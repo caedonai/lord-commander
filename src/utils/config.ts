@@ -22,3 +22,47 @@ export function loadConfig(appName: string): ConfigType {
   
   return {};
 }
+
+
+export interface PackageJson {
+    name?: string;
+    version?: string;
+    description?: string;
+    [key: string]: unknown;
+}
+
+export function getPackageJSON(startDir: string): PackageJson {
+    let dir = path.resolve(startDir);
+
+    const pathCandidate = path.join(dir, 'package.json');
+    if (fs.existsSync(pathCandidate)) {
+        let pkgJSON: PackageJson = JSON.parse(fs.readFileSync(pathCandidate, 'utf8'));
+        return pkgJSON;
+    }
+
+    return {};
+}
+
+import { CreateCliOptions } from '../types/cli';
+import { logger } from './logger';
+
+
+/**
+ * Resolve CLI defaults by combining provided options, package.json and fallbacks.
+ */
+export default function resolveCliDefaults(options: CreateCliOptions = {}) {
+    let pkgJSON: CreateCliOptions = {};
+    try {
+        pkgJSON = getPackageJSON(process.cwd());
+    } catch (error) {
+        if(error instanceof Error) {
+            logger.error(`Failed to read package.json: ${error.message}`);
+        }
+    }
+
+    return {
+        name: options.name || pkgJSON.name || 'CLI Tool',
+        version: options.version || pkgJSON.version || '0.1.0',
+        description: options.description || pkgJSON.description || '',
+    };
+}

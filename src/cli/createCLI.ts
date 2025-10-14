@@ -1,9 +1,9 @@
 import { Command } from "commander";
 import { registerCommands } from './registerCommands';
-import { loadConfig } from '../utils/config';
+import resolveCliDefaults, { loadConfig } from '../utils/config';
 import { logger } from '../utils/logger';
 import { CreateCliOptions } from "../types/cli";
-import resolveCliDefaults from "../utils/resolveCliDefaults";
+
 
 
 
