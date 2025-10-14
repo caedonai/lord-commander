@@ -16,11 +16,8 @@ interface CommandContext {
 /**
  * Recursively discover and register commands from a directory
  */
-export async function registerCommands(
-  program: Command,
-  commandsDir: string,
-  context: CommandContext
-) {
+export async function registerCommands(program: Command, context: CommandContext) {
+  const commandsDir = './commands';
   const absolutePath = path.resolve(process.cwd(), commandsDir);
 
   if (!fs.existsSync(absolutePath)) {
@@ -37,7 +34,7 @@ export async function registerCommands(
 
       if (entry.isDirectory()) {
         // Recursively process subdirectories
-        await registerCommands(program, fullPath, context);
+        await registerCommands(program, context);
         continue;
       }
 

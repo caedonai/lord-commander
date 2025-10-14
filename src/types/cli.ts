@@ -1,4 +1,4 @@
-export interface CliConfig {
+export interface CreateCliOptions {
     name?: string;
     version?: string;
     description?: string;

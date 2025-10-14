@@ -2,12 +2,10 @@ import { Command } from "commander";
 import { registerCommands } from './registerCommands';
 import { loadConfig } from '../utils/config';
 import { logger } from '../utils/logger';
-import { CliConfig } from "../types/cli";
+import { CreateCliOptions } from "../types/cli";
 import resolveCliDefaults from "../utils/resolveCliDefaults";
 
-interface CreateCLIOptions extends CliConfig {
-    commandsPath?: string
-}
+
 
 /**
  * Create and run a Commander-based CLI.
@@ -23,7 +21,7 @@ interface CreateCLIOptions extends CliConfig {
  * @param {string} [options.commandsPath] - Relative path to commands. Defaults to './commands'.
  * @returns {void}
  */
-export function createCLI(options: CreateCLIOptions) {
+export function createCLI(options: CreateCliOptions) {
     const {name, version, description} = resolveCliDefaults(options);
     const program = new Command();
 
@@ -31,12 +29,10 @@ export function createCLI(options: CreateCLIOptions) {
     program.version(version);
     program.description(description);
 
-    const commandsPath = options.commandsPath || './commands';
-
     const config = loadConfig(name);
     
 
-    registerCommands(program, commandsPath, { logger, config });
+    registerCommands(program, { logger, config });
 
     program.parseAsync(process.argv).catch((error) => {
         logger.error(`Error executing command: ${error.message}`);

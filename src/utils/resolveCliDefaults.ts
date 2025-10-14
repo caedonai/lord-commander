@@ -1,4 +1,4 @@
-import { CliConfig } from '../types/cli';
+import { CreateCliOptions } from '../types/cli';
 import getPackageJSON from './getPackageJSON';
 import { logger } from './logger';
 
@@ -6,8 +6,8 @@ import { logger } from './logger';
 /**
  * Resolve CLI defaults by combining provided options, package.json and fallbacks.
  */
-export default function resolveCliDefaults(options: CliConfig = {}) {
-    let pkgJSON: CliConfig = {};
+export default function resolveCliDefaults(options: CreateCliOptions = {}) {
+    let pkgJSON: CreateCliOptions = {};
     try {
         pkgJSON = getPackageJSON(process.cwd());
     } catch (error) {
