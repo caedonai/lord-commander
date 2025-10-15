@@ -9,7 +9,8 @@
     "dev": "node --loader ts-node/esm src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "test-cli": "tsx src/tests/test-cli.ts",
-    "test-updater": "tsx src/tests/test-updater.ts"
+    "test-updater": "tsx src/tests/test-updater.ts",
+    "test-updater-comprehensive": "tsx src/tests/test-updater-comprehensive.ts"
   },
   "keywords": [],
   "author": "",
