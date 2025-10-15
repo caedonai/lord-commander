@@ -1,5 +1,8 @@
+// DEPRECATED: Use core/logger.ts for new code
+// This file provides backward compatibility
 import chalk from 'chalk';
 import figures from 'figures';
+import { logger as coreLogger } from '../core/logger';
 
 type LogFunction = (message: string) => void;
 

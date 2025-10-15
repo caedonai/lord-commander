@@ -10,6 +10,7 @@
 // Essential utilities
 export * from './constants';
 export * from './errors';
+export * from './logger';
 
 // To be implemented
 export * from './logger';
