@@ -54,9 +54,9 @@ examples/**/node_modules/
 examples/**/dist/
 examples/**/build/
 
-# Test files
-src/tests/test-cli.ts
+# Temporary test files
 test-*.mjs
+test-temp-*
 
 # Misc
 *.orig
