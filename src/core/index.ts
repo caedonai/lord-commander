@@ -11,6 +11,7 @@
 export * from './constants';
 export * from './errors';
 export * from './logger';
+export * from './fs';
 
 // To be implemented
 export * from './logger';
