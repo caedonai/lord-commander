@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { registerCommands } from './registerCommands';
 import resolveCliDefaults, { loadConfig } from '../utils/config';
 import { logger } from '../core/logger';
+import * as prompts from '../core/prompts';
 import { CreateCliOptions, CommandContext } from "../types/cli";
 
 
@@ -34,6 +35,7 @@ export function createCLI(options: CreateCliOptions) {
     // Create CommandContext with available utilities
     const context: CommandContext = {
         logger,
+        prompts,
         config,
         cwd: process.cwd()
     };

@@ -8,18 +8,9 @@
  */
 
 // Essential utilities
-export * from './constants';
-export * from './errors';
-export * from './logger';
-export * from './fs';
-
-// To be implemented
-export * from './logger';
-export * from './fs';
-export * from './exec';
-export * from './prompts';
-export * from './temp';
-export * from './semver';
-
-// Existing utilities
-export * from './helpFormatter';
+export * from './constants.js';
+export * from './errors.js';
+export * from './logger.js';
+export * from './fs.js';
+export * from './exec.js';
+export * from './prompts.js';

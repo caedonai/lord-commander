@@ -14,9 +14,9 @@ export interface CreateCliOptions {
 export interface CommandContext {
     // Core utilities
     fs?: any;      // File system operations (implemented)
-    exec?: any;    // Process execution (to be implemented)
+    exec?: any;    // Process execution (implemented)
     logger: any;   // Logging and spinners (implemented)
-    prompts?: any; // Interactive user input (to be implemented)
+    prompts: any;  // Interactive user input (implemented)
     temp?: any;    // Temporary workspace management (to be implemented)
     
     // Plugin utilities (to be implemented) 

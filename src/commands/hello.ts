@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import type { CommandContext } from '../types/cli';
 
 export default function(program: Command, context: CommandContext) {
-  const { logger } = context;
+  const { logger, prompts } = context;
   
   program
     .command('hello')
