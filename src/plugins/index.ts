@@ -7,9 +7,11 @@
  * - Analytics and telemetry tracking
  */
 
-// Advanced functionality plugins (to be implemented)
-export * from './git';
-export * from './updater';
-export * from './workspace';
-export * from './telemetry';
-export * from './config-loader';
+// Advanced functionality plugins
+export * from './git.js';
+
+// To be implemented
+// export * from './updater.js';
+// export * from './workspace.js';
+// export * from './telemetry.js';
+// export * from './config-loader.js';

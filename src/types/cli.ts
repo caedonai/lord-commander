@@ -19,10 +19,10 @@ export interface CommandContext {
     prompts: any;  // Interactive user input (implemented)
     temp?: any;    // Temporary workspace management (to be implemented)
     
-    // Plugin utilities (to be implemented) 
-    git?: any;     // Git operations
-    config?: any;  // Configuration management
-    telemetry?: any; // Analytics and tracking
+    // Plugin utilities
+    git: any;      // Git operations (implemented)
+    config?: any;  // Configuration management (to be implemented)
+    telemetry?: any; // Analytics and tracking (to be implemented)
     
     // Configuration and state
     cwd?: string;  // Current working directory

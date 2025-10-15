@@ -3,6 +3,7 @@ import { registerCommands } from './registerCommands';
 import resolveCliDefaults, { loadConfig } from '../utils/config';
 import { logger } from '../core/logger';
 import * as prompts from '../core/prompts';
+import * as git from '../plugins/git';
 import { CreateCliOptions, CommandContext } from "../types/cli";
 
 
@@ -36,6 +37,7 @@ export function createCLI(options: CreateCliOptions) {
     const context: CommandContext = {
         logger,
         prompts,
+        git,
         config,
         cwd: process.cwd()
     };
