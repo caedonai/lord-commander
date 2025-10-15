@@ -53,7 +53,7 @@ Use the provided `logger` instance with appropriate severity levels:
 - Key Libraries:
   - commander - CLI framework
   - chalk - Terminal styling
-  - @inquirer/prompts - Interactive prompts
+  - @clack/prompts - Interactive prompts
   - ora - Terminal spinners
 
 ## Developer Workflows
