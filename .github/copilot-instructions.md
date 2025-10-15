@@ -21,8 +21,7 @@ This is a CLI tool framework built with TypeScript, utilizing Commander.js for c
 3. **Utilities (`src/utils/`)**
    - `logger.ts` - Consistent logging with symbols and colors
    - `config.ts` - Configuration management
-   - `spinner.ts` - Loading indicators
-   - `prompts.ts` - Interactive user input
+   - `prompts.ts` - Interactive user input and loading indicators
 
 ## Key Patterns
 
@@ -53,8 +52,7 @@ Use the provided `logger` instance with appropriate severity levels:
 - Key Libraries:
   - commander - CLI framework
   - chalk - Terminal styling
-  - @clack/prompts - Interactive prompts
-  - ora - Terminal spinners
+  - @clack/prompts - Interactive prompts and spinners
 
 ## Developer Workflows
 
@@ -84,4 +82,4 @@ pnpm install
 ## Integration Points
 - Commands can access shared context through the `CommandContext` interface
 - Configuration is loaded automatically and passed to commands
-- External tools integration should use the spinner utility for progress indication
+- External tools integration should use the prompts.spinner utility for progress indication
