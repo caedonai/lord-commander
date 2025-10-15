@@ -9,9 +9,9 @@
 
 // Advanced functionality plugins
 export * from './git.js';
+export * from './updater.js';
 
 // To be implemented
-// export * from './updater.js';
 // export * from './workspace.js';
 // export * from './telemetry.js';
 // export * from './config-loader.js';

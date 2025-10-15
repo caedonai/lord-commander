@@ -8,7 +8,8 @@
     "build": "tsup src/index.ts --format esm --dts --clean --target node18",
     "dev": "node --loader ts-node/esm src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "test-cli": "tsx src/tests/test-cli.ts"
+    "test-cli": "tsx src/tests/test-cli.ts",
+    "test-updater": "tsx src/tests/test-updater.ts"
   },
   "keywords": [],
   "author": "",
