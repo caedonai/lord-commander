@@ -12,12 +12,12 @@ export interface CreateCliOptions {
  * - Configuration and state management
  */
 export interface CommandContext {
-    // Core utilities (to be implemented)
-    fs: any;       // File system operations
-    exec: any;     // Process execution
-    logger: any;   // Logging and spinners
-    prompts: any;  // Interactive user input
-    temp: any;     // Temporary workspace management
+    // Core utilities
+    fs?: any;      // File system operations (to be implemented)
+    exec?: any;    // Process execution (to be implemented)
+    logger: any;   // Logging and spinners (implemented)
+    prompts?: any; // Interactive user input (to be implemented)
+    temp?: any;    // Temporary workspace management (to be implemented)
     
     // Plugin utilities (to be implemented) 
     git?: any;     // Git operations
@@ -25,7 +25,7 @@ export interface CommandContext {
     telemetry?: any; // Analytics and tracking
     
     // Configuration and state
-    cwd: string;   // Current working directory
+    cwd?: string;  // Current working directory
     packageManager?: 'npm' | 'pnpm' | 'yarn' | 'bun';
 }
 

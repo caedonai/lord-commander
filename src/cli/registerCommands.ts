@@ -1,13 +1,7 @@
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
-import { Logger } from '../utils/logger';
-import { ConfigType } from '../utils/config';
-
-interface CommandContext {
-  logger: Logger;
-  config: ConfigType;
-}
+import type { CommandContext } from '../types/cli';
 
 // interface CommandModule {
 //   default: (program: Command, context: CommandContext) => void;

@@ -1,8 +1,8 @@
 import { Command } from "commander";
 import { registerCommands } from './registerCommands';
 import resolveCliDefaults, { loadConfig } from '../utils/config';
-import { logger } from '../utils/logger';
-import { CreateCliOptions } from "../types/cli";
+import { logger } from '../core/logger';
+import { CreateCliOptions, CommandContext } from "../types/cli";
 
 
 
@@ -31,8 +31,14 @@ export function createCLI(options: CreateCliOptions) {
 
     const config = loadConfig(name);
     
+    // Create CommandContext with available utilities
+    const context: CommandContext = {
+        logger,
+        config,
+        cwd: process.cwd()
+    };
 
-    registerCommands(program, { logger, config });
+    registerCommands(program, context);
 
     program.parseAsync(process.argv).catch((error) => {
         logger.error(`Error executing command: ${error.message}`);
