@@ -44,7 +44,7 @@ export function getPackageJSON(startDir: string): PackageJson {
 }
 
 import { CreateCliOptions } from '../types/cli';
-import { logger } from './logger';
+import { logger } from '../core/logger.js';
 
 
 /**

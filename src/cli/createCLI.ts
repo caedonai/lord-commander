@@ -3,6 +3,8 @@ import { registerCommands } from './registerCommands';
 import resolveCliDefaults, { loadConfig } from '../utils/config';
 import { logger } from '../core/logger';
 import * as prompts from '../core/prompts';
+import * as fs from '../core/fs';
+import * as exec from '../core/exec';
 import * as git from '../plugins/git';
 import { CreateCliOptions, CommandContext } from "../types/cli";
 
@@ -23,7 +25,7 @@ import { CreateCliOptions, CommandContext } from "../types/cli";
  * @param {string} [options.commandsPath] - Relative path to commands. Defaults to './commands'.
  * @returns {void}
  */
-export function createCLI(options: CreateCliOptions) {
+export async function createCLI(options: CreateCliOptions) {
     const {name, version, description} = resolveCliDefaults(options);
     const program = new Command();
 
@@ -37,12 +39,15 @@ export function createCLI(options: CreateCliOptions) {
     const context: CommandContext = {
         logger,
         prompts,
+        fs,
+        exec,
         git,
         config,
         cwd: process.cwd()
     };
 
-    registerCommands(program, context);
+    // Register commands before parsing
+    await registerCommands(program, context, options.commandsPath || './src/commands');
 
     program.parseAsync(process.argv).catch((error) => {
         logger.error(`Error executing command: ${error.message}`);

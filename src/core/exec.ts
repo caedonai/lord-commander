@@ -188,12 +188,16 @@ export function execSync(
       execLogger.debug(`Executing sync: ${fullCommand}`, { cwd });
     }
 
+    // Filter out options that don't apply to sync execution and handle type compatibility
+    const { signal, encoding, ...syncOptions } = execaOptions;
+    
     const execaResult: ExecaSyncReturnValue = execaSync(command, args, {
       cwd,
       timeout: timeout || undefined,
       reject,
-      ...execaOptions,
-    } as Options);
+      encoding: encoding as any, // Type assertion for encoding compatibility
+      ...syncOptions,
+    });
 
     const duration = Date.now() - startTime;
     const result: ExecResult = {
@@ -506,7 +510,12 @@ export async function git(
 /**
  * Create an AbortController for cancelling commands
  */
-export function createCancellableExecution() {
+export function createCancellableExecution(): {
+  signal: AbortSignal;
+  cancel: () => void;
+  exec: (command: string, args?: string[], options?: ExecOptions) => Promise<ExecResult>;
+  execStream: (command: string, args?: string[], options?: ExecStreamOptions) => Promise<ExecResult>;
+} {
   const controller = new AbortController();
   
   return {

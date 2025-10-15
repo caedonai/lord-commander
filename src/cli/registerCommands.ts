@@ -10,15 +10,15 @@ import type { CommandContext } from '../types/cli';
 /**
  * Recursively discover and register commands from a directory
  */
-export async function registerCommands(program: Command, context: CommandContext) {
-  const commandsDir = './commands';
+export async function registerCommands(program: Command, context: CommandContext, commandsPath: string = './commands') {
+  const commandsDir = commandsPath;
   const absolutePath = path.resolve(process.cwd(), commandsDir);
 
   if (!fs.existsSync(absolutePath)) {
-    context.logger.warn(`Commands directory not found: ${commandsDir}`);
+    context.logger.warn(`Commands directory not found: ${commandsDir} (${absolutePath})`);
     return;
   }
-
+  
   try {
     // Get all files in the commands directory
     const entries = fs.readdirSync(absolutePath, { withFileTypes: true });
@@ -40,7 +40,9 @@ export async function registerCommands(program: Command, context: CommandContext
       if (entry.name === 'index.ts' || entry.name === 'index.js') continue;
 
       try {
-        const commandModule = await import(fullPath);
+        // Use file:// URL for absolute path
+        const fileUrl = `file:///${fullPath.replace(/\\/g, '/')}`;
+        const commandModule = await import(fileUrl);
         
         if (typeof commandModule.default === 'function') {
           commandModule.default(program, context);
@@ -48,7 +50,8 @@ export async function registerCommands(program: Command, context: CommandContext
           context.logger.warn(`Command module ${entry.name} does not export a default function`);
         }
       } catch (error) {
-        context.logger.error(`Failed to load command from ${entry.name}: ${error}`);
+        const message = error instanceof Error ? error.message : String(error);
+        context.logger.error(`Failed to load command from ${entry.name}: ${message}`);
       }
     }
   } catch (error) {
