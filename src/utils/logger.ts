@@ -29,11 +29,20 @@ const defaultStyles: Required<LoggerConfig> = {
   success: { color: chalk.green, symbol: figures.tick }
 };
 
-// Create the logger instance with default configuration
-export const logger: Logger = Object.entries(defaultStyles).reduce((acc, [type, style]) => {
-  acc[type] = createLogFunction(style);
-  return acc;
+/**
+ * Initialize the logger by converting the default styles into functional logging methods.
+ * Process:
+ * 1. Object.entries(defaultStyles) converts the config object into [type, style] pairs
+ *    Example: [['info', { color: chalk.blue, symbol: '→' }], ['error', {...}]]
+ * 2. reduce() builds the final logger object by iterating through these pairs
+ * 3. Each iteration creates a configured logging function for that type (info/warn/error/success)
+ * Result: { info: fn(), warn: fn(), error: fn(), success: fn() }
+ */
+export const logger: Logger = Object.entries(defaultStyles).reduce((loggerInstance, [logType, styleInfo]) => {
+  loggerInstance[logType] = createLogFunction(styleInfo);
+  return loggerInstance;
 }, {} as Logger);
+
 
 /**
  * Configure the built-in log types (info, warn, error, success)
