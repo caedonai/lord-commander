@@ -32,10 +32,10 @@ const defaultStyles: Required<LoggerConfig> = {
 /**
  * Initialize the logger by converting the default styles into functional logging methods.
  * Process:
- * 1. Object.entries(defaultStyles) converts the config object into [type, style] pairs
+ * 1. Object.entries(defaultStyles) converts the config object into [logType, styleInfo] pairs
  *    Example: [['info', { color: chalk.blue, symbol: '→' }], ['error', {...}]]
  * 2. reduce() builds the final logger object by iterating through these pairs
- * 3. Each iteration creates a configured logging function for that type (info/warn/error/success)
+ * 3. Each iteration creates a configured logging function for that logType (info/warn/error/success)
  * Result: { info: fn(), warn: fn(), error: fn(), success: fn() }
  */
 export const logger: Logger = Object.entries(defaultStyles).reduce((loggerInstance, [logType, styleInfo]) => {
