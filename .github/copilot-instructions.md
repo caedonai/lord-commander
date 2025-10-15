@@ -4,82 +4,172 @@ This document provides essential context for AI agents working with the lord-com
 
 ## Project Overview
 
-This is a CLI tool framework built with TypeScript, utilizing Commander.js for command-line argument parsing. The project follows a modular architecture for creating extensible command-line applications.
+**Goal:** Identify and modularize reusable abstractions found across advanced CLIs (like Vercel CLI, create-next-app, next-forge, and Nx CLI) into a developer-friendly SDK for scaffolding, updating, and maintaining projects.
 
-## Core Architecture
+This is a CLI SDK framework built with TypeScript that provides a comprehensive toolkit for building professional-grade command-line tools. The project aims to extract and systematize patterns from industry-leading CLIs into composable, reusable modules.
 
-### Key Components
+## Core SDK Architecture
 
-1. **CLI Core (`src/cli/`)**
-   - `createCLI.ts` - Main factory function for initializing the CLI
-   - `registerCommands.ts` - Dynamic command registration system
+The SDK follows a modular architecture with two main layers:
 
-2. **Commands (`src/commands/`)**
-   - Each command is a standalone module
-   - Commands follow a consistent pattern (see example below)
+### Core Modules (`src/core/`)
+Essential utilities that form the foundation:
+- `exec.ts` - Process execution wrapper (async, cancelable shell commands)
+- `fs.ts` - File system utilities (safe file operations, directory management)
+- `prompts.ts` - Interactive prompt helpers using @clack/prompts
+- `logger.ts` - Unified logging system with spinners and colors
+- `temp.ts` - Temporary workspace handler
+- `semver.ts` - Version comparison utilities
+- `constants.ts` - Global constants and paths
+- `errors.ts` - Error and cancellation handling
 
-3. **Utilities (`src/utils/`)**
-   - `logger.ts` - Consistent logging with symbols and colors
-   - `config.ts` - Configuration management
-   - `prompts.ts` - Interactive user input and loading indicators
+### Plugin Modules (`src/plugins/`)
+Extended functionality for specific use cases:
+- `git.ts` - Repository management and diffing
+- `updater.ts` - Version diff and patching engine
+- `workspace.ts` - Monorepo workspace utilities
+- `telemetry.ts` - Analytics and tracking
+- `config-loader.ts` - Multi-format config loading and merging
 
-## Key Patterns
+## Key SDK Features
 
-### Command Definition Pattern
-Commands should follow this structure (from `src/commands/hello.ts`):
+### 1. Zero-Config Setup
+- Automatically detects project type, config files, and commands
+- Smart project detection for frameworks (Next.js, Remix, Astro, etc.)
+- Auto command registration by scanning `/commands` folder
+
+### 2. Interactive Experience
+- Built-in @clack/prompts flows for setup (region, project name, env vars)
+- Loading spinners with Ora for async tasks
+- Graceful Ctrl+C handling with cleanup
+
+### 3. Advanced Logging & Theming
+- Centralized logger with colorized output using Chalk
+- Real-time streaming output for builds/deploys
+- Customizable color system with global theme config
+- Help message theming with visual hierarchy
+
+### 4. State & Configuration Management
+- Linked project state (like `.vercel` folders)
+- Config loader for `.json`, `.yaml`, `.env` files with merging
+- Environment variable management (`cli env add`/`cli env pull`)
+
+### 5. Extensibility & DX
+- Plugin system with `.use(plugin)` API
+- Command templates/scaffolding (`mycli new:command`)
+- Pre/post hooks for command execution
+- Command execution profiling and telemetry
+
+### 6. Professional CLI Features
+- Error handling with recovery suggestions
+- Automatic update notifications
+- Command aliases and shell autocomplete
+- Debug & verbose modes
+- Customizable branding (ASCII banners, themes)
+
+## Command Definition Pattern
+
+Commands follow this enhanced structure:
 ```typescript
-export default function(program: Command, { logger, config }: CommandContext) {
+export default function(program: Command, context: CommandContext) {
+  const { logger, config, prompts, exec, fs } = context;
+  
   program
     .command('name')
     .description('command description')
     .argument('[args]', 'argument description')
     .option('-f, --flag', 'flag description')
-    .action((args, options) => {
-      // Command implementation
+    .option('--verbose', 'enable verbose logging')
+    .action(async (args, options) => {
+      logger.intro('Starting operation...');
+      
+      if (options.verbose) logger.enableVerbose();
+      
+      const spinner = logger.spinner('Processing...');
+      try {
+        // Command implementation with SDK utilities
+        await exec('some-command', { cwd: process.cwd() });
+        await fs.copy('template', 'output');
+        spinner.success('Operation completed');
+        logger.outro('Done!');
+      } catch (error) {
+        spinner.fail('Operation failed');
+        logger.error(error.message);
+      }
     });
 }
 ```
 
-### Logging Standards
-Use the provided `logger` instance with appropriate severity levels:
-- `logger.info()` - General information
-- `logger.success()` - Successful operations
-- `logger.warn()` - Warnings
-- `logger.error()` - Errors
+## Common CLI Patterns Abstracted
+
+The SDK systematizes these patterns found across professional CLIs:
+
+| Pattern | SDK Module | Examples |
+|---------|------------|----------|
+| File System Operations | `core/fs.ts` | Copy templates, ensure directories, clean temp files |
+| Process Execution | `core/exec.ts` | `git init`, `npm install`, build commands |
+| Interactive Setup | `core/prompts.ts` | Project name, package manager selection |
+| Structured Tasks | Command modules | `cloneRepo()`, `setupEnv()`, `installDeps()` |
+| Environment Management | `plugins/config-loader.ts` | Auto-create `.env.local` from templates |
+| Git Operations | `plugins/git.ts` | Initialize repos, commit, diff between versions |
+| Error Handling | `core/errors.ts` | Graceful exits, user-friendly messages |
+
+## Development Workflows
 
 ### Project Dependencies
 - Package Manager: pnpm (required version >=10.18.1)
-- Key Libraries:
+- Core Libraries:
   - commander - CLI framework
   - chalk - Terminal styling
   - @clack/prompts - Interactive prompts and spinners
+  - execa - Process execution
+  - semver - Version management
 
-## Developer Workflows
-
-### Setup
+### Setup & Development
 ```bash
 pnpm install
 ```
 
-### Development
-- Commands are automatically loaded from `src/commands/`
-- TypeScript configuration is in `tsconfig.json`
-- Tests are written using Vitest
+### Adding New Core Modules
+1. Create module in `src/core/` or `src/plugins/`
+2. Export utilities following established patterns
+3. Add to main SDK exports
+4. Update types in `src/types/`
 
-## Common Tasks
-1. Adding a new command:
-   - Create a new file in `src/commands/`
-   - Export a default function following the command pattern
-   - Command will be automatically registered
+### Adding New Commands
+1. Create file in `src/commands/`
+2. Export default function with CommandContext
+3. Use SDK utilities from context
+4. Commands auto-register via file system scanning
 
-2. Using the logger:
-   ```typescript
-   import { logger } from '../utils/logger';
-   logger.info('Informational message');
-   logger.success('Operation completed');
-   ```
+### SDK Usage Example
+```typescript
+import { exec, fs, prompt, logger } from "@caedonai/sdk/core";
+import { git, updater } from "@caedonai/sdk/plugins";
 
-## Integration Points
-- Commands can access shared context through the `CommandContext` interface
-- Configuration is loaded automatically and passed to commands
-- External tools integration should use the prompts.spinner utility for progress indication
+async function upgradeProject() {
+  logger.intro("Updating your project...");
+  const version = await prompt.select("Select version", ["1.1.0", "1.2.0"]);
+  await git.clone("https://github.com/vercel/next-forge", "temp");
+  const diff = await updater.diff("v1.0.0", `v${version}`);
+  await updater.apply(diff);
+  logger.success(`Upgraded to v${version}!`);
+}
+```
+
+## Integration Points & Context
+
+- **CommandContext Interface**: Provides unified access to all SDK utilities
+- **Plugin System**: Extensible with `.use(plugin)` for custom functionality  
+- **Telemetry**: Optional analytics with clear opt-out mechanisms
+- **Error Boundaries**: Comprehensive error handling with suggestions and recovery
+- **State Management**: Persistent CLI session state for user preferences
+
+## Target CLI Complexity Levels
+
+The SDK scales from simple utilities to enterprise-grade tools:
+- **Simple CLIs**: `npm init my-app` style tools
+- **Advanced CLIs**: create-t3-app, Vercel CLI, next-forge equivalents  
+- **Enterprise Tools**: Internal DevOps and project management CLIs
+
+Each module is independent, typed, and composable for maximum flexibility and maintainability.
