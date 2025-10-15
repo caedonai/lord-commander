@@ -18,6 +18,8 @@ pnpm test-cli hello "Developer" --uppercase
 pnpm tsx src/tests/test-cli.ts hello
 ```
 
+**Auto-Discovery**: Commands are automatically discovered from `src/commands/` without any manual configuration!
+
 ### `basic.test.ts`
 Automated unit tests for the SDK components.
 

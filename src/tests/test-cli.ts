@@ -19,17 +19,10 @@
  */
 
 import { createCLI } from '../cli/createCLI.js';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-// Get the directory of this test file
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const commandsPath = join(__dirname, '../commands');
 
 await createCLI({
     name: 'test-cli',
     description: 'Test CLI for lord-commander-poc SDK',
-    version: '0.1.0',
-    commandsPath
+    version: '0.1.0'
+    // commandsPath is automatically discovered from src/commands
 });

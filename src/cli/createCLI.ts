@@ -22,8 +22,8 @@ import { CreateCliOptions, CommandContext } from "../types/cli";
  * @param {string} [options.name] - CLI display name. Defaults to 'CLI Tool'.
  * @param {string} [options.description] - CLI description. Defaults to ''.
  * @param {string} [options.version] - CLI version string. Defaults to '0.1.0'.
- * @param {string} [options.commandsPath] - Relative path to commands. Defaults to './commands'.
- * @returns {void}
+ * @param {string} [options.commandsPath] - Path to commands directory. If not specified, auto-discovers in common locations.
+ * @returns {Promise<void>}
  */
 export async function createCLI(options: CreateCliOptions) {
     const {name, version, description} = resolveCliDefaults(options);
@@ -46,8 +46,8 @@ export async function createCLI(options: CreateCliOptions) {
         cwd: process.cwd()
     };
 
-    // Register commands before parsing
-    await registerCommands(program, context, options.commandsPath || './src/commands');
+    // Register commands (auto-discover if no path specified)
+    await registerCommands(program, context, options.commandsPath);
 
     program.parseAsync(process.argv).catch((error) => {
         logger.error(`Error executing command: ${error.message}`);
