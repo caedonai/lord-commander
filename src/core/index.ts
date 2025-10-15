@@ -7,8 +7,10 @@
  * - Version management and temporary workspaces
  */
 
-// Essential utilities (to be implemented)
+// Essential utilities
 export * from './constants';
+
+// To be implemented
 export * from './errors';
 export * from './logger';
 export * from './fs';
