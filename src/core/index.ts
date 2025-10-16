@@ -97,3 +97,7 @@ export {
   type SelectOption,
   type MultiSelectOption
 } from './prompts.js';
+
+// CLI Creation and Command Registration
+export { createCLI } from './createCLI.js';
+export { registerCommands } from './registerCommands.js';

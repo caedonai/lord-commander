@@ -13,6 +13,10 @@ describe('Tree-shaking Tests', () => {
       expect(coreModule.intro).toBeDefined();
       expect(coreModule.outro).toBeDefined();
       
+      // Test CLI creation functions are available
+      expect(coreModule.createCLI).toBeDefined();
+      expect(coreModule.registerCommands).toBeDefined();
+      
       // Test constants are available
       expect(coreModule.PACKAGE_MANAGER_COMMANDS).toBeDefined();
       expect(coreModule.DEFAULT_IGNORE_PATTERNS).toBeDefined();

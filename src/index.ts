@@ -6,10 +6,10 @@
  * composable, reusable modules.
  */
 
-// Main CLI creation function
-export { createCLI } from './cli/createCLI';
+// Main CLI creation function (for convenience)
+export { createCLI } from './core/createCLI.js';
 
-// Core SDK modules - Essential utilities
+// Core SDK modules - Essential utilities (includes createCLI)
 export * as core from './core';
 
 // Plugin SDK modules - Extended functionality  

@@ -1,11 +1,11 @@
 import { Command } from "commander";
-import { registerCommands } from './registerCommands';
-import resolveCliDefaults, { loadConfig } from '../utils/config';
-import { logger } from '../core/logger';
-import * as prompts from '../core/prompts';
-import * as fs from '../core/fs';
-import * as exec from '../core/exec';
-import * as git from '../plugins/git';
+import { registerCommands } from './registerCommands.js';
+import resolveCliDefaults, { loadConfig } from '../utils/config.js';
+import { logger } from './logger.js';
+import * as prompts from './prompts.js';
+import * as fs from './fs.js';
+import * as exec from './exec.js';
+import * as git from '../plugins/git.js';
 import { CreateCliOptions, CommandContext } from "../types/cli";
 
 
