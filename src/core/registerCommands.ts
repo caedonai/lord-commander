@@ -4,6 +4,25 @@ import path from 'path';
 import type { CommandContext } from '../types/cli';
 
 /**
+ * Check if a built-in command should be skipped based on configuration
+ */
+function shouldSkipBuiltinCommand(
+  fileName: string, 
+  builtinConfig: { completion?: boolean; hello?: boolean; version?: boolean }
+): boolean {
+  switch (fileName) {
+    case 'completion':
+      return builtinConfig.completion === true;
+    case 'hello':
+      return builtinConfig.hello === true;
+    case 'version':
+      return builtinConfig.version === true;
+    default:
+      return false;
+  }
+}
+
+/**
  * Automatically discover commands directory in common locations
  */
 function discoverCommandsDirectory(): string | null {
@@ -48,7 +67,12 @@ function discoverCommandsDirectory(): string | null {
 /**
  * Recursively discover and register commands from a directory
  */
-export async function registerCommands(program: Command, context: CommandContext, commandsPath?: string) {
+export async function registerCommands(
+  program: Command, 
+  context: CommandContext, 
+  commandsPath?: string,
+  builtinConfig?: { completion?: boolean; hello?: boolean; version?: boolean }
+) {
   let absolutePath: string;
   
   if (commandsPath) {
@@ -78,7 +102,7 @@ export async function registerCommands(program: Command, context: CommandContext
 
       if (entry.isDirectory()) {
         // Recursively process subdirectories
-        await registerCommands(program, context);
+        await registerCommands(program, context, fullPath, builtinConfig);
         continue;
       }
 
@@ -89,9 +113,12 @@ export async function registerCommands(program: Command, context: CommandContext
       if (entry.name.match(/\.(test|spec|d)\.(ts|js)$/)) continue;
       if (entry.name === 'index.ts' || entry.name === 'index.js') continue;
 
-      // Skip built-in commands - these are handled by registerBuiltinCommands
+      // Skip built-in commands only if they are enabled in registerBuiltinCommands
       const fileName = entry.name.replace(/\.(ts|js)$/, '');
-      if (['completion', 'hello', 'version'].includes(fileName)) continue;
+      if (builtinConfig && shouldSkipBuiltinCommand(fileName, builtinConfig)) {
+        context.logger.debug(`Skipping built-in command: ${fileName} (handled by registerBuiltinCommands)`);
+        continue;
+      }
 
       try {
         // Use file:// URL for absolute path

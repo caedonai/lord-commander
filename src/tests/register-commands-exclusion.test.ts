@@ -38,12 +38,12 @@ describe('registerCommands Built-in Exclusion', () => {
   });
 
   describe('Built-in Command Exclusion', () => {
-    it('should skip completion.ts during user command registration', async () => {
+    it('should skip completion.ts when built-in completion is enabled', async () => {
       // Create completion.ts in temp commands directory
       const completionPath = join(tempDir, 'completion.ts');
       await writeFile(completionPath, `
         export default function(program, context) {
-          program.command('completion').description('Should be skipped');
+          program.command('completion').description('User completion - should be skipped');
         }
       `);
 
@@ -55,19 +55,47 @@ describe('registerCommands Built-in Exclusion', () => {
         }
       `);
 
-      await registerCommands(program, mockContext, tempDir);
+      // Pass builtinConfig with completion enabled (should skip user completion.ts)
+      const builtinConfig = { completion: true, hello: false, version: false };
+      await registerCommands(program, mockContext, tempDir, builtinConfig);
 
       const commandNames = program.commands.map(cmd => cmd.name());
       expect(commandNames).toContain('deploy');
       expect(commandNames).not.toContain('completion'); // Should be skipped
     });
 
-    it('should skip hello.ts during user command registration', async () => {
+    it('should load user completion.ts when built-in completion is disabled', async () => {
+      // Create completion.ts in temp commands directory
+      const completionPath = join(tempDir, 'completion.ts');
+      await writeFile(completionPath, `
+        export default function(program, context) {
+          program.command('completion').description('User completion - should load');
+        }
+      `);
+
+      // Create a regular user command
+      const userCmdPath = join(tempDir, 'deploy.ts');
+      await writeFile(userCmdPath, `
+        export default function(program, context) {
+          program.command('deploy').description('User command');
+        }
+      `);
+
+      // Pass builtinConfig with completion disabled (should load user completion.ts)
+      const builtinConfig = { completion: false, hello: false, version: false };
+      await registerCommands(program, mockContext, tempDir, builtinConfig);
+
+      const commandNames = program.commands.map(cmd => cmd.name());
+      expect(commandNames).toContain('deploy');
+      expect(commandNames).toContain('completion'); // Should be loaded
+    });
+
+    it('should skip hello.ts when built-in hello is enabled', async () => {
       // Create hello.ts in temp commands directory
       const helloPath = join(tempDir, 'hello.ts');
       await writeFile(helloPath, `
         export default function(program, context) {
-          program.command('hello').description('Should be skipped');
+          program.command('hello').description('User hello - should be skipped');
         }
       `);
 
@@ -79,19 +107,47 @@ describe('registerCommands Built-in Exclusion', () => {
         }
       `);
 
-      await registerCommands(program, mockContext, tempDir);
+      // Pass builtinConfig with hello enabled (should skip user hello.ts)
+      const builtinConfig = { completion: false, hello: true, version: false };
+      await registerCommands(program, mockContext, tempDir, builtinConfig);
 
       const commandNames = program.commands.map(cmd => cmd.name());
       expect(commandNames).toContain('build');
       expect(commandNames).not.toContain('hello'); // Should be skipped
     });
 
-    it('should skip version.ts during user command registration', async () => {
+    it('should load user hello.ts when built-in hello is disabled', async () => {
+      // Create hello.ts in temp commands directory
+      const helloPath = join(tempDir, 'hello.ts');
+      await writeFile(helloPath, `
+        export default function(program, context) {
+          program.command('hello').description('User hello - should load');
+        }
+      `);
+
+      // Create a regular user command
+      const userCmdPath = join(tempDir, 'build.ts');
+      await writeFile(userCmdPath, `
+        export default function(program, context) {
+          program.command('build').description('User command');
+        }
+      `);
+
+      // Pass builtinConfig with hello disabled (should load user hello.ts)
+      const builtinConfig = { completion: false, hello: false, version: false };
+      await registerCommands(program, mockContext, tempDir, builtinConfig);
+
+      const commandNames = program.commands.map(cmd => cmd.name());
+      expect(commandNames).toContain('build');
+      expect(commandNames).toContain('hello'); // Should be loaded
+    });
+
+    it('should skip version.ts when built-in version is enabled', async () => {
       // Create version.ts in temp commands directory
       const versionPath = join(tempDir, 'version.ts');
       await writeFile(versionPath, `
         export default function(program, context) {
-          program.command('version').description('Should be skipped');
+          program.command('version').description('User version - should be skipped');
         }
       `);
 
@@ -103,30 +159,58 @@ describe('registerCommands Built-in Exclusion', () => {
         }
       `);
 
-      await registerCommands(program, mockContext, tempDir);
+      // Pass builtinConfig with version enabled (should skip user version.ts)
+      const builtinConfig = { completion: false, hello: false, version: true };
+      await registerCommands(program, mockContext, tempDir, builtinConfig);
 
       const commandNames = program.commands.map(cmd => cmd.name());
       expect(commandNames).toContain('init');
       expect(commandNames).not.toContain('version'); // Should be skipped
     });
 
-    it('should skip all built-in commands but register user commands', async () => {
+    it('should load user version.ts when built-in version is disabled', async () => {
+      // Create version.ts in temp commands directory
+      const versionPath = join(tempDir, 'version.ts');
+      await writeFile(versionPath, `
+        export default function(program, context) {
+          program.command('version').description('User version - should load');
+        }
+      `);
+
+      // Create a regular user command
+      const userCmdPath = join(tempDir, 'init.ts');
+      await writeFile(userCmdPath, `
+        export default function(program, context) {
+          program.command('init').description('User command');
+        }
+      `);
+
+      // Pass builtinConfig with version disabled (should load user version.ts)
+      const builtinConfig = { completion: false, hello: false, version: false };
+      await registerCommands(program, mockContext, tempDir, builtinConfig);
+
+      const commandNames = program.commands.map(cmd => cmd.name());
+      expect(commandNames).toContain('init');
+      expect(commandNames).toContain('version'); // Should be loaded
+    });
+
+    it('should handle mixed scenarios - some built-ins enabled, some disabled', async () => {
       // Create all built-in command files
       await writeFile(join(tempDir, 'completion.ts'), `
         export default function(program, context) {
-          program.command('completion').description('Should be skipped');
+          program.command('completion').description('User completion - should be skipped');
         }
       `);
       
       await writeFile(join(tempDir, 'hello.ts'), `
         export default function(program, context) {
-          program.command('hello').description('Should be skipped');
+          program.command('hello').description('User hello - should load');
         }
       `);
       
       await writeFile(join(tempDir, 'version.ts'), `
         export default function(program, context) {
-          program.command('version').description('Should be skipped');
+          program.command('version').description('User version - should be skipped');
         }
       `);
 
@@ -136,27 +220,62 @@ describe('registerCommands Built-in Exclusion', () => {
           program.command('deploy').description('Deploy command');
         }
       `);
-      
-      await writeFile(join(tempDir, 'build.ts'), `
-        export default function(program, context) {
-          program.command('build').description('Build command');
-        }
-      `);
 
-      await registerCommands(program, mockContext, tempDir);
+      // Mixed config: completion enabled (skip), hello disabled (load), version enabled (skip)
+      const builtinConfig = { completion: true, hello: false, version: true };
+      await registerCommands(program, mockContext, tempDir, builtinConfig);
 
       const commandNames = program.commands.map(cmd => cmd.name());
       
       // User commands should be registered
       expect(commandNames).toContain('deploy');
-      expect(commandNames).toContain('build');
+      expect(commandNames).toContain('hello');      // Should load user hello.ts
       
-      // Built-in commands should be skipped
-      expect(commandNames).not.toContain('completion');
-      expect(commandNames).not.toContain('hello');
-      expect(commandNames).not.toContain('version');
+      // Built-in enabled commands should be skipped
+      expect(commandNames).not.toContain('completion'); // Should be skipped
+      expect(commandNames).not.toContain('version');    // Should be skipped
       
       expect(commandNames).toHaveLength(2);
+    });
+
+    it('should load all user commands when no built-in config provided (backward compatibility)', async () => {
+      // Create all command files including ones with built-in names
+      await writeFile(join(tempDir, 'completion.ts'), `
+        export default function(program, context) {
+          program.command('completion').description('User completion');
+        }
+      `);
+      
+      await writeFile(join(tempDir, 'hello.ts'), `
+        export default function(program, context) {
+          program.command('hello').description('User hello');
+        }
+      `);
+      
+      await writeFile(join(tempDir, 'version.ts'), `
+        export default function(program, context) {
+          program.command('version').description('User version');
+        }
+      `);
+
+      await writeFile(join(tempDir, 'deploy.ts'), `
+        export default function(program, context) {
+          program.command('deploy').description('Deploy command');
+        }
+      `);
+
+      // No builtinConfig provided - should load all user commands
+      await registerCommands(program, mockContext, tempDir);
+
+      const commandNames = program.commands.map(cmd => cmd.name());
+      
+      // All user commands should be loaded when no builtin config provided
+      expect(commandNames).toContain('completion');
+      expect(commandNames).toContain('hello');
+      expect(commandNames).toContain('version');
+      expect(commandNames).toContain('deploy');
+      
+      expect(commandNames).toHaveLength(4);
     });
 
     it('should register user commands with similar names but different extensions', async () => {
@@ -182,16 +301,16 @@ describe('registerCommands Built-in Exclusion', () => {
     });
 
     it('should handle JavaScript files as well as TypeScript', async () => {
-      // Create built-in commands as .js files (should still be skipped)
+      // Create built-in commands as .js files
       await writeFile(join(tempDir, 'completion.js'), `
         export default function(program, context) {
-          program.command('completion').description('Should be skipped');
+          program.command('completion').description('User completion');
         }
       `);
       
       await writeFile(join(tempDir, 'hello.js'), `
         export default function(program, context) {
-          program.command('hello').description('Should be skipped');
+          program.command('hello').description('User hello');
         }
       `);
 
@@ -202,12 +321,14 @@ describe('registerCommands Built-in Exclusion', () => {
         }
       `);
 
-      await registerCommands(program, mockContext, tempDir);
+      // Enable built-ins to test JS file skipping
+      const builtinConfig = { completion: true, hello: true, version: false };
+      await registerCommands(program, mockContext, tempDir, builtinConfig);
 
       const commandNames = program.commands.map(cmd => cmd.name());
       expect(commandNames).toContain('test');
-      expect(commandNames).not.toContain('completion');
-      expect(commandNames).not.toContain('hello');
+      expect(commandNames).not.toContain('completion'); // Should be skipped
+      expect(commandNames).not.toContain('hello');      // Should be skipped
       expect(commandNames).toHaveLength(1);
     });
   });

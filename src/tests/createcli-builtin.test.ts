@@ -26,7 +26,8 @@ describe('createCLI Built-in Commands Integration', () => {
       const cli = await createCLI({
         name: 'test-cli',
         version: '1.0.0',
-        description: 'Test CLI with default configuration'
+        description: 'Test CLI with default configuration',
+        commandsPath: '/non/existent/path' // Prevent auto-discovery for isolated testing
       });
 
       expect(cli).toBeInstanceOf(Command);
@@ -45,6 +46,7 @@ describe('createCLI Built-in Commands Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
+        commandsPath: '/non/existent/path', // Prevent auto-discovery
         builtinCommands: {
           completion: true,
           hello: true,
@@ -63,6 +65,7 @@ describe('createCLI Built-in Commands Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
+        commandsPath: '/non/existent/path', // Prevent auto-discovery
         builtinCommands: {
           completion: true,
           hello: true,
@@ -81,6 +84,7 @@ describe('createCLI Built-in Commands Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
+        commandsPath: '/non/existent/path', // Prevent auto-discovery
         builtinCommands: {
           completion: false,
           hello: false,
@@ -99,6 +103,7 @@ describe('createCLI Built-in Commands Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
+        commandsPath: '/non/existent/path', // Prevent auto-discovery
         builtinCommands: {
           completion: false,
           hello: false,
@@ -119,6 +124,7 @@ describe('createCLI Built-in Commands Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
+        commandsPath: '/non/existent/path', // Prevent auto-discovery
         builtinCommands: {
           // completion not specified - should default to true
           hello: false,
@@ -135,6 +141,7 @@ describe('createCLI Built-in Commands Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
+        commandsPath: '/non/existent/path', // Prevent auto-discovery
         builtinCommands: {
           completion: true,
           // hello not specified - should default to false
@@ -151,6 +158,7 @@ describe('createCLI Built-in Commands Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
+        commandsPath: '/non/existent/path', // Prevent auto-discovery
         builtinCommands: {
           completion: true,
           hello: false
@@ -166,7 +174,8 @@ describe('createCLI Built-in Commands Integration', () => {
       const cli = await createCLI({
         name: 'test-cli',
         version: '1.0.0',
-        description: 'Test CLI'
+        description: 'Test CLI',
+        commandsPath: '/non/existent/path' // Prevent auto-discovery
         // builtinCommands not specified - should use defaults
       });
 
@@ -236,6 +245,7 @@ describe('createCLI Built-in Commands Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
+        commandsPath: '/non/existent/path', // Prevent auto-discovery
         builtinCommands: {
           hello: true
           // completion and version should use defaults
@@ -299,6 +309,49 @@ describe('createCLI Built-in Commands Integration', () => {
       
       const commandNames = cli.commands.map(cmd => cmd.name());
       expect(commandNames).toContain('completion'); // Should have default
+    });
+  });
+
+  describe('User Command Override', () => {
+    it('should allow user commands to override built-in command names when built-ins are disabled', async () => {
+      // When built-in commands are disabled, user should be able to create their own
+      // completion.ts, hello.ts, or version.ts files without conflict
+      const cli = await createCLI({
+        name: 'test-cli',
+        version: '1.0.0',
+        description: 'Test CLI with custom commands',
+        builtinCommands: {
+          completion: false,  // Disable built-in completion
+          hello: false,      // Disable built-in hello  
+          version: false     // Disable built-in version
+        }
+      });
+
+      expect(cli).toBeInstanceOf(Command);
+      // The user's custom commands would be loaded if they existed in the commands directory
+      // This test verifies the CLI can be created without conflicts
+    });
+
+    it('should not load user commands with built-in names when built-ins are enabled', async () => {
+      // When built-in commands are enabled, user commands with same names should be skipped
+      const cli = await createCLI({
+        name: 'test-cli',
+        version: '1.0.0',
+        description: 'Test CLI with built-ins enabled',
+        builtinCommands: {
+          completion: true,   // Enable built-in completion (skip user completion.ts)
+          hello: true,       // Enable built-in hello (skip user hello.ts)
+          version: true      // Enable built-in version (skip user version.ts)
+        }
+      });
+
+      expect(cli).toBeInstanceOf(Command);
+      
+      const commandNames = cli.commands.map(cmd => cmd.name());
+      // Should have built-in commands, not user overrides
+      expect(commandNames).toContain('completion');
+      expect(commandNames).toContain('hello');
+      expect(commandNames).toContain('version');
     });
   });
 });

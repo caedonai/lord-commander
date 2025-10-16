@@ -61,7 +61,8 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
     await registerBuiltinCommands(program, context, builtinConfig);
 
     // Register user commands (auto-discover if no path specified)
-    await registerCommands(program, context, options.commandsPath);
+    // Pass builtinConfig so registerCommands knows which commands to skip
+    await registerCommands(program, context, options.commandsPath, builtinConfig);
 
     // Handle autocomplete setup if enabled
     if (options.autocomplete?.enabled !== false) {
