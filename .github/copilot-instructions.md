@@ -29,6 +29,7 @@ Essential utilities that form the foundation:
 - `errors.ts` - Error and cancellation handling
 - `createCLI.ts` - Main CLI creation and initialization
 - `registerCommands.ts` - Automatic command discovery and registration
+- `autocomplete.ts` - Shell completion support (bash, zsh, fish, PowerShell)
 
 ### Plugin Modules (`src/plugins/`)
 Extended functionality for specific use cases:
@@ -70,11 +71,19 @@ Extended functionality for specific use cases:
 - Git tag management, breaking change detection
 - Safe update application with multiple strategies (merge, overwrite, selective)
 
-### 7. Professional CLI Features
+### 7. Shell Autocomplete System
+- **Multi-shell Support**: Comprehensive tab completion for bash, zsh, fish, and PowerShell
+- **Auto-installation**: Seamless setup during CLI creation with `autoInstall: true`
+- **Command Discovery**: Tab completion for all commands, options, and arguments
+- **File Completion**: Automatic file/directory completion for command arguments
+- **Manual Control**: Built-in `completion` command for install/uninstall/generate operations
+- **Custom Logic**: Support for shell-specific customizations and completion behavior
+
+### 8. Professional CLI Features
 - Error handling with recovery suggestions
 - Automatic update notifications
-- Command aliases and shell autocomplete
-- Debug & verbose modes
+- Command aliases and advanced help formatting
+- Debug & verbose modes with structured logging
 - Dependency abstraction (no need to import commander directly)
 
 ## Command Definition Pattern
@@ -181,6 +190,38 @@ async function upgradeProject() {
 }
 ```
 
+#### Shell Autocomplete Setup
+```typescript
+import { createCLI } from "@caedonai/sdk/core";
+
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'My CLI with autocomplete',
+  autocomplete: {
+    enabled: true,        // Enable shell completion
+    autoInstall: true,    // Auto-install on first run
+    shells: ['bash', 'zsh'], // Target specific shells
+    enableFileCompletion: true // File/directory completion
+  }
+});
+```
+
+#### Manual Completion Management
+```typescript
+import { generateCompletion, installCompletion, detectShell } from "@caedonai/sdk/core";
+
+// Generate completion script
+const shell = await detectShell();
+const script = generateCompletion(program, shell);
+
+// Install completion programmatically
+const result = await installCompletion(program, {
+  shell: 'bash',
+  global: false
+});
+```
+
 #### Advanced CLI Control
 ```typescript
 import { Command, registerCommands, createLogger } from "@caedonai/sdk/core";
@@ -217,8 +258,8 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 ## Current Implementation Status
 
 ### Test Coverage & Performance
-- **Total Tests**: 93 comprehensive tests passing
-- **Test Types**: Unit tests, integration tests, tree-shaking validation
+- **Total Tests**: 121 comprehensive tests passing (28 new autocomplete tests)
+- **Test Types**: Unit tests, integration tests, tree-shaking validation, autocomplete functionality
 - **Performance**: Optimized test suite (~17s for comprehensive Git integration tests)
 - **Manual Testing**: `pnpm test-cli` for interactive development testing
 
@@ -229,7 +270,8 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 - **Full SDK**: 71KB (complete feature set)
 
 ### Module Completion Status
-- ✅ **Core**: Complete (exec, fs, prompts, logger, createCLI, registerCommands)
+- ✅ **Core**: Complete (exec, fs, prompts, logger, createCLI, registerCommands, autocomplete)
+- ✅ **Shell Autocomplete**: Complete (bash, zsh, fish, PowerShell completion with auto-install)
 - ✅ **Git Plugin**: Complete (repository operations, tagging, diffing)
 - ✅ **Updater Plugin**: Complete (version management, update planning/application)
 - ✅ **Workspace Plugin**: Complete (Nx, Lerna, Rush, Turborepo, pnpm, yarn, npm support)

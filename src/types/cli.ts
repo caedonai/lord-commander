@@ -3,6 +3,12 @@ export interface CreateCliOptions {
     version?: string;
     description?: string;
     commandsPath?: string;
+    autocomplete?: {
+        enabled?: boolean;
+        autoInstall?: boolean;
+        shells?: ('bash' | 'zsh' | 'fish' | 'powershell')[];
+        enableFileCompletion?: boolean;
+    };
 }
 
 /**

@@ -6,6 +6,7 @@ import * as prompts from './prompts.js';
 import * as fs from './fs.js';
 import * as exec from './exec.js';
 import * as git from '../plugins/git.js';
+import { detectShell, installCompletion, analyzeProgram } from './autocomplete.js';
 import { CreateCliOptions, CommandContext } from "../types/cli";
 
 
@@ -49,8 +50,47 @@ export async function createCLI(options: CreateCliOptions) {
     // Register commands (auto-discover if no path specified)
     await registerCommands(program, context, options.commandsPath);
 
+    // Handle autocomplete setup if enabled
+    if (options.autocomplete?.enabled !== false) {
+        await handleAutocompleteSetup(program, options);
+    }
+
     program.parseAsync(process.argv).catch((error) => {
         logger.error(`Error executing command: ${error.message}`);
         process.exit(1);
     });
+}
+
+/**
+ * Handle autocomplete setup during CLI initialization
+ */
+async function handleAutocompleteSetup(program: Command, options: CreateCliOptions) {
+    const autocompleteConfig = options.autocomplete || {};
+    
+    // Auto-install if requested and not already installed
+    if (autocompleteConfig.autoInstall) {
+        try {
+            const shell = await detectShell();
+            
+            // Check if completion should be installed for this shell
+            if (!autocompleteConfig.shells || autocompleteConfig.shells.includes(shell)) {
+                logger.info(`Setting up ${shell} completion...`);
+                
+                const result = await installCompletion(program, {
+                    shell,
+                    global: false // Default to user-local installation
+                });
+                
+                if (result.success && result.restartRequired) {
+                    logger.note(`Shell completion installed! Restart your shell or run: ${result.activationCommand}`);
+                }
+            }
+        } catch (error) {
+            // Silently ignore autocomplete setup errors during CLI creation
+            logger.debug(`Autocomplete setup failed: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+    
+    // Add completion context to program for command access
+    (program as any)._autocompleteContext = analyzeProgram(program);
 }

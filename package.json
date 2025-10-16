@@ -35,7 +35,7 @@
     "test-updater-comprehensive": "tsx src/tests/test-updater-comprehensive.ts"
   },
   "keywords": [],
-  "author": "",
+  "author": "fabiomarcellusdev",
   "license": "ISC",
   "packageManager": "pnpm@10.18.1",
   "dependencies": {

@@ -102,5 +102,23 @@ export {
 export { createCLI } from './createCLI.js';
 export { registerCommands } from './registerCommands.js';
 
+// Shell Autocomplete Support
+export { 
+  analyzeProgram,
+  generateCompletion,
+  generateCompletionScript,
+  generateBashCompletion,
+  generateZshCompletion,
+  generateFishCompletion,
+  generatePowerShellCompletion,
+  installCompletion,
+  uninstallCompletion,
+  detectShell,
+  type CompletionOptions,
+  type CompletionContext,
+  type CompletionResult,
+  type InstallationOptions
+} from './autocomplete.js';
+
 // Re-export Commander for advanced CLI control
 export { Command } from 'commander';
