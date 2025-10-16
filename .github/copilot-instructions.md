@@ -20,16 +20,28 @@ This is a CLI SDK framework built with TypeScript that provides a comprehensive 
 The SDK follows a modular architecture with two main layers:
 
 ### Core Modules (`src/core/`)
-Essential utilities that form the foundation:
-- `exec.ts` - Process execution wrapper (async, cancelable shell commands)
-- `fs.ts` - File system utilities (safe file operations, directory management)
-- `prompts.ts` - Interactive prompt helpers using @clack/prompts
-- `logger.ts` - Unified logging system with spinners and colors
-- `constants.ts` - Global constants and paths
-- `errors.ts` - Error and cancellation handling
-- `createCLI.ts` - Main CLI creation and initialization
+Essential utilities organized into logical subfolders:
+
+#### Foundation (`src/core/foundation/`)
+- `constants.ts` - Global constants, framework patterns, and configuration paths
+- `errors.ts` - Error classes, cancellation handling, and recovery suggestions
+
+#### Commands (`src/core/commands/`)
 - `registerCommands.ts` - Automatic command discovery and registration with duplicate detection
 - `autocomplete.ts` - Shell completion support (bash, zsh, fish, PowerShell)
+
+#### Execution (`src/core/execution/`)
+- `exec.ts` - Process execution wrapper (async, cancelable shell commands)
+- `fs.ts` - File system utilities (safe file operations, directory management)
+
+#### UI (`src/core/ui/`)
+- `logger.ts` - Unified logging system with spinners and colors
+- `prompts.ts` - Interactive prompt helpers using @clack/prompts
+- `helpFormatter.ts` - CLI help message formatting and theming
+
+#### Main (`src/core/`)
+- `createCLI.ts` - Main CLI creation and initialization
+- `index.ts` - Core module exports with tree-shaking optimization
 
 ### Plugin Modules (`src/plugins/`)
 Extended functionality for specific use cases:
@@ -145,15 +157,15 @@ The SDK systematizes these patterns found across professional CLIs:
 
 | Pattern | SDK Module | Examples |
 |---------|------------|----------|
-| File System Operations | `core/fs.ts` | Copy templates, ensure directories, clean temp files |
-| Process Execution | `core/exec.ts` | `git init`, `npm install`, build commands |
-| Interactive Setup | `core/prompts.ts` | Project name, package manager selection |
-| Shell Completion | `core/autocomplete.ts` | Tab completion, status checking, multi-shell support |
+| File System Operations | `core/execution/fs.ts` | Copy templates, ensure directories, clean temp files |
+| Process Execution | `core/execution/exec.ts` | `git init`, `npm install`, build commands |
+| Interactive Setup | `core/ui/prompts.ts` | Project name, package manager selection |
+| Shell Completion | `core/commands/autocomplete.ts` | Tab completion, status checking, multi-shell support |
 | Structured Tasks | Command modules | `cloneRepo()`, `setupEnv()`, `installDeps()` |
 | Environment Management | `plugins/config-loader.ts` | Auto-create `.env.local` from templates |
 | Git Operations | `plugins/git.ts` | Initialize repos, commit, diff between versions |
-| Error Handling | `core/errors.ts` | Graceful exits, user-friendly messages |
-| Command Conflict Detection | `core/registerCommands.ts` | Prevent duplicate commands, detailed error messages |
+| Error Handling | `core/foundation/errors.ts` | Graceful exits, user-friendly messages |
+| Command Conflict Detection | `core/commands/registerCommands.ts` | Prevent duplicate commands, detailed error messages |
 
 ## Development Workflows
 
@@ -172,16 +184,28 @@ pnpm install
 ```
 
 ### Adding New Core Modules
-1. Create module in `src/core/` or `src/plugins/`
+1. Create module in appropriate `src/core/` subfolder or `src/plugins/`
+   - **Foundation**: Constants, errors, shared infrastructure (`src/core/foundation/`)
+   - **Commands**: Command registration, autocomplete (`src/core/commands/`)
+   - **Execution**: Process execution, file system (`src/core/execution/`)
+   - **UI**: Logging, prompts, formatting (`src/core/ui/`)
 2. Export utilities following established patterns
-3. Add to main SDK exports
-4. Update types in `src/types/`
+3. Add to relevant subfolder `index.ts` using `export * from './module.js'`
+4. Update main `src/core/index.ts` if needed (usually auto-exported via subfolder)
+5. Update types in `src/types/`
+6. **Update tree-shaking tests**: Add new exports to `EXPECTED_EXPORTS` in `tree-shaking.test.ts`
 
 ### Adding New Commands
 1. Create file in `src/commands/`
 2. Export default function with CommandContext
 3. Use SDK utilities from context
 4. Commands auto-register via file system scanning
+
+### Test Maintenance Best Practices
+- **Tree-shaking Tests**: Use data-driven approach with `EXPECTED_EXPORTS` configuration
+- **Export Validation**: Run `pnpm test tree-shaking` when adding new exports
+- **Module Boundaries**: Ensure core/plugin separation is maintained in tests
+- **Test Structure**: Prefer configuration-driven tests over hardcoded expect statements
 
 ### SDK Usage Examples
 
@@ -366,10 +390,11 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 ## Current Implementation Status
 
 ### Test Coverage & Performance
-- **Total Tests**: 185 comprehensive tests passing (6 new duplicate detection tests, 33 autocomplete tests, 14 built-in exclusion tests)
-- **Test Types**: Unit tests, integration tests, tree-shaking validation, autocomplete functionality, duplicate detection, conflict resolution
+- **Total Tests**: 187 comprehensive tests passing (10 improved tree-shaking tests, 6 duplicate detection tests, 33 autocomplete tests, 14 built-in exclusion tests)
+- **Test Types**: Unit tests, integration tests, data-driven tree-shaking validation, autocomplete functionality, duplicate detection, conflict resolution
 - **Performance**: Optimized test suite (~18s for comprehensive Git integration tests)
 - **Manual Testing**: `pnpm test-cli` for interactive development testing
+- **Tree-shaking Tests**: Data-driven approach with 90% reduction in test boilerplate
 
 ### Bundle Optimization Results
 - **Tree-shaking**: 97% size reduction for selective imports
@@ -385,11 +410,28 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 - ✅ **Git Plugin**: Complete (repository operations, tagging, diffing)
 - ✅ **Updater Plugin**: Complete (version management, update planning/application)
 - ✅ **Workspace Plugin**: Complete (Nx, Lerna, Rush, Turborepo, pnpm, yarn, npm support)
-- ✅ **Tree-shaking**: Complete (optimal bundle splitting and selective imports)
+- ✅ **Tree-shaking**: Complete (optimal bundle splitting, selective imports, data-driven test validation)
 
 ### Recent Major Enhancements
 
-#### Duplicate Detection & Conflict Resolution System (Latest)
+#### Data-Driven Tree-shaking Test System (Latest)
+- **Maintainable Configuration**: Replaced 129 lines of hardcoded expect statements with organized data structure
+- **90% Boilerplate Reduction**: Tests generated dynamically from `EXPECTED_EXPORTS` configuration object
+- **Accurate Export Validation**: Tests match exactly what's exported from built modules (71 core, 37 plugin exports)
+- **Category Organization**: Exports grouped by logical categories (constants, UI, CLI, autocomplete, etc.)
+- **Better Error Messages**: Each test includes category context and proper type checking
+- **Future-proof Scalability**: Adding new exports only requires updating the data structure
+- **Comprehensive Coverage**: Module boundary validation, tree-shaking compatibility, selective imports
+
+#### Core Module Reorganization
+- **Logical Folder Structure**: Reorganized `src/core/` into foundation/, commands/, execution/, and ui/ subfolders
+- **Improved Scalability**: Clear separation of concerns for 30+ future modules
+- **Maintained Tree-shaking**: `export *` patterns preserve optimal bundling performance
+- **Updated Import Paths**: All 25+ files updated to use new folder structure
+- **Index File Strategy**: Each subfolder has its own index.ts for clean exports
+- **Backward Compatibility**: External API unchanged, only internal organization improved
+
+#### Duplicate Detection & Conflict Resolution System
 - **Map-based Tracking**: Comprehensive command registration state management
 - **Smart Conflict Detection**: Differentiates between same-path duplicates (safe) vs cross-path conflicts (error)
 - **Detailed Error Messages**: Shows conflicting file paths, source directories, and resolution guidance
