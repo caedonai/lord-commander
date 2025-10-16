@@ -733,7 +733,7 @@ async function logUpdatePlan(plan: UpdatePlan): Promise<void> {
  */
 export async function getLatestTag(cwd: string = process.cwd()): Promise<string | null> {
   try {
-    const result = await exec('git', ['describe', '--tags', '--abbrev=0'], { cwd });
+    const result = await exec('git', ['describe', '--tags', '--abbrev=0'], { cwd, silent: true });
     return result.stdout.trim() || null;
   } catch {
     return null;
@@ -769,7 +769,7 @@ export async function getAllTags(cwd: string = process.cwd()): Promise<string[]>
  */
 export async function tagExists(tag: string, cwd: string = process.cwd()): Promise<boolean> {
   try {
-    await exec('git', ['rev-parse', `refs/tags/${tag}`], { cwd });
+    await exec('git', ['rev-parse', `refs/tags/${tag}`], { cwd, silent: true });
     return true;
   } catch {
     return false;
