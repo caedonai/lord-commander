@@ -21,7 +21,7 @@ import {
   getWorkspaceSummary,
   type PackageFilter
 } from '../plugins/workspace.js';
-import { writeFile, ensureDir } from '../core/fs.js';
+import { writeFile, ensureDir } from '../core/execution/fs.js';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import os from 'node:os';

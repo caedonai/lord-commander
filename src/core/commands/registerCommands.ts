@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
-import type { CommandContext } from '../types/cli';
+import type { CommandContext } from '../../types/cli';
 
 // Track registered commands and their sources for conflict detection
 const registeredCommands = new Map<string, { source: string; path: string }>();

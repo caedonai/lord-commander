@@ -6,8 +6,8 @@
  */
 
 import { Command } from 'commander';
-import { exec } from './exec.js';
-import { createLogger } from './logger.js';
+import { exec } from '../execution/exec.js';
+import { createLogger } from '../ui/logger.js';
 
 export interface CompletionOptions {
   /**

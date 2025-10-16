@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Command } from 'commander';
-import { registerCommands, resetCommandTracking } from '../core/registerCommands.js';
+import { registerCommands, resetCommandTracking } from '../core/commands/registerCommands.js';
 import { writeFile, mkdir, rm } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';

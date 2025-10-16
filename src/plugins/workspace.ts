@@ -9,9 +9,9 @@
  * - Change detection and affected package identification
  */
 
-import { readFile, exists, readDir } from '../core/fs.js';
-import { CLIError } from '../core/errors.js';
-import { createLogger } from '../core/logger.js';
+import { readFile, exists, readDir } from '../core/execution/fs.js';
+import { CLIError } from '../core/foundation/errors.js';
+import { createLogger } from '../core/ui/logger.js';
 import path from 'node:path';
 
 const workspaceLogger = createLogger({ prefix: 'workspace' });
@@ -978,7 +978,7 @@ export async function runScript(
   }
 
   // Import exec here to avoid circular dependencies
-  const { exec } = await import('../core/exec.js');
+  const { exec } = await import('../core/execution/exec.js');
   
   let completed = 0;
   const total = packagesWithScript.length;
@@ -1042,7 +1042,7 @@ export async function installDependencies(
   packageManager: PackageManager = 'npm',
   options: BatchOperationOptions = {}
 ): Promise<Map<string, { success: boolean; output?: string; error?: Error }>> {
-  const { exec } = await import('../core/exec.js');
+  const { exec } = await import('../core/execution/exec.js');
   const results = new Map<string, { success: boolean; output?: string; error?: Error }>();
   
   let filteredPackages = packages;
@@ -1111,7 +1111,7 @@ export async function getAffectedPackages(
     maxDepth = Infinity
   } = options;
 
-  const { exec } = await import('../core/exec.js');
+  const { exec } = await import('../core/execution/exec.js');
   const affectedPackages = new Set<string>();
   
   try {

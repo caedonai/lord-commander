@@ -11,7 +11,7 @@
  * import { exec } from '@caedonai/lord-commander/core/exec'; 
  */
 
-// Explicit named exports for better tree-shaking
+// Foundation utilities - Core infrastructure
 export { 
   PACKAGE_MANAGER_COMMANDS, 
   DEFAULT_IGNORE_PATTERNS,
@@ -25,7 +25,7 @@ export {
   BRANDING,
   type PackageManager,
   type Framework 
-} from './constants.js';
+} from './foundation/constants.js';
 
 export { 
   CLIError, 
@@ -43,14 +43,32 @@ export {
   getRecoverySuggestion,
   withErrorHandling,
   setupGlobalErrorHandlers
-} from './errors.js';
+} from './foundation/errors.js';
 
+// User interface utilities
 export { 
   createLogger,
   type Logger,
   type LoggerOptions 
-} from './logger.js';
+} from './ui/logger.js';
 
+export { 
+  confirm,
+  select,
+  multiselect,
+  text,
+  password,
+  spinner,
+  outro,
+  intro,
+  note,
+  cancel,
+  log,
+  type SelectOption,
+  type MultiSelectOption
+} from './ui/prompts.js';
+
+// Execution utilities  
 export { 
   exists,
   stat,
@@ -72,7 +90,7 @@ export {
   type FileOperationOptions,
   type CopyOptions,
   type DirectoryEntry
-} from './fs.js';
+} from './execution/fs.js';
 
 export { 
   exec,
@@ -80,27 +98,11 @@ export {
   execStream,
   type ExecResult,
   type ExecOptions
-} from './exec.js';
-
-export { 
-  confirm,
-  select,
-  multiselect,
-  text,
-  password,
-  spinner,
-  outro,
-  intro,
-  note,
-  cancel,
-  log,
-  type SelectOption,
-  type MultiSelectOption
-} from './prompts.js';
+} from './execution/exec.js';
 
 // CLI Creation and Command Registration
 export { createCLI, registerBuiltinCommands } from './createCLI.js';
-export { registerCommands } from './registerCommands.js';
+export { registerCommands, resetCommandTracking } from './commands/registerCommands.js';
 
 // Shell Autocomplete Support
 export { 
@@ -120,7 +122,7 @@ export {
   type CompletionResult,
   type InstallationOptions,
   type CompletionStatus
-} from './autocomplete.js';
+} from './commands/autocomplete.js';
 
 // Re-export Commander for advanced CLI control
 export { Command } from 'commander';

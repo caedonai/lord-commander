@@ -9,9 +9,9 @@
 // npm install execa@^8.0.1
 import { execa, execaSync } from 'execa';
 import type { ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa';
-import { ProcessError } from './errors';
-import { createLogger } from './logger';
-import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from './constants';
+import { ProcessError } from '../foundation/errors.js';
+import { createLogger } from '../ui/logger.js';
+import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/constants.js';
 
 // Create a logger instance for internal exec operations
 const execLogger = createLogger({ prefix: 'exec' });

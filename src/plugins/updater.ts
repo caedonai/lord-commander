@@ -9,10 +9,10 @@
  */
 
 import * as git from './git.js';
-import { exec } from '../core/exec.js';
-import { ensureDir, copyFile, exists } from '../core/fs.js';
-import { CLIError } from '../core/errors.js';
-import { logger } from '../core/logger.js';
+import { exec } from '../core/execution/exec.js';
+import { ensureDir, copyFile, exists } from '../core/execution/fs.js';
+import { CLIError } from '../core/foundation/errors.js';
+import { logger } from '../core/ui/logger.js';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 

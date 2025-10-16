@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { CommandContext } from '../types/cli.js';
-import { generateCompletion, installCompletion, uninstallCompletion, detectShell, checkCompletionStatus } from '../core/autocomplete.js';
+import { generateCompletion, installCompletion, uninstallCompletion, detectShell, checkCompletionStatus } from '../core/commands/autocomplete.js';
 
 export default function(program: Command, context: CommandContext) {
   const { logger } = context;

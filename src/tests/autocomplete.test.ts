@@ -9,7 +9,7 @@ import {
   uninstallCompletion,
   checkCompletionStatus,
   CompletionContext 
-} from '../core/autocomplete.js';
+} from '../core/commands/autocomplete.js';
 
 describe('Shell Autocomplete', () => {
   let testProgram: Command;

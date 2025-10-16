@@ -1,12 +1,12 @@
 import { Command } from "commander";
-import { registerCommands } from './registerCommands.js';
+import { registerCommands } from './commands/registerCommands.js';
 import resolveCliDefaults, { loadConfig } from '../utils/config.js';
-import { logger } from './logger.js';
-import * as prompts from './prompts.js';
-import * as fs from './fs.js';
-import * as exec from './exec.js';
+import { logger } from './ui/logger.js';
+import * as prompts from './ui/prompts.js';
+import * as fs from './execution/fs.js';
+import * as exec from './execution/exec.js';
 import * as git from '../plugins/git.js';
-import { detectShell, installCompletion, analyzeProgram } from './autocomplete.js';
+import { detectShell, installCompletion, analyzeProgram } from './commands/autocomplete.js';
 import { CreateCliOptions, CommandContext } from "../types/cli";
 
 

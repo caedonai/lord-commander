@@ -14,8 +14,8 @@ import {
   note as clackNote,
   spinner as clackSpinner
 } from '@clack/prompts';
-import { BRANDING } from './constants';
-import { formatError } from './errors';
+import { BRANDING } from '../foundation/constants.js';
+import { formatError } from '../foundation/errors.js';
 
 // Define Spinner type based on @clack/prompts return type
 type Spinner = ReturnType<typeof clackSpinner>;

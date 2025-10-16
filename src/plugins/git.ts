@@ -8,8 +8,8 @@
  * - Utility functions for version control workflows
  */
 
-import { exec, execStream } from '../core/exec.js';
-import { CLIError } from '../core/errors.js';
+import { exec, execStream } from '../core/execution/exec.js';
+import { CLIError } from '../core/foundation/errors.js';
 
 export interface GitStatus {
   branch: string;

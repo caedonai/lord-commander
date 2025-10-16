@@ -1,7 +1,7 @@
 import * as clack from '@clack/prompts';
 import chalk from 'chalk';
 import figures from 'figures';
-import { CLIError } from './errors.js';
+import { CLIError } from '../foundation/errors.js';
 
 export type PromptTheme = {
   prefix: string;

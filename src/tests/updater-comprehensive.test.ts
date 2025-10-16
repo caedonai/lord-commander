@@ -7,8 +7,8 @@
 
 import { describe, it, expect, beforeEach, afterEach, afterAll } from 'vitest';
 import { parseVersion, getVersionDiff, createUpdatePlan, applyUpdate, getAllTags, getLatestTag, tagExists, createTag } from '../plugins/updater.js';
-import { exec } from '../core/exec.js';
-import { writeFile, readFile, ensureDir } from '../core/fs.js';
+import { exec } from '../core/execution/exec.js';
+import { writeFile, readFile, ensureDir } from '../core/execution/fs.js';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import os from 'node:os';
