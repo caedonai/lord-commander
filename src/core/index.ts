@@ -114,10 +114,12 @@ export {
   installCompletion,
   uninstallCompletion,
   detectShell,
+  checkCompletionStatus,
   type CompletionOptions,
   type CompletionContext,
   type CompletionResult,
-  type InstallationOptions
+  type InstallationOptions,
+  type CompletionStatus
 } from './autocomplete.js';
 
 // Re-export Commander for advanced CLI control

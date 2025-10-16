@@ -421,6 +421,19 @@ export interface InstallationOptions {
 }
 
 /**
+ * Status information for completion installation
+ */
+export interface CompletionStatus {
+  shell: 'bash' | 'zsh' | 'fish' | 'powershell';
+  cliName: string;
+  installed: boolean;
+  installationPath?: string;
+  installationType?: 'global' | 'local';
+  isActive?: boolean;
+  errorMessage?: string;
+}
+
+/**
  * Generate completion script (alias for generateCompletionScript)
  */
 export function generateCompletion(
@@ -616,6 +629,94 @@ export async function uninstallCompletion(
       error: `Failed to uninstall completion: ${error}`,
       restartRequired: false
     };
+  }
+}
+
+/**
+ * Check the installation status of shell completion
+ */
+export async function checkCompletionStatus(
+  program: Command,
+  shell?: 'bash' | 'zsh' | 'fish' | 'powershell'
+): Promise<CompletionStatus> {
+  const context = analyzeProgram(program);
+  const { cliName } = context;
+  
+  // Detect shell if not specified
+  if (!shell) {
+    shell = await detectShell();
+  }
+
+  const status: CompletionStatus = {
+    shell,
+    cliName,
+    installed: false
+  };
+
+  try {
+    let possiblePaths: Array<{ path: string; type: 'global' | 'local' }> = [];
+
+    switch (shell) {
+      case 'bash':
+        possiblePaths = [
+          { path: `/etc/bash_completion.d/${cliName}`, type: 'global' },
+          { path: `${process.env.HOME}/.local/share/bash-completion/completions/${cliName}`, type: 'local' },
+          { path: `${process.env.HOME}/.bash_completion.d/${cliName}`, type: 'local' }
+        ];
+        break;
+
+      case 'zsh':
+        possiblePaths = [
+          { path: `/usr/local/share/zsh/site-functions/_${cliName}`, type: 'global' },
+          { path: `/usr/share/zsh/site-functions/_${cliName}`, type: 'global' },
+          { path: `${process.env.HOME}/.zsh/completions/_${cliName}`, type: 'local' },
+          { path: `${process.env.HOME}/.zsh/site-functions/_${cliName}`, type: 'local' }
+        ];
+        break;
+
+      case 'fish':
+        possiblePaths = [
+          { path: `/usr/share/fish/completions/${cliName}.fish`, type: 'global' },
+          { path: `${process.env.HOME}/.config/fish/completions/${cliName}.fish`, type: 'local' }
+        ];
+        break;
+
+      case 'powershell':
+        status.errorMessage = 'PowerShell completion status cannot be automatically detected (requires manual profile inspection)';
+        return status;
+
+      default:
+        status.errorMessage = `Unsupported shell: ${shell}`;
+        return status;
+    }
+
+    // Check each possible installation path
+    const fs = await import('node:fs/promises');
+    for (const { path, type } of possiblePaths) {
+      try {
+        await fs.access(path);
+        status.installed = true;
+        status.installationPath = path;
+        status.installationType = type;
+        
+        // Try to determine if it's active by checking file content
+        try {
+          const content = await fs.readFile(path, 'utf-8');
+          status.isActive = content.includes(cliName);
+        } catch {
+          status.isActive = undefined; // Cannot determine
+        }
+        
+        break; // Found installation, stop checking
+      } catch {
+        // File doesn't exist, continue checking
+      }
+    }
+
+    return status;
+  } catch (error) {
+    status.errorMessage = `Failed to check completion status: ${error}`;
+    return status;
   }
 }
 

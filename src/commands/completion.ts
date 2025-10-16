@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { CommandContext } from '../types/cli.js';
-import { generateCompletion, installCompletion, uninstallCompletion, detectShell } from '../core/autocomplete.js';
+import { generateCompletion, installCompletion, uninstallCompletion, detectShell, checkCompletionStatus } from '../core/autocomplete.js';
 
 export default function(program: Command, context: CommandContext) {
   const { logger } = context;
@@ -102,16 +102,56 @@ export default function(program: Command, context: CommandContext) {
   completionCmd
     .command('status')
     .description('Show completion installation status')
-    .action(async () => {
+    .option('-s, --shell <shell>', 'Check status for specific shell (bash, zsh, fish, powershell)')
+    .action(async (options) => {
       logger.intro('Checking completion status...');
       
       try {
-        const shell = await detectShell();
-        logger.info(`Current shell: ${shell}`);
+        const detectedShell = await detectShell();
+        const targetShell = options.shell || detectedShell;
         
-        // Check if completion is installed
-        // This would require implementing a status check in autocomplete.ts
-        logger.note('Status check functionality coming soon...');
+        const status = await checkCompletionStatus(program, targetShell as any);
+        
+        // Display basic information
+        logger.info(`CLI Name: ${status.cliName}`);
+        logger.info(`Detected Shell: ${detectedShell}`);
+        if (options.shell && options.shell !== detectedShell) {
+          logger.info(`Checking Shell: ${status.shell} (specified)`);
+        } else {
+          logger.info(`Checking Shell: ${status.shell}`);
+        }
+        
+        // Display installation status
+        if (status.installed) {
+          logger.success('✓ Completion is installed');
+          logger.info(`  Installation Path: ${status.installationPath}`);
+          logger.info(`  Installation Type: ${status.installationType}`);
+          
+          if (status.isActive === true) {
+            logger.success('  Status: Active and working');
+          } else if (status.isActive === false) {
+            logger.warn('  Status: Installed but may not be active');
+          } else {
+            logger.note('  Status: Cannot determine if active (manual verification needed)');
+          }
+        } else {
+          logger.warn('✗ Completion is not installed');
+          logger.note('Run `completion install` to set up shell completion');
+        }
+        
+        // Show error message if any
+        if (status.errorMessage) {
+          logger.warn(`Note: ${status.errorMessage}`);
+        }
+        
+        // Provide helpful next steps
+        if (!status.installed) {
+          logger.outro('To install completion, run: completion install');
+        } else if (status.isActive === false) {
+          logger.outro('Completion installed but may need shell restart. Try: exec $SHELL');
+        } else {
+          logger.outro('Completion status check complete');
+        }
       } catch (error) {
         logger.error(`Failed to check status: ${error instanceof Error ? error.message : String(error)}`);
       }

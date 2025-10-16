@@ -18,6 +18,13 @@ describe('Tree-shaking Tests', () => {
       expect(coreModule.registerCommands).toBeDefined();
       expect(coreModule.Command).toBeDefined();
       
+      // Test autocomplete functions are available
+      expect(coreModule.generateCompletion).toBeDefined();
+      expect(coreModule.installCompletion).toBeDefined();
+      expect(coreModule.uninstallCompletion).toBeDefined();
+      expect(coreModule.checkCompletionStatus).toBeDefined();
+      expect(coreModule.detectShell).toBeDefined();
+      
       // Test constants are available
       expect(coreModule.PACKAGE_MANAGER_COMMANDS).toBeDefined();
       expect(coreModule.DEFAULT_IGNORE_PATTERNS).toBeDefined();

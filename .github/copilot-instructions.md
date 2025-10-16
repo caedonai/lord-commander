@@ -37,6 +37,11 @@ Extended functionality for specific use cases:
 - `updater.ts` - Version management and update system (semver, diffs, plans, application)
 - `workspace.ts` - Monorepo workspace utilities (Nx, Lerna, Rush, pnpm, yarn workspaces)
 
+### Command Modules (`src/commands/`)
+Built-in commands that demonstrate SDK capabilities:
+- `hello.ts` - Simple example command showcasing basic patterns
+- `completion.ts` - Shell completion management (install, uninstall, generate, status)
+
 ## Key SDK Features
 
 ### 1. Tree-shaking Optimization
@@ -76,7 +81,8 @@ Extended functionality for specific use cases:
 - **Auto-installation**: Seamless setup during CLI creation with `autoInstall: true`
 - **Command Discovery**: Tab completion for all commands, options, and arguments
 - **File Completion**: Automatic file/directory completion for command arguments
-- **Manual Control**: Built-in `completion` command for install/uninstall/generate operations
+- **Manual Control**: Built-in `completion` command for install/uninstall/generate/status operations
+- **Status Monitoring**: Real-time completion installation status checking with detailed diagnostics
 - **Custom Logic**: Support for shell-specific customizations and completion behavior
 
 ### 8. Professional CLI Features
@@ -128,6 +134,7 @@ The SDK systematizes these patterns found across professional CLIs:
 | File System Operations | `core/fs.ts` | Copy templates, ensure directories, clean temp files |
 | Process Execution | `core/exec.ts` | `git init`, `npm install`, build commands |
 | Interactive Setup | `core/prompts.ts` | Project name, package manager selection |
+| Shell Completion | `core/autocomplete.ts` | Tab completion, status checking, multi-shell support |
 | Structured Tasks | Command modules | `cloneRepo()`, `setupEnv()`, `installDeps()` |
 | Environment Management | `plugins/config-loader.ts` | Auto-create `.env.local` from templates |
 | Git Operations | `plugins/git.ts` | Initialize repos, commit, diff between versions |
@@ -209,7 +216,7 @@ await createCLI({
 
 #### Manual Completion Management
 ```typescript
-import { generateCompletion, installCompletion, detectShell } from "@caedonai/sdk/core";
+import { generateCompletion, installCompletion, detectShell, checkCompletionStatus } from "@caedonai/sdk/core";
 
 // Generate completion script
 const shell = await detectShell();
@@ -220,6 +227,29 @@ const result = await installCompletion(program, {
   shell: 'bash',
   global: false
 });
+
+// Check installation status
+const status = await checkCompletionStatus(program, 'bash');
+console.log(`Installed: ${status.installed}, Path: ${status.installationPath}`);
+```
+
+#### CLI Completion Commands
+```bash
+# Install completion for current shell
+my-cli completion install
+
+# Install completion globally
+my-cli completion install --global
+
+# Generate completion script for manual installation
+my-cli completion generate --shell zsh --output ~/.zshrc
+
+# Check completion status
+my-cli completion status
+my-cli completion status --shell bash
+
+# Uninstall completion
+my-cli completion uninstall
 ```
 
 #### Advanced CLI Control
@@ -258,7 +288,7 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 ## Current Implementation Status
 
 ### Test Coverage & Performance
-- **Total Tests**: 121 comprehensive tests passing (28 new autocomplete tests)
+- **Total Tests**: 126 comprehensive tests passing (33 new autocomplete tests)
 - **Test Types**: Unit tests, integration tests, tree-shaking validation, autocomplete functionality
 - **Performance**: Optimized test suite (~17s for comprehensive Git integration tests)
 - **Manual Testing**: `pnpm test-cli` for interactive development testing

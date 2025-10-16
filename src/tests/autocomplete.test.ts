@@ -7,6 +7,7 @@ import {
   detectShell,
   installCompletion,
   uninstallCompletion,
+  checkCompletionStatus,
   CompletionContext 
 } from '../core/autocomplete.js';
 
@@ -237,6 +238,49 @@ describe('Shell Autocomplete', () => {
       
       expect(result.success).toBe(false);
       expect(result.error).toContain('Unsupported shell: unsupported');
+    });
+  });
+
+  describe('checkCompletionStatus', () => {
+    it('should check status for bash shell', async () => {
+      const status = await checkCompletionStatus(testProgram, 'bash');
+      
+      expect(status.shell).toBe('bash');
+      expect(status.cliName).toBe('test-cli');
+      expect(typeof status.installed).toBe('boolean');
+    });
+
+    it('should check status for zsh shell', async () => {
+      const status = await checkCompletionStatus(testProgram, 'zsh');
+      
+      expect(status.shell).toBe('zsh');
+      expect(status.cliName).toBe('test-cli');
+      expect(typeof status.installed).toBe('boolean');
+    });
+
+    it('should check status for fish shell', async () => {
+      const status = await checkCompletionStatus(testProgram, 'fish');
+      
+      expect(status.shell).toBe('fish');
+      expect(status.cliName).toBe('test-cli');
+      expect(typeof status.installed).toBe('boolean');
+    });
+
+    it('should handle PowerShell with appropriate message', async () => {
+      const status = await checkCompletionStatus(testProgram, 'powershell');
+      
+      expect(status.shell).toBe('powershell');
+      expect(status.cliName).toBe('test-cli');
+      expect(status.installed).toBe(false);
+      expect(status.errorMessage).toContain('PowerShell completion status cannot be automatically detected');
+    });
+
+    it('should detect shell automatically if not specified', async () => {
+      const status = await checkCompletionStatus(testProgram);
+      
+      expect(status.shell).toBeDefined();
+      expect(status.cliName).toBe('test-cli');
+      expect(['bash', 'zsh', 'fish', 'powershell']).toContain(status.shell);
     });
   });
 
