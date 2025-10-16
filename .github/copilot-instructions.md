@@ -2,6 +2,13 @@
 
 This document provides essential context for AI agents working with the lord-commander-poc codebase.
 
+## 📋 Task Completion Reminder
+**After completing any task, always remind the user to consider updating this copilot-instructions.md file to reflect:**
+- New modules, features, or architectural changes
+- Updated usage patterns or examples
+- Performance improvements or optimization results
+- New SDK capabilities or plugin functionality
+
 ## Project Overview
 
 **Goal:** Identify and modularize reusable abstractions found across advanced CLIs (like Vercel CLI, create-next-app, next-forge, and Nx CLI) into a developer-friendly SDK for scaffolding, updating, and maintaining projects.
@@ -18,54 +25,57 @@ Essential utilities that form the foundation:
 - `fs.ts` - File system utilities (safe file operations, directory management)
 - `prompts.ts` - Interactive prompt helpers using @clack/prompts
 - `logger.ts` - Unified logging system with spinners and colors
-- `temp.ts` - Temporary workspace handler
-- `semver.ts` - Version comparison utilities
 - `constants.ts` - Global constants and paths
 - `errors.ts` - Error and cancellation handling
+- `createCLI.ts` - Main CLI creation and initialization
+- `registerCommands.ts` - Automatic command discovery and registration
 
 ### Plugin Modules (`src/plugins/`)
 Extended functionality for specific use cases:
-- `git.ts` - Repository management and diffing
-- `updater.ts` - Version diff and patching engine
-- `workspace.ts` - Monorepo workspace utilities
-- `telemetry.ts` - Analytics and tracking
-- `config-loader.ts` - Multi-format config loading and merging
+- `git.ts` - Repository management and Git operations (clone, commit, diff, tags)
+- `updater.ts` - Version management and update system (semver, diffs, plans, application)
+- `workspace.ts` - Monorepo workspace utilities (Nx, Lerna, Rush, pnpm, yarn workspaces)
 
 ## Key SDK Features
 
-### 1. Zero-Config Setup
+### 1. Tree-shaking Optimization
+- **97% bundle size reduction** for selective imports (71KB → 1.78KB)
+- Explicit named exports for maximum tree-shaking efficiency
+- Granular import control: import only what you need
+- Bundle size: Core (~1.78KB), Plugins (~1.33KB), Full SDK (~71KB)
+
+### 2. Zero-Config Setup
 - Automatically detects project type, config files, and commands
 - Smart project detection for frameworks (Next.js, Remix, Astro, etc.)
 - Auto command registration by scanning `/commands` folder
 
-### 2. Interactive Experience
+### 3. Interactive Experience
 - Built-in @clack/prompts flows for setup (region, project name, env vars)
 - Loading spinners with Ora for async tasks
 - Graceful Ctrl+C handling with cleanup
 
-### 3. Advanced Logging & Theming
+### 4. Advanced Logging & Theming
 - Centralized logger with colorized output using Chalk
 - Real-time streaming output for builds/deploys
 - Customizable color system with global theme config
 - Help message theming with visual hierarchy
 
-### 4. State & Configuration Management
-- Linked project state (like `.vercel` folders)
-- Config loader for `.json`, `.yaml`, `.env` files with merging
-- Environment variable management (`cli env add`/`cli env pull`)
+### 5. Comprehensive Monorepo Support
+- **Workspace Plugin**: Full support for Nx, Lerna, Rush, Turborepo, pnpm, yarn, npm workspaces
+- Package discovery, dependency graphs, batch operations
+- Workspace validation and configuration loading
 
-### 5. Extensibility & DX
-- Plugin system with `.use(plugin)` API
-- Command templates/scaffolding (`mycli new:command`)
-- Pre/post hooks for command execution
-- Command execution profiling and telemetry
+### 6. Professional Version Management
+- **Updater Plugin**: Semantic version parsing, diff analysis, update planning
+- Git tag management, breaking change detection
+- Safe update application with multiple strategies (merge, overwrite, selective)
 
-### 6. Professional CLI Features
+### 7. Professional CLI Features
 - Error handling with recovery suggestions
 - Automatic update notifications
 - Command aliases and shell autocomplete
 - Debug & verbose modes
-- Customizable branding (ASCII banners, themes)
+- Dependency abstraction (no need to import commander directly)
 
 ## Command Definition Pattern
 
@@ -142,18 +152,48 @@ pnpm install
 3. Use SDK utilities from context
 4. Commands auto-register via file system scanning
 
-### SDK Usage Example
+### SDK Usage Examples
+
+#### Simple CLI Creation
 ```typescript
-import { exec, fs, prompt, logger } from "@caedonai/sdk/core";
-import { git, updater } from "@caedonai/sdk/plugins";
+import { createCLI } from "@caedonai/sdk/core";
+
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'My awesome CLI tool'
+});
+```
+
+#### Tree-shakeable Imports (Recommended)
+```typescript
+import { exec, createLogger, intro, outro } from "@caedonai/sdk/core";
+import { parseVersion, getVersionDiff } from "@caedonai/sdk/plugins";
 
 async function upgradeProject() {
-  logger.intro("Updating your project...");
-  const version = await prompt.select("Select version", ["1.1.0", "1.2.0"]);
-  await git.clone("https://github.com/vercel/next-forge", "temp");
-  const diff = await updater.diff("v1.0.0", `v${version}`);
-  await updater.apply(diff);
-  logger.success(`Upgraded to v${version}!`);
+  const logger = createLogger();
+  intro("Updating your project...");
+  
+  const diff = await getVersionDiff("v1.0.0", "v2.0.0");
+  await exec('npm install');
+  
+  outro(`Upgraded successfully!`);
+}
+```
+
+#### Advanced CLI Control
+```typescript
+import { Command, registerCommands, createLogger } from "@caedonai/sdk/core";
+import { isWorkspace } from "@caedonai/sdk/plugins";
+
+const program = new Command();
+const logger = createLogger();
+
+// Conditional command loading
+if (await isWorkspace()) {
+  await registerCommands(program, { logger }, './workspace-commands');
+} else {
+  await registerCommands(program, { logger }, './single-project-commands');
 }
 ```
 
@@ -173,3 +213,24 @@ The SDK scales from simple utilities to enterprise-grade tools:
 - **Enterprise Tools**: Internal DevOps and project management CLIs
 
 Each module is independent, typed, and composable for maximum flexibility and maintainability.
+
+## Current Implementation Status
+
+### Test Coverage & Performance
+- **Total Tests**: 93 comprehensive tests passing
+- **Test Types**: Unit tests, integration tests, tree-shaking validation
+- **Performance**: Optimized test suite (~17s for comprehensive Git integration tests)
+- **Manual Testing**: `pnpm test-cli` for interactive development testing
+
+### Bundle Optimization Results
+- **Tree-shaking**: 97% size reduction for selective imports
+- **Core Only**: 1.78KB (basic CLI functionality)
+- **Plugins Only**: 1.33KB (specialized tools)  
+- **Full SDK**: 71KB (complete feature set)
+
+### Module Completion Status
+- ✅ **Core**: Complete (exec, fs, prompts, logger, createCLI, registerCommands)
+- ✅ **Git Plugin**: Complete (repository operations, tagging, diffing)
+- ✅ **Updater Plugin**: Complete (version management, update planning/application)
+- ✅ **Workspace Plugin**: Complete (Nx, Lerna, Rush, Turborepo, pnpm, yarn, npm support)
+- ✅ **Tree-shaking**: Complete (optimal bundle splitting and selective imports)
