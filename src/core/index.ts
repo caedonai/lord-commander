@@ -101,3 +101,6 @@ export {
 // CLI Creation and Command Registration
 export { createCLI } from './createCLI.js';
 export { registerCommands } from './registerCommands.js';
+
+// Re-export Commander for advanced CLI control
+export { Command } from 'commander';

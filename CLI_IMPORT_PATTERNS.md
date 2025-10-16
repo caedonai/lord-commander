@@ -39,11 +39,10 @@ const cli = createCLI({
 
 ```typescript
 import { 
-  createCLI, 
+  Command,
   registerCommands,
   createLogger 
 } from '@caedonai/sdk/core';
-import { Command } from 'commander';
 
 // Custom CLI setup with manual command registration
 const program = new Command();
@@ -86,9 +85,8 @@ export default createCLI({
 
 ### Advanced CLI (Custom Setup)
 ```typescript
-import { registerCommands, createLogger } from '@caedonai/sdk/core';
+import { Command, registerCommands, createLogger } from '@caedonai/sdk/core';
 import { isWorkspace } from '@caedonai/sdk/plugins';
-import { Command } from 'commander';
 
 const program = new Command();
 const logger = createLogger();
@@ -105,7 +103,7 @@ program.parse();
 
 ### Testing CLI Components
 ```typescript
-import { registerCommands } from '@caedonai/sdk/core';
+import { Command, registerCommands } from '@caedonai/sdk/core';
 import { describe, it, expect } from 'vitest';
 
 describe('CLI Commands', () => {
@@ -122,12 +120,28 @@ describe('CLI Commands', () => {
 
 ## Summary
 
-**Answer to your question**: Yes, `registerCommands` should be exported because it enables:
+**Key Design Decisions**:
 
-1. **Custom CLI initialization patterns**
-2. **Multiple command directory registration** 
-3. **Conditional command loading**
-4. **Advanced testing scenarios**
-5. **Fine-grained control for power users**
+✅ **Export `registerCommands`** - Enables custom CLI initialization patterns  
+✅ **Export `Command`** - No need for users to import commander directly  
+✅ **Maintain backward compatibility** - Top-level `createCLI` still works  
+✅ **Tree-shaking friendly** - Import only what you need  
 
-The SDK now provides both convenience (`createCLI` does everything) and flexibility (`registerCommands` for custom workflows) while maintaining excellent tree-shaking support.
+## Benefits of Exporting Command
+
+1. **Dependency Abstraction**: Users don't need to know about `commander`
+2. **Version Control**: SDK manages commander version compatibility  
+3. **API Consistency**: Everything CLI-related from one import source
+4. **Future-Proofing**: Could switch CLI libraries without breaking user code
+5. **Cleaner Developer Experience**: Single import source
+
+## Import Pattern Comparison
+
+| Pattern | External Dependencies | Tree-Shaking | Use Case |
+|---|---|---|---|
+| `createCLI` only | None | ✅ Excellent | Simple CLIs |
+| `createCLI + registerCommands` | None | ✅ Excellent | Custom registration |  
+| `Command + registerCommands` | None | ✅ Excellent | Full control |
+| **Old way** | `commander` required | ❌ Dependency leak | Not recommended |
+
+The SDK now provides both convenience (`createCLI` does everything) and flexibility (`registerCommands + Command` for custom workflows) while maintaining excellent tree-shaking support and zero external dependency requirements for users.

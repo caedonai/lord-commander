@@ -16,6 +16,7 @@ describe('Tree-shaking Tests', () => {
       // Test CLI creation functions are available
       expect(coreModule.createCLI).toBeDefined();
       expect(coreModule.registerCommands).toBeDefined();
+      expect(coreModule.Command).toBeDefined();
       
       // Test constants are available
       expect(coreModule.PACKAGE_MANAGER_COMMANDS).toBeDefined();
@@ -88,6 +89,24 @@ describe('Tree-shaking Tests', () => {
       expect(typeof parseVersion).toBe('function');
       expect(isGitRepository).toBeDefined();
       expect(typeof isGitRepository).toBe('function');
+    });
+    
+    it('should allow Command usage without external dependencies', async () => {
+      // Test that Command can be used for custom CLI creation
+      const { Command } = await import('../core/index');
+      
+      expect(Command).toBeDefined();
+      expect(typeof Command).toBe('function');
+      
+      // Test that Command is actually usable (constructor test)
+      const program = new Command();
+      program.name('test-cli');
+      program.description('Test CLI built with SDK Command');
+      
+      expect(program.name()).toBe('test-cli');
+      expect(program.description()).toBe('Test CLI built with SDK Command');
+      expect(typeof program.command).toBe('function');
+      expect(typeof program.parse).toBe('function');
     });
   });
   
