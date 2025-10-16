@@ -7,7 +7,14 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean --target node18",
     "dev": "node --loader ts-node/esm src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "test:updater": "vitest run src/tests/updater.test.ts",
+    "test:comprehensive": "vitest run src/tests/updater-comprehensive.test.ts",
+    "test:all": "vitest run src/tests/",
     "test-cli": "tsx src/tests/test-cli.ts",
     "test-updater": "tsx src/tests/test-updater.ts",
     "test-updater-comprehensive": "tsx src/tests/test-updater-comprehensive.ts"
@@ -25,6 +32,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
+    "@vitest/coverage-v8": "3.2.4",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
     "tsx": "^4.20.6",
