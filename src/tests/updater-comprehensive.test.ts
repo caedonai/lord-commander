@@ -5,7 +5,7 @@
  * potentially risky operations using isolated temporary repositories.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, afterAll } from 'vitest';
 import { parseVersion, getVersionDiff, createUpdatePlan, applyUpdate, getAllTags, getLatestTag, tagExists, createTag } from '../plugins/updater.js';
 import { exec } from '../core/exec.js';
 import { writeFile, readFile, ensureDir } from '../core/fs.js';
@@ -21,17 +21,20 @@ interface TestRepository {
 
 /**
  * Create an isolated test git repository with sample history
+ * Optimized for faster test execution
  */
 async function createTestRepository(): Promise<TestRepository> {
   const testRepoPath = path.join(os.tmpdir(), `updater-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   
   try {
-    // Initialize clean git repository
+    // Initialize clean git repository with batched config
     await ensureDir(testRepoPath);
-    await exec('git', ['init'], { cwd: testRepoPath });
-    await exec('git', ['config', 'user.name', 'Test User'], { cwd: testRepoPath });
-    await exec('git', ['config', 'user.email', 'test@example.com'], { cwd: testRepoPath });
-    await exec('git', ['config', 'init.defaultBranch', 'main'], { cwd: testRepoPath });
+    await exec('git', ['init', '--initial-branch=main'], { cwd: testRepoPath });
+    
+    // Batch git config commands for speed
+    await exec('git', ['config', '--local', 'user.name', 'Test User'], { cwd: testRepoPath });
+    await exec('git', ['config', '--local', 'user.email', 'test@example.com'], { cwd: testRepoPath });
+    await exec('git', ['config', '--local', 'commit.gpgsign', 'false'], { cwd: testRepoPath });
     
     // Create sample project structure and history
     await createSampleProjectHistory(testRepoPath);
@@ -75,7 +78,7 @@ async function createSampleProjectHistory(repoPath: string): Promise<void> {
   await writeFile(path.join(repoPath, '.gitignore'), 'node_modules/\n.env\n*.log\n');
   
   await exec('git', ['add', '.'], { cwd: repoPath });
-  await exec('git', ['commit', '-m', 'Initial project setup'], { cwd: repoPath });
+  await exec('git', ['commit', '--no-verify', '-m', 'Initial project setup'], { cwd: repoPath });
   await exec('git', ['tag', 'v1.0.0'], { cwd: repoPath });
   
   // v1.1.0 - Add new features
@@ -92,7 +95,7 @@ async function createSampleProjectHistory(repoPath: string): Promise<void> {
   await writeFile(path.join(repoPath, 'README.md'), '# Test Project\n\nTest project with utilities.\n\n## Features\n- Basic math utilities\n- Configuration support\n');
   
   await exec('git', ['add', '.'], { cwd: repoPath });
-  await exec('git', ['commit', '-m', 'feat: add utility functions and configuration'], { cwd: repoPath });
+  await exec('git', ['commit', '--no-verify', '-m', 'feat: add utility functions and configuration'], { cwd: repoPath });
   await exec('git', ['tag', 'v1.1.0'], { cwd: repoPath });
   
   // v1.2.0 - Bug fixes and improvements
@@ -103,7 +106,7 @@ async function createSampleProjectHistory(repoPath: string): Promise<void> {
   await writeFile(path.join(repoPath, 'test', 'utils.test.js'), 'import { add, multiply } from "../src/utils.js";\n\nconsole.log("Testing utils...");\nconsole.log("add(2, 3) =", add(2, 3));\nconsole.log("multiply(4, 5) =", multiply(4, 5));\n');
   
   await exec('git', ['add', '.'], { cwd: repoPath });
-  await exec('git', ['commit', '-m', 'fix: add input validation and multiply function'], { cwd: repoPath });
+  await exec('git', ['commit', '--no-verify', '-m', 'fix: add input validation and multiply function'], { cwd: repoPath });
   await exec('git', ['tag', 'v1.2.0'], { cwd: repoPath });
   
   // v2.0.0 - Breaking changes
@@ -126,7 +129,7 @@ async function createSampleProjectHistory(repoPath: string): Promise<void> {
   await writeFile(path.join(repoPath, 'test', 'calculator.test.js'), 'import { Calculator } from "../src/utils.js";\n\nconst calc = new Calculator();\nconsole.log("Testing Calculator...");\nconsole.log("add(2, 3) =", calc.add(2, 3));\nconsole.log("multiply(4, 5) =", calc.multiply(4, 5));\nconsole.log("divide(10, 2) =", calc.divide(10, 2));\n');
   
   await exec('git', ['add', '.'], { cwd: repoPath });
-  await exec('git', ['commit', '-m', 'BREAKING CHANGE: refactor to class-based API'], { cwd: repoPath });
+  await exec('git', ['commit', '--no-verify', '-m', 'BREAKING CHANGE: refactor to class-based API'], { cwd: repoPath });
   await exec('git', ['tag', 'v2.0.0'], { cwd: repoPath });
   
   // v2.1.0-beta.1 - Prerelease version
@@ -136,7 +139,7 @@ async function createSampleProjectHistory(repoPath: string): Promise<void> {
   await writeFile(path.join(repoPath, 'src', 'utils.js'), 'export class Calculator {\n  add(a, b) {\n    if (typeof a !== "number" || typeof b !== "number") {\n      throw new Error("Both arguments must be numbers");\n    }\n    return a + b;\n  }\n\n  multiply(a, b) {\n    return a * b;\n  }\n\n  divide(a, b) {\n    if (b === 0) throw new Error("Division by zero");\n    return a / b;\n  }\n\n  // Beta: new experimental feature\n  power(base, exp) {\n    return Math.pow(base, exp);\n  }\n}\n');
   
   await exec('git', ['add', '.'], { cwd: repoPath });
-  await exec('git', ['commit', '-m', 'feat: add experimental power function (beta)'], { cwd: repoPath });
+  await exec('git', ['commit', '--no-verify', '-m', 'feat: add experimental power function (beta)'], { cwd: repoPath });
   await exec('git', ['tag', 'v2.1.0-beta.1'], { cwd: repoPath });
 }
 
@@ -192,19 +195,31 @@ class MockFileSystem {
 describe('Updater Plugin - Comprehensive Sandboxed Tests', () => {
   let testRepo: TestRepository;
   let mockFs: MockFileSystem;
+  
+  // Shared test repository for read-only operations (faster)
+  let sharedTestRepo: TestRepository | null = null;
 
   beforeEach(async () => {
-    // Create isolated test repository
-    testRepo = await createTestRepository();
     mockFs = new MockFileSystem();
+    
+    // For tests that don't modify the repository, reuse shared instance
+    if (!sharedTestRepo) {
+      sharedTestRepo = await createTestRepository();
+    }
+    testRepo = sharedTestRepo;
   });
 
   afterEach(async () => {
-    // Clean up test repository
-    if (testRepo) {
-      await testRepo.cleanup();
-    }
     mockFs.reset();
+    // Don't cleanup shared repo after each test
+  });
+  
+  // Clean up shared repo after all tests
+  afterAll(async () => {
+    if (sharedTestRepo) {
+      await sharedTestRepo.cleanup();
+      sharedTestRepo = null;
+    }
   });
 
   describe('Git-based Version Operations (Isolated Repository)', () => {
@@ -342,43 +357,56 @@ describe('Updater Plugin - Comprehensive Sandboxed Tests', () => {
   });
 
   describe('Tag Management (Isolated Repository)', () => {
+    // These tests need fresh repos since they modify git state
+    let isolatedRepo: TestRepository;
+    
+    beforeEach(async () => {
+      isolatedRepo = await createTestRepository();
+    });
+    
+    afterEach(async () => {
+      if (isolatedRepo) {
+        await isolatedRepo.cleanup();
+      }
+    });
+
     it('should create new tags successfully', async () => {
       const newTags = ['v2.1.0', 'v2.1.1-alpha.1'];
       
       for (const tag of newTags) {
         // Ensure tag doesn't exist initially
-        let exists = await tagExists(tag, testRepo.path);
+        let exists = await tagExists(tag, isolatedRepo.path);
         expect(exists).toBe(false);
         
         // Create the tag
-        await createTag(tag, `Test release ${tag}`, testRepo.path);
+        await createTag(tag, `Test release ${tag}`, isolatedRepo.path);
         
         // Verify it was created
-        exists = await tagExists(tag, testRepo.path);
+        exists = await tagExists(tag, isolatedRepo.path);
         expect(exists).toBe(true);
       }
       
       // Verify tag count increased
-      const allTagsAfter = await getAllTags(testRepo.path);
+      const allTagsAfter = await getAllTags(isolatedRepo.path);
       expect(allTagsAfter).toHaveLength(7); // Original 5 + 2 new ones
     });
 
     it('should update latest tag after creation', async () => {
       // Create a newer tag
-      await createTag('v3.0.0', 'Major release', testRepo.path);
+      await createTag('v3.0.0', 'Major release', isolatedRepo.path);
       
-      const latestTag = await getLatestTag(testRepo.path);
+      const latestTag = await getLatestTag(isolatedRepo.path);
       expect(latestTag).toBe('v3.0.0');
     });
 
     it('should handle tag creation with and without messages', async () => {
       // Create tag with message
-      await createTag('v2.2.0', 'Release with message', testRepo.path);
-      expect(await tagExists('v2.2.0', testRepo.path)).toBe(true);
+      await createTag('v2.2.0', 'Release with message', isolatedRepo.path);
+      expect(await tagExists('v2.2.0', isolatedRepo.path)).toBe(true);
       
       // Create tag without message
-      await createTag('v2.3.0', undefined, testRepo.path);
-      expect(await tagExists('v2.3.0', testRepo.path)).toBe(true);
+      await createTag('v2.3.0', undefined, isolatedRepo.path);
+      expect(await tagExists('v2.3.0', isolatedRepo.path)).toBe(true);
     });
   });
 
