@@ -4,8 +4,23 @@
   "description": "",
   "type": "module",
   "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./core": {
+      "import": "./dist/core/index.js",
+      "types": "./dist/core/index.d.ts"
+    },
+    "./plugins": {
+      "import": "./dist/plugins/index.js", 
+      "types": "./dist/plugins/index.d.ts"
+    }
+  },
+  "sideEffects": false,
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean --target node18",
+    "build": "tsup src/index.ts src/core/index.ts src/plugins/index.ts --format esm --dts --clean --target node18",
     "dev": "node --loader ts-node/esm src/index.ts",
     "test": "vitest",
     "test:run": "vitest run",
