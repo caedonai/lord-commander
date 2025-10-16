@@ -9,6 +9,11 @@ export interface CreateCliOptions {
         shells?: ('bash' | 'zsh' | 'fish' | 'powershell')[];
         enableFileCompletion?: boolean;
     };
+    builtinCommands?: {
+        completion?: boolean;    // Default: true - Shell autocomplete management
+        hello?: boolean;         // Default: false - Example command for learning
+        version?: boolean;       // Default: false - Advanced version management (conflicts with -V)
+    };
 }
 
 /**

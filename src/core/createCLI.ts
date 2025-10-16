@@ -24,9 +24,12 @@ import { CreateCliOptions, CommandContext } from "../types/cli";
  * @param {string} [options.description] - CLI description. Defaults to ''.
  * @param {string} [options.version] - CLI version string. Defaults to '0.1.0'.
  * @param {string} [options.commandsPath] - Path to commands directory. If not specified, auto-discovers in common locations.
- * @returns {Promise<void>}
+ * @param {object} [options.builtinCommands] - Configure built-in SDK commands.
+ * @param {boolean} [options.builtinCommands.completion=true] - Include shell completion management command.
+ * @param {boolean} [options.builtinCommands.hello=false] - Include example hello command.
+ * @returns {Promise<Command>} The configured Commander program instance
  */
-export async function createCLI(options: CreateCliOptions) {
+export async function createCLI(options: CreateCliOptions): Promise<Command> {
     const {name, version, description} = resolveCliDefaults(options);
     const program = new Command();
 
@@ -47,7 +50,17 @@ export async function createCLI(options: CreateCliOptions) {
         cwd: process.cwd()
     };
 
-    // Register commands (auto-discover if no path specified)
+    // Configure built-in commands (defaults: completion=true, hello=false, version=false)
+    const builtinConfig = {
+        completion: options.builtinCommands?.completion ?? true,
+        hello: options.builtinCommands?.hello ?? false,
+        version: options.builtinCommands?.version ?? false
+    };
+
+    // Register built-in commands first (if enabled)
+    await registerBuiltinCommands(program, context, builtinConfig);
+
+    // Register user commands (auto-discover if no path specified)
     await registerCommands(program, context, options.commandsPath);
 
     // Handle autocomplete setup if enabled
@@ -55,10 +68,58 @@ export async function createCLI(options: CreateCliOptions) {
         await handleAutocompleteSetup(program, options);
     }
 
+    // Start CLI processing
     program.parseAsync(process.argv).catch((error) => {
         logger.error(`Error executing command: ${error.message}`);
         process.exit(1);
     });
+
+    return program;
+}
+
+/**
+ * Register built-in SDK commands based on configuration
+ */
+export async function registerBuiltinCommands(
+    program: Command, 
+    context: CommandContext, 
+    config: { completion: boolean; hello: boolean; version: boolean }
+) {
+    if (config.completion) {
+        try {
+            const completionModule = await import('../commands/completion.js');
+            if (completionModule.default) {
+                completionModule.default(program, context);
+            }
+        } catch (error) {
+            // Silently ignore if completion command is not available
+            logger.debug(`Could not load completion command: ${error}`);
+        }
+    }
+
+    if (config.hello) {
+        try {
+            const helloModule = await import('../commands/hello.js');
+            if (helloModule.default) {
+                helloModule.default(program, context);
+            }
+        } catch (error) {
+            // Silently ignore if hello command is not available
+            logger.debug(`Could not load hello command: ${error}`);
+        }
+    }
+
+    if (config.version) {
+        try {
+            const versionModule = await import('../commands/version.js');
+            if (versionModule.default) {
+                versionModule.default(program, context);
+            }
+        } catch (error) {
+            // Silently ignore if version command is not available
+            logger.debug(`Could not load version command: ${error}`);
+        }
+    }
 }
 
 /**

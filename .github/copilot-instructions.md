@@ -71,12 +71,19 @@ Built-in commands that demonstrate SDK capabilities:
 - Package discovery, dependency graphs, batch operations
 - Workspace validation and configuration loading
 
-### 6. Professional Version Management
+### 7. Professional Version Management
 - **Updater Plugin**: Semantic version parsing, diff analysis, update planning
 - Git tag management, breaking change detection
 - Safe update application with multiple strategies (merge, overwrite, selective)
 
-### 7. Shell Autocomplete System
+### 8. Configurable Built-in Commands
+- **Selective Command Loading**: Choose which SDK commands to include in your CLI
+- **Default Configuration**: `completion: true`, `hello: false`, `version: false`
+- **Flexible Options**: Enable/disable completion management, example commands, and advanced version tools
+- **Tree-shaking Compatible**: Only bundles commands that are actually enabled
+- **No Conflicts**: Built-in commands are separated from user command auto-discovery
+
+### 9. Shell Autocomplete System
 - **Multi-shell Support**: Comprehensive tab completion for bash, zsh, fish, and PowerShell
 - **Auto-installation**: Seamless setup during CLI creation with `autoInstall: true`
 - **Command Discovery**: Tab completion for all commands, options, and arguments
@@ -85,7 +92,7 @@ Built-in commands that demonstrate SDK capabilities:
 - **Status Monitoring**: Real-time completion installation status checking with detailed diagnostics
 - **Custom Logic**: Support for shell-specific customizations and completion behavior
 
-### 8. Professional CLI Features
+### 10. Professional CLI Features
 - Error handling with recovery suggestions
 - Automatic update notifications
 - Command aliases and advanced help formatting
@@ -178,6 +185,42 @@ await createCLI({
   name: 'my-cli',
   version: '1.0.0',
   description: 'My awesome CLI tool'
+});
+```
+
+#### Configurable Built-in Commands
+```typescript
+import { createCLI } from "@caedonai/sdk/core";
+
+// Default: completion enabled, hello/version disabled
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'CLI with default built-ins'
+});
+
+// Custom configuration
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'CLI with custom built-ins',
+  builtinCommands: {
+    completion: true,    // Shell autocomplete management
+    hello: true,         // Example command for learning
+    version: false       // Advanced version tools (conflicts with -V)
+  }
+});
+
+// Minimal CLI with no built-ins
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'Minimal CLI',
+  builtinCommands: {
+    completion: false,
+    hello: false,
+    version: false
+  }
 });
 ```
 
@@ -302,6 +345,7 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 ### Module Completion Status
 - ✅ **Core**: Complete (exec, fs, prompts, logger, createCLI, registerCommands, autocomplete)
 - ✅ **Shell Autocomplete**: Complete (bash, zsh, fish, PowerShell completion with auto-install)
+- ✅ **Built-in Commands**: Complete (configurable completion, hello, version commands)
 - ✅ **Git Plugin**: Complete (repository operations, tagging, diffing)
 - ✅ **Updater Plugin**: Complete (version management, update planning/application)
 - ✅ **Workspace Plugin**: Complete (Nx, Lerna, Rush, Turborepo, pnpm, yarn, npm support)

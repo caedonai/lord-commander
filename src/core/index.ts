@@ -99,7 +99,7 @@ export {
 } from './prompts.js';
 
 // CLI Creation and Command Registration
-export { createCLI } from './createCLI.js';
+export { createCLI, registerBuiltinCommands } from './createCLI.js';
 export { registerCommands } from './registerCommands.js';
 
 // Shell Autocomplete Support

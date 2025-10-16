@@ -89,6 +89,10 @@ export async function registerCommands(program: Command, context: CommandContext
       if (entry.name.match(/\.(test|spec|d)\.(ts|js)$/)) continue;
       if (entry.name === 'index.ts' || entry.name === 'index.js') continue;
 
+      // Skip built-in commands - these are handled by registerBuiltinCommands
+      const fileName = entry.name.replace(/\.(ts|js)$/, '');
+      if (['completion', 'hello', 'version'].includes(fileName)) continue;
+
       try {
         // Use file:// URL for absolute path
         const fileUrl = `file:///${fullPath.replace(/\\/g, '/')}`;
