@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 /**
- * Test CLI for development and manual testing
+ * Manual Test CLI for Development
  * 
- * This file provides a way to manually test the CLI SDK during development.
- * It creates a CLI instance with all available commands and can be used to:
- * - Test new features and commands
- * - Validate SDK functionality
- * - Demonstrate usage patterns
+ * This is a MANUAL testing tool, not an automated test.
+ * It provides interactive testing of the CLI SDK during development.
+ * 
+ * Purpose:
+ * - Interactive testing of commands and options
+ * - Quick validation during development
+ * - Demo/example of SDK usage
+ * - Debug tool for CLI behavior
+ * 
+ * Note: For automated testing, see cli-integration.test.ts
  * 
  * Usage:
  *   pnpm test-cli <command> [options]
@@ -14,11 +19,12 @@
  * 
  * Examples:
  *   pnpm test-cli hello
- *   pnpm test-cli hello --git
+ *   pnpm test-cli hello --git  
  *   pnpm test-cli hello "World" --uppercase
+ *   pnpm test-cli --help
  */
 
-import { createCLI } from '../cli/createCLI.js';
+import { createCLI } from '../core/createCLI.js';
 
 await createCLI({
     name: 'test-cli',
