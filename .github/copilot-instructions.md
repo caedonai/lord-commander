@@ -28,7 +28,7 @@ Essential utilities that form the foundation:
 - `constants.ts` - Global constants and paths
 - `errors.ts` - Error and cancellation handling
 - `createCLI.ts` - Main CLI creation and initialization
-- `registerCommands.ts` - Automatic command discovery and registration
+- `registerCommands.ts` - Automatic command discovery and registration with duplicate detection
 - `autocomplete.ts` - Shell completion support (bash, zsh, fish, PowerShell)
 
 ### Plugin Modules (`src/plugins/`)
@@ -92,7 +92,14 @@ Built-in commands that demonstrate SDK capabilities:
 - **Status Monitoring**: Real-time completion installation status checking with detailed diagnostics
 - **Custom Logic**: Support for shell-specific customizations and completion behavior
 
-### 10. Professional CLI Features
+### 10. Robust Command Registration System
+- **Duplicate Detection**: Map-based tracking prevents command name conflicts
+- **Smart Conflict Resolution**: Different paths throw detailed errors, same paths skip silently
+- **State Management**: `resetCommandTracking()` for clean test isolation
+- **Conditional Exclusion**: Built-in commands won't load conflicting user commands
+- **Error Recovery**: Graceful handling of malformed command files
+
+### 11. Professional CLI Features
 - Error handling with recovery suggestions
 - Automatic update notifications
 - Command aliases and advanced help formatting
@@ -146,6 +153,7 @@ The SDK systematizes these patterns found across professional CLIs:
 | Environment Management | `plugins/config-loader.ts` | Auto-create `.env.local` from templates |
 | Git Operations | `plugins/git.ts` | Initialize repos, commit, diff between versions |
 | Error Handling | `core/errors.ts` | Graceful exits, user-friendly messages |
+| Command Conflict Detection | `core/registerCommands.ts` | Prevent duplicate commands, detailed error messages |
 
 ## Development Workflows
 
@@ -297,11 +305,14 @@ my-cli completion uninstall
 
 #### Advanced CLI Control
 ```typescript
-import { Command, registerCommands, createLogger } from "@caedonai/sdk/core";
+import { Command, registerCommands, createLogger, resetCommandTracking } from "@caedonai/sdk/core";
 import { isWorkspace } from "@caedonai/sdk/plugins";
 
 const program = new Command();
 const logger = createLogger();
+
+// Reset tracking state for clean registration
+resetCommandTracking();
 
 // Conditional command loading
 if (await isWorkspace()) {
@@ -309,6 +320,30 @@ if (await isWorkspace()) {
 } else {
   await registerCommands(program, { logger }, './single-project-commands');
 }
+```
+
+#### Duplicate Detection and Conflict Resolution
+```typescript
+import { registerCommands, resetCommandTracking } from "@caedonai/sdk/core";
+
+// Reset tracking state (useful for tests or re-initialization)
+resetCommandTracking();
+
+try {
+  // Register commands from multiple sources
+  await registerCommands(program, context, './commands');
+  await registerCommands(program, context, './plugins/commands');
+} catch (error) {
+  // Handle command name conflicts
+  if (error.message.includes('Command name conflict')) {
+    console.error('Conflict detected:', error.message);
+    // Detailed error shows conflicting paths and suggestions
+  }
+}
+
+// Safe to run multiple times on same directory (silently skipped)
+await registerCommands(program, context, './commands');
+await registerCommands(program, context, './commands'); // No error, skipped
 ```
 
 ## Integration Points & Context
@@ -331,9 +366,9 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 ## Current Implementation Status
 
 ### Test Coverage & Performance
-- **Total Tests**: 126 comprehensive tests passing (33 new autocomplete tests)
-- **Test Types**: Unit tests, integration tests, tree-shaking validation, autocomplete functionality
-- **Performance**: Optimized test suite (~17s for comprehensive Git integration tests)
+- **Total Tests**: 185 comprehensive tests passing (6 new duplicate detection tests, 33 autocomplete tests, 14 built-in exclusion tests)
+- **Test Types**: Unit tests, integration tests, tree-shaking validation, autocomplete functionality, duplicate detection, conflict resolution
+- **Performance**: Optimized test suite (~18s for comprehensive Git integration tests)
 - **Manual Testing**: `pnpm test-cli` for interactive development testing
 
 ### Bundle Optimization Results
@@ -343,10 +378,29 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 - **Full SDK**: 71KB (complete feature set)
 
 ### Module Completion Status
-- ✅ **Core**: Complete (exec, fs, prompts, logger, createCLI, registerCommands, autocomplete)
+- ✅ **Core**: Complete (exec, fs, prompts, logger, createCLI, registerCommands with duplicate detection, autocomplete)
 - ✅ **Shell Autocomplete**: Complete (bash, zsh, fish, PowerShell completion with auto-install)
-- ✅ **Built-in Commands**: Complete (configurable completion, hello, version commands)
+- ✅ **Built-in Commands**: Complete (configurable completion, hello, version commands with conditional exclusion)
+- ✅ **Duplicate Detection**: Complete (command conflict detection, state management, error recovery)
 - ✅ **Git Plugin**: Complete (repository operations, tagging, diffing)
 - ✅ **Updater Plugin**: Complete (version management, update planning/application)
 - ✅ **Workspace Plugin**: Complete (Nx, Lerna, Rush, Turborepo, pnpm, yarn, npm support)
 - ✅ **Tree-shaking**: Complete (optimal bundle splitting and selective imports)
+
+### Recent Major Enhancements
+
+#### Duplicate Detection & Conflict Resolution System (Latest)
+- **Map-based Tracking**: Comprehensive command registration state management
+- **Smart Conflict Detection**: Differentiates between same-path duplicates (safe) vs cross-path conflicts (error)
+- **Detailed Error Messages**: Shows conflicting file paths, source directories, and resolution guidance
+- **Test Isolation**: `resetCommandTracking()` ensures clean state between test runs
+- **Error Recovery**: Graceful handling of malformed command files with proper logging
+- **Backward Compatibility**: Existing functionality completely preserved
+
+#### Key Conflict Scenarios Handled:
+1. **Same Path Duplication**: Silent skip (prevents crashes on re-runs)
+2. **Cross-Path Conflicts**: Detailed error with conflicting file information
+3. **Mixed Scenarios**: Partial registration with conflict reporting
+4. **Malformed Files**: Graceful error handling with appropriate logging
+5. **Built-in Exclusion**: Conditional loading prevents user/built-in conflicts
+6. **State Reset**: Clean tracking state for testing and re-initialization

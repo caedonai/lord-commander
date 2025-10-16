@@ -3,6 +3,10 @@ import fs from 'fs';
 import path from 'path';
 import type { CommandContext } from '../types/cli';
 
+// Track registered commands and their sources for conflict detection
+const registeredCommands = new Map<string, { source: string; path: string }>();
+const processedPaths = new Set<string>();
+
 /**
  * Check if a built-in command should be skipped based on configuration
  */
@@ -20,6 +24,52 @@ function shouldSkipBuiltinCommand(
     default:
       return false;
   }
+}
+
+/**
+ * Check if a command name is already registered and handle conflicts
+ */
+function checkCommandConflict(
+  commandName: string, 
+  commandPath: string, 
+  sourcePath: string,
+  context: CommandContext
+): boolean {
+  const existing = registeredCommands.get(commandName);
+  
+  if (existing) {
+    // Check if it's from the same directory path (duplicate registration)
+    if (existing.source === sourcePath) {
+      context.logger.debug(`Skipping duplicate registration of command '${commandName}' from same path: ${sourcePath}`);
+      return true; // Skip silently
+    } else {
+      // Different paths with same command name - this is a conflict!
+      const error = new Error(
+        `Command name conflict: '${commandName}' is defined in both:\n` +
+        `  - ${existing.path} (from ${existing.source})\n` +
+        `  - ${commandPath} (from ${sourcePath})\n` +
+        `Please rename one of the commands to avoid conflicts.`
+      );
+      context.logger.error(error.message);
+      throw error;
+    }
+  }
+  
+  // Register this command
+  registeredCommands.set(commandName, {
+    source: sourcePath,
+    path: commandPath
+  });
+  
+  return false; // No conflict, proceed with registration
+}
+
+/**
+ * Reset command registration tracking (useful for testing)
+ */
+export function resetCommandTracking(): void {
+  registeredCommands.clear();
+  processedPaths.clear();
 }
 
 /**
@@ -92,6 +142,16 @@ export async function registerCommands(
     absolutePath = discoveredPath;
     context.logger.debug(`Auto-discovered commands directory: ${path.relative(process.cwd(), absolutePath)}`);
   }
+
+  // Check if we've already processed this path
+  const normalizedPath = path.normalize(absolutePath);
+  if (processedPaths.has(normalizedPath)) {
+    context.logger.debug(`Skipping already processed commands directory: ${path.relative(process.cwd(), absolutePath)}`);
+    return;
+  }
+  
+  // Mark this path as processed
+  processedPaths.add(normalizedPath);
   
   try {
     // Get all files in the commands directory
@@ -101,7 +161,8 @@ export async function registerCommands(
       const fullPath = path.join(absolutePath, entry.name);
 
       if (entry.isDirectory()) {
-        // Recursively process subdirectories
+        // Recursively process subdirectories, but don't mark subdirectories as "processed" 
+        // since they're part of the same source tree
         await registerCommands(program, context, fullPath, builtinConfig);
         continue;
       }
@@ -121,21 +182,57 @@ export async function registerCommands(
       }
 
       try {
+        // Check for command name conflicts before registration
+        const shouldSkip = checkCommandConflict(fileName, fullPath, absolutePath, context);
+        if (shouldSkip) {
+          continue;
+        }
+
         // Use file:// URL for absolute path
         const fileUrl = `file:///${fullPath.replace(/\\/g, '/')}`;
         const commandModule = await import(fileUrl);
         
         if (typeof commandModule.default === 'function') {
-          commandModule.default(program, context);
+          // Try to register the command and catch Commander.js duplicate errors
+          try {
+            commandModule.default(program, context);
+            context.logger.debug(`Successfully registered command: ${fileName}`);
+          } catch (cmdError) {
+            // Handle Commander.js duplicate command errors gracefully
+            if (cmdError instanceof Error && cmdError.message.includes('already have command')) {
+              context.logger.warn(`Command '${fileName}' already registered, skipping: ${cmdError.message}`);
+              // Remove from our tracking since it wasn't actually registered
+              registeredCommands.delete(fileName);
+            } else {
+              throw cmdError; // Re-throw other errors
+            }
+          }
         } else {
           context.logger.warn(`Command module ${entry.name} does not export a default function`);
+          // Remove from tracking since it wasn't registered
+          registeredCommands.delete(fileName);
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        context.logger.error(`Failed to load command from ${entry.name}: ${message}`);
+        // Handle both conflict errors and module loading errors
+        if (error instanceof Error && error.message.includes('Command name conflict')) {
+          // Re-throw conflict errors to stop processing
+          throw error;
+        } else {
+          // Log other errors but continue processing
+          const message = error instanceof Error ? error.message : String(error);
+          context.logger.error(`Failed to load command from ${entry.name}: ${message}`);
+          // Remove from tracking since registration failed
+          registeredCommands.delete(fileName);
+        }
       }
     }
   } catch (error) {
-    context.logger.error(`Failed to read commands directory: ${error}`);
+    // Re-throw command name conflict errors to stop the CLI
+    if (error instanceof Error && error.message.includes('Command name conflict')) {
+      throw error;
+    } else {
+      // Log other directory-level errors but don't crash
+      context.logger.error(`Failed to read commands directory: ${error}`);
+    }
   }
 }
