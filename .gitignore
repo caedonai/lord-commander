@@ -61,4 +61,7 @@ test-temp-*
 # Misc
 *.orig
 
+# AI Documentation (internal use only)
+.ai/
+
 .github/copilot-instructions.md
