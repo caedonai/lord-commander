@@ -17,6 +17,7 @@ export const PATH_TRAVERSAL_PATTERNS = {
   // Advanced traversal techniques
   UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g,
   DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi,
+  MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c)/gi,
   
   // Windows-specific traversal
   UNC_PATH: /^\\\\[^\\]+\\[^\\]/,
@@ -170,30 +171,64 @@ export const INPUT_VALIDATION_PATTERNS = {
 } as const;
 
 /**
- * Combined security pattern validator
- * Analyzes input against all security patterns and returns detailed results
+ * Represents a single security violation detected in input analysis
+ * 
+ * @interface SecurityViolation
  */
 export interface SecurityViolation {
+  /** The category of security violation (e.g., 'path-traversal', 'command-injection') */
   type: string;
+  /** The specific pattern that was matched (e.g., 'directory-traversal', 'shell-metacharacters') */
   pattern: string;
+  /** The severity level of the violation */
   severity: 'low' | 'medium' | 'high' | 'critical';
+  /** Human-readable description of what was detected */
   description: string;
+  /** Recommended action to fix the violation */
   recommendation: string;
 }
 
+/**
+ * Result of comprehensive security analysis on input
+ * 
+ * @interface SecurityAnalysisResult
+ */
 export interface SecurityAnalysisResult {
+  /** Whether the input passed all security checks */
   isSecure: boolean;
+  /** Array of all security violations found */
   violations: SecurityViolation[];
-  riskScore: number; // 0-100
+  /** Risk score from 0-100, where 100 is maximum risk */
+  riskScore: number;
+  /** Sanitized version of the input with dangerous patterns removed/escaped */
   sanitizedInput?: string;
 }
 
 /**
- * Analyzes input for security violations
+ * Analyzes input string for security violations across all attack categories
+ * 
+ * Performs comprehensive security analysis checking for:
+ * - Path traversal attacks (../../../, encoded variants)
+ * - Command injection attempts (shell metacharacters, dangerous commands)
+ * - Script injection (eval usage, template injection)
+ * - Privilege escalation (sudo, runas commands)
+ * - Sensitive file access attempts
+ * 
+ * @param input - The input string to analyze for security threats
+ * @returns SecurityAnalysisResult with violations, risk score, and sanitized input
+ * 
+ * @example
+ * ```typescript
+ * const result = analyzeInputSecurity("rm -rf /");
+ * // Returns: { isSecure: false, violations: [...], riskScore: 40, sanitizedInput: "" }
+ * 
+ * const safe = analyzeInputSecurity("my-project-name");
+ * // Returns: { isSecure: true, violations: [], riskScore: 0, sanitizedInput: "my-project-name" }
+ * ```
  */
 export function analyzeInputSecurity(input: string): SecurityAnalysisResult {
-  // Handle null/undefined inputs
-  if (input == null) {
+  // Handle null/undefined and non-string inputs
+  if (input == null || typeof input !== 'string') {
     return {
       isSecure: true,
       violations: [],
@@ -204,8 +239,11 @@ export function analyzeInputSecurity(input: string): SecurityAnalysisResult {
   const violations: SecurityViolation[] = [];
   let riskScore = 0;
 
-  // Check path traversal
-  if (PATH_TRAVERSAL_PATTERNS.DOTDOT_SLASH.test(input)) {
+  // Check path traversal (basic and encoded variants)
+  if (PATH_TRAVERSAL_PATTERNS.DOTDOT_SLASH.test(input) || 
+      PATH_TRAVERSAL_PATTERNS.DOTDOT_ENCODED.test(input) ||
+      PATH_TRAVERSAL_PATTERNS.DOUBLE_ENCODED.test(input) ||
+      PATH_TRAVERSAL_PATTERNS.MIXED_ENCODED.test(input)) {
     violations.push({
       type: 'path-traversal',
       pattern: 'directory-traversal',
@@ -286,19 +324,43 @@ export function analyzeInputSecurity(input: string): SecurityAnalysisResult {
 }
 
 /**
- * Sanitizes input by removing or escaping dangerous patterns
+ * Sanitizes input string by removing or escaping dangerous patterns
+ * 
+ * Applies the following sanitization rules:
+ * - Removes path traversal sequences (../)
+ * - Removes null bytes that could truncate paths
+ * - Escapes shell metacharacters with backslashes
+ * - Removes dangerous command patterns
+ * - Removes JavaScript injection patterns
+ * 
+ * @param input - The input string to sanitize
+ * @returns Sanitized string with dangerous patterns removed/escaped
+ * 
+ * @example
+ * ```typescript
+ * const dangerous = "../../etc/passwd; rm -rf /";
+ * const safe = sanitizeInput(dangerous);
+ * // Returns: "etc/passwd\\;  /"
+ * ```
  */
 export function sanitizeInput(input: string): string {
-  // Handle null/undefined inputs
-  if (input == null) {
+  // Handle null/undefined and non-string inputs
+  if (input == null || typeof input !== 'string') {
     return '';
   }
   
   let sanitized = input;
 
-  // Remove path traversal attempts
+  // Remove path traversal attempts (including encoded variants)
   sanitized = sanitized.replace(PATH_TRAVERSAL_PATTERNS.DOTDOT_SLASH, '');
+  sanitized = sanitized.replace(PATH_TRAVERSAL_PATTERNS.DOTDOT_ENCODED, '');
+  sanitized = sanitized.replace(PATH_TRAVERSAL_PATTERNS.DOUBLE_ENCODED, '');
+  sanitized = sanitized.replace(PATH_TRAVERSAL_PATTERNS.MIXED_ENCODED, '');
   sanitized = sanitized.replace(PATH_TRAVERSAL_PATTERNS.NULL_BYTE, '');
+
+  // Remove JavaScript injection patterns
+  sanitized = sanitized.replace(SCRIPT_INJECTION_PATTERNS.JAVASCRIPT_EVAL, '');
+  sanitized = sanitized.replace(SCRIPT_INJECTION_PATTERNS.JAVASCRIPT_FUNCTION, '');
 
   // Escape shell metacharacters
   sanitized = sanitized.replace(/([;&|`$(){}[\]<>])/g, '\\$1');
@@ -310,19 +372,47 @@ export function sanitizeInput(input: string): string {
 }
 
 /**
- * Validates if a path is safe for file operations
+ * Validates if a file path is safe for file system operations
+ * 
+ * Checks path against all security patterns and ensures low risk score.
+ * Safe paths must not contain directory traversal, absolute paths,
+ * or references to sensitive system locations.
+ * 
+ * @param path - The file path to validate
+ * @returns true if path is safe for file operations, false otherwise
+ * 
+ * @example
+ * ```typescript
+ * isPathSafe("./src/components/Button.tsx"); // true
+ * isPathSafe("../../../etc/passwd");         // false
+ * isPathSafe("C:\\Windows\\System32");       // false
+ * ```
  */
 export function isPathSafe(path: string): boolean {
-  if (path == null) return false;
+  if (path == null || typeof path !== 'string') return false;
   const analysis = analyzeInputSecurity(path);
   return analysis.isSecure && analysis.riskScore < 10;
 }
 
 /**
- * Validates if a command is safe for execution
+ * Validates if a command string is safe for shell execution
+ * 
+ * Checks for command injection attempts, privilege escalation,
+ * and dangerous command patterns. Safe commands should not
+ * contain shell metacharacters or system-level operations.
+ * 
+ * @param command - The command string to validate
+ * @returns true if command is safe to execute, false otherwise
+ * 
+ * @example
+ * ```typescript
+ * isCommandSafe("npm install");           // true
+ * isCommandSafe("rm -rf /");              // false
+ * isCommandSafe("cmd; cat /etc/passwd");  // false
+ * ```
  */
 export function isCommandSafe(command: string): boolean {
-  if (command == null) return true;
+  if (command == null || typeof command !== 'string') return true;
   
   const analysis = analyzeInputSecurity(command);
   const hasCommandInjection = analysis.violations.some(v => v.type === 'command-injection');
@@ -335,10 +425,26 @@ export function isCommandSafe(command: string): boolean {
 }
 
 /**
- * Validates if a project name is safe
+ * Validates if a project name follows safe naming conventions
+ * 
+ * Safe project names must:
+ * - Contain only alphanumeric characters, hyphens, underscores, and dots
+ * - Pass all security pattern checks
+ * - Not contain any injection attempts or traversal patterns
+ * 
+ * @param name - The project name to validate
+ * @returns true if project name is safe, false otherwise
+ * 
+ * @example
+ * ```typescript
+ * isProjectNameSafe("my-awesome-project");  // true
+ * isProjectNameSafe("my_project.v2");       // true
+ * isProjectNameSafe("../../../etc");        // false
+ * isProjectNameSafe("project; rm -rf /");   // false
+ * ```
  */
 export function isProjectNameSafe(name: string): boolean {
-  if (name == null) return false;
+  if (name == null || typeof name !== 'string') return false;
   return INPUT_VALIDATION_PATTERNS.SAFE_PROJECT_NAME.test(name) && 
          analyzeInputSecurity(name).isSecure;
 }

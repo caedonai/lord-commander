@@ -222,33 +222,117 @@ export const TELEMETRY_CONFIG = {
 
 /**
  * Error message constants for consistent error handling across the SDK
+ * 
+ * These functions provide type-safe, parameterized error messages that maintain
+ * consistency across the entire CLI framework. Each function returns a formatted
+ * string with contextual information to help developers debug issues.
+ * 
+ * @example
+ * ```typescript
+ * // Security-focused error
+ * throw new Error(ERROR_MESSAGES.SUSPICIOUS_INPUT_DETECTED('$(rm -rf /)', 'command-injection'));
+ * 
+ * // Path validation error  
+ * throw new Error(ERROR_MESSAGES.INVALID_COMMAND_PATH('../../../etc'));
+ * 
+ * // Command conflict error
+ * throw new Error(ERROR_MESSAGES.COMMAND_NAME_CONFLICT(
+ *   'deploy', 
+ *   '/path/to/commands/deploy.ts', 
+ *   'commands',
+ *   '/path/to/other/deploy.ts', 
+ *   'other-commands'
+ * ));
+ * ```
  */
 export const ERROR_MESSAGES = {
+  /**
+   * Error message for invalid or unsafe command directory paths
+   * @param path - The invalid path that was rejected
+   * @returns Formatted error message with security context
+   */
   INVALID_COMMAND_PATH: (path: string) => 
     `Invalid or unsafe commands directory path: ${path}. Command paths must be within the current working directory for security.`,
+    
+  /**
+   * Error message for command name conflicts during registration
+   * @param name - The conflicting command name
+   * @param existingPath - Path to the existing command file
+   * @param existingSource - Source directory of the existing command
+   * @param newPath - Path to the new conflicting command file
+   * @param newSource - Source directory of the new command
+   * @returns Formatted error message with conflict details
+   */
   COMMAND_NAME_CONFLICT: (name: string, existingPath: string, existingSource: string, newPath: string, newSource: string) =>
     `Command name conflict: '${name}' is defined in both:\n` +
     `  - ${existingPath} (from ${existingSource})\n` +
     `  - ${newPath} (from ${newSource})\n` +
     `Please rename one of the commands to avoid conflicts.`,
     
-  // Security-focused error messages
+  /**
+   * Error message for suspicious input that matches security patterns
+   * @param input - The suspicious input that was detected
+   * @param pattern - The security pattern that was matched
+   * @returns Formatted error message with input and pattern details
+   */
   SUSPICIOUS_INPUT_DETECTED: (input: string, pattern: string) => 
     `Suspicious input detected: "${input}" matches security pattern: ${pattern}. This input has been rejected for security reasons.`,
+    
+  /**
+   * Error message for privilege escalation attempts
+   * @returns Formatted error message with escalation warning
+   */
   PRIVILEGE_ESCALATION_ATTEMPT: () => 
     'Refusing to run with elevated privileges. Use --allow-root flag if intentional and you understand the security risks.',
+    
+  /**
+   * Error message for unsafe template sources
+   * @param url - The untrusted template source URL
+   * @returns Formatted error message with allowlist guidance
+   */
   UNSAFE_TEMPLATE_SOURCE: (url: string) => 
     `Template source not whitelisted: ${url}. Only verified sources allowed. Please use official templates or add this source to your allowlist.`,
+    
+  /**
+   * Error message for blocked script execution
+   * @param script - The script that was blocked
+   * @returns Formatted error message with script details and override option
+   */
   SCRIPT_EXECUTION_BLOCKED: (script: string) => 
     `Script execution blocked for security: ${script}. Use --allow-scripts if needed and you trust the script source.`,
     
-  // Additional security error messages
+  /**
+   * Error message for malicious path detection
+   * @param path - The malicious path that was detected
+   * @param reason - The reason why the path is considered malicious
+   * @returns Formatted error message with path and reason
+   */
   MALICIOUS_PATH_DETECTED: (path: string, reason: string) =>
     `Malicious path detected: "${path}" (${reason}). Operation blocked for security.`,
+    
+  /**
+   * Error message for command injection attempts
+   * @param input - The input containing injection attempt
+   * @returns Formatted error message with injection details
+   */
   COMMAND_INJECTION_ATTEMPT: (input: string) =>
     `Command injection attempt detected in input: "${input}". Operation blocked.`,
+    
+  /**
+   * Error message for unsafe file operations
+   * @param operation - The file operation that was blocked
+   * @param path - The unsafe path for the operation
+   * @returns Formatted error message with operation and path details
+   */
   UNSAFE_FILE_OPERATION: (operation: string, path: string) =>
     `Unsafe file operation "${operation}" blocked for path: "${path}". Path must be within project directory.`,
+    
+  /**
+   * Error message for configuration tampering detection
+   * @param config - The configuration file that shows tampering
+   * @param issue - The specific tampering issue detected
+   * @returns Formatted error message with config and issue details
+   */
   CONFIGURATION_TAMPERING: (config: string, issue: string) =>
     `Configuration tampering detected in ${config}: ${issue}. Using safe defaults instead.`,
 } as const;
