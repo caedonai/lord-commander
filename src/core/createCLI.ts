@@ -7,7 +7,52 @@ import * as fs from './execution/fs.js';
 import * as exec from './execution/exec.js';
 import * as git from '../plugins/git.js';
 import { detectShell, installCompletion, analyzeProgram } from './commands/autocomplete.js';
+import { formatError } from './foundation/errors.js';
 import { CreateCliOptions, CommandContext } from "../types/cli";
+
+/**
+ * Check if debug mode is enabled via environment variables or CLI arguments
+ * In production, debug mode is disabled regardless of flags for security
+ */
+function isDebugMode(): boolean {
+    // Security: Never enable debug mode in production
+    if (process.env.NODE_ENV === 'production') {
+        return false;
+    }
+    
+    return process.env.DEBUG === 'true' || 
+           process.env.NODE_ENV === 'development' ||
+           process.argv.includes('--debug') ||
+           process.argv.includes('--verbose');
+}
+
+/**
+ * Format error for user-friendly display with appropriate detail level
+ * Includes security-conscious formatting for production environments
+ */
+function formatErrorForDisplay(error: Error, options: { showStack?: boolean } = {}): string {
+    const { showStack = false } = options;
+    
+    // Use the formatError utility but with user-friendly defaults
+    return formatError(error, {
+        showStack,
+        showSuggestion: true,
+        showContext: process.env.NODE_ENV !== 'production', // Hide context in production
+        colorize: true
+    });
+}
+
+/**
+ * Sanitize error message to remove potentially sensitive information
+ */
+function sanitizeErrorMessage(message: string): string {
+    return message
+        .replace(/password[=:]\s*\S+/gi, 'password=***')
+        .replace(/token[=:]\s*\S+/gi, 'token=***')
+        .replace(/key[=:]\s*\S+/gi, 'key=***')
+        .replace(/secret[=:]\s*\S+/gi, 'secret=***')
+        .replace(/api[_-]?key[=:]\s*\S+/gi, 'api_key=***');
+}
 
 
 
@@ -18,6 +63,20 @@ import { CreateCliOptions, CommandContext } from "../types/cli";
  * Initializes a Command with the provided options, loads CLI configuration,
  * registers commands from the given path, and parses argv asynchronously.
  * Any error thrown by command handlers is logged and causes the process to exit(1).
+ * 
+ * Error Handling:
+ * - Default: Logs user-friendly error message; stack traces shown in debug mode
+ * - Custom errorHandler: Receives full Error object; if handler throws, falls back to default behavior
+ * - Debug mode: Enabled via DEBUG=true, NODE_ENV=development, --debug, or --verbose flags
+ * - Stack traces: Automatically shown in debug mode for better developer experience
+ * - Production safety: Debug mode disabled when NODE_ENV=production regardless of flags
+ * - Message sanitization: Sensitive patterns (passwords, tokens, keys) sanitized in production
+ * 
+ * Security Considerations:
+ * - Custom error handlers execute with full application privileges
+ * - Error handlers should sanitize sensitive information before logging
+ * - Production deployments should set NODE_ENV=production to disable debug features
+ * - Consider implementing error handler validation for untrusted code
  *
  * @param {CreateCLIOptions} options - Options to configure the CLI.
  * @param {string} [options.name] - CLI display name. Defaults to 'CLI Tool'.
@@ -27,7 +86,7 @@ import { CreateCliOptions, CommandContext } from "../types/cli";
  * @param {object} [options.builtinCommands] - Configure built-in SDK commands.
  * @param {boolean} [options.builtinCommands.completion=true] - Include shell completion management command.
  * @param {boolean} [options.builtinCommands.hello=false] - Include example hello command.
- * @param {function} [options.errorHandler] - Custom error handler for command execution errors. If not provided, defaults to logging error and exit(1).
+ * @param {function} [options.errorHandler] - Custom error handler for command execution errors. Receives Error object. Should sanitize sensitive information. If not provided, defaults to logging error with stack trace in debug mode and exit(1).
  * @returns {Promise<Command>} The configured Commander program instance
  */
 export async function createCLI(options: CreateCliOptions): Promise<Command> {
@@ -88,14 +147,27 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
                 try {
                     await options.errorHandler(error);
                 } catch (handlerError) {
-                    // If custom error handler throws, fall back to default behavior
-                    logger.error(`Error in custom error handler: ${handlerError instanceof Error ? handlerError.message : String(handlerError)}`);
-                    logger.error(`Original error: ${error.message}`);
+                    // If custom error handler throws, fall back to default behavior with enhanced logging
+                    logger.error('Custom error handler failed:');
+                    const handlerErr = handlerError instanceof Error ? handlerError : new Error(String(handlerError));
+                    logger.error(formatErrorForDisplay(handlerErr, { showStack: isDebugMode() }));
+                    logger.error('\nOriginal command error:');
+                    logger.error(formatErrorForDisplay(error, { showStack: isDebugMode() }));
                     process.exit(1);
                 }
             } else {
-                // Default error handling behavior
-                logger.error(`Error executing command: ${error.message}`);
+                // Enhanced default error handling with stack traces in debug mode and message sanitization
+                const isDebug = isDebugMode();
+                const message = isDebug ? error.message : sanitizeErrorMessage(error.message);
+                
+                // Create a sanitized error for display if not in debug mode
+                const displayError = isDebug ? error : new Error(message);
+                if (!isDebug && error.stack) {
+                    displayError.stack = undefined; // Remove stack trace in production
+                }
+                
+                logger.error('Command execution failed:');
+                logger.error(formatErrorForDisplay(displayError, { showStack: isDebug }));
                 process.exit(1);
             }
         });
