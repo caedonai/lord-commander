@@ -33,25 +33,126 @@ function isDebugMode(): boolean {
 function formatErrorForDisplay(error: Error, options: { showStack?: boolean } = {}): string {
     const { showStack = false } = options;
     
-    // Use the formatError utility but with user-friendly defaults
-    return formatError(error, {
-        showStack,
+    // Security: Use shouldShowDetailedErrors for production safety
+    const showDetails = shouldShowDetailedErrors();
+    const actualShowStack = showStack && showDetails;
+    
+    // Sanitize the error message
+    const sanitizedMessage = showDetails ? error.message : sanitizeErrorMessage(error.message);
+    
+    // Create sanitized error for display
+    const displayError = new Error(sanitizedMessage);
+    if (actualShowStack && error.stack) {
+        displayError.stack = sanitizeStackTrace(error.stack);
+    }
+    
+    // Use the formatError utility but with security-conscious defaults
+    return formatError(displayError, {
+        showStack: actualShowStack,
         showSuggestion: true,
-        showContext: process.env.NODE_ENV !== 'production', // Hide context in production
+        showContext: showDetails, // Hide context in production
         colorize: true
     });
 }
 
 /**
  * Sanitize error message to remove potentially sensitive information
+ * Enhanced to catch more patterns and provide comprehensive protection
  */
 function sanitizeErrorMessage(message: string): string {
     return message
+        // Remove potential injection patterns first (before other processing)
+        .replace(/<[^>]*>/g, '') // Remove HTML/XML tags completely
+        .replace(/javascript:[^;\s]*/gi, '') // Remove javascript: URLs
+        .replace(/alert\s*\([^)]*\)/gi, '') // Remove alert() calls
+        .replace(/eval\s*\([^)]*\)/gi, '') // Remove eval() calls
+        .replace(/on\w+\s*=\s*[^>\s]*/gi, '') // Remove event handlers
+        .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
+        
+        // Generic patterns for common sensitive data (processed first to preserve casing)
+        .replace(/API_KEY[=:-][^\s,;}]+/g, 'API_KEY=***')
+        .replace(/TOKEN[=:-][^\s,;}]+/g, 'TOKEN=***')
+        .replace(/SECRET[=:-][^\s,;}]+/g, 'SECRET=***')
+        .replace(/PWD[=:-][^\s,;}]+/g, 'PWD=***')
+        .replace(/([A-Z_]*SECRET[A-Z_]*)-[^\s,;}]+/gi, '$1=***') // Handle SECRET-data pattern
+        .replace(/(key|secret|token|password|pass|pwd)[=:-][^\s,;}]+/gi, '$1=***')
+        
+        // Passwords and secrets (more specific patterns)
         .replace(/password[=:]\s*\S+/gi, 'password=***')
-        .replace(/token[=:]\s*\S+/gi, 'token=***')
-        .replace(/key[=:]\s*\S+/gi, 'key=***')
-        .replace(/secret[=:]\s*\S+/gi, 'secret=***')
-        .replace(/api[_-]?key[=:]\s*\S+/gi, 'api_key=***');
+        .replace(/passwd[=:]\s*\S+/gi, 'passwd=***')
+        .replace(/private[_-]?key[=:]\s*\S+/gi, 'private_key=***')
+        
+        // API keys and tokens (kept only for patterns not covered above)
+        .replace(/access[_-]?token[=:]\s*\S+/gi, 'access_token=***')
+        .replace(/bearer[=:]\s*\S+/gi, 'bearer=***')
+        .replace(/authorization[=:]\s*[^\s]+(\s+[^\s]+)*/gi, 'authorization=***')
+        
+        // Database and connection strings
+        .replace(/connection[_-]?string[=:]\s*\S+/gi, 'connection_string=***')
+        .replace(/(mongodb|mysql|postgres|redis):\/\/[^\s]+/gi, '$1://***')
+        .replace(/host[=:]\s*\S+/gi, 'host=***')
+        .replace(/database[=:]\s*\S+/gi, 'database=***')
+        
+        // File paths that might contain sensitive info
+        .replace(/\/Users\/[^\/\s]+(?:\/[^\/\s]*)*(?:\/[^\/\s]+)?/g, '/Users/***/')
+        .replace(/C:[\/\\]Users[\/\\][^\/\\\s]+(?:[\/\\][^\/\\\s]*)*(?:[\/\\][^\/\\\s]+)?/g, 'C:\\Users\\***\\')
+        .replace(/\/home\/[^\/\s]+(?:\/[^\/\s]*)*(?:\/[^\/\s]+)?/g, '/home/***/')
+        
+        // Email addresses and usernames
+        .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '***@***.***')
+        .replace(/username[=:]\s*\S+/gi, 'username=***')
+        .replace(/user[=:]\s*\S+/gi, 'user=***')
+        
+        // Credit card and financial information
+        .replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, '****-****-****-****')
+        .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '***-**-****') // SSN pattern
+        
+        // IP addresses and network info
+        .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '***.***.***.***')
+        .replace(/port[=:]\s*\d+/gi, 'port=***')
+        
+        .replace(/['"](sk|pk|tok|key)-[a-zA-Z0-9_-]+['"]/g, '"***"')
+        
+        .slice(0, 500); // Limit message length to prevent DoS
+}
+
+/**
+ * Sanitize stack trace to remove sensitive file paths and internal details
+ */
+function sanitizeStackTrace(stack: string): string {
+    if (!stack) return stack;
+    
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction) {
+        // In production, completely remove stack traces for security
+        return '';
+    }
+    
+    return stack
+        // Remove absolute file paths, keep relative ones
+        .replace(/\/.*?\/node_modules/g, 'node_modules')
+        .replace(/C:\\.*?\\node_modules/g, 'node_modules')
+        // Remove user home directory paths
+        .replace(/\/Users\/[^\/]+/g, '/Users/***')
+        .replace(/C:\\Users\\[^\\]+/g, 'C:\\Users\\***')
+        // Remove other potentially sensitive paths
+        .replace(/\/home\/[^\/]+/g, '/home/***')
+        .replace(/\/opt\/[^\/]+/g, '/opt/***')
+        // Limit stack trace depth in development
+        .split('\n').slice(0, 10).join('\n');
+}
+
+/**
+ * Check if we should show detailed error information
+ */
+function shouldShowDetailedErrors(): boolean {
+    // Never show detailed errors in production
+    if (process.env.NODE_ENV === 'production') {
+        return false;
+    }
+    
+    // Show detailed errors in development/debug mode
+    return isDebugMode();
 }
 
 
@@ -156,18 +257,20 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
                     process.exit(1);
                 }
             } else {
-                // Enhanced default error handling with stack traces in debug mode and message sanitization
-                const isDebug = isDebugMode();
-                const message = isDebug ? error.message : sanitizeErrorMessage(error.message);
+                // Enhanced default error handling with security-conscious approach
+                const showDetails = shouldShowDetailedErrors();
                 
-                // Create a sanitized error for display if not in debug mode
-                const displayError = isDebug ? error : new Error(message);
-                if (!isDebug && error.stack) {
-                    displayError.stack = undefined; // Remove stack trace in production
+                if (showDetails) {
+                    // Development: Show detailed information
+                    logger.error('Command execution failed:');
+                    logger.error(formatErrorForDisplay(error, { showStack: true }));
+                } else {
+                    // Production: Show minimal, sanitized information
+                    const sanitizedMessage = sanitizeErrorMessage(error.message);
+                    logger.error(`Application error: ${sanitizedMessage}`);
+                    logger.error('Please contact support for assistance.');
                 }
                 
-                logger.error('Command execution failed:');
-                logger.error(formatErrorForDisplay(displayError, { showStack: isDebug }));
                 process.exit(1);
             }
         });
@@ -254,3 +357,12 @@ async function handleAutocompleteSetup(program: Command, options: CreateCliOptio
     // Add completion context to program for command access
     (program as any)._autocompleteContext = analyzeProgram(program);
 }
+
+// Export sanitization functions for testing
+export {
+    sanitizeErrorMessage,
+    sanitizeStackTrace,
+    isDebugMode,
+    shouldShowDetailedErrors,
+    formatErrorForDisplay
+};

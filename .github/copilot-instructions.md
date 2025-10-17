@@ -6,7 +6,7 @@ This document provides essential context for AI agents working with the lord-com
 **After completing any coding task, always ask the user in brief sentences:**
 1. "Should I update copilot-instructions.md to reflect this change?"
 2. "Should I create tests for this implementation?"
-3. "Should I check for edge cases, error scenarios, and security issues/risks?"
+3. "Should I check for edge cases, error scenarios (handle where needed), and security issues/risks (create comprehensive security analysis)?"
 4. "Should I run all tests to ensure everything passes?"
 
 **Also remind to consider updating this file for:**
