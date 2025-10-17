@@ -250,7 +250,7 @@ describe('Error Handler Security Validation', () => {
         
         try {
           await executeErrorHandlerSafely(throwingHandler, originalError);
-        } catch (wrappedError) {
+        } catch (wrappedError: any) {
           expect(wrappedError.message).toContain('Handler error');
           expect(wrappedError.message).toContain('Original error: Original error');
         }
