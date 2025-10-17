@@ -13,3 +13,6 @@ export * from './errors.js';
 
 // Export log security utilities
 export * from './log-security.js';
+
+// Export security patterns for input validation
+export * from './security-patterns.js';
