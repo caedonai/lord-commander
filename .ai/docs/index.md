@@ -9,7 +9,7 @@
 | [Core Module Design](./architecture/core-module-design.md) | ✅ Complete | High | Foundation architecture & tree-shaking |
 | [Security-First Design ADR](./decisions/005-security-first-design.md) | ✅ Complete | High | 88 security tests framework |
 | [Bundle Size Analysis](./performance/bundle-size-analysis.md) | ✅ Complete | High | 97% size reduction achievement |
-| [Security Test Methodology](./testing/security-test-methodology.md) | ✅ Complete | High | Data-driven testing (367 tests) |
+| [Security Test Methodology](./testing/security-test-methodology.md) | ✅ Complete | High | Data-driven testing (449 tests) |
 | [CLI Pattern Analysis](./research/cli-pattern-analysis.md) | ✅ Complete | High | Industry pattern systematization |
 
 ### 📂 **Documentation Categories**

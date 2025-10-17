@@ -489,21 +489,34 @@ describe('Security Performance Tests', () => {
 
 ```
 src/tests/
-├── security/
-│   ├── path-validation.test.ts           # Path traversal protection
-│   ├── error-sanitization.test.ts        # Content disclosure protection  
-│   ├── log-injection.test.ts             # Terminal manipulation protection
-│   ├── memory-exhaustion.test.ts         # DoS protection
-│   ├── code-injection.test.ts            # Error handler validation
-│   └── integration-security.test.ts      # Cross-module security
+├── core/                                 # Core CLI functionality (6 tests)
+│   ├── autocomplete.test.ts              # Shell completion system
+│   ├── builtin-commands.test.ts          # Built-in command configuration
+│   ├── createcli-builtin.test.ts         # CLI creation with built-in commands
+│   ├── multiple-command-paths.test.ts    # Multiple directory support
+│   ├── register-commands-duplicates.test.ts # Command conflict detection
+│   └── register-commands-exclusion.test.ts  # Built-in exclusion logic
 │
-├── performance/
-│   ├── security-benchmarks.test.ts       # Security control performance
-│   └── bundle-analysis.test.ts           # Tree-shaking validation
+├── security/                             # Security framework (13 tests)
+│   ├── error-handler-security-*.test.ts  # Error handler security validation (3 files)
+│   ├── error-handling-*.test.ts          # Error handling security & edge cases (3 files)
+│   ├── log-injection-protection.test.ts  # Terminal manipulation protection
+│   ├── memory-exhaustion-protection.test.ts # DoS protection
+│   ├── security-*.test.ts                # Security patterns, message sanitization, path validation (6 files)
+│   └── security-stack-trace-leakage.test.ts # Stack trace security
 │
-└── data/
-    ├── security-test-cases.ts            # Centralized test data
-    └── test-helpers.ts                   # Security test utilities
+├── plugins/                              # Plugin functionality (3 tests)
+│   ├── updater-comprehensive.test.ts     # Version management comprehensive tests
+│   ├── updater.test.ts                   # Version management basic tests
+│   └── workspace.test.ts                 # Monorepo workspace utilities
+│
+├── performance/                          # Performance optimization (1 test)
+│   └── tree-shaking.test.ts              # Bundle optimization and selective imports
+│
+├── integration/                          # Integration utilities (1 utility)
+│   └── test-cli.ts                       # Interactive CLI testing utility
+│
+└── README.md                             # Test documentation and guidelines
 ```
 
 ### **CI/CD Integration**
