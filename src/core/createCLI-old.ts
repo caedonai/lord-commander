@@ -163,33 +163,24 @@ export async function executeErrorHandlerSafely(
     // 1. Apply comprehensive error sanitization with memory protection
     const sanitizedError = sanitizeErrorObject(error);
     
-    // 2. Create timeout promise with proper cleanup
-    let timeoutId: NodeJS.Timeout | undefined;
+    // 2. Create timeout promise
     const timeoutPromise = new Promise<never>((_, reject) => {
-        timeoutId = setTimeout(() => {
+        const timeoutId = setTimeout(() => {
             reject(new Error(
                 `Error handler execution timed out after ${config.timeout}ms. ` +
                 `This may indicate an infinite loop or blocking operation in the error handler.`
             ));
         }, config.timeout);
+        
+        // Ensure timeout is cleared if handler completes
+        return timeoutId;
     });
 
     // 3. Execute handler with timeout protection
     try {
         const handlerPromise = Promise.resolve(handler(sanitizedError));
-        const result = await Promise.race([handlerPromise, timeoutPromise]);
-        
-        // Clear timeout on successful completion
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-        }
-        
-        return result;
+        await Promise.race([handlerPromise, timeoutPromise]);
     } catch (handlerError) {
-        // Clear timeout on error
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-        }
         // 4. Wrap handler errors with context
         const wrappedError = new Error(
             `Error handler failed: ${handlerError instanceof Error ? handlerError.message : String(handlerError)}. ` +
@@ -486,8 +477,192 @@ function shouldShowDetailedErrors(): boolean {
     return isDebugMode();
 }
 
-// Re-export log injection protection functions from foundation module
+// Re-export log injection protection functions
 export { sanitizeLogOutput, sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig } from './foundation/log-security.js';
+
+/**
+ * Create and run a Commander-based CLI.
+ * Sanitize log output to prevent log injection attacks
+ * 
+ * Protects against:
+ * - ANSI escape sequences for terminal manipulation
+ * - Control characters that can corrupt logs
+ * - Carriage return/line feed injection
+ * - Terminal bell and other disruptive characters
+ * - Unicode bidirectional override attacks
+ * - Format string attacks
+ */
+export function sanitizeLogOutput(message: string): string {
+    if (!message || typeof message !== 'string') {
+        return '';
+    }
+    
+    return message
+        // Remove ANSI escape sequences (terminal color/cursor manipulation)
+        .replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '')
+        .replace(/\x1B\][0-9]*;[^\x07\x1B]*(?:\x07|\x1B\\)/g, '')
+        .replace(/\x1B[P^_].*?(?:\x1B\\|\x07)/g, '')
+        
+        // Remove terminal bell and other disruptive sequences
+        .replace(/\x07/g, '') // Bell character
+        .replace(/\x1B\x63/g, '') // Reset terminal
+        .replace(/\x1B./g, '') // Any remaining ESC sequences
+        
+        // Remove dangerous control characters (excluding ESC which we handled above)
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1A\x1C-\x1F\x7F]/g, '') // Control chars except \t, \n, \r, ESC
+        
+        // Handle line ending injection attempts
+        .replace(/\r\n/g, ' [CRLF] ')  // Windows line endings
+        .replace(/\r/g, ' [CR] ')      // Mac classic line endings
+        .replace(/\n/g, ' [LF] ')      // Unix line endings
+        
+        // Prevent Unicode bidirectional override attacks
+        .replace(/[\u202A-\u202E\u2066-\u2069]/g, '')
+        
+        // Remove potential format string specifiers
+        .replace(/%[diouxXeEfFgGaAcspn%]/g, '[FORMAT]')
+        
+        // Limit excessive whitespace
+        .replace(/\s{10,}/g, ' [WHITESPACE] ')
+        
+        // Truncate extremely long messages to prevent log flooding
+        .slice(0, 2000);
+}
+
+/**
+ * Configuration for log injection protection
+ */
+export interface LogInjectionConfig {
+    enableProtection?: boolean;
+    maxLineLength?: number;
+    allowControlChars?: boolean;
+    preserveFormatting?: boolean;
+    warningThreshold?: number;
+}
+
+/**
+ * Default configuration for log injection protection
+ */
+const DEFAULT_LOG_INJECTION_CONFIG: Required<LogInjectionConfig> = {
+    enableProtection: true,
+    maxLineLength: 2000,
+    allowControlChars: false,
+    preserveFormatting: false,
+    warningThreshold: 1000
+};
+
+/**
+ * Enhanced log sanitization with configurable protection levels
+ * 
+ * Provides comprehensive protection against log injection while allowing
+ * developers to configure the level of sanitization based on their needs.
+ */
+export function sanitizeLogOutputAdvanced(
+    message: string, 
+    config: LogInjectionConfig = {}
+): string {
+    if (!message || typeof message !== 'string') {
+        return '';
+    }
+    
+    const finalConfig = { ...DEFAULT_LOG_INJECTION_CONFIG, ...config };
+    
+    if (!finalConfig.enableProtection) {
+        return message;
+    }
+    
+    let sanitized = message;
+    
+    // Basic sanitization always applied
+    if (!finalConfig.allowControlChars) {
+        // Remove dangerous control characters
+        sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+        
+        // Handle ANSI escape sequences
+        sanitized = sanitized
+            .replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '')
+            .replace(/\x1B\][0-9]*;[^\x07\x1B]*(?:\x07|\x1B\\)/g, '')
+            .replace(/\x1B[P^_].*?(?:\x1B\\|\x07)/g, '');
+    }
+    
+    // Line ending injection protection
+    if (!finalConfig.preserveFormatting) {
+        sanitized = sanitized
+            .replace(/\r\n/g, ' ')
+            .replace(/[\r\n]/g, ' ');
+    }
+    
+    // Length protection
+    if (sanitized.length > finalConfig.maxLineLength) {
+        sanitized = sanitized.slice(0, finalConfig.maxLineLength) + '[TRUNCATED]';
+    }
+    
+    // Warning for suspicious content
+    if (sanitized.length > finalConfig.warningThreshold) {
+        console.warn('[Log Security] Large log message detected, potential flooding attempt');
+    }
+    
+    return sanitized;
+}
+
+/**
+ * Analyze log content for potential injection patterns
+ * 
+ * Returns metadata about potential security risks in log content
+ */
+export function analyzeLogSecurity(message: string): {
+    hasAnsiEscapes: boolean;
+    hasControlChars: boolean;
+    hasLineInjection: boolean;
+    hasFormatStrings: boolean;
+    riskLevel: 'low' | 'medium' | 'high';
+    warnings: string[];
+} {
+    const warnings: string[] = [];
+    let riskLevel: 'low' | 'medium' | 'high' = 'low';
+    
+    const hasAnsiEscapes = /\x1B\[[0-9;]*[a-zA-Z]/.test(message);
+    const hasControlChars = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(message);
+    const hasLineInjection = /[\r\n]/.test(message);
+    const hasFormatStrings = /%[diouxXeEfFgGaAcspn%]/.test(message);
+    
+    if (hasAnsiEscapes) {
+        warnings.push('ANSI escape sequences detected');
+        riskLevel = 'medium';
+    }
+    
+    if (hasControlChars) {
+        warnings.push('Control characters detected');
+        riskLevel = 'medium';
+    }
+    
+    if (hasLineInjection) {
+        warnings.push('Line injection patterns detected');
+        riskLevel = 'high';
+    }
+    
+    if (hasFormatStrings) {
+        warnings.push('Format string specifiers detected');
+        riskLevel = 'medium';
+    }
+    
+    if (message.length > 5000) {
+        warnings.push('Extremely long message detected');
+        riskLevel = riskLevel === 'high' ? 'high' : 'medium';
+    }
+    
+    return {
+        hasAnsiEscapes,
+        hasControlChars,
+        hasLineInjection,
+        hasFormatStrings,
+        riskLevel,
+        warnings
+    };
+}
+
+
+
 
 /**
  * Create and run a Commander-based CLI.
@@ -497,22 +672,25 @@ export { sanitizeLogOutput, sanitizeLogOutputAdvanced, analyzeLogSecurity, type 
  * Any error thrown by command handlers is logged and causes the process to exit(1).
  * 
  * Error Handling:
- * - If options.errorHandler is provided, it will be validated for security and executed safely
- * - If custom error handler throws, falls back to default error handling
- * - Default behavior: Log error with appropriate detail level and exit(1)
- * - Debug mode: Shows full stack traces and detailed information  
- * - Production mode: Shows minimal sanitized information
+ * - Default: Logs user-friendly error message; stack traces shown in debug mode
+ * - Custom errorHandler: Receives full Error object; if handler throws, falls back to default behavior
+ * - Debug mode: Enabled via DEBUG=true, NODE_ENV=development, --debug, or --verbose flags
+ * - Stack traces: Automatically shown in debug mode for better developer experience
+ * - Production safety: Debug mode disabled when NODE_ENV=production regardless of flags
+ * - Message sanitization: Sensitive patterns (passwords, tokens, keys) sanitized in production
  * 
- * @param {CreateCliOptions} options - Configuration for the CLI
- * @param {string} options.name - CLI name (used for help and config)
- * @param {string} options.version - CLI version (shown in --version)
- * @param {string} options.description - CLI description (shown in help)
- * @param {string|string[]} [options.commandsPath] - Path(s) to commands directory. Supports arrays for multiple directories. Defaults to "./commands".
- * @param {object} [options.autocomplete] - Autocomplete configuration
- * @param {boolean} [options.autocomplete.enabled=true] - Enable shell completion
- * @param {boolean} [options.autocomplete.autoInstall=false] - Auto-install completion 
- * @param {string[]} [options.autocomplete.shells] - Target shells for completion
- * @param {object} [options.builtinCommands] - Built-in command configuration
+ * Security Considerations:
+ * - Custom error handlers execute with full application privileges
+ * - Error handlers should sanitize sensitive information before logging
+ * - Production deployments should set NODE_ENV=production to disable debug features
+ * - Consider implementing error handler validation for untrusted code
+ *
+ * @param {CreateCLIOptions} options - Options to configure the CLI.
+ * @param {string} [options.name] - CLI display name. Defaults to 'CLI Tool'.
+ * @param {string} [options.description] - CLI description. Defaults to ''.
+ * @param {string} [options.version] - CLI version string. Defaults to '0.1.0'.
+ * @param {string|string[]} [options.commandsPath] - Path(s) to commands directory/directories. If not specified, auto-discovers in common locations.
+ * @param {object} [options.builtinCommands] - Configure built-in SDK commands.
  * @param {boolean} [options.builtinCommands.completion=true] - Include shell completion management command.
  * @param {boolean} [options.builtinCommands.hello=false] - Include example hello command.
  * @param {function} [options.errorHandler] - Custom error handler for command execution errors. Receives Error object. Should sanitize sensitive information. If not provided, defaults to logging error with stack trace in debug mode and exit(1).

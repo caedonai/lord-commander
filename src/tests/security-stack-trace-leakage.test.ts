@@ -49,7 +49,7 @@ describe('Stack Trace Leakage Security', () => {
     at C:\\Users\\Administrator\\secret\\api-keys.js:5:8
     at node_modules/some-lib/index.js:100:20`;
 
-      const mockErrorHandler = vi.fn().mockImplementation((error) => {
+      const mockErrorHandler = vi.fn((error: Error) => {
         // Simulate how the actual error formatting would work
         const isProduction = process.env.NODE_ENV === 'production';
         if (isProduction) {
@@ -216,7 +216,7 @@ describe('Stack Trace Leakage Security', () => {
       // Create error with sensitive information
       const sensitiveMessage = 'Connection failed: password=secret123 token=abc-xyz-789 api_key=sk-1234567890';
       
-      const mockErrorHandler = vi.fn().mockImplementation((error) => {
+      const mockErrorHandler = vi.fn((error: Error) => {
         // Test that error handler can safely process sensitive data
         console.error(`Handled error: ${error.message}`);
       });

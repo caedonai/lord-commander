@@ -29,7 +29,9 @@ describe('Error Handling Edge Cases', () => {
       obj1.child = obj2; // Create circular reference
       (circularError as any).context = obj1;
 
-      const mockErrorHandler = vi.fn().mockRejectedValue(circularError);
+      const mockErrorHandler = vi.fn((_error: Error) => {
+        throw circularError;
+      });
 
       await expect(createCLI({
         name: 'test-cli',
@@ -54,7 +56,9 @@ describe('Error Handling Edge Cases', () => {
         suggestion: 'Check your circular references'
       });
 
-      const mockErrorHandler = vi.fn().mockRejectedValue(circularCLIError);
+      const mockErrorHandler = vi.fn((_error: Error) => {
+        throw circularCLIError;
+      });
 
       await expect(createCLI({
         name: 'test-cli',
@@ -74,7 +78,9 @@ describe('Error Handling Edge Cases', () => {
       const largeMessage = 'Error: '.repeat(100000); // ~600KB message
       const largeError = new Error(largeMessage);
 
-      const mockErrorHandler = vi.fn().mockRejectedValue(largeError);
+      const mockErrorHandler = vi.fn((_error: Error) => {
+        throw largeError;
+      });
 
       await expect(createCLI({
         name: 'test-cli',
@@ -96,7 +102,9 @@ describe('Error Handling Edge Cases', () => {
       );
       errorWithLargeStack.stack = `Error: Error with large stack\n${fakeStack.join('\n')}`;
 
-      const mockErrorHandler = vi.fn().mockRejectedValue(errorWithLargeStack);
+      const mockErrorHandler = vi.fn((_error: Error) => {
+        throw errorWithLargeStack;
+      });
 
       await expect(createCLI({
         name: 'test-cli',
@@ -118,7 +126,7 @@ describe('Error Handling Edge Cases', () => {
         await Promise.reject(new Error('Level 1'));
       };
 
-      const deeplyNestedErrorHandler = vi.fn().mockImplementation(async () => {
+      const deeplyNestedErrorHandler = vi.fn(async (_error: Error) => {
         try {
           await nestedAsyncError();
         } catch (error) {
@@ -140,7 +148,7 @@ describe('Error Handling Edge Cases', () => {
 
     it('should handle async error handler that never resolves', async () => {
       // This tests timeout scenarios and resource cleanup
-      const hangingErrorHandler = vi.fn().mockImplementation(async () => {
+      const hangingErrorHandler = vi.fn(async (_error: Error) => {
         // Simulate a hanging promise (but we'll reject it quickly for testing)
         await new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10));
       });
@@ -160,7 +168,7 @@ describe('Error Handling Edge Cases', () => {
 
   describe('Process.exit() in Custom Handlers', () => {
     it('should handle custom error handler that calls process.exit()', async () => {
-      const exitingErrorHandler = vi.fn().mockImplementation(() => {
+      const exitingErrorHandler = vi.fn((_error: Error) => {
         process.exit(42); // Custom exit code
       });
 
@@ -179,7 +187,7 @@ describe('Error Handling Edge Cases', () => {
     });
 
     it('should handle async error handler that calls process.exit() after delay', async () => {
-      const delayedExitErrorHandler = vi.fn().mockImplementation(async () => {
+      const delayedExitErrorHandler = vi.fn(async (_error: Error) => {
         await new Promise(resolve => setTimeout(resolve, 5));
         process.exit(99);
       });
@@ -200,7 +208,9 @@ describe('Error Handling Edge Cases', () => {
 
   describe('Memory Leak Prevention', () => {
     it('should not leak memory with repeated error handler failures', async () => {
-      const failingErrorHandler = vi.fn().mockRejectedValue(new Error('Handler always fails'));
+      const failingErrorHandler = vi.fn((_error: Error) => {
+        throw new Error('Handler always fails');
+      });
 
       // Simulate multiple CLI creations (like in a loop)
       for (let i = 0; i < 10; i++) {
@@ -220,7 +230,7 @@ describe('Error Handling Edge Cases', () => {
     });
 
     it('should clean up resources when error handler creates large objects', async () => {
-      const memoryIntensiveErrorHandler = vi.fn().mockImplementation(async (error) => {
+      const memoryIntensiveErrorHandler = vi.fn(async (error: Error) => {
         // Create large objects that should be garbage collected
         const largeArray = new Array(1000000).fill('memory-intensive-data');
         const largeObject = {
@@ -250,7 +260,9 @@ describe('Error Handling Edge Cases', () => {
 
   describe('Error Type Edge Cases', () => {
     it('should handle null/undefined error objects', async () => {
-      const nullErrorHandler = vi.fn().mockRejectedValue(null);
+      const nullErrorHandler = vi.fn((_error: Error) => {
+        throw null;
+      });
 
       await expect(createCLI({
         name: 'test-cli',
@@ -265,7 +277,9 @@ describe('Error Handling Edge Cases', () => {
     });
 
     it('should handle non-Error objects being thrown', async () => {
-      const stringErrorHandler = vi.fn().mockRejectedValue('String error message');
+      const stringErrorHandler = vi.fn((_error: Error) => {
+        throw 'String error message';
+      });
 
       await expect(createCLI({
         name: 'test-cli',
@@ -284,7 +298,9 @@ describe('Error Handling Edge Cases', () => {
       customError.name = 'CustomError';
       // Intentionally omit message property
 
-      const customErrorHandler = vi.fn().mockRejectedValue(customError);
+      const customErrorHandler = vi.fn((_error: Error) => {
+        throw customError;
+      });
 
       await expect(createCLI({
         name: 'test-cli',
@@ -306,7 +322,9 @@ describe('Error Handling Edge Cases', () => {
         }
       });
 
-      const trickyErrorHandler = vi.fn().mockRejectedValue(trickyError);
+      const trickyErrorHandler = vi.fn((_error: Error) => {
+        throw trickyError;
+      });
 
       await expect(createCLI({
         name: 'test-cli',
@@ -330,7 +348,9 @@ describe('Error Handling Edge Cases', () => {
       const malformedStackError = new Error('Error with malformed stack');
       malformedStackError.stack = 'Not a real stack trace\nInvalid format';
 
-      const mockErrorHandler = vi.fn().mockRejectedValue(malformedStackError);
+      const mockErrorHandler = vi.fn((_error: Error) => {
+        throw malformedStackError;
+      });
 
       try {
         await expect(createCLI({
@@ -366,7 +386,9 @@ describe('Error Handling Edge Cases', () => {
       );
       deepStackError.stack = `Error: Deep stack error\n${deepStack.join('\n')}`;
 
-      const mockErrorHandler = vi.fn().mockRejectedValue(deepStackError);
+      const mockErrorHandler = vi.fn((_error: Error) => {
+        throw deepStackError;
+      });
 
       try {
         await expect(createCLI({
@@ -393,9 +415,9 @@ describe('Error Handling Edge Cases', () => {
 
   describe('Concurrent Error Scenarios', () => {
     it('should handle multiple CLIs with errors simultaneously', async () => {
-      const error1Handler = vi.fn().mockRejectedValue(new Error('Error 1'));
-      const error2Handler = vi.fn().mockRejectedValue(new Error('Error 2'));
-      const error3Handler = vi.fn().mockRejectedValue(new Error('Error 3'));
+      const error1Handler = vi.fn((_error: Error) => { throw new Error('Error 1'); });
+      const error2Handler = vi.fn((_error: Error) => { throw new Error('Error 2'); });
+      const error3Handler = vi.fn((_error: Error) => { throw new Error('Error 3'); });
 
       // Create multiple CLIs concurrently
       const cliPromises = [
@@ -437,7 +459,9 @@ describe('Error Handling Edge Cases', () => {
 
   describe('Real Error Handler Testing', () => {
     it('should actually test error handler with simulated parseAsync failure', async () => {
-      const mockErrorHandler = vi.fn().mockResolvedValue(undefined);
+      const mockErrorHandler = vi.fn((_error: Error) => {
+        // Handler completes successfully
+      });
       
       // Create CLI but don't actually run parseAsync - we'll manually test the error path
       await createCLI({
@@ -454,12 +478,14 @@ describe('Error Handling Edge Cases', () => {
       
       // We can't easily test the actual parseAsync error flow without complex mocking,
       // but we can verify the error handler function works correctly
-      await expect(mockErrorHandler(testError)).resolves.toBeUndefined();
+      mockErrorHandler(testError);
       expect(mockErrorHandler).toHaveBeenCalledWith(testError);
     });
 
     it('should test error handler failure scenario', async () => {
-      const throwingErrorHandler = vi.fn().mockRejectedValue(new Error('Handler failed'));
+      const throwingErrorHandler = vi.fn((_error: Error) => {
+        throw new Error('Handler failed');
+      });
       
       await createCLI({
         name: 'test-cli',
@@ -472,7 +498,7 @@ describe('Error Handling Edge Cases', () => {
 
       // Test that the error handler throws as expected
       const testError = new Error('Original error');
-      await expect(throwingErrorHandler(testError)).rejects.toThrow('Handler failed');
+      expect(() => throwingErrorHandler(testError)).toThrow('Handler failed');
       expect(throwingErrorHandler).toHaveBeenCalledWith(testError);
     });
   });

@@ -115,7 +115,11 @@ export {
   getObjectMemorySize,
   isDebugMode,
   shouldShowDetailedErrors,
-  formatErrorForDisplay
+  formatErrorForDisplay,
+  sanitizeLogOutput,
+  sanitizeLogOutputAdvanced,
+  analyzeLogSecurity,
+  type LogInjectionConfig
 } from './createCLI.js';
 export { registerCommands, resetCommandTracking } from './commands/registerCommands.js';
 

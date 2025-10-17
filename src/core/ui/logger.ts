@@ -16,6 +16,7 @@ import {
 } from '@clack/prompts';
 import { BRANDING } from '../foundation/constants.js';
 import { formatError } from '../foundation/errors.js';
+import { sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig } from '../foundation/log-security.js';
 
 // Define Spinner type based on @clack/prompts return type
 type Spinner = ReturnType<typeof clackSpinner>;
@@ -55,6 +56,7 @@ export interface LoggerOptions {
   prefix?: string;
   timestamp?: boolean;
   showBrand?: boolean;
+  logInjectionProtection?: LogInjectionConfig;
 }
 
 /**
@@ -81,6 +83,7 @@ export class Logger {
   private showTimestamp: boolean;
   private showBrand: boolean;
   private activeSpinners = new Set<Spinner>();
+  private logInjectionConfig: LogInjectionConfig;
 
   constructor(options: LoggerOptions = {}) {
     this.level = options.level ?? LogLevel.INFO;
@@ -88,6 +91,7 @@ export class Logger {
     this.prefix = options.prefix;
     this.showTimestamp = options.timestamp ?? false;
     this.showBrand = options.showBrand ?? false;
+    this.logInjectionConfig = options.logInjectionProtection ?? { enableProtection: true };
   }
 
   /**
@@ -138,17 +142,19 @@ export class Logger {
   }
 
   /**
-   * Raw console.log wrapper for internal use
+   * Raw console.log wrapper for internal use with log injection protection
    */
   private write(message: string): void {
-    console.log(message);
+    const sanitizedMessage = sanitizeLogOutputAdvanced(message, this.logInjectionConfig);
+    console.log(sanitizedMessage);
   }
 
   /**
-   * Raw console.error wrapper for internal use
+   * Raw console.error wrapper for internal use with log injection protection
    */
   private writeError(message: string): void {
-    console.error(message);
+    const sanitizedMessage = sanitizeLogOutputAdvanced(message, this.logInjectionConfig);
+    console.error(sanitizedMessage);
   }
 
   /**
@@ -420,6 +426,27 @@ export class Logger {
    */
   getTheme(): LoggerTheme {
     return { ...this.theme };
+  }
+
+  /**
+   * Update log injection protection configuration
+   */
+  setLogInjectionProtection(config: LogInjectionConfig): void {
+    this.logInjectionConfig = { ...this.logInjectionConfig, ...config };
+  }
+
+  /**
+   * Get current log injection protection configuration
+   */
+  getLogInjectionProtection(): LogInjectionConfig {
+    return { ...this.logInjectionConfig };
+  }
+
+  /**
+   * Analyze a message for potential log injection risks
+   */
+  analyzeMessage(message: string) {
+    return analyzeLogSecurity(message);
   }
 }
 

@@ -10,3 +10,6 @@ export * from './constants.js';
 
 // Export error handling utilities
 export * from './errors.js';
+
+// Export log security utilities
+export * from './log-security.js';
