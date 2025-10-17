@@ -61,8 +61,4 @@ test-temp-*
 # Misc
 *.orig
 
-# AI Documentation - track docs but ignore task files (not the folder structure)
-.ai/docs/tasks/*
-!.ai/docs/tasks/.gitkeep
-
 .github/copilot-instructions.md
