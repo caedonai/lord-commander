@@ -23,6 +23,7 @@ export {
   GIT_PATTERNS,
   TELEMETRY_CONFIG,
   BRANDING,
+  ERROR_MESSAGES,
   type PackageManager,
   type Framework 
 } from './foundation/constants.js';

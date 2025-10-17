@@ -221,6 +221,19 @@ export const TELEMETRY_CONFIG = {
 } as const;
 
 /**
+ * Error message constants for consistent error handling across the SDK
+ */
+export const ERROR_MESSAGES = {
+  INVALID_COMMAND_PATH: (path: string) => 
+    `Invalid or unsafe commands directory path: ${path}. Command paths must be within the current working directory for security.`,
+  COMMAND_NAME_CONFLICT: (name: string, existingPath: string, existingSource: string, newPath: string, newSource: string) =>
+    `Command name conflict: '${name}' is defined in both:\n` +
+    `  - ${existingPath} (from ${existingSource})\n` +
+    `  - ${newPath} (from ${newSource})\n` +
+    `Please rename one of the commands to avoid conflicts.`,
+} as const;
+
+/**
  * CLI branding and theming constants
  */
 export const BRANDING = {

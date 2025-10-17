@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { Command } from 'commander';
 import { createCLI } from '../core/createCLI.js';
+import { ERROR_MESSAGES } from '../core/index.js';
 
 // Mock the process.argv and process.exit to prevent actual CLI execution
 const originalArgv = process.argv;
@@ -248,7 +249,7 @@ describe('createCLI Built-in Commands Integration', () => {
           hello: false,
           version: false
         }
-      })).rejects.toThrow(/Invalid or unsafe commands directory path.*\/non\/existent\/path/);
+      })).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('/non/existent/path'));
     });
 
     it('should handle missing required options with defaults', async () => {

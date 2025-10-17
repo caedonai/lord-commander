@@ -3,6 +3,18 @@ import { mkdir, writeFile, rm } from 'fs/promises';
 import { join } from 'path';
 import { createCLI } from '../core/createCLI.js';
 import { resetCommandTracking } from '../core/commands/registerCommands.js';
+import { ERROR_MESSAGES } from '../core/index.js';
+
+/**
+ * Helper function to create a matcher for invalid path error messages
+ */
+function expectInvalidPathError(path?: string) {
+  if (path) {
+    return ERROR_MESSAGES.INVALID_COMMAND_PATH(path);
+  }
+  // For cases where we want to match any invalid path error
+  return /Invalid or unsafe commands directory path/;
+}
 
 describe('Security Edge Cases - Multiple Command Paths', () => {
   const tempDir = join(process.cwd(), 'temp-security-test');
@@ -28,7 +40,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
           builtinCommands: { completion: false, hello: false, version: false },
           skipArgvParsing: true
         });
-      }).rejects.toThrow(/Invalid or unsafe commands directory path.*Command paths must be within the current working directory/);
+      }).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('../../../..'));
     });
 
     it('should block complex path traversal attempts', async () => {
@@ -50,7 +62,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             builtinCommands: { completion: false, hello: false, version: false },
             skipArgvParsing: true
           });
-        }).rejects.toThrow(/Invalid or unsafe commands directory path/);
+        }).rejects.toThrow(expectInvalidPathError());
       }
     });
 
@@ -73,7 +85,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             builtinCommands: { completion: false, hello: false, version: false },
             skipArgvParsing: true
           });
-        }).rejects.toThrow(/Invalid or unsafe commands directory path/);
+        }).rejects.toThrow(expectInvalidPathError());
       }
     });
 
@@ -88,7 +100,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
           builtinCommands: { completion: false, hello: false, version: false },
           skipArgvParsing: true
         });
-      }).rejects.toThrow(/Invalid or unsafe commands directory path.*unsafe/);
+      }).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('../../../unsafe'));
     });
   });
 
@@ -165,7 +177,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
           builtinCommands: { completion: false, hello: false, version: false },
           skipArgvParsing: true
         });
-      }).rejects.toThrow(/Invalid or unsafe commands directory path.*unsafe/);
+      }).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('../unsafe'));
     });
 
     it('should handle special characters in valid paths', async () => {
@@ -229,7 +241,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             builtinCommands: { completion: false, hello: false, version: false },
             skipArgvParsing: true
           });
-        }).rejects.toThrow(/Invalid or unsafe commands directory path/);
+        }).rejects.toThrow(expectInvalidPathError());
       }
     });
 
@@ -246,7 +258,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             builtinCommands: { completion: false, hello: false, version: false },
             skipArgvParsing: true
           });
-        }).rejects.toThrow(/Invalid or unsafe commands directory path/);
+        }).rejects.toThrow(expectInvalidPathError());
       }
     });
   });

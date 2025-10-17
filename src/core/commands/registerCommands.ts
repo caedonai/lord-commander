@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
 import type { CommandContext } from '../../types/cli';
+import { ERROR_MESSAGES } from '../foundation/constants';
 
 // Track registered commands and their sources for conflict detection
 const registeredCommands = new Map<string, { source: string; path: string }>();
@@ -69,10 +70,7 @@ function checkCommandConflict(
     } else {
       // Different paths with same command name - this is a conflict!
       const error = new Error(
-        `Command name conflict: '${commandName}' is defined in both:\n` +
-        `  - ${existing.path} (from ${existing.source})\n` +
-        `  - ${commandPath} (from ${sourcePath})\n` +
-        `Please rename one of the commands to avoid conflicts.`
+        ERROR_MESSAGES.COMMAND_NAME_CONFLICT(commandName, existing.path, existing.source, commandPath, sourcePath)
       );
       context.logger.error(error.message);
       throw error;
@@ -153,7 +151,7 @@ export async function registerCommands(
   if (commandsPath) {
     // Validate path security before processing
     if (!validateCommandPath(commandsPath, workingDir)) {
-      const error = new Error(`Invalid or unsafe commands directory path: ${commandsPath}. Command paths must be within the current working directory for security.`);
+      const error = new Error(ERROR_MESSAGES.INVALID_COMMAND_PATH(commandsPath));
       context.logger.error(error.message);
       throw error;
     }

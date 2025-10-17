@@ -7,6 +7,7 @@ This document provides essential context for AI agents working with the lord-com
 1. "Should I update copilot-instructions.md to reflect this change?"
 2. "Should I create tests for this implementation?"
 3. "Should I check for edge cases, error scenarios, and security issues/risks?"
+4. "Should I run all tests to ensure everything passes?"
 
 **Also remind to consider updating this file for:**
 - New modules, features, or architectural changes
@@ -126,7 +127,14 @@ Built-in commands that demonstrate SDK capabilities:
 - **Working Directory Validation**: All command paths must be within the current working directory
 - **Safe Relative Paths**: Allows legitimate relative paths like `./commands`, `src/commands`
 
-### 12. Professional CLI Features
+### 12. Maintainable Error Message System
+- **Centralized Error Messages**: All error messages defined in `ERROR_MESSAGES` constants for consistency
+- **Type-Safe Parameters**: Error message functions with proper TypeScript parameter validation
+- **Test Integration**: Shared constants used in both production code and test assertions
+- **Single Source of Truth**: Change error messages once, update everywhere automatically
+- **Helper Functions**: Flexible error matching utilities for complex test scenarios
+
+### 13. Professional CLI Features
 - Error handling with recovery suggestions
 - Automatic update notifications
 - Command aliases and advanced help formatting
@@ -361,6 +369,32 @@ async function upgradeProject() {
 }
 ```
 
+#### Maintainable Error Messages
+```typescript
+import { ERROR_MESSAGES } from "@caedonai/sdk/core";
+
+// ✅ Production code - using centralized error messages
+function validateCommandPath(commandsPath: string) {
+  if (!isValidPath(commandsPath)) {
+    throw new Error(ERROR_MESSAGES.INVALID_COMMAND_PATH(commandsPath));
+  }
+}
+
+// ✅ Test code - using the same shared constants
+it('should reject unsafe paths', async () => {
+  await expect(
+    createCLI({ commandsPath: '../../../etc' })
+  ).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('../../../etc'));
+});
+
+// ✅ Flexible helper for loop-based tests
+function expectInvalidPathError(path?: string) {
+  return path 
+    ? ERROR_MESSAGES.INVALID_COMMAND_PATH(path)
+    : /Invalid or unsafe commands directory path/;
+}
+```
+
 #### Shell Autocomplete Setup
 ```typescript
 import { createCLI } from "@caedonai/sdk/core";
@@ -496,6 +530,7 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 - ✅ **Core**: Complete (exec, fs, prompts, logger, createCLI, registerCommands with duplicate detection, autocomplete)
 - ✅ **Multiple Command Paths**: Complete (string | string[] support, array iteration, security validation integration)
 - ✅ **Security Validation**: Complete (path traversal protection, absolute path blocking, UNC path blocking, Windows-specific security)
+- ✅ **Error Message System**: Complete (centralized ERROR_MESSAGES constants, type-safe parameters, test integration)
 - ✅ **Shell Autocomplete**: Complete (bash, zsh, fish, PowerShell completion with auto-install)
 - ✅ **Built-in Commands**: Complete (configurable completion, hello, version commands with conditional exclusion)
 - ✅ **Duplicate Detection**: Complete (command conflict detection, state management, error recovery)
@@ -506,7 +541,17 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 
 ### Recent Major Enhancements
 
-#### Multiple Command Paths & Security Validation System (Latest)
+#### Error Message Maintainability System (Latest)
+- **Centralized Constants**: Created `ERROR_MESSAGES` constant object in `constants.ts` for all error messages
+- **Type-Safe Functions**: Error messages are now parameterized functions for consistent formatting
+- **Single Source of Truth**: All error messages defined once, used everywhere (production and tests)
+- **Test Integration**: Updated all test files to use shared constants instead of hardcoded strings
+- **Helper Functions**: Added flexible error matching functions for loop-based tests
+- **Tree-shaking Support**: ERROR_MESSAGES properly exported and validated (73 core exports)
+- **Maintainable Tests**: Tests now use the same message generation logic as production code
+- **Zero Functionality Impact**: All 204 tests still passing, no behavioral changes
+
+#### Multiple Command Paths & Security Validation System
 - **Multiple Directory Support**: Enhanced `commandsPath` to support both `string` and `string[]` for organizing commands across directories
 - **Security-First Design**: Comprehensive path validation prevents directory traversal attacks (`../../../..`) and absolute path access
 - **Windows Security**: Specialized protection against UNC paths (`\\server\share`) and drive root access (`C:\`, `D:\`)

@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 const EXPECTED_EXPORTS = {
   core: {
     // Foundation - Constants (from actual exports)
-    constants: ['BRANDING', 'CLI_CONFIG_PATHS', 'DEFAULT_IGNORE_PATTERNS', 'DEFAULT_PORTS', 'FILE_EXTENSIONS', 'FRAMEWORK_PATTERNS', 'GIT_PATTERNS', 'PACKAGE_MANAGER_COMMANDS', 'TELEMETRY_CONFIG', 'TEMP_DIR_PREFIX'],
+    constants: ['BRANDING', 'CLI_CONFIG_PATHS', 'DEFAULT_IGNORE_PATTERNS', 'DEFAULT_PORTS', 'ERROR_MESSAGES', 'FILE_EXTENSIONS', 'FRAMEWORK_PATTERNS', 'GIT_PATTERNS', 'PACKAGE_MANAGER_COMMANDS', 'TELEMETRY_CONFIG', 'TEMP_DIR_PREFIX'],
     
     // Foundation - Errors (from actual exports)
     errors: ['CLIError', 'ConfigurationError', 'ERROR_RECOVERY_SUGGESTIONS', 'FileSystemError', 'NetworkError', 'ProcessError', 'UserCancelledError', 'ValidationError', 'formatError', 'getRecoverySuggestion', 'gracefulExit', 'handleCancel', 'isCancel', 'setupGlobalErrorHandlers', 'withErrorHandling'],

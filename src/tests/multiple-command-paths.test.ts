@@ -3,6 +3,7 @@ import { mkdir, writeFile, rm } from 'fs/promises';
 import { join } from 'path';
 import { createCLI } from '../core/createCLI.js';
 import { resetCommandTracking } from '../core/commands/registerCommands.js';
+import { ERROR_MESSAGES } from '../core/index.js';
 
 describe('Multiple Command Paths', () => {
   const tempDir1 = join(process.cwd(), 'temp-multi-commands-1');
@@ -113,7 +114,7 @@ describe('Multiple Command Paths', () => {
         builtinCommands: { completion: false, hello: false, version: false },
         skipArgvParsing: true
       });
-    }).rejects.toThrow(/Invalid or unsafe commands directory path.*\/non\/existent\/path/);
+    }).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('/non/existent/path'));
   });
 
   it('should still detect conflicts across multiple paths', async () => {
