@@ -116,7 +116,17 @@ Built-in commands that demonstrate SDK capabilities:
 - **Conditional Exclusion**: Built-in commands won't load conflicting user commands
 - **Error Recovery**: Graceful handling of malformed command files
 
-### 11. Professional CLI Features
+### 11. Comprehensive Security Validation System
+- **Path Traversal Protection**: Blocks directory traversal attacks (`../../../..`, `../../../../etc`)
+- **Absolute Path Protection**: Prevents access to system directories (`C:\Windows\System32`, `/etc/passwd`)
+- **UNC Path Protection**: Blocks Windows network path attempts (`\\server\share`, `\\localhost\c$`)
+- **Drive Root Protection**: Prevents access to drive roots (`C:\`, `D:\`, etc.)
+- **Windows-specific Security**: Handles Windows UNC paths and drive access attempts
+- **Security Error Messages**: Clear, detailed error messages for security violations
+- **Working Directory Validation**: All command paths must be within the current working directory
+- **Safe Relative Paths**: Allows legitimate relative paths like `./commands`, `src/commands`
+
+### 12. Professional CLI Features
 - Error handling with recovery suggestions
 - Automatic update notifications
 - Command aliases and advanced help formatting
@@ -211,6 +221,9 @@ pnpm install
 - **Export Validation**: Run `pnpm test tree-shaking` when adding new exports
 - **Module Boundaries**: Ensure core/plugin separation is maintained in tests
 - **Test Structure**: Prefer configuration-driven tests over hardcoded expect statements
+- **Security Tests**: Use `security-multiple-paths.test.ts` as template for path validation scenarios
+- **Command Path Tests**: `multiple-command-paths.test.ts` covers array support and conflict detection
+- **Built-in Tests**: `createcli-builtin.test.ts` validates built-in command integration
 
 ### SDK Usage Examples
 
@@ -223,6 +236,77 @@ await createCLI({
   version: '1.0.0',
   description: 'My awesome CLI tool'
 });
+```
+
+#### Multiple Command Directories
+```typescript
+import { createCLI } from "@caedonai/sdk/core";
+
+// Register commands from multiple directories
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'CLI with organized commands',
+  commandsPath: [
+    './src/commands/core',     // Core business commands
+    './src/commands/admin',    // Administrative commands
+    './src/commands/utils'     // Utility commands
+  ]
+});
+
+// Single directory (backward compatible)
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'CLI with single command directory',
+  commandsPath: './commands'
+});
+
+// Array with mixed existing/non-existing paths (safely handled)
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'CLI with mixed paths',
+  commandsPath: [
+    './src/commands',      // Loads commands if exists
+    './optional-commands'  // Warns if doesn't exist, continues safely
+  ]
+});
+```
+
+#### Security Validation Examples
+```typescript
+import { createCLI } from "@caedonai/sdk/core";
+
+// ✅ Safe relative paths (allowed)
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'CLI with safe paths',
+  commandsPath: [
+    './commands',              // Safe relative path
+    'src/commands',            // Safe relative path
+    './src/nested/commands'    // Safe nested relative path
+  ]
+});
+
+// ❌ Unsafe paths (blocked with security errors)
+try {
+  await createCLI({
+    name: 'my-cli',
+    version: '1.0.0',
+    description: 'CLI with unsafe paths',
+    commandsPath: [
+      '../../../etc',          // Path traversal - BLOCKED
+      'C:\\Windows\\System32', // Absolute path - BLOCKED
+      '\\\\server\\share',     // UNC path - BLOCKED
+      '/etc/passwd'            // Absolute path - BLOCKED
+    ]
+  });
+} catch (error) {
+  // Error: Invalid or unsafe commands directory path: ../../../etc
+  // Command paths must be within the current working directory for security.
+}
 ```
 
 #### Configurable Built-in Commands
@@ -395,8 +479,9 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 ## Current Implementation Status
 
 ### Test Coverage & Performance
-- **Total Tests**: 187 comprehensive tests passing (10 improved tree-shaking tests, 6 duplicate detection tests, 33 autocomplete tests, 14 built-in exclusion tests)
-- **Test Types**: Unit tests, integration tests, data-driven tree-shaking validation, autocomplete functionality, duplicate detection, conflict resolution
+- **Total Tests**: 204 comprehensive tests passing (10 tree-shaking tests, 6 duplicate detection tests, 33 autocomplete tests, 14 built-in exclusion tests, 12 security validation tests, 18 createCLI built-in tests, 5 multiple command paths tests)
+- **Test Types**: Unit tests, integration tests, data-driven tree-shaking validation, autocomplete functionality, duplicate detection, conflict resolution, comprehensive security validation
+- **Security Test Coverage**: 12 comprehensive security tests covering path traversal, absolute paths, UNC paths, edge cases, and Windows-specific attacks
 - **Performance**: Optimized test suite (~18s for comprehensive Git integration tests)
 - **Manual Testing**: `pnpm test-cli` for interactive development testing
 - **Tree-shaking Tests**: Data-driven approach with 90% reduction in test boilerplate
@@ -409,6 +494,8 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 
 ### Module Completion Status
 - ✅ **Core**: Complete (exec, fs, prompts, logger, createCLI, registerCommands with duplicate detection, autocomplete)
+- ✅ **Multiple Command Paths**: Complete (string | string[] support, array iteration, security validation integration)
+- ✅ **Security Validation**: Complete (path traversal protection, absolute path blocking, UNC path blocking, Windows-specific security)
 - ✅ **Shell Autocomplete**: Complete (bash, zsh, fish, PowerShell completion with auto-install)
 - ✅ **Built-in Commands**: Complete (configurable completion, hello, version commands with conditional exclusion)
 - ✅ **Duplicate Detection**: Complete (command conflict detection, state management, error recovery)
@@ -419,7 +506,16 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 
 ### Recent Major Enhancements
 
-#### Data-Driven Tree-shaking Test System (Latest)
+#### Multiple Command Paths & Security Validation System (Latest)
+- **Multiple Directory Support**: Enhanced `commandsPath` to support both `string` and `string[]` for organizing commands across directories
+- **Security-First Design**: Comprehensive path validation prevents directory traversal attacks (`../../../..`) and absolute path access
+- **Windows Security**: Specialized protection against UNC paths (`\\server\share`) and drive root access (`C:\`, `D:\`)
+- **Backward Compatibility**: Single string paths continue to work seamlessly alongside new array support
+- **Error Recovery**: Mixed arrays with safe/unsafe paths handled gracefully with clear error messages
+- **Test Coverage**: 12 comprehensive security tests covering all attack vectors and edge cases
+- **Production Ready**: All 204 tests passing with robust security validation in place
+
+#### Data-Driven Tree-shaking Test System
 - **Maintainable Configuration**: Replaced 129 lines of hardcoded expect statements with organized data structure
 - **90% Boilerplate Reduction**: Tests generated dynamically from `EXPECTED_EXPORTS` configuration object
 - **Accurate Export Validation**: Tests match exactly what's exported from built modules (71 core, 37 plugin exports)

@@ -23,7 +23,7 @@ import { CreateCliOptions, CommandContext } from "../types/cli";
  * @param {string} [options.name] - CLI display name. Defaults to 'CLI Tool'.
  * @param {string} [options.description] - CLI description. Defaults to ''.
  * @param {string} [options.version] - CLI version string. Defaults to '0.1.0'.
- * @param {string} [options.commandsPath] - Path to commands directory. If not specified, auto-discovers in common locations.
+ * @param {string|string[]} [options.commandsPath] - Path(s) to commands directory/directories. If not specified, auto-discovers in common locations.
  * @param {object} [options.builtinCommands] - Configure built-in SDK commands.
  * @param {boolean} [options.builtinCommands.completion=true] - Include shell completion management command.
  * @param {boolean} [options.builtinCommands.hello=false] - Include example hello command.
@@ -62,18 +62,30 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
 
     // Register user commands (auto-discover if no path specified)
     // Pass builtinConfig so registerCommands knows which commands to skip
-    await registerCommands(program, context, options.commandsPath, builtinConfig);
+    if (options.commandsPath) {
+        const paths = Array.isArray(options.commandsPath) ? options.commandsPath : [options.commandsPath];
+        // Filter out falsy values (null, undefined, empty strings)
+        const validPaths = paths.filter(Boolean);
+        for (const commandPath of validPaths) {
+            await registerCommands(program, context, commandPath, builtinConfig);
+        }
+    } else {
+        // Auto-discovery when no paths specified
+        await registerCommands(program, context, undefined, builtinConfig);
+    }
 
     // Handle autocomplete setup if enabled
     if (options.autocomplete?.enabled !== false) {
         await handleAutocompleteSetup(program, options);
     }
 
-    // Start CLI processing
-    program.parseAsync(process.argv).catch((error) => {
-        logger.error(`Error executing command: ${error.message}`);
-        process.exit(1);
-    });
+    // Start CLI processing (unless skipped for testing)
+    if (!options.skipArgvParsing) {
+        program.parseAsync(process.argv).catch((error) => {
+            logger.error(`Error executing command: ${error.message}`);
+            process.exit(1);
+        });
+    }
 
     return program;
 }

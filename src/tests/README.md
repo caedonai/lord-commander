@@ -32,12 +32,10 @@ pnpm test
 ## Testing Strategy
 
 - **Manual Testing**: Use `test-cli.ts` for interactive testing and validation
-- **Unit Tests**: Use `basic.test.ts` for automated testing of individual components
 - **Integration Tests**: Test complete workflows and command interactions
 - **Development Testing**: Validate new features before committing
 
 ## Adding New Tests
 
 1. **New Commands**: Add test cases to `test-cli.ts` or create new manual test scenarios
-2. **Unit Tests**: Add tests to `basic.test.ts` or create new `.test.ts` files
-3. **Integration Tests**: Create comprehensive workflow tests for complex scenarios
+2. **Integration Tests**: Create comprehensive workflow tests for complex scenarios

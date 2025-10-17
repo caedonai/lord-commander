@@ -2,7 +2,7 @@ export interface CreateCliOptions {
     name?: string;
     version?: string;
     description?: string;
-    commandsPath?: string;
+    commandsPath?: string | string[];  // Support both single path and array of paths
     autocomplete?: {
         enabled?: boolean;
         autoInstall?: boolean;
@@ -14,6 +14,8 @@ export interface CreateCliOptions {
         hello?: boolean;         // Default: false - Example command for learning
         version?: boolean;       // Default: false - Advanced version management (conflicts with -V)
     };
+    // Internal option for testing - don't parse argv automatically
+    skipArgvParsing?: boolean;
 }
 
 /**

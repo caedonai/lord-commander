@@ -8,6 +8,30 @@ const registeredCommands = new Map<string, { source: string; path: string }>();
 const processedPaths = new Set<string>();
 
 /**
+ * Validate that a path is safe and within allowed boundaries
+ */
+function validateCommandPath(commandPath: string, workingDir: string): boolean {
+  try {
+    const resolvedPath = path.resolve(commandPath);
+    const resolvedWorkingDir = path.resolve(workingDir);
+    
+    // Ensure the resolved path is within the working directory or its subdirectories
+    const relativePath = path.relative(resolvedWorkingDir, resolvedPath);
+    
+    // If relative path starts with '..' or is absolute, it's trying to escape
+    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+      return false;
+    }
+    
+    // Additional check: make sure the resolved path is actually under working directory
+    return resolvedPath.startsWith(resolvedWorkingDir);
+  } catch {
+    // If path resolution fails, consider it unsafe
+    return false;
+  }
+}
+
+/**
  * Check if a built-in command should be skipped based on configuration
  */
 function shouldSkipBuiltinCommand(
@@ -124,10 +148,18 @@ export async function registerCommands(
   builtinConfig?: { completion?: boolean; hello?: boolean; version?: boolean }
 ) {
   let absolutePath: string;
+  const workingDir = process.cwd();
   
   if (commandsPath) {
+    // Validate path security before processing
+    if (!validateCommandPath(commandsPath, workingDir)) {
+      const error = new Error(`Invalid or unsafe commands directory path: ${commandsPath}. Command paths must be within the current working directory for security.`);
+      context.logger.error(error.message);
+      throw error;
+    }
+    
     // Use provided path
-    absolutePath = path.resolve(process.cwd(), commandsPath);
+    absolutePath = path.resolve(workingDir, commandsPath);
     if (!fs.existsSync(absolutePath)) {
       context.logger.warn(`Specified commands directory not found: ${commandsPath}`);
       return;
@@ -140,7 +172,7 @@ export async function registerCommands(
       return; // Silently return - this is normal for libraries that don't have commands
     }
     absolutePath = discoveredPath;
-    context.logger.debug(`Auto-discovered commands directory: ${path.relative(process.cwd(), absolutePath)}`);
+    context.logger.debug(`Auto-discovered commands directory: ${path.relative(workingDir, absolutePath)}`);
   }
 
   // Check if we've already processed this path
@@ -168,14 +200,14 @@ export async function registerCommands(
       }
 
       // Only process TypeScript/JavaScript files
-      if (!entry.name.match(/\.(ts|js)$/)) continue;
+      if (!entry.name.match(/\.(ts|js|mjs)$/)) continue;
 
       // Skip test, type definition, and non-command files
       if (entry.name.match(/\.(test|spec|d)\.(ts|js)$/)) continue;
-      if (entry.name === 'index.ts' || entry.name === 'index.js') continue;
+      if (entry.name === 'index.ts' || entry.name === 'index.js' || entry.name === 'index.mjs') continue;
 
       // Skip built-in commands only if they are enabled in registerBuiltinCommands
-      const fileName = entry.name.replace(/\.(ts|js)$/, '');
+      const fileName = entry.name.replace(/\.(ts|js|mjs)$/, '');
       if (builtinConfig && shouldSkipBuiltinCommand(fileName, builtinConfig)) {
         context.logger.debug(`Skipping built-in command: ${fileName} (handled by registerBuiltinCommands)`);
         continue;

@@ -3,7 +3,6 @@ import { Command } from 'commander';
 import { registerCommands, resetCommandTracking } from '../core/commands/registerCommands.js';
 import { writeFile, mkdir, rm } from 'fs/promises';
 import { join } from 'path';
-import { tmpdir } from 'os';
 
 describe('registerCommands Built-in Exclusion', () => {
   let program: Command;
@@ -26,8 +25,8 @@ describe('registerCommands Built-in Exclusion', () => {
       }
     };
 
-    // Create a temporary directory for test commands
-    tempDir = join(tmpdir(), `lord-commander-test-${Date.now()}`);
+    // Create a temporary directory for test commands within the current working directory for security
+    tempDir = join(process.cwd(), `temp-register-commands-test-${Date.now()}`);
     await mkdir(tempDir, { recursive: true });
   });
 

@@ -12,7 +12,7 @@ async function createTestCLI(options: Parameters<typeof createCLI>[0]) {
     name: 'test-cli',
     version: '1.0.0',
     description: 'Test CLI',
-    commandsPath: '/non/existent/path', // Prevent auto-discovery for isolated testing
+    commandsPath: './non-existent-path', // Prevent auto-discovery for isolated testing (safe relative path)
     ...options // Override defaults with provided options
   });
   
@@ -237,17 +237,18 @@ describe('createCLI Built-in Commands Integration', () => {
 
   describe('Error Scenarios', () => {
     it('should handle invalid CLI options gracefully', async () => {
+      // Test that the CLI throws an error for unsafe paths as expected
       await expect(createCLI({
         name: '',
         version: '1.0.0',
         description: 'Test CLI',
-        commandsPath: '/non/existent/path', // Prevent auto-discovery
+        commandsPath: '/non/existent/path', // This should now trigger security validation error
         builtinCommands: {
           completion: true,
           hello: false,
           version: false
         }
-      })).resolves.toBeDefined();
+      })).rejects.toThrow(/Invalid or unsafe commands directory path.*\/non\/existent\/path/);
     });
 
     it('should handle missing required options with defaults', async () => {
