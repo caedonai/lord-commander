@@ -4,8 +4,8 @@ import {
   sanitizeLogOutputAdvanced, 
   analyzeLogSecurity,
   type LogInjectionConfig 
-} from '../core/createCLI.js';
-import { createLogger, type LoggerOptions } from '../core/ui/logger.js';
+} from '../../core/createCLI.js';
+import { createLogger, type LoggerOptions } from '../../core/ui/logger.js';
 
 describe('Log Injection Protection', () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>;

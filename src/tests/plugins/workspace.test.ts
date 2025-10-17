@@ -20,8 +20,8 @@ import {
   validateWorkspace,
   getWorkspaceSummary,
   type PackageFilter
-} from '../plugins/workspace.js';
-import { writeFile, ensureDir } from '../core/execution/fs.js';
+} from '../../plugins/workspace.js';
+import { writeFile, ensureDir } from '../../core/execution/fs.js';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import os from 'node:os';

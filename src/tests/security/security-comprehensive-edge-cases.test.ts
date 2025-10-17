@@ -4,14 +4,14 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ERROR_MESSAGES } from '../core/foundation/constants.js';
+import { ERROR_MESSAGES } from '../../core/foundation/constants.js';
 import { 
   analyzeInputSecurity,
   sanitizeInput,
   isPathSafe,
   isCommandSafe,
   isProjectNameSafe
-} from '../core/foundation/security-patterns.js';
+} from '../../core/foundation/security-patterns.js';
 
 describe('Security Comprehensive Edge Cases', () => {
   describe('ERROR_MESSAGES Edge Cases', () => {

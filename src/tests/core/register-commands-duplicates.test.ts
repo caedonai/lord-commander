@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Command } from 'commander';
-import { registerCommands, resetCommandTracking } from '../core/commands/registerCommands.js';
-import { createLogger } from '../core/ui/logger.js';
-import type { CommandContext } from '../types/cli.js';
+import { registerCommands, resetCommandTracking } from '../../core/commands/registerCommands.js';
+import { createLogger } from '../../core/ui/logger.js';
+import type { CommandContext } from '../../types/cli.js';
 import fs from 'fs';
 import path from 'path';
 

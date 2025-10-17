@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { validateErrorHandler, executeErrorHandlerSafely, ErrorHandlerValidationError } from '../core/createCLI.js';
+import { validateErrorHandler, executeErrorHandlerSafely, ErrorHandlerValidationError } from '../../core/createCLI.js';
 
 describe('Error Handler Security Validation', () => {
   beforeEach(() => {
@@ -375,7 +375,7 @@ describe('Error Handler Security Validation', () => {
 
   describe('Integration with createCLI', () => {
     it('should validate error handlers during CLI creation', async () => {
-      const { createCLI } = await import('../core/createCLI.js');
+      const { createCLI } = await import('../../core/createCLI.js');
       
       const dangerousHandler = (_error: Error) => {
         eval('malicious code');
@@ -391,7 +391,7 @@ describe('Error Handler Security Validation', () => {
     });
 
     it('should allow safe error handlers during CLI creation', async () => {
-      const { createCLI } = await import('../core/createCLI.js');
+      const { createCLI } = await import('../../core/createCLI.js');
       
       const safeHandler = (error: Error) => {
         console.error('Safe error:', error.message);

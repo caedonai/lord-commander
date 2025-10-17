@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Command } from 'commander';
-import { registerBuiltinCommands } from '../core/createCLI.js';
+import { registerBuiltinCommands } from '../../core/createCLI.js';
 
 describe('Built-in Commands Configuration', () => {
   let program: Command;

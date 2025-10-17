@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { parseVersion, compareVersions, getChangeType, satisfiesRange, getAllTags, getLatestTag, tagExists } from '../plugins/updater.js';
+import { parseVersion, compareVersions, getChangeType, satisfiesRange, getAllTags, getLatestTag, tagExists } from '../../plugins/updater.js';
 
 describe('Updater Plugin - Basic Tests', () => {
   describe('Semantic Version Parsing', () => {

@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createCLI } from '../core/createCLI.js';
+import { createCLI } from '../../core/createCLI.js';
 
 describe('Error Handling Security', () => {
   let originalNodeEnv: string | undefined;

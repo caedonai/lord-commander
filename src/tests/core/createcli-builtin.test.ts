@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { Command } from 'commander';
-import { createCLI } from '../core/createCLI.js';
-import { ERROR_MESSAGES } from '../core/index.js';
+import { createCLI } from '../../core/createCLI.js';
+import { ERROR_MESSAGES } from '../../core/index.js';
 
 // Mock the process.argv and process.exit to prevent actual CLI execution
 const originalArgv = process.argv;

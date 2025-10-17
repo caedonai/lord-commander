@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdir, writeFile, rm } from 'fs/promises';
 import { join } from 'path';
-import { createCLI } from '../core/createCLI.js';
-import { resetCommandTracking } from '../core/commands/registerCommands.js';
-import { ERROR_MESSAGES } from '../core/index.js';
+import { createCLI } from '../../core/createCLI.js';
+import { resetCommandTracking } from '../../core/commands/registerCommands.js';
+import { ERROR_MESSAGES } from '../../core/index.js';
 
 /**
  * Helper function to create a matcher for invalid path error messages

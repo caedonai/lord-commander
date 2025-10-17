@@ -24,7 +24,7 @@
  *   pnpm test-cli --help
  */
 
-import { createCLI } from '../core/createCLI.js';
+import { createCLI } from '../../core/createCLI.js';
 
 await createCLI({
     name: 'test-cli',

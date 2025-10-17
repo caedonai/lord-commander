@@ -46,7 +46,7 @@ const EXPECTED_EXPORTS = {
 describe('Tree-shaking Tests', () => {
   describe('Core Module Exports', () => {
     it('should export all expected core functions', async () => {
-      const coreModule = await import('../core/index') as any;
+      const coreModule = await import('../../core/index') as any;
       
       // Test all expected exports are present
       Object.entries(EXPECTED_EXPORTS.core).forEach(([category, functions]) => {
@@ -78,7 +78,7 @@ describe('Tree-shaking Tests', () => {
     });
     
     it('should not export plugin functionality from core', async () => {
-      const coreModule = await import('../core/index');
+      const coreModule = await import('../../core/index');
       
       // Test excluded functions are NOT present
       EXPECTED_EXPORTS.core.excluded.forEach(funcName => {
@@ -91,7 +91,7 @@ describe('Tree-shaking Tests', () => {
   
   describe('Plugins Module Exports', () => {
     it('should export all expected plugin functions', async () => {
-      const pluginsModule = await import('../plugins/index') as any;
+      const pluginsModule = await import('../../plugins/index') as any;
       
       // Test all expected exports are present
       Object.entries(EXPECTED_EXPORTS.plugins).forEach(([category, functions]) => {
@@ -111,7 +111,7 @@ describe('Tree-shaking Tests', () => {
     });
     
     it('should not export core functionality from plugins', async () => {
-      const pluginsModule = await import('../plugins/index') as any;
+      const pluginsModule = await import('../../plugins/index') as any;
       
       // Test excluded functions are NOT present
       EXPECTED_EXPORTS.plugins.excluded.forEach(funcName => {
@@ -134,7 +134,7 @@ describe('Tree-shaking Tests', () => {
       ];
       
       for (const { name, expectedType } of testFunctions) {
-        const module = await import('../core/index') as any;
+        const module = await import('../../core/index') as any;
         const importedItem = module[name];
         expect(importedItem, `${name} should be selectively importable`).toBeDefined();
         expect(typeof importedItem, `${name} should be a ${expectedType}`).toBe(expectedType);
@@ -148,7 +148,7 @@ describe('Tree-shaking Tests', () => {
       const testFunctions = ['parseVersion', 'isGitRepository', 'isWorkspace'];
       
       for (const funcName of testFunctions) {
-        const module = await import('../plugins/index') as any;
+        const module = await import('../../plugins/index') as any;
         const importedFunc = module[funcName];
         expect(importedFunc, `${funcName} should be selectively importable`).toBeDefined();
         expect(typeof importedFunc, `${funcName} should be a function`).toBe('function');
@@ -158,7 +158,7 @@ describe('Tree-shaking Tests', () => {
     });
     
     it('should allow Command usage without external dependencies', async () => {
-      const { Command } = await import('../core/index');
+      const { Command } = await import('../../core/index');
       
       expect(Command).toBeDefined();
       expect(typeof Command).toBe('function');
@@ -179,8 +179,8 @@ describe('Tree-shaking Tests', () => {
   describe('Module Boundaries', () => {
     it('should maintain clear separation between core and plugins', async () => {
       const [coreModule, pluginsModule] = await Promise.all([
-        import('../core/index'),
-        import('../plugins/index')
+        import('../../core/index'),
+        import('../../plugins/index')
       ]);
       
       // Get all exports from both modules
@@ -200,8 +200,8 @@ describe('Tree-shaking Tests', () => {
     
     it('should have consistent export patterns', async () => {
       const [coreModule, pluginsModule] = await Promise.all([
-        import('../core/index'),
-        import('../plugins/index')
+        import('../../core/index'),
+        import('../../plugins/index')
       ]);
       
       // Verify that both modules export actual values (not undefined)
@@ -221,7 +221,7 @@ describe('Tree-shaking Tests', () => {
   describe('Type Exports', () => {
     it('should export TypeScript types for tree-shaking', async () => {
       // Import types - this validates they exist for TypeScript
-      const typesModule = await import('../types/index');
+      const typesModule = await import('../../types/index');
       
       expect(typesModule).toBeDefined();
       // Types don't have runtime presence, but importing validates they exist

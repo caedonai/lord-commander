@@ -12,7 +12,7 @@ import {
   isPathSafe,
   isCommandSafe,
   isProjectNameSafe
-} from '../core/foundation/security-patterns.js';
+} from '../../core/foundation/security-patterns.js';
 
 describe('Security Patterns', () => {
   describe('Path Traversal Patterns', () => {

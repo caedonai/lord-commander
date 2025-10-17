@@ -11,8 +11,8 @@ import {
   truncateErrorMessage,
   getObjectMemorySize,
   createCLI 
-} from '../core/createCLI.js';
-import { CLIError } from '../core/foundation/errors.js';
+} from '../../core/createCLI.js';
+import { CLIError } from '../../core/foundation/errors.js';
 
 describe('Memory Exhaustion Protection', () => {
   beforeEach(() => {

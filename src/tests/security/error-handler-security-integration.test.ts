@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createCLI, ErrorHandlerValidationError } from '../core/createCLI.js';
+import { createCLI, ErrorHandlerValidationError } from '../../core/createCLI.js';
 
 describe('Error Handler Security Integration', () => {
   describe('CLI Creation with Error Handler Validation', () => {
