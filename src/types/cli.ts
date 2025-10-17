@@ -14,6 +14,8 @@ export interface CreateCliOptions {
         hello?: boolean;         // Default: false - Example command for learning
         version?: boolean;       // Default: false - Advanced version management (conflicts with -V)
     };
+    // Custom error handler for command execution errors
+    errorHandler?: (error: Error) => void | Promise<void>;
     // Internal option for testing - don't parse argv automatically
     skipArgvParsing?: boolean;
 }

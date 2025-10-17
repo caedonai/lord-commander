@@ -27,6 +27,7 @@ import { CreateCliOptions, CommandContext } from "../types/cli";
  * @param {object} [options.builtinCommands] - Configure built-in SDK commands.
  * @param {boolean} [options.builtinCommands.completion=true] - Include shell completion management command.
  * @param {boolean} [options.builtinCommands.hello=false] - Include example hello command.
+ * @param {function} [options.errorHandler] - Custom error handler for command execution errors. If not provided, defaults to logging error and exit(1).
  * @returns {Promise<Command>} The configured Commander program instance
  */
 export async function createCLI(options: CreateCliOptions): Promise<Command> {
@@ -81,9 +82,22 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
 
     // Start CLI processing (unless skipped for testing)
     if (!options.skipArgvParsing) {
-        program.parseAsync(process.argv).catch((error) => {
-            logger.error(`Error executing command: ${error.message}`);
-            process.exit(1);
+        program.parseAsync(process.argv).catch(async (error) => {
+            if (options.errorHandler) {
+                // Use custom error handler if provided
+                try {
+                    await options.errorHandler(error);
+                } catch (handlerError) {
+                    // If custom error handler throws, fall back to default behavior
+                    logger.error(`Error in custom error handler: ${handlerError instanceof Error ? handlerError.message : String(handlerError)}`);
+                    logger.error(`Original error: ${error.message}`);
+                    process.exit(1);
+                }
+            } else {
+                // Default error handling behavior
+                logger.error(`Error executing command: ${error.message}`);
+                process.exit(1);
+            }
         });
     }
 

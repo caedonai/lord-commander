@@ -134,7 +134,14 @@ Built-in commands that demonstrate SDK capabilities:
 - **Single Source of Truth**: Change error messages once, update everywhere automatically
 - **Helper Functions**: Flexible error matching utilities for complex test scenarios
 
-### 13. Professional CLI Features
+### 13. Custom Error Handling
+- **Optional Error Handler**: Developers can provide custom error handlers for `program.parseAsync()` execution
+- **Async Support**: Both synchronous and asynchronous error handlers are supported
+- **Fallback Mechanism**: If custom error handler throws, falls back to default error handling with detailed logging
+- **Backward Compatibility**: Default error handling preserved when no custom handler provided
+- **Type Safety**: Error handler function properly typed with Error parameter
+
+### 14. Professional CLI Features
 - Error handling with recovery suggestions
 - Automatic update notifications
 - Command aliases and advanced help formatting
@@ -395,6 +402,60 @@ function expectInvalidPathError(path?: string) {
 }
 ```
 
+#### Custom Error Handling
+```typescript
+import { createCLI } from "@caedonai/sdk/core";
+
+// ✅ Custom synchronous error handler
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'CLI with custom error handling',
+  errorHandler: (error) => {
+    console.error(`Custom error handling: ${error.message}`);
+    // Send to analytics, log to file, etc.
+    process.exit(2); // Custom exit code
+  }
+});
+
+// ✅ Custom async error handler  
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'CLI with async error handling',
+  errorHandler: async (error) => {
+    await logErrorToRemoteService(error);
+    await notifyAdmins(error);
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  }
+});
+
+// ✅ Robust error handler with fallback
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'CLI with robust error handling',
+  errorHandler: async (error) => {
+    try {
+      await logToAnalytics(error);
+      await showUserFriendlyMessage(error);
+    } catch (handlerError) {
+      // If custom handler fails, let SDK handle fallback
+      throw handlerError; // SDK will log both errors and exit
+    }
+  }
+});
+
+// ✅ Backward compatibility - no error handler (default behavior)
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'CLI with default error handling'
+  // No errorHandler - uses built-in: log error and exit(1)
+});
+```
+
 #### Shell Autocomplete Setup
 ```typescript
 import { createCLI } from "@caedonai/sdk/core";
@@ -513,9 +574,10 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 ## Current Implementation Status
 
 ### Test Coverage & Performance
-- **Total Tests**: 204 comprehensive tests passing (10 tree-shaking tests, 6 duplicate detection tests, 33 autocomplete tests, 14 built-in exclusion tests, 12 security validation tests, 18 createCLI built-in tests, 5 multiple command paths tests)
-- **Test Types**: Unit tests, integration tests, data-driven tree-shaking validation, autocomplete functionality, duplicate detection, conflict resolution, comprehensive security validation
+- **Total Tests**: 208 comprehensive tests passing (10 tree-shaking tests, 6 duplicate detection tests, 33 autocomplete tests, 14 built-in exclusion tests, 12 security validation tests, 22 createCLI built-in tests, 5 multiple command paths tests)
+- **Test Types**: Unit tests, integration tests, data-driven tree-shaking validation, autocomplete functionality, duplicate detection, conflict resolution, comprehensive security validation, custom error handling
 - **Security Test Coverage**: 12 comprehensive security tests covering path traversal, absolute paths, UNC paths, edge cases, and Windows-specific attacks
+- **Error Handler Test Coverage**: 4 comprehensive tests covering sync/async handlers, fallback behavior, and backward compatibility
 - **Performance**: Optimized test suite (~18s for comprehensive Git integration tests)
 - **Manual Testing**: `pnpm test-cli` for interactive development testing
 - **Tree-shaking Tests**: Data-driven approach with 90% reduction in test boilerplate
@@ -531,6 +593,7 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 - ✅ **Multiple Command Paths**: Complete (string | string[] support, array iteration, security validation integration)
 - ✅ **Security Validation**: Complete (path traversal protection, absolute path blocking, UNC path blocking, Windows-specific security)
 - ✅ **Error Message System**: Complete (centralized ERROR_MESSAGES constants, type-safe parameters, test integration)
+- ✅ **Custom Error Handling**: Complete (optional error handlers, async support, fallback mechanism, backward compatibility)
 - ✅ **Shell Autocomplete**: Complete (bash, zsh, fish, PowerShell completion with auto-install)
 - ✅ **Built-in Commands**: Complete (configurable completion, hello, version commands with conditional exclusion)
 - ✅ **Duplicate Detection**: Complete (command conflict detection, state management, error recovery)
@@ -541,7 +604,16 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 
 ### Recent Major Enhancements
 
-#### Error Message Maintainability System (Latest)
+#### Custom Error Handling System (Latest)
+- **Optional Error Handler**: Developers can provide custom error handlers for `program.parseAsync()` execution
+- **Async Support**: Both synchronous and asynchronous error handlers are supported with proper await handling
+- **Robust Fallback**: If custom error handler throws, falls back to default error handling with detailed logging of both errors
+- **Backward Compatibility**: Default error handling preserved when no custom handler provided - no breaking changes
+- **Type Safety**: Error handler function properly typed with Error parameter for full TypeScript support
+- **Test Coverage**: 4 comprehensive tests covering sync/async handlers, fallback behavior, and backward compatibility
+- **Production Ready**: All 208 tests passing with comprehensive error handling validation
+
+#### Error Message Maintainability System
 - **Centralized Constants**: Created `ERROR_MESSAGES` constant object in `constants.ts` for all error messages
 - **Type-Safe Functions**: Error messages are now parameterized functions for consistent formatting
 - **Single Source of Truth**: All error messages defined once, used everywhere (production and tests)

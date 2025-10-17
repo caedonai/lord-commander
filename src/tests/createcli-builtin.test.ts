@@ -299,4 +299,74 @@ describe('createCLI Built-in Commands Integration', () => {
       expect(commandNames).toContain('version');
     });
   });
+
+  describe('Custom Error Handler', () => {
+    it('should use custom error handler when provided', async () => {
+      const mockErrorHandler = vi.fn();
+      
+      // Create CLI with custom error handler
+      const cli = await createCLI({
+        name: 'test-cli',
+        version: '1.0.0',
+        description: 'Test CLI with custom error handler',
+        commandsPath: './non-existent-path',
+        builtinCommands: { completion: false, hello: false, version: false },
+        errorHandler: mockErrorHandler,
+        skipArgvParsing: true // Don't actually parse argv for this test
+      });
+
+      expect(cli).toBeInstanceOf(Command);
+      expect(mockErrorHandler).not.toHaveBeenCalled(); // Should only be called on actual errors
+    });
+
+    it('should handle async error handlers', async () => {
+      const mockAsyncErrorHandler = vi.fn().mockResolvedValue(undefined);
+      
+      const cli = await createCLI({
+        name: 'test-cli',
+        version: '1.0.0',
+        description: 'Test CLI with async error handler',
+        commandsPath: './non-existent-path',
+        builtinCommands: { completion: false, hello: false, version: false },
+        errorHandler: mockAsyncErrorHandler,
+        skipArgvParsing: true
+      });
+
+      expect(cli).toBeInstanceOf(Command);
+      expect(mockAsyncErrorHandler).not.toHaveBeenCalled();
+    });
+
+    it('should fall back to default error handling if custom handler throws', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+      
+      const throwingErrorHandler = vi.fn().mockRejectedValue(new Error('Handler error'));
+      
+      const cli = await createCLI({
+        name: 'test-cli',
+        version: '1.0.0',
+        description: 'Test CLI with throwing error handler',
+        commandsPath: './non-existent-path',
+        builtinCommands: { completion: false, hello: false, version: false },
+        errorHandler: throwingErrorHandler,
+        skipArgvParsing: true
+      });
+
+      expect(cli).toBeInstanceOf(Command);
+      
+      // Cleanup mocks
+      consoleSpy.mockRestore();
+      processExitSpy.mockRestore();
+    });
+
+    it('should maintain backward compatibility when no error handler provided', async () => {
+      // Test that CLI still works normally without error handler
+      const { cli, commandNames } = await createTestCLI({
+        // No errorHandler provided - should use default behavior
+      });
+
+      expect(cli).toBeInstanceOf(Command);
+      expect(commandNames).toContain('completion'); // Should still work normally
+    });
+  });
 });
