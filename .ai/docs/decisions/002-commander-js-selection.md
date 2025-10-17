@@ -7,20 +7,11 @@
 
 ## Context
 
-The lord-commander-poc CLI SDK needed a robust foundation for command-line interface functionality. This decision would impact the entire SDK architecture, developer experience, security model, and extensibility patterns.
-
-We evaluated multiple CLI frameworks considering:
-1. TypeScript support and type definitions quality
-2. Security features and validation capabilities
-3. Command parsing flexibility and performance
-4. Ecosystem compatibility and adoption
-5. Extension patterns and middleware support
-6. Bundle size and tree-shaking compatibility
-7. Documentation and community support
+The lord-commander-poc CLI SDK needed a robust foundation for command-line interface functionality. We evaluated multiple frameworks considering TypeScript support, security features, performance, and ecosystem compatibility.
 
 ## Decision
 
-**We have decided to use Commander.js as the foundational CLI framework** for the lord-commander-poc SDK, with abstracted utilities built on top to enhance security and developer experience.
+**We chose Commander.js as the foundational CLI framework** for the SDK, with enhanced security abstractions built on top.
 
 ## Evaluation Matrix
 
@@ -33,342 +24,136 @@ We evaluated multiple CLI frameworks considering:
 
 ## Rationale
 
-### 1. **Superior TypeScript Integration**
+### **Excellent TypeScript Integration**
 
-Commander.js provides excellent TypeScript support with comprehensive type definitions.
+Commander.js provides comprehensive type definitions and type-safe command registration:
 
-**Commander.js TypeScript Excellence**:
 ```typescript
-import { Command } from 'commander';
-
-// Rich type definitions for all command methods
-const program = new Command();
-
+// Type-safe command definition
 program
-  .name('my-cli')
-  .description('CLI description')
-  .version('1.0.0')
-  .option('-v, --verbose', 'enable verbose logging')
-  .option('-e, --env <environment>', 'target environment', 'production')
-  .argument('<input>', 'input file path')
-  .action((input: string, options: { verbose?: boolean; env: string }) => {
-    // Full type safety for arguments and options
-    if (options.verbose) {
-      console.log(`Processing ${input} for ${options.env}`);
-    }
-  });
-
-// Type-safe command registration
-program
-  .command('build')
-  .description('Build the project')
-  .option('--watch', 'watch for changes')
-  .action((options: { watch?: boolean }) => {
-    // Compile-time type validation
+  .command('deploy')
+  .argument('<environment>', 'deployment target')
+  .option('-f, --force', 'force deployment')
+  .action((environment: string, options: { force?: boolean }) => {
+    // Full compile-time type validation
   });
 ```
 
-**Yargs Comparison** (more verbose, less type-safe):
+### **Security Enhancement Foundation**
+
+Commander.js provides flexible foundation for security abstractions:
+
 ```typescript
-import yargs from 'yargs';
-
-// More complex type definitions, harder to extend
-const argv = yargs
-  .command('build', 'Build the project', (yargs) => {
-    return yargs.option('watch', {
-      type: 'boolean',
-      description: 'watch for changes'
-    });
-  }, (argv) => {
-    // Type inference is less precise
-    const watch: boolean | undefined = argv.watch;
-  })
-  .parse();
-```
-
-### 2. **Flexible Architecture for Security Enhancement**
-
-Commander.js provides the right foundation for building security-enhanced abstractions.
-
-**Security Enhancement Layer**:
-```typescript
-// Our security-enhanced wrapper built on Commander.js
+// Security-enhanced wrapper built on Commander.js
 export async function createCLI(options: CLIOptions): Promise<void> {
   const program = new Command(options.name); // Commander.js foundation
   
   // Security validation layer
-  if (options.commandsPath) {
-    validateCommandPaths(options.commandsPath); // Our security enhancement
-  }
+  validateCommandPaths(options.commandsPath);
   
   // Enhanced context with security utilities
   const context: CommandContext = {
-    logger: createSecureLogger(),     // Our enhancement
-    exec: createSecureExecutor(),     // Our enhancement  
-    fs: createSecureFileSystem(),     // Our enhancement
-    prompts: createSecurePrompts()    // Our enhancement
+    logger: createSecureLogger(),     // Sanitized logging
+    exec: createSecureExecutor(),     // Process validation
+    fs: createSecureFileSystem(),     // Path validation
+    prompts: createSecurePrompts()    // Input validation
   };
   
-  // Command registration with duplicate detection
   await registerCommands(program, context, options.commandsPath);
-  
-  // Custom error handling with sanitization
-  try {
-    await program.parseAsync();
-  } catch (error) {
-    if (options.errorHandler) {
-      await executeErrorHandlerSafely(options.errorHandler, error);
-    } else {
-      handleDefaultError(sanitizeErrorMessage(error.message));
-    }
-  }
 }
 ```
 
-### 3. **Performance and Bundle Size**
+### **Performance and Bundle Optimization**
 
-Commander.js offers excellent performance with a reasonable bundle footprint.
-
-**Bundle Analysis**:
 ```typescript
-// Commander.js core: ~8KB (reasonable foundation)
-import { Command } from 'commander';
-
-// Our SDK enhancements: ~63KB additional functionality
-// - Security utilities: ~15KB
-// - File system utilities: ~12KB  
-// - Process execution: ~8KB
-// - Interactive prompts: ~18KB
-// - Plugin system: ~10KB
-
-// Total SDK: ~71KB full feature set
-// Tree-shakeable down to: ~1.78KB for core functionality
+// Commander.js: ~8KB foundation
+// Our SDK additions: ~63KB functionality
+// Total: ~71KB full feature set
+// Tree-shakeable: down to 1.78KB for core functionality
 
 // Competitive comparison:
 // - Oclif: ~45KB minimum (no tree-shaking)
-// - Yargs: ~25KB minimum (limited tree-shaking)
+// - Yargs: ~25KB minimum (limited tree-shaking) 
 // - Our SDK: 1.78KB minimum (aggressive tree-shaking)
 ```
 
-### 4. **Command Registration Flexibility**
+### **Industry Adoption**
 
-Commander.js allows for sophisticated command registration patterns.
-
-**Advanced Command Registration**:
-```typescript
-// Flexible command definition pattern
-export default function(program: Command, context: CommandContext) {
-  const { logger, exec, prompts } = context;
-  
-  program
-    .command('deploy')
-    .description('Deploy application')
-    .argument('<environment>', 'deployment target')
-    .option('-f, --force', 'force deployment')
-    .option('--dry-run', 'preview deployment without executing')
-    .addHelpText('after', `
-Examples:
-  $ my-cli deploy production
-  $ my-cli deploy staging --dry-run
-  $ my-cli deploy production --force
-    `)
-    .action(async (environment: string, options: DeployOptions) => {
-      // Rich command implementation with type safety
-      logger.intro(`Deploying to ${environment}`);
-      
-      if (options.dryRun) {
-        logger.info('Dry run mode - no changes will be made');
-      }
-      
-      if (!options.force) {
-        const confirmed = await prompts.confirmAction(
-          `Deploy to ${environment}?`
-        );
-        if (!confirmed) return;
-      }
-      
-      await exec.exec('npm run build');
-      await exec.exec(`deploy-script ${environment}`);
-      
-      logger.outro('Deployment completed successfully!');
-    });
-}
-```
-
-### 5. **Industry Adoption and Ecosystem**
-
-Commander.js is the most widely adopted CLI framework in the Node.js ecosystem.
-
-**Ecosystem Benefits**:
-- **Battle-tested**: Used by npm, Vue CLI, Angular CLI, Create React App
-- **Community**: Large community with extensive documentation and examples
-- **Middleware**: Rich ecosystem of plugins and extensions
-- **Stability**: Mature API with excellent backward compatibility
-- **Performance**: Optimized for CLI use cases over many years
-
-**Industry Usage**:
-```typescript
-// Major tools using Commander.js:
-// - npm CLI (package management)
-// - Vue CLI (framework tooling)  
-// - Angular CLI (framework tooling)
-// - Create React App (project scaffolding)
-// - AWS CLI v2 (cloud services)
-// - Docker CLI extensions
-
-// This validates our choice - we're building on proven foundation
-```
-
-### 6. **Extension and Plugin Architecture**
-
-Commander.js provides excellent patterns for building plugin systems.
-
-**Plugin Integration Pattern**:
-```typescript
-// Commander.js enables clean plugin architecture
-interface CLIPlugin {
-  name: string;
-  commands: CommandDefinition[];
-  hooks?: PluginHooks;
-}
-
-export function registerPlugin(program: Command, plugin: CLIPlugin): void {
-  // Commander.js command registration is straightforward
-  plugin.commands.forEach(commandDef => {
-    const command = program
-      .command(commandDef.name)
-      .description(commandDef.description);
-    
-    // Flexible option and argument registration
-    commandDef.options?.forEach(opt => {
-      command.option(opt.flags, opt.description, opt.defaultValue);
-    });
-    
-    commandDef.arguments?.forEach(arg => {
-      command.argument(arg.syntax, arg.description);
-    });
-    
-    command.action(commandDef.action);
-  });
-}
-```
+Battle-tested by major tools:
+- npm CLI, Vue CLI, Angular CLI, Create React App
+- Large community with extensive documentation
+- Mature API with excellent backward compatibility
 
 ## Alternative Analysis
 
 ### **Yargs**
+**Pros**: Rich configuration API, built-in validation
+**Cons**: Larger bundle (25KB), complex TypeScript integration, configuration-heavy
 
-**Pros**:
-- Rich configuration object API
-- Built-in command completion
-- Extensive validation capabilities
-
-**Cons**:
-- Larger bundle size (25KB vs 8KB)
-- More complex TypeScript integration
-- Configuration-heavy API less suitable for programmatic use
-- Harder to build abstractions on top
-
-**Example Comparison**:
-```typescript
-// Yargs - configuration heavy
-yargs
-  .command({
-    command: 'deploy <environment>',
-    describe: 'Deploy application',
-    builder: {
-      force: {
-        type: 'boolean',
-        describe: 'force deployment'
-      }
-    },
-    handler: (argv) => {
-      // Less type safety, more verbose
-    }
-  });
-
-// Commander.js - more flexible and type-safe
-program
-  .command('deploy')
-  .argument('<environment>')
-  .option('-f, --force', 'force deployment')
-  .action((environment: string, options: { force?: boolean }) => {
-    // Better type safety, cleaner API
-  });
-```
-
-### **CAC (Command And Conquer)**
-
-**Pros**:
-- Lightweight (12KB)
-- Simple API
-- Good TypeScript support
-
-**Cons**:
-- Smaller ecosystem and community
-- Less battle-tested in production
-- Limited advanced features (help formatting, complex validation)
-- Fewer extension patterns
+### **CAC** 
+**Pros**: Lightweight (12KB), simple API
+**Cons**: Smaller ecosystem, less battle-tested, limited advanced features
 
 ### **Oclif**
-
-**Pros**:
-- Full CLI framework with generators
-- Plugin architecture built-in
-- Comprehensive testing utilities
-
-**Cons**:
-- Large bundle size (45KB minimum)
-- Opinionated architecture harder to customize
-- Complex setup for simple CLIs
-- Limited tree-shaking opportunities
+**Pros**: Full framework with generators, plugin architecture
+**Cons**: Large bundle (45KB), opinionated architecture, complex for simple CLIs
 
 ## Implementation Strategy
 
-### **Abstraction Layer Design**
-
+### **Abstraction Layer**
 ```typescript
-// We build security-enhanced abstractions on Commander.js foundation
+// Security-enhanced utilities on Commander.js foundation
 export interface CommandContext {
-  // Enhanced utilities with security built-in
-  logger: SecureLogger;      // Sanitized logging with injection protection
-  exec: SecureExecutor;      // Process execution with validation
-  fs: SecureFileSystem;      // File operations with path validation
-  prompts: SecurePrompts;    // Interactive prompts with validation
-  config: ProjectConfig;     // Smart project detection
+  logger: SecureLogger;      // Injection protection
+  exec: SecureExecutor;      // Process validation
+  fs: SecureFileSystem;      // Path validation  
+  prompts: SecurePrompts;    // Input validation
 }
 
 // Clean command definition pattern
 export type CommandDefinition = (
   program: Command,           // Commander.js foundation
-  context: CommandContext     // Our enhanced utilities
+  context: CommandContext     // Enhanced utilities
 ) => void;
 ```
 
-### **Security Enhancement Integration**
-
+### **Tree-shaking Strategy**
 ```typescript
-// Commander.js provides the parsing, we add security layers
-export async function createCLI(options: CLIOptions): Promise<void> {
-  // 1. Commander.js handles argument parsing
-  const program = new Command(options.name);
-  
-  // 2. We add security validation
-  validateCLIOptions(options);
-  
-  // 3. We enhance with secure utilities
-  const context = createSecureContext();
-  
-  // 4. Commander.js enables clean command registration
-  await registerCommands(program, context, options.commandsPath);
-  
-  // 5. We add secure error handling
-  await executeWithSecureErrorHandling(program, options.errorHandler);
-}
+// Explicit named exports enable optimal tree-shaking
+export { createCLI, CLIOptions } from './createCLI.js';
+export { Command } from 'commander'; // Re-export for flexibility
+
+// Enables 97% bundle size reduction for selective imports
 ```
 
-### **Tree-shaking Optimization**
+## Consequences
 
-```typescript
+### **Positive**
+1. **Excellent TypeScript support** with comprehensive type definitions
+2. **Flexible architecture** for security and utility enhancements  
+3. **Performance optimization** - enables 97% bundle size reduction
+4. **Industry validation** - proven by major CLI tools
+5. **Rich ecosystem** with extensive community support
+
+### **Negative**
+1. **Security layer responsibility** - must build security on top
+2. **Abstraction complexity** - additional layer over Commander.js
+3. **Bundle size** - 8KB baseline vs simpler alternatives
+
+### **Mitigation**
+- Comprehensive security abstractions in SDK
+- Clear documentation for security patterns
+- Tree-shaking optimization for minimal bundle impact
+
+## Related ADRs
+
+- ADR-001: TypeScript enables excellent Commander.js integration
+- ADR-003: Vitest provides great testing for Commander.js patterns
+- ADR-005: Security-first design requires enhanced abstractions
+
+---
+
+**Impact**: Commander.js provides the optimal foundation for our CLI SDK, enabling type-safe command definition, flexible security enhancements, and superior performance through tree-shaking optimization.
 // Commander.js works well with tree-shaking
 import { Command } from 'commander';  // Core functionality only
 
