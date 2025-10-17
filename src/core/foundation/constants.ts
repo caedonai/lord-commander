@@ -231,6 +231,26 @@ export const ERROR_MESSAGES = {
     `  - ${existingPath} (from ${existingSource})\n` +
     `  - ${newPath} (from ${newSource})\n` +
     `Please rename one of the commands to avoid conflicts.`,
+    
+  // Security-focused error messages
+  SUSPICIOUS_INPUT_DETECTED: (input: string, pattern: string) => 
+    `Suspicious input detected: "${input}" matches security pattern: ${pattern}. This input has been rejected for security reasons.`,
+  PRIVILEGE_ESCALATION_ATTEMPT: () => 
+    'Refusing to run with elevated privileges. Use --allow-root flag if intentional and you understand the security risks.',
+  UNSAFE_TEMPLATE_SOURCE: (url: string) => 
+    `Template source not whitelisted: ${url}. Only verified sources allowed. Please use official templates or add this source to your allowlist.`,
+  SCRIPT_EXECUTION_BLOCKED: (script: string) => 
+    `Script execution blocked for security: ${script}. Use --allow-scripts if needed and you trust the script source.`,
+    
+  // Additional security error messages
+  MALICIOUS_PATH_DETECTED: (path: string, reason: string) =>
+    `Malicious path detected: "${path}" (${reason}). Operation blocked for security.`,
+  COMMAND_INJECTION_ATTEMPT: (input: string) =>
+    `Command injection attempt detected in input: "${input}". Operation blocked.`,
+  UNSAFE_FILE_OPERATION: (operation: string, path: string) =>
+    `Unsafe file operation "${operation}" blocked for path: "${path}". Path must be within project directory.`,
+  CONFIGURATION_TAMPERING: (config: string, issue: string) =>
+    `Configuration tampering detected in ${config}: ${issue}. Using safe defaults instead.`,
 } as const;
 
 /**
