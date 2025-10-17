@@ -240,10 +240,14 @@ export function analyzeInputSecurity(input: string): SecurityAnalysisResult {
   let riskScore = 0;
 
   // Check path traversal (basic and encoded variants)
-  if (PATH_TRAVERSAL_PATTERNS.DOTDOT_SLASH.test(input) || 
-      PATH_TRAVERSAL_PATTERNS.DOTDOT_ENCODED.test(input) ||
-      PATH_TRAVERSAL_PATTERNS.DOUBLE_ENCODED.test(input) ||
-      PATH_TRAVERSAL_PATTERNS.MIXED_ENCODED.test(input)) {
+  const pathTraversalPatterns = [
+    PATH_TRAVERSAL_PATTERNS.DOTDOT_SLASH,
+    PATH_TRAVERSAL_PATTERNS.DOTDOT_ENCODED,
+    PATH_TRAVERSAL_PATTERNS.DOUBLE_ENCODED,
+    PATH_TRAVERSAL_PATTERNS.MIXED_ENCODED
+  ];
+  
+  if (pathTraversalPatterns.some(pattern => pattern.test(input))) {
     violations.push({
       type: 'path-traversal',
       pattern: 'directory-traversal',
@@ -352,11 +356,17 @@ export function sanitizeInput(input: string): string {
   let sanitized = input;
 
   // Remove path traversal attempts (including encoded variants)
-  sanitized = sanitized.replace(PATH_TRAVERSAL_PATTERNS.DOTDOT_SLASH, '');
-  sanitized = sanitized.replace(PATH_TRAVERSAL_PATTERNS.DOTDOT_ENCODED, '');
-  sanitized = sanitized.replace(PATH_TRAVERSAL_PATTERNS.DOUBLE_ENCODED, '');
-  sanitized = sanitized.replace(PATH_TRAVERSAL_PATTERNS.MIXED_ENCODED, '');
-  sanitized = sanitized.replace(PATH_TRAVERSAL_PATTERNS.NULL_BYTE, '');
+  const pathTraversalPatterns = [
+    PATH_TRAVERSAL_PATTERNS.DOTDOT_SLASH,
+    PATH_TRAVERSAL_PATTERNS.DOTDOT_ENCODED,
+    PATH_TRAVERSAL_PATTERNS.DOUBLE_ENCODED,
+    PATH_TRAVERSAL_PATTERNS.MIXED_ENCODED,
+    PATH_TRAVERSAL_PATTERNS.NULL_BYTE
+  ];
+  
+  pathTraversalPatterns.forEach(pattern => {
+    sanitized = sanitized.replace(pattern, '');
+  });
 
   // Remove JavaScript injection patterns
   sanitized = sanitized.replace(SCRIPT_INJECTION_PATTERNS.JAVASCRIPT_EVAL, '');
@@ -389,9 +399,10 @@ export function sanitizeInput(input: string): string {
  * ```
  */
 export function isPathSafe(path: string): boolean {
-  if (path == null || typeof path !== 'string') return false;
-  const analysis = analyzeInputSecurity(path);
-  return analysis.isSecure && analysis.riskScore < 10;
+  const { isValidType, analysis } = validateInputType(path);
+  if (!isValidType) return false;
+  
+  return analysis!.isSecure && analysis!.riskScore < 10;
 }
 
 /**
@@ -412,16 +423,27 @@ export function isPathSafe(path: string): boolean {
  * ```
  */
 export function isCommandSafe(command: string): boolean {
-  if (command == null || typeof command !== 'string') return true;
+  const { isValidType, analysis } = validateInputType(command);
+  if (!isValidType) return true; // null/undefined commands are safe (no-op)
   
-  const analysis = analyzeInputSecurity(command);
-  const hasCommandInjection = analysis.violations.some(v => v.type === 'command-injection');
-  const hasPrivilegeEscalation = analysis.violations.some(v => v.type === 'privilege-escalation');
+  const hasCommandInjection = analysis!.violations.some(v => v.type === 'command-injection');
+  const hasPrivilegeEscalation = analysis!.violations.some(v => v.type === 'privilege-escalation');
   
   // Also check for dangerous commands directly
   const hasDangerousCommand = COMMAND_INJECTION_PATTERNS.DANGEROUS_COMMANDS.test(command);
   
   return !hasCommandInjection && !hasPrivilegeEscalation && !hasDangerousCommand;
+}
+
+/**
+ * Helper function to validate input type and perform security analysis
+ * @private
+ */
+function validateInputType(input: any): { isValidType: boolean; analysis?: SecurityAnalysisResult } {
+  if (input == null || typeof input !== 'string') {
+    return { isValidType: false };
+  }
+  return { isValidType: true, analysis: analyzeInputSecurity(input) };
 }
 
 /**
@@ -444,7 +466,9 @@ export function isCommandSafe(command: string): boolean {
  * ```
  */
 export function isProjectNameSafe(name: string): boolean {
-  if (name == null || typeof name !== 'string') return false;
+  const { isValidType, analysis } = validateInputType(name);
+  if (!isValidType) return false;
+  
   return INPUT_VALIDATION_PATTERNS.SAFE_PROJECT_NAME.test(name) && 
-         analyzeInputSecurity(name).isSecure;
+         analysis!.isSecure;
 }
