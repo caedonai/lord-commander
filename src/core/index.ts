@@ -101,8 +101,22 @@ export {
   type ExecOptions
 } from './execution/exec.js';
 
-// CLI Creation and Command Registration
-export { createCLI, registerBuiltinCommands } from './createCLI.js';
+// CLI Creation and Command Registration  
+export { 
+  createCLI, 
+  registerBuiltinCommands,
+  validateErrorHandler,
+  executeErrorHandlerSafely,
+  ErrorHandlerValidationError,
+  sanitizeErrorMessage,
+  sanitizeStackTrace,
+  sanitizeErrorObject,
+  truncateErrorMessage,
+  getObjectMemorySize,
+  isDebugMode,
+  shouldShowDetailedErrors,
+  formatErrorForDisplay
+} from './createCLI.js';
 export { registerCommands, resetCommandTracking } from './commands/registerCommands.js';
 
 // Shell Autocomplete Support

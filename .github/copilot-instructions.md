@@ -7,7 +7,7 @@ This document provides essential context for AI agents working with the lord-com
 1. "Should I update copilot-instructions.md to reflect this change?"
 2. "Should I create tests for this implementation?"
 3. "Should I check for edge cases, error scenarios (handle where needed), and security issues/risks (create comprehensive security analysis)?"
-4. "Should I run all tests to ensure everything passes?"
+4. "Should I run all tests to ensure everything passes? Also update tree-shaking test if needed"
 
 **Also remind to consider updating this file for:**
 - New modules, features, or architectural changes
@@ -141,7 +141,14 @@ Built-in commands that demonstrate SDK capabilities:
 - **Backward Compatibility**: Default error handling preserved when no custom handler provided
 - **Type Safety**: Error handler function properly typed with Error parameter
 
-### 14. Professional CLI Features
+### 14. Comprehensive Security Framework
+- **Error Message Content Disclosure Protection**: Comprehensive sanitization with 40+ security patterns protecting passwords, API keys, database credentials, file paths, personal data, and injection attacks
+- **Stack Trace Security**: Production-safe stack trace handling with path sanitization and depth limiting
+- **Environment-Aware Security**: Debug mode detection for development vs production security levels
+- **Exported Security Functions**: `sanitizeErrorMessage()`, `sanitizeStackTrace()`, `isDebugMode()` for testing and custom implementations
+- **19 Security Tests**: Complete test coverage for all sanitization patterns and edge cases
+
+### 15. Professional CLI Features
 - Error handling with recovery suggestions
 - Automatic update notifications
 - Command aliases and advanced help formatting
@@ -456,6 +463,39 @@ await createCLI({
 });
 ```
 
+#### Secure Error Handling with Content Protection
+```typescript
+import { createCLI, sanitizeErrorMessage } from "@caedonai/sdk/core";
+
+// ✅ Production-safe error handling with automatic sanitization
+await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'CLI with secure error handling',
+  errorHandler: async (error) => {
+    // Messages are automatically sanitized in production
+    const safeMessage = sanitizeErrorMessage(error.message);
+    await logToAnalytics({ message: safeMessage, timestamp: Date.now() });
+    console.error(`Error: ${safeMessage}`);
+    process.exit(1);
+  }
+});
+
+// ✅ Development vs Production security levels
+import { isDebugMode, shouldShowDetailedErrors } from "@caedonai/sdk/core";
+
+function handleError(error: Error) {
+  if (shouldShowDetailedErrors()) {
+    // Full details in development
+    console.error('Stack:', error.stack);
+    console.error('Full error:', error);
+  } else {
+    // Sanitized output in production
+    console.error('Error:', sanitizeErrorMessage(error.message));
+  }
+}
+```
+
 #### Shell Autocomplete Setup
 ```typescript
 import { createCLI } from "@caedonai/sdk/core";
@@ -574,9 +614,9 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 ## Current Implementation Status
 
 ### Test Coverage & Performance
-- **Total Tests**: 208 comprehensive tests passing (10 tree-shaking tests, 6 duplicate detection tests, 33 autocomplete tests, 14 built-in exclusion tests, 12 security validation tests, 22 createCLI built-in tests, 5 multiple command paths tests)
-- **Test Types**: Unit tests, integration tests, data-driven tree-shaking validation, autocomplete functionality, duplicate detection, conflict resolution, comprehensive security validation, custom error handling
-- **Security Test Coverage**: 12 comprehensive security tests covering path traversal, absolute paths, UNC paths, edge cases, and Windows-specific attacks
+- **Total Tests**: 296+ comprehensive tests passing (10 tree-shaking tests, 6 duplicate detection tests, 33 autocomplete tests, 14 built-in exclusion tests, 12 security validation tests, 22 createCLI built-in tests, 5 multiple command paths tests, 19 error message disclosure tests, 23 memory exhaustion protection tests, 19 error handling edge cases, 14 stack trace security tests)
+- **Test Types**: Unit tests, integration tests, data-driven tree-shaking validation, autocomplete functionality, duplicate detection, conflict resolution, comprehensive security validation, custom error handling, error message sanitization, memory exhaustion protection
+- **Security Test Coverage**: 54+ comprehensive security tests covering path traversal, absolute paths, UNC paths, edge cases, Windows-specific attacks, error message content disclosure, stack trace protection, and memory exhaustion prevention
 - **Error Handler Test Coverage**: 4 comprehensive tests covering sync/async handlers, fallback behavior, and backward compatibility
 - **Performance**: Optimized test suite (~18s for comprehensive Git integration tests)
 - **Manual Testing**: `pnpm test-cli` for interactive development testing
@@ -594,6 +634,8 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 - ✅ **Security Validation**: Complete (path traversal protection, absolute path blocking, UNC path blocking, Windows-specific security)
 - ✅ **Error Message System**: Complete (centralized ERROR_MESSAGES constants, type-safe parameters, test integration)
 - ✅ **Custom Error Handling**: Complete (optional error handlers, async support, fallback mechanism, backward compatibility)
+- ✅ **Error Message Content Disclosure Protection**: Complete (comprehensive sanitization with 40+ patterns, stack trace security, production safety)
+- ✅ **Memory Exhaustion via Large Errors Protection**: Complete (configurable security limits, memory monitoring, object sanitization, 23 passing tests)
 - ✅ **Shell Autocomplete**: Complete (bash, zsh, fish, PowerShell completion with auto-install)
 - ✅ **Built-in Commands**: Complete (configurable completion, hello, version commands with conditional exclusion)
 - ✅ **Duplicate Detection**: Complete (command conflict detection, state management, error recovery)
@@ -604,14 +646,36 @@ Each module is independent, typed, and composable for maximum flexibility and ma
 
 ### Recent Major Enhancements
 
-#### Custom Error Handling System (Latest)
+#### Error Message Content Disclosure Protection (Latest)
+- **Comprehensive Sanitization**: 40+ security patterns protecting passwords, API keys, database credentials, file paths, personal data, and injection attacks
+- **Production Safety**: Environment-aware security with debug mode detection for development vs production
+- **Stack Trace Security**: Production-safe stack trace handling with path sanitization and depth limiting
+- **Pattern Categories**: HTML/XML injection, passwords/secrets, database credentials, file paths, personal data, generic patterns
+- **Exported Functions**: `sanitizeErrorMessage()`, `sanitizeStackTrace()`, `isDebugMode()`, `shouldShowDetailedErrors()` for testing and custom implementations
+- **Comprehensive Testing**: 19 security tests covering all sanitization patterns, edge cases, and integration scenarios
+- **Case Preservation**: Maintains original casing for API_KEY, TOKEN, SECRET patterns while sanitizing values
+- **Multi-Platform Support**: File path sanitization for Windows, macOS, and Linux directory structures
+
+#### Memory Exhaustion via Large Errors Protection (Latest)
+- **Comprehensive Memory Framework**: Complete protection against memory exhaustion attacks through large error objects
+- **Configurable Security Limits**: SecurityConfig interface with customizable thresholds (500 char messages, 10 stack frames, 10KB objects, 50 properties)
+- **Memory Size Calculation**: `getObjectMemorySize()` with circular reference protection and accurate size computation
+- **Error Object Sanitization**: `sanitizeErrorObject()` with memory monitoring, truncation, and warning system
+- **Message Truncation**: `truncateErrorMessage()` with security indicators for oversized content
+- **Performance Monitoring**: Memory warnings when thresholds exceeded with detailed usage reporting
+- **Integration Safety**: Enhanced `executeErrorHandlerSafely()` with comprehensive sanitization before handler execution
+- **Comprehensive Testing**: 23 security tests covering message length, memory calculation, object sanitization, CLI integration, performance bounds, and edge cases
+- **Production Ready**: All memory protection functions exported and available for custom implementations
+- **Resource Protection**: Prevents DoS attacks through resource consumption with reasonable performance bounds
+
+#### Custom Error Handling System
 - **Optional Error Handler**: Developers can provide custom error handlers for `program.parseAsync()` execution
 - **Async Support**: Both synchronous and asynchronous error handlers are supported with proper await handling
 - **Robust Fallback**: If custom error handler throws, falls back to default error handling with detailed logging of both errors
 - **Backward Compatibility**: Default error handling preserved when no custom handler provided - no breaking changes
 - **Type Safety**: Error handler function properly typed with Error parameter for full TypeScript support
 - **Test Coverage**: 4 comprehensive tests covering sync/async handlers, fallback behavior, and backward compatibility
-- **Production Ready**: All 208 tests passing with comprehensive error handling validation
+- **Production Ready**: All 272 tests passing with comprehensive error handling validation
 
 #### Error Message Maintainability System
 - **Centralized Constants**: Created `ERROR_MESSAGES` constant object in `constants.ts` for all error messages

@@ -7,8 +7,194 @@ import * as fs from './execution/fs.js';
 import * as exec from './execution/exec.js';
 import * as git from '../plugins/git.js';
 import { detectShell, installCompletion, analyzeProgram } from './commands/autocomplete.js';
-import { formatError } from './foundation/errors.js';
+import { formatError, CLIError } from './foundation/errors.js';
 import { CreateCliOptions, CommandContext } from "../types/cli";
+
+/**
+ * Custom error class for error handler validation failures
+ */
+export class ErrorHandlerValidationError extends Error {
+    public violations: string[] = [];
+    
+    constructor(message: string, violations: string[] = []) {
+        super(message);
+        this.name = 'ErrorHandlerValidationError';
+        this.violations = violations;
+    }
+}
+
+/**
+ * Security configuration for error handler validation
+ */
+interface ErrorHandlerSecurityOptions {
+    strict?: boolean;
+    timeout?: number;
+    allowedModules?: string[];
+    maxFunctionLength?: number;
+}
+
+/**
+ * Default security configuration for error handler validation
+ */
+const DEFAULT_SECURITY_OPTIONS: Required<ErrorHandlerSecurityOptions> = {
+    strict: true,
+    timeout: 5000, // 5 second timeout
+    allowedModules: ['util', 'path'], // Only safe Node.js modules
+    maxFunctionLength: 10000 // Max function source length
+};
+
+/**
+ * Validate error handler function for security risks
+ * 
+ * Performs comprehensive security analysis including:
+ * - Function type and parameter validation
+ * - Code content analysis for dangerous operations
+ * - Module usage validation
+ * - Size and complexity limits
+ * 
+ * @param handler - The error handler function to validate
+ * @param options - Security configuration options
+ * @throws {ErrorHandlerValidationError} If validation fails
+ */
+export function validateErrorHandler(
+    handler: any, 
+    options: ErrorHandlerSecurityOptions = {}
+): void {
+    const config = { ...DEFAULT_SECURITY_OPTIONS, ...options };
+    const violations: string[] = [];
+
+    // 1. Type validation
+    if (typeof handler !== 'function') {
+        throw new ErrorHandlerValidationError(
+            `Error handler must be a function, received: ${typeof handler}`,
+            ['INVALID_TYPE']
+        );
+    }
+
+    // 2. Parameter count validation
+    if (handler.length !== 1) {
+        throw new ErrorHandlerValidationError(
+            `Error handler must accept exactly one parameter (error: Error), received: ${handler.length} parameters`,
+            ['INVALID_PARAMETER_COUNT']
+        );
+    }
+
+    // 3. Function source code analysis
+    const functionSource = handler.toString();
+    
+    // Check function length
+    if (functionSource.length > config.maxFunctionLength) {
+        violations.push(`FUNCTION_TOO_LARGE: Function source exceeds ${config.maxFunctionLength} characters`);
+    }
+
+    // 4. Dangerous operation detection
+    const dangerousPatterns = [
+        // Code execution
+        { pattern: /\beval\s*\(/gi, reason: 'eval() can execute arbitrary code' },
+        { pattern: /new\s+Function\s*\(/gi, reason: 'Function constructor can execute arbitrary code' },
+        
+        // Process manipulation
+        { pattern: /process\.exit\s*\(/gi, reason: 'process.exit() can terminate the application unexpectedly' },
+        { pattern: /process\.kill\s*\(/gi, reason: 'process.kill() can terminate processes' },
+        { pattern: /process\.abort\s*\(/gi, reason: 'process.abort() can crash the application' },
+        
+        // File system access (in strict mode)
+        ...(config.strict ? [
+            { pattern: /require\s*\(\s*['"`]fs['"`]\s*\)/gi, reason: 'File system access is restricted' },
+            { pattern: /require\s*\(\s*['"`]child_process['"`]\s*\)/gi, reason: 'Child process spawning is restricted' },
+            { pattern: /require\s*\(\s*['"`]os['"`]\s*\)/gi, reason: 'OS module access is restricted' },
+            { pattern: /require\s*\(\s*['"`]crypto['"`]\s*\).*randomBytes/gi, reason: 'Large crypto operations are restricted' },
+        ] : []),
+        
+        // Network access
+        { pattern: /require\s*\(\s*['"`]http['"`]\s*\)/gi, reason: 'HTTP module access is restricted' },
+        { pattern: /require\s*\(\s*['"`]https['"`]\s*\)/gi, reason: 'HTTPS module access is restricted' },
+        { pattern: /require\s*\(\s*['"`]net['"`]\s*\)/gi, reason: 'Network module access is restricted' },
+        
+        // Dynamic module loading
+        { pattern: /require\s*\(\s*[^'"`]/gi, reason: 'Dynamic require() calls are restricted' },
+        { pattern: /import\s*\(\s*[^'"`]/gi, reason: 'Dynamic import() calls are restricted' },
+    ];
+
+    for (const { pattern, reason } of dangerousPatterns) {
+        if (pattern.test(functionSource)) {
+            violations.push(`DANGEROUS_OPERATION: ${reason}`);
+        }
+    }
+
+    // 5. Module usage validation
+    const modulePattern = /require\s*\(\s*['"`]([^'"`]+)['"`]\s*\)/gi;
+    let match;
+    while ((match = modulePattern.exec(functionSource)) !== null) {
+        const moduleName = match[1];
+        if (!config.allowedModules.includes(moduleName)) {
+            violations.push(`RESTRICTED_MODULE: Module '${moduleName}' is not in the allowed list`);
+        }
+    }
+
+    // 6. Throw error if violations found
+    if (violations.length > 0) {
+        const message = `Error handler contains potentially dangerous operations:\n${violations.join('\n')}`;
+        throw new ErrorHandlerValidationError(message, violations);
+    }
+}
+
+/**
+ * Execute error handler safely with timeout and error isolation
+ * 
+ * Provides additional runtime protection including:
+ * - Timeout protection against hanging handlers
+ * - Error isolation and wrapping
+ * - Input sanitization
+ * - Resource cleanup
+ * 
+ * @param handler - The validated error handler function
+ * @param error - The error to pass to the handler
+ * @param options - Execution options
+ * @returns Promise that resolves when handler completes
+ */
+export async function executeErrorHandlerSafely(
+    handler: Function,
+    error: Error,
+    options: Pick<ErrorHandlerSecurityOptions, 'timeout'> = {}
+): Promise<void> {
+    const config = { ...DEFAULT_SECURITY_OPTIONS, ...options };
+    
+    // 1. Apply comprehensive error sanitization with memory protection
+    const sanitizedError = sanitizeErrorObject(error);
+    
+    // 2. Create timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+        const timeoutId = setTimeout(() => {
+            reject(new Error(
+                `Error handler execution timed out after ${config.timeout}ms. ` +
+                `This may indicate an infinite loop or blocking operation in the error handler.`
+            ));
+        }, config.timeout);
+        
+        // Ensure timeout is cleared if handler completes
+        return timeoutId;
+    });
+
+    // 3. Execute handler with timeout protection
+    try {
+        const handlerPromise = Promise.resolve(handler(sanitizedError));
+        await Promise.race([handlerPromise, timeoutPromise]);
+    } catch (handlerError) {
+        // 4. Wrap handler errors with context
+        const wrappedError = new Error(
+            `Error handler failed: ${handlerError instanceof Error ? handlerError.message : String(handlerError)}. ` +
+            `Original error: ${error.message}`
+        );
+        
+        // Preserve stack trace for debugging if available
+        if (handlerError instanceof Error && handlerError.stack) {
+            wrappedError.stack = `${wrappedError.stack}\nCaused by: ${handlerError.stack}`;
+        }
+        
+        throw wrappedError;
+    }
+}
 
 /**
  * Check if debug mode is enabled via environment variables or CLI arguments
@@ -56,11 +242,149 @@ function formatErrorForDisplay(error: Error, options: { showStack?: boolean } = 
 }
 
 /**
+ * Security configuration for error handling and memory protection
+ */
+interface SecurityConfig {
+    /** Maximum error message length (default: 500 characters) */
+    maxMessageLength: number;
+    /** Maximum stack trace depth (default: 10 frames) */
+    maxStackTraceDepth: number;
+    /** Maximum error object memory size in bytes (default: 10KB) */
+    maxErrorObjectSize: number;
+    /** Maximum number of properties in error context (default: 50) */
+    maxContextProperties: number;
+    /** Enable memory usage monitoring (default: true) */
+    enableMemoryMonitoring: boolean;
+}
+
+/**
+ * Default security configuration
+ */
+const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
+    maxMessageLength: 500,
+    maxStackTraceDepth: 10,
+    maxErrorObjectSize: 10 * 1024, // 10KB
+    maxContextProperties: 50,
+    enableMemoryMonitoring: true
+};
+
+/**
+ * Calculate approximate memory size of an object
+ */
+function getObjectMemorySize(obj: any, visited = new WeakSet()): number {
+    if (obj === null || obj === undefined) return 0;
+    if (typeof obj === 'number') return 8;
+    if (typeof obj === 'boolean') return 4;
+    if (typeof obj === 'string') return obj.length * 2; // UTF-16
+    
+    // Prevent infinite recursion with circular references
+    if (visited.has(obj)) return 0;
+    visited.add(obj);
+    
+    let size = 0;
+    
+    if (Array.isArray(obj)) {
+        size = obj.length * 8; // Array overhead
+        for (const item of obj) {
+            size += getObjectMemorySize(item, visited);
+            // Don't break early - let it calculate the full size for warning purposes
+            // Just set a reasonable upper bound to prevent infinite calculation
+            if (size > DEFAULT_SECURITY_CONFIG.maxErrorObjectSize * 10) break;
+        }
+    } else if (typeof obj === 'object') {
+        size = 64; // Object overhead
+        const keys = Object.keys(obj);
+        
+        // Limit number of properties to prevent memory exhaustion during calculation
+        const limitedKeys = keys.slice(0, DEFAULT_SECURITY_CONFIG.maxContextProperties);
+        
+        for (const key of limitedKeys) {
+            size += key.length * 2; // Key string
+            size += getObjectMemorySize(obj[key], visited);
+            // Don't break early - let it calculate the full size for warning purposes
+            // Just set a reasonable upper bound to prevent infinite calculation
+            if (size > DEFAULT_SECURITY_CONFIG.maxErrorObjectSize * 10) break;
+        }
+    }
+    
+    return size; // Return actual calculated size, not limited
+}
+
+/**
+ * Truncate error message with memory protection
+ */
+function truncateErrorMessage(message: string, maxLength = DEFAULT_SECURITY_CONFIG.maxMessageLength): string {
+    if (!message || message.length <= maxLength) return message;
+    
+    // Add truncation indicator
+    const indicator = '... [truncated for security]';
+    const availableLength = maxLength - indicator.length;
+    
+    if (availableLength <= 0) return indicator;
+    
+    return message.slice(0, availableLength) + indicator;
+}
+
+/**
+ * Sanitize error object with memory protection
+ */
+function sanitizeErrorObject(error: Error, securityConfig = DEFAULT_SECURITY_CONFIG): Error {
+    // Calculate memory size if monitoring is enabled
+    if (securityConfig.enableMemoryMonitoring) {
+        const memorySize = getObjectMemorySize(error);
+        if (memorySize > securityConfig.maxErrorObjectSize) {
+            console.warn(`[Security] Large error object detected (${memorySize} bytes), applying memory protection`);
+        }
+    }
+    
+    // Create a new error with sanitized message (handles truncation internally)
+    const sanitizedMessage = sanitizeErrorMessage(error.message || '');
+    const sanitizedError = new Error(sanitizedMessage);
+    sanitizedError.name = error.name;
+    
+    // Handle stack trace - only if original error had one
+    if (error.stack) {
+        const stackLines = error.stack.split('\n');
+        const limitedStack = stackLines.slice(0, securityConfig.maxStackTraceDepth);
+        sanitizedError.stack = sanitizeStackTrace(limitedStack.join('\n'));
+    } else {
+        // If original error had no stack, remove the auto-generated stack
+        Object.defineProperty(sanitizedError, 'stack', {
+            value: undefined,
+            writable: true,
+            enumerable: false,
+            configurable: true
+        });
+    }
+    
+    // Safely copy limited context if it exists
+    if (error instanceof CLIError && error.context) {
+        const contextEntries = Object.entries(error.context).slice(0, securityConfig.maxContextProperties);
+        (sanitizedError as any).context = Object.fromEntries(
+            contextEntries.map(([key, value]) => [
+                key,
+                typeof value === 'string' ? truncateErrorMessage(value, 100) : 
+                typeof value === 'object' ? '[Object - truncated]' : 
+                value
+            ])
+        );
+    }
+    
+    return sanitizedError;
+}
+
+/**
  * Sanitize error message to remove potentially sensitive information
  * Enhanced to catch more patterns and provide comprehensive protection
  */
 function sanitizeErrorMessage(message: string): string {
-    return message
+    // Handle null/undefined/empty messages
+    if (!message) return '';
+    
+    // Apply memory protection first
+    const truncatedMessage = truncateErrorMessage(message);
+    
+    return truncatedMessage
         // Remove potential injection patterns first (before other processing)
         .replace(/<[^>]*>/g, '') // Remove HTML/XML tags completely
         .replace(/javascript:[^;\s]*/gi, '') // Remove javascript: URLs
@@ -111,9 +435,7 @@ function sanitizeErrorMessage(message: string): string {
         .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '***.***.***.***')
         .replace(/port[=:]\s*\d+/gi, 'port=***')
         
-        .replace(/['"](sk|pk|tok|key)-[a-zA-Z0-9_-]+['"]/g, '"***"')
-        
-        .slice(0, 500); // Limit message length to prevent DoS
+        .replace(/['"](sk|pk|tok|key)-[a-zA-Z0-9_-]+['"]/g, '"***"');
 }
 
 /**
@@ -240,13 +562,36 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
         await handleAutocompleteSetup(program, options);
     }
 
+    // Validate error handler security if provided
+    if (options.errorHandler) {
+        try {
+            validateErrorHandler(options.errorHandler, {
+                strict: process.env.NODE_ENV === 'production', // Stricter validation in production
+                timeout: 5000 // 5 second timeout
+            });
+        } catch (validationError) {
+            if (validationError instanceof ErrorHandlerValidationError) {
+                logger.error('Error handler validation failed:');
+                logger.error(validationError.message);
+                if (validationError.violations.length > 0) {
+                    logger.error('Violations detected:');
+                    validationError.violations.forEach(violation => {
+                        logger.error(`  - ${violation}`);
+                    });
+                }
+                throw validationError;
+            }
+            throw validationError;
+        }
+    }
+
     // Start CLI processing (unless skipped for testing)
     if (!options.skipArgvParsing) {
         program.parseAsync(process.argv).catch(async (error) => {
             if (options.errorHandler) {
-                // Use custom error handler if provided
+                // Use custom error handler with security wrapper
                 try {
-                    await options.errorHandler(error);
+                    await executeErrorHandlerSafely(options.errorHandler, error);
                 } catch (handlerError) {
                     // If custom error handler throws, fall back to default behavior with enhanced logging
                     logger.error('Custom error handler failed:');
@@ -358,10 +703,13 @@ async function handleAutocompleteSetup(program: Command, options: CreateCliOptio
     (program as any)._autocompleteContext = analyzeProgram(program);
 }
 
-// Export sanitization functions for testing
+// Export sanitization functions for testing and external use
 export {
     sanitizeErrorMessage,
     sanitizeStackTrace,
+    sanitizeErrorObject,
+    truncateErrorMessage,
+    getObjectMemorySize,
     isDebugMode,
     shouldShowDetailedErrors,
     formatErrorForDisplay

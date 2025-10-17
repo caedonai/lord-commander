@@ -40,7 +40,9 @@ describe('Error Handling Security', () => {
         process.argv.push('--debug');
       }
 
-      const mockErrorHandler = vi.fn();
+      const mockErrorHandler = vi.fn((error: Error) => {
+        // Mock handler that accepts error parameter
+      });
 
       try {
         await expect(createCLI({
@@ -125,14 +127,15 @@ describe('Error Handling Security', () => {
 
   describe('Custom Error Handler Security', () => {
     it('should allow custom error handlers with security warnings in documentation', async () => {
-      const secureErrorHandler = vi.fn().mockImplementation(async (error: Error) => {
+      // Create a real function instead of a mock to preserve parameter count
+      const secureErrorHandler = vi.fn(async (error: Error) => {
         // Simulate a secure error handler that sanitizes information
         const sanitizedMessage = error.message
           .replace(/password[=:]\s*\S+/gi, 'password=***')
           .replace(/token[=:]\s*\S+/gi, 'token=***');
         
+        // Log safely (this would be handled by the application's logging system)
         console.error(`Sanitized error: ${sanitizedMessage}`);
-        process.exit(1);
       });
 
       await expect(createCLI({
@@ -149,7 +152,7 @@ describe('Error Handling Security', () => {
 
     it('should handle untrusted error handlers safely', async () => {
       // Simulate a potentially malicious error handler
-      const untrustedErrorHandler = vi.fn().mockImplementation(() => {
+      const untrustedErrorHandler = vi.fn((_error: Error) => {
         // This could be malicious code, but our framework should handle it
         throw new Error('Untrusted handler failed');
       });
@@ -169,7 +172,9 @@ describe('Error Handling Security', () => {
 
   describe('Resource Security', () => {
     it('should handle large error objects without security issues', async () => {
-      const largeErrorHandler = vi.fn();
+      const largeErrorHandler = vi.fn((_error: Error) => {
+        // Handler for large error objects
+      });
 
       await expect(createCLI({
         name: 'test-cli',
@@ -262,7 +267,7 @@ describe('Error Handling Security', () => {
 
   describe('Process Control Security', () => {
     it('should handle error handlers that attempt to control process behavior', async () => {
-      const processControlHandler = vi.fn().mockImplementation(() => {
+      const processControlHandler = vi.fn((_error: Error) => {
         // Simulate an error handler that tries to control the process
         process.exit(42); // This will be mocked
       });

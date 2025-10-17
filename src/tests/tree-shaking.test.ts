@@ -10,7 +10,7 @@ const EXPECTED_EXPORTS = {
     errors: ['CLIError', 'ConfigurationError', 'ERROR_RECOVERY_SUGGESTIONS', 'FileSystemError', 'NetworkError', 'ProcessError', 'UserCancelledError', 'ValidationError', 'formatError', 'getRecoverySuggestion', 'gracefulExit', 'handleCancel', 'isCancel', 'setupGlobalErrorHandlers', 'withErrorHandling'],
     
     // CLI creation (from actual exports)
-    cli: ['Command', 'createCLI', 'registerBuiltinCommands', 'registerCommands'],
+    cli: ['Command', 'createCLI', 'registerBuiltinCommands', 'registerCommands', 'validateErrorHandler', 'executeErrorHandlerSafely', 'ErrorHandlerValidationError', 'sanitizeErrorMessage', 'sanitizeStackTrace', 'sanitizeErrorObject', 'truncateErrorMessage', 'getObjectMemorySize', 'isDebugMode', 'shouldShowDetailedErrors', 'formatErrorForDisplay'],
     
     // Autocomplete system (from actual exports)
     autocomplete: ['analyzeProgram', 'checkCompletionStatus', 'detectShell', 'generateBashCompletion', 'generateCompletion', 'generateCompletionScript', 'generateFishCompletion', 'generatePowerShellCompletion', 'generateZshCompletion', 'installCompletion', 'uninstallCompletion'],

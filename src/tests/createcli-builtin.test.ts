@@ -302,7 +302,9 @@ describe('createCLI Built-in Commands Integration', () => {
 
   describe('Custom Error Handler', () => {
     it('should use custom error handler when provided', async () => {
-      const mockErrorHandler = vi.fn();
+      const mockErrorHandler = vi.fn((error: Error) => {
+        console.error(`Mock handler: ${error.message}`);
+      });
       
       // Create CLI with custom error handler
       const cli = await createCLI({
@@ -320,7 +322,9 @@ describe('createCLI Built-in Commands Integration', () => {
     });
 
     it('should handle async error handlers', async () => {
-      const mockAsyncErrorHandler = vi.fn().mockResolvedValue(undefined);
+      const mockAsyncErrorHandler = vi.fn(async (error: Error) => {
+        console.error(`Async mock handler: ${error.message}`);
+      });
       
       const cli = await createCLI({
         name: 'test-cli',
@@ -340,7 +344,9 @@ describe('createCLI Built-in Commands Integration', () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
       
-      const throwingErrorHandler = vi.fn().mockRejectedValue(new Error('Handler error'));
+      const throwingErrorHandler = vi.fn((error: Error) => {
+        throw new Error('Handler error');
+      });
       
       const cli = await createCLI({
         name: 'test-cli',
