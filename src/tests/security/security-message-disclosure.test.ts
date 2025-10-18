@@ -293,11 +293,13 @@ describe('Error Message Content Disclosure Security', () => {
         `    at function${i} (/path/to/file${i}.js:${i}:${i})`
       ).join('\n');
       
-      const result = sanitizeStackTrace(`Error: Test\n${longStackTrace}`);
+      const result = sanitizeStackTrace(`Error: Test\n${longStackTrace}`, {
+        maxStackDepth: 10
+      });
       
-      // Should limit stack trace lines
+      // Should limit stack trace lines (includes error message line)
       const lines = result.split('\n');
-      expect(lines.length).toBeLessThanOrEqual(10); // Reasonable limit
+      expect(lines.length).toBeLessThanOrEqual(11); // Error message + max 10 frames
     });
   });
 

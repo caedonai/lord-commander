@@ -54,6 +54,14 @@ export interface ErrorSanitizationConfig {
   removeStackInProduction: boolean;
   /** Whether to preserve error codes for debugging while sanitizing messages */
   preserveErrorCodes: boolean;
+  /** Environment-specific stack trace handling levels */
+  stackTraceLevel: 'none' | 'minimal' | 'sanitized' | 'full';
+  /** Whether to remove source map references for security */
+  removeSourceMaps: boolean;
+  /** Whether to sanitize module names that might reveal internal structure */
+  sanitizeModuleNames: boolean;
+  /** Whether to remove line numbers and column numbers */
+  removeLineNumbers: boolean;
 }
 
 /**
@@ -73,7 +81,11 @@ export const DEFAULT_ERROR_SANITIZATION_CONFIG: ErrorSanitizationConfig = {
   maxMessageLength: 500,
   maxStackDepth: 10,
   removeStackInProduction: true,
-  preserveErrorCodes: true
+  preserveErrorCodes: true,
+  stackTraceLevel: 'sanitized', // Default to sanitized for security
+  removeSourceMaps: true, // Remove source maps by default for security
+  sanitizeModuleNames: true, // Sanitize module names to hide internal structure
+  removeLineNumbers: false // Keep line numbers for debugging (can be overridden per environment)
 };
 
 /**
@@ -535,23 +547,80 @@ export function sanitizeStackTrace(
   // Merge with defaults
   const fullConfig = { ...DEFAULT_ERROR_SANITIZATION_CONFIG, ...config };
   
-  // In production, remove completely if configured
-  const isProduction = process.env.NODE_ENV === 'production';
-  if (isProduction && fullConfig.removeStackInProduction) {
-    return '';
+  // Handle different stack trace levels
+  switch (fullConfig.stackTraceLevel) {
+    case 'none':
+      return '';
+    case 'minimal':
+      return _sanitizeStackMinimal(stack, fullConfig);
+    case 'sanitized':
+      return _sanitizeStackSanitized(stack, fullConfig);
+    case 'full':
+      return _sanitizeStackFull(stack, fullConfig);
+    default:
+      return _sanitizeStackSanitized(stack, fullConfig);
+  }
+}
+
+/**
+ * Minimal stack trace sanitization - removes most information, keeps error location only
+ * @private
+ */
+function _sanitizeStackMinimal(
+  stack: string, 
+  config: ErrorSanitizationConfig
+): string {
+  const lines = stack.split('\n');
+  if (lines.length === 0) return stack;
+  
+  // Keep only the first line (error message) and first stack frame
+  const errorLine = lines[0] || '';
+  const firstFrame = lines.find(line => line.trim().startsWith('at ')) || '';
+  
+  if (!firstFrame) return errorLine;
+  
+  // Sanitize the first frame heavily
+  let sanitizedFrame = firstFrame
+    .replace(/\/.*?\//g, '/')  // Remove path components
+    .replace(/C:\\.*?\\/g, 'C:\\')  // Remove Windows path components
+    .replace(/:\d+:\d+/g, '')  // Remove line:column numbers if configured
+    .replace(/\([^)]*node_modules[^)]*\)/g, '(node_modules)')  // Sanitize node_modules
+    .replace(/\([^)]*\/[^)]*\)/g, '(internal)');  // Replace other paths
+  
+  if (config.removeLineNumbers) {
+    sanitizedFrame = sanitizedFrame.replace(/:\d+/g, '');
   }
   
+  return `${errorLine}\n${sanitizedFrame}`;
+}
+
+/**
+ * Standard sanitized stack trace - removes sensitive paths but keeps structure
+ * @private
+ */
+function _sanitizeStackSanitized(
+  stack: string, 
+  config: ErrorSanitizationConfig
+): string {
   let sanitizedStack = stack;
   
+  // Remove source map references for security
+  if (config.removeSourceMaps) {
+    sanitizedStack = sanitizedStack
+      .replace(/\/\/# sourceMappingURL=.*/g, '')
+      .replace(/\/\*# sourceMappingURL=.*\*\//g, '')
+      .replace(/\.js\.map/g, '.js')
+      .replace(/\.ts\.map/g, '.ts');
+  }
+  
   // Apply file path sanitization if configured
-  if (fullConfig.redactFilePaths) {
+  if (config.redactFilePaths) {
     sanitizedStack = sanitizedStack
       // First, sanitize user home directories BEFORE node_modules cleanup
       .replace(/\/Users\/[^\/\s]+/g, '/Users/***')
       .replace(/C:\\Users\\[^\\]+/g, 'C:\\Users\\***')
       .replace(/\/home\/[^\/\s]+/g, '/home/***')
       // Then remove absolute file paths but preserve already-sanitized user directories
-      // Skip paths that contain sanitized user directories
       .replace(/(C:\\Users\\\*\*\*\\.*?)\\node_modules/gi, (_match, userPath) => {
         return userPath + '\\node_modules';
       })
@@ -562,16 +631,77 @@ export function sanitizeStackTrace(
       .replace(/node_modules\\+/g, 'node_modules/')
       .replace(/(node_modules\/[^\\:\n\s]*?)\\+/g, '$1/')
       // Remove other potentially sensitive paths
-      .replace(/\/opt\/[^\/]+/g, '/opt/***')
-      .replace(/\/var\/[^\/]+/g, '/var/***')
-      .replace(/\/etc\/[^\/]+/g, '/etc/***');
+      .replace(/\/opt\/[^\/\s]+/g, '/opt/***')
+      .replace(/\/var\/[^\/\s]+/g, '/var/***')
+      .replace(/\/etc\/[^\/\s]+/g, '/etc/***')
+      .replace(/\/mnt\/[^\/\s]+\/[^\/\s]+/g, '/mnt/***/***')  // Mount points with nested paths (WSL, Docker, etc.)
+      .replace(/\/mnt\/[^\/\s]+/g, '/mnt/***')  // Mount points base paths
+      // Sanitize project-specific paths (anything outside node_modules)
+      .replace(/\/workspace\/[^\/\s]+/g, '/workspace/***')
+      .replace(/C:\\.*?\\workspace\\[^\\]+/g, 'C:\\***\\workspace\\***')  // Windows workspace paths
+      .replace(/\\workspace\\[^\\]+/g, '\\workspace\\***')  // Relative Windows workspace paths  
+      .replace(/\/app\/[^\/\s]+/g, '/app/***')
+      .replace(/C:\\.*?\\app\\[^\\]+/g, 'C:\\***\\app\\***')  // Windows app paths
+      .replace(/C:\\Program Files\\[^\\]+/g, 'C:\\Program Files\\***')  // Program Files
+      .replace(/\/src\/(?!node_modules)/g, '/src/***/')
+      .replace(/\/dist\/(?!node_modules)/g, '/dist/***/');
+  }
+  
+  // Sanitize module names that might reveal internal structure
+  if (config.sanitizeModuleNames) {
+    sanitizedStack = sanitizedStack
+      .replace(/(@[^\/]+\/[^\/\s\n)]+)/g, '@***/***')  // Scoped packages
+      .replace(/(internal\/[^\/\s\n)]+)/g, 'internal/***')  // Internal modules
+      .replace(/(lib\/[^\/\s\n)]+)/g, 'lib/***')  // Library paths
+      .replace(/(src\/[^\/\s\n)]+)/g, 'src/***');  // Source paths
+  }
+  
+  // Remove line and column numbers if configured
+  if (config.removeLineNumbers) {
+    sanitizedStack = sanitizedStack.replace(/:\d+:\d+/g, '');
   }
   
   // Limit stack depth
   const lines = sanitizedStack.split('\n');
-  if (lines.length > fullConfig.maxStackDepth) {
-    return lines.slice(0, fullConfig.maxStackDepth).join('\n') + 
-           `\n... [${lines.length - fullConfig.maxStackDepth} more frames hidden for security]`;
+  if (lines.length > config.maxStackDepth) {
+    return lines.slice(0, config.maxStackDepth).join('\n') + 
+           `\n... [${lines.length - config.maxStackDepth} more frames hidden for security]`;
+  }
+  return sanitizedStack;
+}
+
+/**
+ * Full stack trace with minimal sanitization - for development environments
+ * @private
+ */
+function _sanitizeStackFull(
+  stack: string, 
+  config: ErrorSanitizationConfig
+): string {
+  let sanitizedStack = stack;
+  
+  // Even in full mode, we may want to remove source maps for security
+  if (config.removeSourceMaps) {
+    sanitizedStack = sanitizedStack
+      .replace(/\/\/# sourceMappingURL=.*/g, '')
+      .replace(/\/\*# sourceMappingURL=.*\*\//g, '');
+  }
+  
+  // Apply minimal path sanitization only if specifically requested
+  if (config.redactFilePaths) {
+    sanitizedStack = sanitizedStack
+      // Only sanitize very sensitive paths, keep most for debugging
+      .replace(/\/Users\/[^\/\s]+\/\.ssh/g, '/Users/***/[hidden]')
+      .replace(/\/home\/[^\/\s]+\/\.ssh/g, '/home/***/[hidden]')
+      .replace(/\.env\b/g, '[env-file]')  // Hide .env file references
+      .replace(/password|secret|key|token/gi, (match) => `[${match.toLowerCase()}]`);
+  }
+  
+  // Still respect stack depth limits even in full mode
+  const lines = sanitizedStack.split('\n');
+  if (lines.length > config.maxStackDepth) {
+    return lines.slice(0, config.maxStackDepth).join('\n') + 
+           `\n... [${lines.length - config.maxStackDepth} more frames, use higher maxStackDepth for full trace]`;
   }
   
   return sanitizedStack;
@@ -756,20 +886,147 @@ export function createEnvironmentConfig(
       maxMessageLength: 1000,
       maxStackDepth: 20,
       removeStackInProduction: false,
+      stackTraceLevel: 'full' as const,
+      removeSourceMaps: false,
+      sanitizeModuleNames: false,
+      removeLineNumbers: false,
     },
     staging: {
       ...DEFAULT_ERROR_SANITIZATION_CONFIG,
       maxMessageLength: 750,
       maxStackDepth: 15,
       removeStackInProduction: false,
+      stackTraceLevel: 'sanitized' as const,
+      removeSourceMaps: true,
+      sanitizeModuleNames: true,
+      removeLineNumbers: false,
     },
     production: {
       ...DEFAULT_ERROR_SANITIZATION_CONFIG,
       maxMessageLength: 250,
       maxStackDepth: 5,
       removeStackInProduction: true,
+      stackTraceLevel: 'minimal' as const,
+      removeSourceMaps: true,
+      sanitizeModuleNames: true,
+      removeLineNumbers: true,
     },
   };
   
   return { ...baseConfigs[environment], ...customOverrides };
+}
+
+/**
+ * Analyze stack trace for potential security risks and sensitive information
+ * 
+ * Examines stack traces for patterns that might indicate information disclosure
+ * risks, such as exposed file paths, source maps, or internal module structure.
+ * Useful for security auditing and compliance validation.
+ * 
+ * @param stack - Stack trace string to analyze
+ * @returns Analysis result with risk assessment and recommendations
+ * 
+ * @example
+ * ```typescript
+ * const analysis = analyzeStackTraceSecurity(error.stack);
+ * if (analysis.riskLevel === 'high') {
+ *   console.warn('Stack trace contains sensitive information:', analysis.risks);
+ * }
+ * ```
+ */
+export function analyzeStackTraceSecurity(stack: string): {
+  riskLevel: 'low' | 'medium' | 'high';
+  risks: string[];
+  recommendations: string[];
+  sensitivePatterns: Array<{ pattern: string; description: string; line: string }>;
+} {
+  if (!stack) {
+    return { riskLevel: 'low', risks: [], recommendations: [], sensitivePatterns: [] };
+  }
+  
+  const risks: string[] = [];
+  const recommendations: string[] = [];
+  const sensitivePatterns: Array<{ pattern: string; description: string; line: string }> = [];
+  
+  const lines = stack.split('\n');
+  
+  // Check for various security risks
+  lines.forEach(line => {
+    // Check for user home directories
+    if (/\/Users\/[^\/\s]+|C:\\Users\\[^\\]+|\/home\/[^\/\s]+/.test(line)) {
+      risks.push('User home directory paths exposed');
+      sensitivePatterns.push({
+        pattern: 'home-directory',
+        description: 'User home directory path revealed',
+        line: line.trim()
+      });
+    }
+    
+    // Check for source map references
+    if (/sourceMappingURL|\.js\.map|\.ts\.map/.test(line)) {
+      risks.push('Source map references present');
+      sensitivePatterns.push({
+        pattern: 'source-maps',
+        description: 'Source map reference found',
+        line: line.trim()
+      });
+    }
+    
+    // Check for potentially sensitive file patterns
+    if (/\.env|config|secret|password|key|token/i.test(line)) {
+      risks.push('Potentially sensitive file or variable names');
+      sensitivePatterns.push({
+        pattern: 'sensitive-names',
+        description: 'Sensitive file or variable name detected',
+        line: line.trim()
+      });
+    }
+    
+    // Check for internal module structure exposure
+    if (/internal\/|lib\/private|src\/.*\/private/.test(line)) {
+      risks.push('Internal module structure exposed');
+      sensitivePatterns.push({
+        pattern: 'internal-structure',
+        description: 'Internal module structure revealed',
+        line: line.trim()
+      });
+    }
+    
+    // Check for absolute paths that might reveal deployment structure
+    if (/^[\s]*at.*[\/\\](?:opt|var|srv|app|workspace)[\/\\]/.test(line)) {
+      risks.push('Deployment path structure exposed');
+      sensitivePatterns.push({
+        pattern: 'deployment-paths',
+        description: 'Deployment directory structure revealed',
+        line: line.trim()
+      });
+    }
+  });
+  
+  // Determine risk level
+  let riskLevel: 'low' | 'medium' | 'high' = 'low';
+  if (risks.length > 0 && risks.length <= 2) {
+    riskLevel = 'medium';
+  } else if (risks.length > 2) {
+    riskLevel = 'high';
+  }
+  
+  // Generate recommendations based on risks
+  if (risks.includes('User home directory paths exposed')) {
+    recommendations.push('Enable redactFilePaths in sanitization config');
+  }
+  if (risks.includes('Source map references present')) {
+    recommendations.push('Enable removeSourceMaps in sanitization config');
+  }
+  if (risks.includes('Internal module structure exposed')) {
+    recommendations.push('Enable sanitizeModuleNames in sanitization config');
+  }
+  if (risks.includes('Deployment path structure exposed')) {
+    recommendations.push('Use stackTraceLevel: "minimal" or "sanitized" for production');
+  }
+  if (sensitivePatterns.length > 0) {
+    recommendations.push('Consider using higher stack trace sanitization level');
+  }
+  
+  return { riskLevel, risks, recommendations, sensitivePatterns };
 }

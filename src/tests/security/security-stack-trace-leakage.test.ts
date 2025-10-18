@@ -5,6 +5,11 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createCLI } from '../../core/createCLI.js';
+import { 
+  sanitizeStackTrace, 
+  analyzeStackTraceSecurity,
+  createEnvironmentConfig
+} from '../../core/foundation/error-sanitization.js';
 
 describe('Stack Trace Leakage Security', () => {
   let originalNodeEnv: string | undefined;
@@ -347,6 +352,351 @@ describe('Stack Trace Leakage Security', () => {
       });
 
       // Should handle malformed stack traces without crashing
+    });
+  });
+
+  describe('Enhanced Stack Trace Security (Task 1.3.2)', () => {
+    describe('Stack Trace Level Configuration', () => {
+      it('should support none level (completely remove stack traces)', () => {
+        const stack = `Error: Test error
+    at /Users/admin/secret/file.js:10:5
+    at /sensitive/path/config.js:25:12`;
+        
+        const result = sanitizeStackTrace(stack, { stackTraceLevel: 'none' });
+        expect(result).toBe('');
+      });
+
+      it('should support minimal level (error + one frame only)', () => {
+        const stack = `Error: Test error with sensitive paths
+    at /Users/admin/secret/file.js:10:5
+    at /home/user/private/config.js:25:12
+    at /workspace/app/database.js:45:8`;
+        
+        const result = sanitizeStackTrace(stack, { 
+          stackTraceLevel: 'minimal',
+          removeLineNumbers: true 
+        });
+        
+        expect(result).toContain('Error: Test error with sensitive paths');
+        expect(result).toContain('at ');
+        expect(result.split('\n')).toHaveLength(2); // Only error line + one frame
+        expect(result).not.toContain('10:5'); // Line numbers removed
+        expect(result).not.toContain('/Users/admin'); // Paths sanitized
+      });
+
+      it('should support sanitized level (remove sensitive info, keep structure)', () => {
+        const stack = `Error: Test error
+    at /Users/admin/secret/file.js:10:5
+    at node_modules/some-package/lib/index.js:100:20
+    at /workspace/app/config.js:25:12`;
+        
+        const result = sanitizeStackTrace(stack, { 
+          stackTraceLevel: 'sanitized',
+          redactFilePaths: true,
+          sanitizeModuleNames: true 
+        });
+        
+        expect(result).toContain('Error: Test error');
+        expect(result).toContain('node_modules'); // Node modules preserved
+        expect(result).not.toContain('/Users/admin'); // Sensitive paths removed
+        expect(result).not.toContain('/workspace/app'); // Project paths sanitized
+      });
+
+      it('should support full level (minimal sanitization for development)', () => {
+        const stack = `Error: Development error
+    at /Users/developer/project/src/file.js:10:5
+    at /Users/developer/.ssh/config:5:1
+    at node_modules/package/index.js:100:20`;
+        
+        const result = sanitizeStackTrace(stack, { 
+          stackTraceLevel: 'full',
+          redactFilePaths: true 
+        });
+        
+        expect(result).toContain('Error: Development error');
+        expect(result).toContain('/Users/developer/project'); // Most paths preserved
+        expect(result).not.toContain('/.ssh/'); // Very sensitive paths still hidden
+        expect(result).toContain('[hidden]'); // Sensitive replaced with marker
+      });
+    });
+
+    describe('Source Map Protection', () => {
+      it('should remove source map references when configured', () => {
+        const stack = `Error: Test error
+    at Object.<anonymous> (/app/dist/file.js:1:23)
+    //# sourceMappingURL=file.js.map
+    at Module._compile (internal/modules/cjs/loader.js:1063:30)
+    /*# sourceMappingURL=data:application/json;base64,... */`;
+        
+        const result = sanitizeStackTrace(stack, { 
+          stackTraceLevel: 'sanitized',
+          removeSourceMaps: true 
+        });
+        
+        expect(result).not.toContain('sourceMappingURL');
+        expect(result).not.toContain('.js.map');
+        expect(result).not.toContain('application/json;base64');
+      });
+
+      it('should preserve source maps when configured for development', () => {
+        const stack = `Error: Development error
+    at Object.<anonymous> (/app/src/file.ts:10:5)
+    //# sourceMappingURL=file.js.map`;
+        
+        const result = sanitizeStackTrace(stack, { 
+          stackTraceLevel: 'full',
+          removeSourceMaps: false 
+        });
+        
+        expect(result).toContain('sourceMappingURL');
+        expect(result).toContain('file.js.map');
+      });
+    });
+
+    describe('Module Name Sanitization', () => {
+      it('should sanitize internal module names when configured', () => {
+        const stack = `Error: Internal error
+    at internal/bootstrap/loader.js:10:5
+    at lib/private/secrets.js:25:12
+    at src/internal/config.js:45:8
+    at @company/private-package/index.js:100:20`;
+        
+        const result = sanitizeStackTrace(stack, { 
+          stackTraceLevel: 'sanitized',
+          sanitizeModuleNames: true 
+        });
+        
+        expect(result).toContain('internal/***');
+        expect(result).toContain('lib/***');
+        expect(result).toContain('src/***');
+        expect(result).toContain('@***/***'); // Scoped packages
+      });
+
+      it('should preserve module names in full mode', () => {
+        const stack = `Error: Development error
+    at internal/bootstrap/loader.js:10:5
+    at src/components/Button.tsx:25:12`;
+        
+        const result = sanitizeStackTrace(stack, { 
+          stackTraceLevel: 'full',
+          sanitizeModuleNames: false 
+        });
+        
+        expect(result).toContain('internal/bootstrap/loader.js');
+        expect(result).toContain('src/components/Button.tsx');
+      });
+    });
+
+    describe('Line Number Protection', () => {
+      it('should remove line numbers when configured', () => {
+        const stack = `Error: Security test
+    at /safe/file.js:123:45
+    at /safe/config.js:67:89
+    at node_modules/package/index.js:100:20`;
+        
+        const result = sanitizeStackTrace(stack, { 
+          stackTraceLevel: 'sanitized',
+          removeLineNumbers: true,
+          redactFilePaths: false  // Don't redact file paths for this test
+        });
+        
+        expect(result).not.toContain(':123:45');
+        expect(result).not.toContain(':67:89');
+        expect(result).not.toContain(':100:20');
+        expect(result).toContain('/safe/file.js');
+      });
+
+      it('should preserve line numbers when configured for debugging', () => {
+        const stack = `Error: Debug error
+    at /app/file.js:123:45
+    at /app/config.js:67:89`;
+        
+        const result = sanitizeStackTrace(stack, { 
+          stackTraceLevel: 'full',
+          removeLineNumbers: false 
+        });
+        
+        expect(result).toContain(':123:45');
+        expect(result).toContain(':67:89');
+      });
+    });
+  });
+
+  describe('Environment-Specific Stack Trace Configuration', () => {
+    it('should create appropriate development configuration', () => {
+      const config = createEnvironmentConfig('development');
+      
+      expect(config.stackTraceLevel).toBe('full');
+      expect(config.removeSourceMaps).toBe(false);
+      expect(config.sanitizeModuleNames).toBe(false);
+      expect(config.removeLineNumbers).toBe(false);
+      expect(config.maxStackDepth).toBe(20);
+    });
+
+    it('should create appropriate staging configuration', () => {
+      const config = createEnvironmentConfig('staging');
+      
+      expect(config.stackTraceLevel).toBe('sanitized');
+      expect(config.removeSourceMaps).toBe(true);
+      expect(config.sanitizeModuleNames).toBe(true);
+      expect(config.removeLineNumbers).toBe(false);
+      expect(config.maxStackDepth).toBe(15);
+    });
+
+    it('should create appropriate production configuration', () => {
+      const config = createEnvironmentConfig('production');
+      
+      expect(config.stackTraceLevel).toBe('minimal');
+      expect(config.removeSourceMaps).toBe(true);
+      expect(config.sanitizeModuleNames).toBe(true);
+      expect(config.removeLineNumbers).toBe(true);
+      expect(config.maxStackDepth).toBe(5);
+    });
+
+    it('should allow configuration overrides', () => {
+      const config = createEnvironmentConfig('production', {
+        stackTraceLevel: 'sanitized',
+        maxStackDepth: 10
+      });
+      
+      expect(config.stackTraceLevel).toBe('sanitized');
+      expect(config.maxStackDepth).toBe(10);
+      expect(config.removeSourceMaps).toBe(true); // Other defaults preserved
+    });
+  });
+
+  describe('Stack Trace Security Analysis', () => {
+    it('should analyze stack traces for security risks', () => {
+      const riskyStack = `Error: Test error
+    at /Users/admin/secret-project/file.js:10:5
+    //# sourceMappingURL=file.js.map
+    at /home/user/.env:5:1
+    at internal/private/config.js:25:12
+    at /opt/deployment/secrets/api-keys.js:45:8`;
+      
+      const analysis = analyzeStackTraceSecurity(riskyStack);
+      
+      expect(analysis.riskLevel).toBe('high');
+      expect(analysis.risks).toContain('User home directory paths exposed');
+      expect(analysis.risks).toContain('Source map references present');
+      expect(analysis.risks).toContain('Potentially sensitive file or variable names');
+      expect(analysis.risks).toContain('Internal module structure exposed');
+      expect(analysis.risks).toContain('Deployment path structure exposed');
+    });
+
+    it('should provide appropriate recommendations', () => {
+      const riskyStack = `Error: Test error
+    at /Users/admin/project/file.js:10:5
+    //# sourceMappingURL=file.js.map`;
+      
+      const analysis = analyzeStackTraceSecurity(riskyStack);
+      
+      expect(analysis.recommendations).toContain('Enable redactFilePaths in sanitization config');
+      expect(analysis.recommendations).toContain('Enable removeSourceMaps in sanitization config');
+    });
+
+    it('should identify sensitive patterns with details', () => {
+      const riskyStack = `Error: Testing error
+    at /Users/admin/project/file.js:10:5
+    at internal/private/config.js:25:12`;
+      
+      const analysis = analyzeStackTraceSecurity(riskyStack);
+      
+      // Should find: home-directory, internal-structure patterns
+      expect(analysis.sensitivePatterns.length).toBeGreaterThanOrEqual(2);
+      
+      const patterns = analysis.sensitivePatterns.map(p => p.pattern);
+      expect(patterns).toContain('home-directory');
+      expect(patterns).toContain('internal-structure');
+      
+      expect(analysis.riskLevel).toBe('high');
+    });
+
+    it('should return low risk for safe stack traces', () => {
+      const safeStack = `Error: Safe error
+    at node_modules/package/index.js:100:20
+    at Object.<anonymous> (dist/app.js:50:10)`;
+      
+      const analysis = analyzeStackTraceSecurity(safeStack);
+      
+      expect(analysis.riskLevel).toBe('low');
+      expect(analysis.risks).toHaveLength(0);
+      expect(analysis.recommendations).toHaveLength(0);
+    });
+
+    it('should handle empty or invalid stack traces', () => {
+      expect(analyzeStackTraceSecurity('')).toEqual({
+        riskLevel: 'low',
+        risks: [],
+        recommendations: [],
+        sensitivePatterns: []
+      });
+      
+      expect(analyzeStackTraceSecurity(null as any)).toEqual({
+        riskLevel: 'low',
+        risks: [],
+        recommendations: [],
+        sensitivePatterns: []
+      });
+    });
+  });
+
+  describe('Advanced Stack Trace Edge Cases', () => {
+    it('should handle stack traces with Windows paths', () => {
+      const windowsStack = `Error: Windows error
+    at C:\\Users\\Administrator\\secret\\file.js:10:5
+    at C:\\Program Files\\myapp\\config.exe:25:12`;
+      
+      const result = sanitizeStackTrace(windowsStack, { 
+        stackTraceLevel: 'sanitized',
+        redactFilePaths: true 
+      });
+      
+      expect(result).not.toContain('Administrator\\secret');
+      expect(result).not.toContain('Program Files\\myapp');
+      expect(result).toContain('C:\\Users\\***');  // Should be sanitized to this
+      expect(result).toContain('C:\\Program Files\\***');  // Should be sanitized to this
+    });
+
+    it('should handle mixed path separators', () => {
+      const mixedStack = `Error: Mixed path error
+    at C:/Users/admin/project\\src/file.js:10:5
+    at /mnt/c/myworkspace/config.js:25:12`;
+      
+      const result = sanitizeStackTrace(mixedStack, { 
+        stackTraceLevel: 'sanitized',
+        redactFilePaths: true 
+      });
+      
+      expect(result).not.toContain('admin/project');
+      expect(result).not.toContain('myworkspace');
+      expect(result).toContain('C:/Users/***/');  // Should be sanitized
+    });
+
+    it('should respect stack depth limits across all modes', () => {
+      const deepStack = `Error: Deep error\n` + 
+        Array.from({ length: 15 }, (_, i) => 
+          `    at function${i} (/path/file${i}.js:${i}:1)`
+        ).join('\n');
+      
+      const result = sanitizeStackTrace(deepStack, { 
+        stackTraceLevel: 'sanitized',
+        maxStackDepth: 5 
+      });
+      
+      const lines = result.split('\n');
+      expect(lines.length).toBeLessThanOrEqual(6); // Error line + 5 frames + truncation message
+      expect(result).toContain('more frames hidden for security');
+    });
+
+    it('should handle stack traces with no frames', () => {
+      const noFrameStack = 'Error: Just an error message';
+      
+      const result = sanitizeStackTrace(noFrameStack, { 
+        stackTraceLevel: 'minimal' 
+      });
+      
+      expect(result).toBe('Error: Just an error message');
     });
   });
 });
