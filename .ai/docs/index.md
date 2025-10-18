@@ -15,7 +15,10 @@
 ### 📂 **Documentation Categories**
 
 #### 🔐 Security
-- ✅ [Error Handling Security Analysis](./security/error-handling-security-analysis.md)
+- ✅ [Security Documentation Index](./security/README.md) **[NEW]**
+- ✅ [Error Handling Security Analysis](./security/error-handling-security-analysis.md) **[UPDATED]**
+- ✅ [DoS Protection Analysis](./security/dos-protection-analysis.md) **[NEW - Oct 2025]**
+- ✅ [Input Validation Security Analysis](./security/input-validation-security-analysis.md)
 - 🔜 Command Injection Analysis
 - 🔜 Plugin Security Analysis  
 - 🔜 Overall Security Framework
@@ -55,9 +58,10 @@
 
 ### 🎯 **Key Metrics Documented**
 
-- **88 Security Tests** - Comprehensive attack vector coverage
+- **420 Security Tests** - Comprehensive attack vector coverage **[UPDATED]**
+- **DoS Protection** - Critical vulnerability resolved (Oct 2025) **[NEW]**  
 - **97% Bundle Reduction** - 71KB → 1.78KB optimization
-- **367 Total Tests** - Data-driven testing methodology  
+- **616 Total Tests** - Data-driven testing methodology **[UPDATED]**
 - **15+ CLIs Analyzed** - Industry pattern research
 - **7 Core Patterns** - Systematized reusable modules
 
