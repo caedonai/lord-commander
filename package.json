@@ -22,7 +22,7 @@
   "scripts": {
     "build": "tsup src/index.ts src/core/index.ts src/plugins/index.ts --format esm --dts --clean --target node18",
     "dev": "node --loader ts-node/esm src/index.ts",
-    "test": "vitest",
+    "test": "vitest --run",
     "test:run": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
