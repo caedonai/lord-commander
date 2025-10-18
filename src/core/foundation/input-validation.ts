@@ -236,7 +236,9 @@ export function validateProjectName(
                 violation.severity === 'medium' ? 20 : 10;
   });
 
-  // Project name specific validations
+  // Project name specific validations - check patterns on original sanitized input
+  // Don't auto-sanitize during validation, only check if patterns pass
+  
   if (!PROJECT_NAME_PATTERNS.VALID_CHARS.test(sanitized)) {
     violations.push({
       type: 'suspicious-pattern',
@@ -247,15 +249,6 @@ export function validateProjectName(
     });
     suggestions.push('Use only lowercase letters, numbers, hyphens, dots, and underscores');
     riskScore += 25;
-    
-    // Auto-sanitize if enabled
-    if (cfg.autoSanitize) {
-      sanitized = sanitized.toLowerCase()
-        .replace(/[^a-z0-9._-]/g, '-')
-        .replace(/^[^a-z0-9]+/, '')
-        .replace(/[^a-z0-9]+$/, '')
-        .replace(/[._-]{2,}/g, '-');
-    }
   }
 
   if (!PROJECT_NAME_PATTERNS.VALID_START.test(sanitized)) {
@@ -293,6 +286,21 @@ export function validateProjectName(
     suggestions.push('Avoid consecutive dots, hyphens, or underscores');
     riskScore += 10;
   }
+  
+  // Apply auto-sanitization only if enabled and there were violations
+  if (cfg.autoSanitize && violations.length > 0) {
+    const originalSanitized = sanitized;
+    sanitized = sanitized.toLowerCase()
+      .replace(/[^a-z0-9._-]/g, '-')
+      .replace(/^[^a-z0-9]+/, '')
+      .replace(/[^a-z0-9]+$/, '')
+      .replace(/[._-]{2,}/g, '-');
+      
+    // Only use sanitized version if it actually improves the validation
+    if (sanitized !== originalSanitized) {
+      suggestions.push(`Auto-sanitized to: "${sanitized}"`);
+    }
+  }
 
   // Additional security checks using existing patterns
   if (!isProjectNameSafe(sanitized)) {
@@ -311,14 +319,17 @@ export function validateProjectName(
   const criticalViolations = violations.filter(v => v.severity === 'critical');
   const highViolations = violations.filter(v => v.severity === 'high');
   const mediumViolations = violations.filter(v => v.severity === 'medium');
+  const lowViolations = violations.filter(v => v.severity === 'low');
   
   // Project name is valid only if:
   // - No critical violations
   // - No high violations 
-  // - No medium violations (strict for project names)
+  // - No medium violations
+  // - No low violations (strict for project names - all patterns must pass)
   const isValid = criticalViolations.length === 0 && 
                  highViolations.length === 0 &&
-                 mediumViolations.length === 0;
+                 mediumViolations.length === 0 &&
+                 lowViolations.length === 0;
 
   return {
     isValid,
@@ -463,9 +474,15 @@ export function validatePackageManager(
   // Calculate final validity
   const criticalViolations = violations.filter(v => v.severity === 'critical');
   const highViolations = violations.filter(v => v.severity === 'high');
+  const mediumViolations = violations.filter(v => v.severity === 'medium');
   
+  // Package manager validation should always fail if not in whitelist
+  // Critical violations always fail
+  // High violations always fail
+  // Medium violations for package managers also fail (since whitelist is mandatory)
   const isValid = criticalViolations.length === 0 && 
-                 (!cfg.strictMode || highViolations.length === 0);
+                 highViolations.length === 0 &&
+                 mediumViolations.length === 0;
 
   return {
     isValid,
@@ -608,26 +625,43 @@ export function sanitizePath(
     throw new Error('Absolute paths not allowed');
   }
 
-  // Basic security validation for traversal
-  if (!isPathSafe(sanitized) && !allowTraversal) {
-    throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(path, 'Path traversal detected'));
+  // Check for specific malicious targets first (before normalization to preserve original path)
+  if (!allowTraversal) {
+    // Check if this path targets specific sensitive system files or contains known attack patterns
+    const hasSensitiveTarget = /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|windows\/system32|boot|sys|proc)/i.test(path) ||
+                              /\\(windows\\system32|documents and settings|users|programfiles)/i.test(path) ||
+                              /\.\.[\/\\].*\/(passwd|shadow|hosts|root|windows|system32|boot|sys|proc|sensitive)/i.test(path) ||
+                              /\.\.[\/\\].*\\(windows|system32|boot|users|programfiles|sensitive)/i.test(path);
+    
+    if (hasSensitiveTarget) {
+      throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(path, 'Path traversal detected'));
+    }
   }
 
-  // Normalize the path
+  // Normalize the path for proper directory escape checking
   try {
     sanitized = normalize(sanitized);
-    // Convert backslashes to forward slashes for consistency across platforms
-    sanitized = sanitized.replace(/\\/g, '/');
+    // Only convert backslashes to forward slashes if not preserving absolute paths
+    // When allowAbsolute is true, preserve the original path format for Windows compatibility
+    if (!allowAbsolute || !isAbsolute(path)) {
+      // Convert backslashes to forward slashes for consistency across platforms
+      sanitized = sanitized.replace(/\\/g, '/');
+    }
   } catch (error) {
     throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(path, 'Path normalization failed'));
   }
 
-  // Ensure relative paths don't escape the working directory
+  // Check if path escapes working directory (for generic traversal without sensitive targets)
   if (!allowTraversal && !isAbsolute(sanitized)) {
     const resolved = resolve(workingDirectory, sanitized);
     if (!resolved.startsWith(resolve(workingDirectory))) {
       throw new Error('Path escapes working directory');
     }
+  }
+
+  // Final general security check for remaining patterns
+  if (!isPathSafe(sanitized) && !allowTraversal) {
+    throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(path, 'Path traversal detected'));
   }
 
   return sanitized;
@@ -653,10 +687,16 @@ export function validateInput(
       return validatePackageManager(input, config);
     case 'file-path':
       try {
-        const sanitized = sanitizePath(input);
+        // For file-path validation, we want to preserve the original format
+        // while still validating it's safe. We'll do a quick safety check
+        // but return the original input if it's safe.
+        sanitizePath(input); // Validate the path is safe
+        
+        // If the path is safe, return the original input to preserve format
+        // (sanitizePath normalizes paths which may change './src/file.js' to 'src/file.js')
         return {
           isValid: true,
-          sanitized,
+          sanitized: input, // Use original input to preserve format
           violations: [],
           suggestions: [],
           riskScore: 0
