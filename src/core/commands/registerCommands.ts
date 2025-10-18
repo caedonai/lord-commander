@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import fs from 'fs';
 import path from 'path';
 import type { CommandContext } from '../../types/cli';
-import { ERROR_MESSAGES } from '../foundation/constants';
+import { ERROR_MESSAGES } from '../foundation/constants.js';
 
 // Track registered commands and their sources for conflict detection
 const registeredCommands = new Map<string, { source: string; path: string }>();

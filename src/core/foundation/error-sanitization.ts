@@ -1434,3 +1434,836 @@ export function analyzeStackTraceSecurity(stack: string): {
   
   return { riskLevel, risks, recommendations, sensitivePatterns };
 }
+
+// ===================================================================
+// Task 1.3.3: Error Context Sanitization
+// ===================================================================
+
+/**
+ * Configuration for error context sanitization behavior
+ * 
+ * Controls how error context information is handled during sanitization,
+ * balancing security concerns with debugging requirements.
+ * 
+ * @example
+ * ```typescript
+ * const config: ErrorContextConfig = {
+ *   generateSecureIds: true,
+ *   preserveErrorCodes: true,
+ *   redactionLevel: 'partial',
+ *   includeContextHints: true,
+ *   maxContextLength: 1000,
+ *   allowedProperties: ['timestamp', 'level', 'operation']
+ * };
+ * ```
+ */
+export interface ErrorContextConfig {
+  /** Whether to generate secure, non-sensitive error IDs */
+  generateSecureIds: boolean;
+  /** Whether to preserve error codes for debugging */
+  preserveErrorCodes: boolean;
+  /** Level of context redaction: 'none', 'partial', 'full' */
+  redactionLevel: 'none' | 'partial' | 'full';
+  /** Whether to include hints about redacted content */
+  includeContextHints: boolean;
+  /** Maximum allowed context length (DoS protection) */
+  maxContextLength: number;
+  /** List of allowed context properties to preserve */
+  allowedProperties: string[];
+  /** Whether to sanitize nested objects recursively */
+  sanitizeNestedObjects: boolean;
+  /** Whether to preserve timestamp information */
+  preserveTimestamps: boolean;
+  /** Whether to sanitize function names that might reveal internal structure */
+  sanitizeFunctionNames: boolean;
+  /** Custom patterns for context-specific sensitive data */
+  customContextPatterns: RegExp[];
+}
+
+/**
+ * Default configuration for error context sanitization
+ * 
+ * Provides secure defaults that protect sensitive information while
+ * maintaining sufficient debugging context for troubleshooting.
+ */
+export const DEFAULT_ERROR_CONTEXT_CONFIG: ErrorContextConfig = {
+  generateSecureIds: true,
+  preserveErrorCodes: true,
+  redactionLevel: 'partial',
+  includeContextHints: true,
+  maxContextLength: 1000,
+  allowedProperties: ['timestamp', 'level', 'operation', 'component'],
+  sanitizeNestedObjects: true,
+  preserveTimestamps: true,
+  sanitizeFunctionNames: true,
+  customContextPatterns: []
+};
+
+/**
+ * Result of error context sanitization
+ * 
+ * Contains the sanitized context along with metadata about
+ * what was redacted and secure identifiers.
+ */
+export interface SanitizedErrorContext {
+  /** Unique, secure identifier for this error */
+  errorId: string;
+  /** Sanitized error context object */
+  context: Record<string, unknown>;
+  /** Original error code if preserved */
+  code?: string | number;
+  /** Timestamp of the error (if preserved) */
+  timestamp?: string;
+  /** List of properties that were redacted */
+  redactedProperties: string[];
+  /** Security warnings about the original context */
+  securityWarnings: string[];
+  /** Whether any sensitive data was detected and removed */
+  hadSensitiveData: boolean;
+  /** Safe hints about redacted content for debugging */
+  redactionHints: Record<string, string>;
+}
+
+/**
+ * Information about detected sensitive content in error context
+ */
+export interface SensitiveContextDetection {
+  /** Property path where sensitive data was found */
+  propertyPath: string;
+  /** Type of sensitive data detected */
+  sensitiveType: string;
+  /** Suggested replacement hint */
+  hint: string;
+  /** Severity level of the detection */
+  severity: 'low' | 'medium' | 'high' | 'critical';
+}
+
+/**
+ * Sanitizes error context to prevent information disclosure
+ * 
+ * This function processes error context objects (commonly used in logging
+ * and telemetry) to remove sensitive information while preserving debugging
+ * value. It supports selective redaction, secure ID generation, and provides
+ * hints about what was removed.
+ * 
+ * @param error - The error object to extract context from
+ * @param additionalContext - Additional context to include
+ * @param config - Configuration options for sanitization behavior
+ * @returns Sanitized error context with secure identifier
+ * 
+ * @example
+ * ```typescript
+ * // Basic usage
+ * const result = sanitizeErrorContext(error, { userId: '12345', operation: 'login' });
+ * console.log(result.errorId); // "ERR_2024_A3B7F9C2"
+ * console.log(result.context.operation); // "login"
+ * console.log(result.redactionHints.userId); // "User identifier (redacted)"
+ * 
+ * // Custom configuration
+ * const result = sanitizeErrorContext(error, context, {
+ *   redactionLevel: 'partial',
+ *   allowedProperties: ['operation', 'timestamp'],
+ *   customContextPatterns: [/internal-id-\d+/gi]
+ * });
+ * ```
+ * 
+ * @security This function prevents information disclosure by:
+ * - Removing user credentials, API keys, and personal information
+ * - Sanitizing file paths and system information
+ * - Generating non-sensitive error identifiers
+ * - Limiting context size to prevent DoS attacks
+ * - Providing safe debugging hints without exposing sensitive data
+ */
+export function sanitizeErrorContext(
+  error: Error,
+  additionalContext: Record<string, unknown> = {},
+  config: Partial<ErrorContextConfig> = {}
+): SanitizedErrorContext {
+  const fullConfig: ErrorContextConfig = {
+    ...DEFAULT_ERROR_CONTEXT_CONFIG,
+    ...config
+  };
+
+  const startTime = Date.now();
+  const redactedProperties: string[] = [];
+  const securityWarnings: string[] = [];
+  const redactionHints: Record<string, string> = {};
+  let hadSensitiveData = false;
+
+  // Generate secure error ID
+  const errorId = fullConfig.generateSecureIds 
+    ? _generateSecureErrorId(error)
+    : `ERR_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+  // Build initial context with security filtering
+  const rawContext: Record<string, unknown> = {
+    message: error.message,
+    name: error.name,
+    ...additionalContext
+  };
+
+  // Remove dangerous properties that could be used for injection attacks
+  const initialContext = _removeDangerousProperties(rawContext);
+
+  // Add error code if available and preservation is enabled
+  if (fullConfig.preserveErrorCodes && 'code' in error) {
+    initialContext.code = error.code;
+  }
+
+  // Add timestamp if preservation is enabled
+  const timestamp = fullConfig.preserveTimestamps ? new Date().toISOString() : undefined;
+
+  // DoS protection: Pre-truncate large context
+  let processedContext = initialContext;
+  let contextSize = 0;
+  
+  // Calculate rough context size
+  for (const [, value] of Object.entries(initialContext)) {
+    if (typeof value === 'string') {
+      contextSize += value.length;
+    } else if (typeof value === 'object' && value !== null) {
+      try {
+        contextSize += JSON.stringify(value).length;
+      } catch {
+        contextSize += 1000; // Estimate for objects we can't serialize
+      }
+    }
+  }
+  
+  // Check if context is too large (including the base context from error)
+  const sizeLimit = fullConfig.maxContextLength * 3;
+  if (contextSize > sizeLimit) {
+    securityWarnings.push('Large context detected - applying size limits for security');
+    // Truncate each property that's too long
+    for (const [key, value] of Object.entries(initialContext)) {
+      if (typeof value === 'string' && value.length > 200) {
+        initialContext[key] = value.substring(0, 200) + '...[truncated]';
+        redactionHints[key] = 'Long content truncated for security';
+      }
+    }
+    processedContext = initialContext;
+  } else {
+    try {
+      // Test if we can safely serialize the context
+      JSON.stringify(initialContext);
+      processedContext = initialContext;
+    } catch (error) {
+      // Handle circular references
+      securityWarnings.push('Circular reference detected in context - applying safe serialization');
+      processedContext = _removeDangerousProperties(initialContext);
+    }
+  }
+
+  // Detect and handle sensitive content
+  const sensitiveDetections = _detectSensitiveContent(processedContext, fullConfig);
+  
+  // Apply sanitization based on redaction level
+  const sanitizedContext = _applyContextRedaction(
+    processedContext, 
+    sensitiveDetections, 
+    fullConfig,
+    redactedProperties,
+    redactionHints
+  );
+
+  // Update flags based on detections
+  hadSensitiveData = sensitiveDetections.length > 0;
+  
+  // Add security warnings for high-severity detections
+  sensitiveDetections
+    .filter(d => d.severity === 'high' || d.severity === 'critical')
+    .forEach(d => securityWarnings.push(`${d.sensitiveType} detected in ${d.propertyPath}`));
+
+  // Final size check
+  const finalSize = JSON.stringify(sanitizedContext).length;
+  if (finalSize > fullConfig.maxContextLength) {
+    securityWarnings.push('Context size exceeded limits after sanitization');
+    // Further truncate if needed
+    for (const [key, value] of Object.entries(sanitizedContext)) {
+      if (typeof value === 'string' && value.length > 100) {
+        sanitizedContext[key] = value.substring(0, 100) + '...[size-limited]';
+        redactionHints[key] = (redactionHints[key] || '') + ' (size limited)';
+      }
+    }
+  }
+
+  // Performance monitoring
+  const processingTime = Date.now() - startTime;
+  if (processingTime > 100) {
+    securityWarnings.push(`Context sanitization took ${processingTime}ms - consider reducing context size`);
+  }
+
+  return {
+    errorId,
+    context: sanitizedContext,
+    code: fullConfig.preserveErrorCodes && 'code' in error ? error.code as string | number : undefined,
+    timestamp,
+    redactedProperties,
+    securityWarnings,
+    hadSensitiveData,
+    redactionHints
+  };
+}
+
+/**
+ * Creates a safe error object for forwarding to external systems
+ * 
+ * This function sanitizes an error and its context for safe transmission
+ * to logging, telemetry, or monitoring systems. It ensures no sensitive
+ * information is leaked while maintaining debugging utility.
+ * 
+ * @param error - The error object to sanitize
+ * @param context - Additional context to include
+ * @param config - Configuration for sanitization behavior
+ * @returns Safe error object ready for external forwarding
+ * 
+ * @example
+ * ```typescript
+ * // For telemetry systems
+ * const safeError = createSafeErrorForForwarding(error, {
+ *   operation: 'user-login',
+ *   component: 'auth-service'
+ * });
+ * 
+ * // Send to external monitoring
+ * await telemetry.recordError(safeError);
+ * 
+ * // For logging systems with custom config
+ * const safeError = createSafeErrorForForwarding(error, context, {
+ *   redactionLevel: 'full',
+ *   allowedProperties: ['timestamp', 'component']
+ * });
+ * ```
+ * 
+ * @security This function ensures safe external forwarding by:
+ * - Applying comprehensive context sanitization
+ * - Removing all stack trace information by default
+ * - Generating correlation IDs instead of exposing internal error details
+ * - Limiting payload size to prevent abuse
+ */
+export function createSafeErrorForForwarding(
+  error: Error,
+  context: Record<string, unknown> = {},
+  config: Partial<ErrorContextConfig> = {}
+): {
+  errorId: string;
+  message: string;
+  type: string;
+  timestamp: string;
+  context: Record<string, unknown>;
+  severity: 'low' | 'medium' | 'high';
+  metadata: {
+    hadSensitiveData: boolean;
+    redactedCount: number;
+    securityWarnings: string[];
+  };
+} {
+  // Use more restrictive defaults for external forwarding
+  const forwardingConfig: ErrorContextConfig = {
+    ...DEFAULT_ERROR_CONTEXT_CONFIG,
+    redactionLevel: 'partial', // More restrictive by default
+    maxContextLength: 500, // Smaller limit for external systems
+    preserveTimestamps: true, // Always preserve timestamps for correlation
+    ...config
+  };
+
+  // Sanitize the error context
+  const sanitized = sanitizeErrorContext(error, context, forwardingConfig);
+
+  // Sanitize the error message itself
+  const sanitizedMessage = sanitizeErrorMessage(error.message, {
+    maxMessageLength: 300,
+    redactPasswords: true,
+    redactApiKeys: true,
+    redactFilePaths: true,
+    redactDatabaseUrls: true,
+    redactNetworkInfo: true,
+    redactPersonalInfo: true
+  });
+
+  // Determine severity based on error type and sensitive data detection
+  let severity: 'low' | 'medium' | 'high' = 'low';
+  if (sanitized.hadSensitiveData || sanitized.securityWarnings.length > 0) {
+    severity = 'medium';
+  }
+  if (error.name === 'SecurityError' || error.message.toLowerCase().includes('security')) {
+    severity = 'high';
+  }
+
+  return {
+    errorId: sanitized.errorId,
+    message: sanitizedMessage,
+    type: error.name || 'Error',
+    timestamp: sanitized.timestamp || new Date().toISOString(),
+    context: sanitized.context,
+    severity,
+    metadata: {
+      hadSensitiveData: sanitized.hadSensitiveData,
+      redactedCount: sanitized.redactedProperties.length,
+      securityWarnings: sanitized.securityWarnings
+    }
+  };
+}
+
+/**
+ * Analyzes error context for sensitive information without modifying it
+ * 
+ * This function performs a security analysis of error context to identify
+ * potential information disclosure risks. Useful for auditing and security
+ * monitoring without actually sanitizing the content.
+ * 
+ * @param context - The context object to analyze
+ * @param config - Configuration for analysis behavior
+ * @returns Analysis results with detected risks and recommendations
+ * 
+ * @example
+ * ```typescript
+ * const analysis = analyzeErrorContextSecurity({
+ *   user: { email: 'user@example.com', password: 'secret' },
+ *   apiKey: 'sk-123456789',
+ *   filePath: '/home/user/.env'
+ * });
+ * 
+ * console.log(analysis.riskLevel); // 'high'
+ * console.log(analysis.sensitiveDetections.length); // 3
+ * console.log(analysis.recommendations); // ['Remove user credentials', 'Redact API keys', ...]
+ * ```
+ */
+export function analyzeErrorContextSecurity(
+  context: Record<string, unknown>,
+  config: Partial<ErrorContextConfig> = {}
+): {
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  sensitiveDetections: SensitiveContextDetection[];
+  recommendations: string[];
+  estimatedRedactionPercentage: number;
+} {
+  const fullConfig: ErrorContextConfig = {
+    ...DEFAULT_ERROR_CONTEXT_CONFIG,
+    ...config
+  };
+
+  const sensitiveDetections = _detectSensitiveContent(context, fullConfig);
+  const totalProperties = _countProperties(context);
+  const sensitiveProperties = sensitiveDetections.length;
+
+  // Determine risk level
+  let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
+  
+  const criticalDetections = sensitiveDetections.filter(d => d.severity === 'critical').length;
+  const highDetections = sensitiveDetections.filter(d => d.severity === 'high').length;
+  const mediumDetections = sensitiveDetections.filter(d => d.severity === 'medium').length;
+
+  if (criticalDetections > 0) {
+    riskLevel = 'critical';
+  } else if (highDetections >= 2 || sensitiveProperties >= 5) {
+    riskLevel = 'high';
+  } else if (highDetections > 0 || mediumDetections >= 2) {
+    riskLevel = 'medium';
+  }
+
+  // Generate recommendations
+  const recommendations: string[] = [];
+  
+  if (criticalDetections > 0) {
+    recommendations.push('CRITICAL: Remove all credential and authentication information');
+  }
+  if (sensitiveDetections.some(d => d.sensitiveType.includes('password'))) {
+    recommendations.push('Remove password and authentication data');
+  }
+  if (sensitiveDetections.some(d => d.sensitiveType.includes('api'))) {
+    recommendations.push('Remove API keys and tokens');
+  }
+  if (sensitiveDetections.some(d => d.sensitiveType.includes('path'))) {
+    recommendations.push('Sanitize file paths and directory information');
+  }
+  if (sensitiveDetections.some(d => d.sensitiveType.includes('personal'))) {
+    recommendations.push('Remove personal information (emails, names, etc.)');
+  }
+  if (sensitiveProperties > totalProperties * 0.3) {
+    recommendations.push('Consider using redactionLevel: "full" due to high sensitive content ratio');
+  }
+  if (totalProperties > 20) {
+    recommendations.push('Reduce context size - large contexts increase information disclosure risk');
+  }
+
+  const estimatedRedactionPercentage = totalProperties > 0 
+    ? Math.round((sensitiveProperties / totalProperties) * 100)
+    : 0;
+
+  return {
+    riskLevel,
+    sensitiveDetections,
+    recommendations,
+    estimatedRedactionPercentage
+  };
+}
+
+// ===================================================================
+// Task 1.3.3: Helper Functions (Following SOLID Principles)
+// ===================================================================
+
+/**
+ * Generates a secure, non-sensitive error identifier
+ * 
+ * Creates identifiers that are unique for correlation but don't expose
+ * sensitive information about the system or error content.
+ * 
+ * @param error - The error to generate an ID for
+ * @returns Secure error identifier
+ */
+function _generateSecureErrorId(error: Error): string {
+  const timestamp = Date.now();
+  const year = new Date().getFullYear();
+  const random = Math.random();
+  
+  // Create a hash based on error properties but not sensitive content
+  const hashInput = `${error.name}-${error.message.length}-${timestamp}-${random}`;
+  const hash = _simpleHash(hashInput);
+  
+  // Format: ERR_YEAR_HASH (e.g., ERR_2024_A3B7F9C2)
+  // Ensure exactly 8 characters by padding with zeros
+  const paddedHash = hash.substring(0, 8).toUpperCase().padEnd(8, '0');
+  return `ERR_${year}_${paddedHash}`;
+}
+
+/**
+ * Simple hash function for generating error IDs
+ * 
+ * @param input - String to hash
+ * @returns Hash string
+ */
+function _simpleHash(input: string): string {
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    const char = input.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash).toString(16);
+}
+
+/**
+ * Detects sensitive content in error context
+ * 
+ * @param context - Context object to analyze
+ * @param config - Configuration for detection
+ * @returns Array of sensitive content detections
+ */
+function _detectSensitiveContent(
+  context: Record<string, unknown>,
+  config: ErrorContextConfig
+): SensitiveContextDetection[] {
+  const detections: SensitiveContextDetection[] = [];
+
+  function analyzeValue(value: unknown, path: string): void {
+    if (typeof value === 'string') {
+      _analyzeSensitiveString(value, path, detections);
+    } else if (typeof value === 'object' && value !== null && config.sanitizeNestedObjects) {
+      if (Array.isArray(value)) {
+        // Check if array contains sensitive items
+        let hasSensitiveItems = false;
+        value.forEach((item, index) => {
+          if (typeof item === 'object' && item !== null) {
+            const itemDetections: SensitiveContextDetection[] = [];
+            _analyzeSensitiveString(JSON.stringify(item), `${path}[${index}]`, itemDetections);
+            if (itemDetections.length > 0) {
+              hasSensitiveItems = true;
+              detections.push(...itemDetections);
+            }
+          } else if (typeof item === 'string') {
+            _analyzeSensitiveString(item, `${path}[${index}]`, detections);
+          }
+        });
+        
+        // If array has sensitive content, mark the whole array
+        if (hasSensitiveItems) {
+          detections.push({
+            propertyPath: path,
+            sensitiveType: 'sensitive-array',
+            hint: 'Array containing sensitive data',
+            severity: 'high'
+          });
+        }
+      } else {
+        Object.entries(value as Record<string, unknown>).forEach(([key, val]) => {
+          analyzeValue(val, path ? `${path}.${key}` : key);
+        });
+      }
+    }
+  }
+
+  Object.entries(context).forEach(([key, value]) => {
+    analyzeValue(value, key);
+  });
+
+  return detections;
+}
+
+/**
+ * Analyzes a string value for sensitive content patterns
+ * 
+ * @param value - String value to analyze
+ * @param path - Property path for reporting
+ * @param detections - Array to add detections to
+ */
+function _analyzeSensitiveString(
+  value: string,
+  path: string,
+  detections: SensitiveContextDetection[]
+): void {
+  // Check for passwords
+  if (/password|passwd|pwd|secret|key/i.test(path) || 
+      /password[=:]\s*\S+|secret[=:]\s*\S+/i.test(value)) {
+    detections.push({
+      propertyPath: path,
+      sensitiveType: 'password/secret',
+      hint: 'Authentication credential',
+      severity: 'critical'
+    });
+  }
+
+  // Check for API keys and tokens
+  if (/api[_-]?key|token|bearer|authorization/i.test(path) ||
+      /sk-[a-zA-Z0-9]+|pk-[a-zA-Z0-9]+|[a-zA-Z0-9]{32,}/g.test(value)) {
+    detections.push({
+      propertyPath: path,
+      sensitiveType: 'api-key/token',
+      hint: 'API authentication token',
+      severity: 'critical'
+    });
+  }
+
+  // Check for email addresses
+  if (/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/.test(value)) {
+    detections.push({
+      propertyPath: path,
+      sensitiveType: 'personal-email',
+      hint: 'Email address',
+      severity: 'high'
+    });
+  }
+
+  // Check for file paths
+  if (/^\/|^[A-Z]:[\\\/]|\/home\/|\/Users\/|\\Users\\/.test(value)) {
+    detections.push({
+      propertyPath: path,
+      sensitiveType: 'file-path',
+      hint: 'File system path',
+      severity: 'medium'
+    });
+  }
+
+  // Check for URLs with credentials
+  if (/https?:\/\/[^:]+:[^@]+@/.test(value)) {
+    detections.push({
+      propertyPath: path,
+      sensitiveType: 'url-with-credentials',
+      hint: 'URL containing credentials',
+      severity: 'critical'
+    });
+  }
+
+  // Check for database connection strings
+  if (/(mongodb|mysql|postgres|redis):\/\//.test(value) && /:.*@/.test(value)) {
+    detections.push({
+      propertyPath: path,
+      sensitiveType: 'database-connection',
+      hint: 'Database connection string',
+      severity: 'critical'
+    });
+  }
+
+  // Check for IP addresses
+  if (/\b(?:\d{1,3}\.){3}\d{1,3}\b/.test(value)) {
+    detections.push({
+      propertyPath: path,
+      sensitiveType: 'ip-address',
+      hint: 'IP address',
+      severity: 'medium'
+    });
+  }
+}
+
+/**
+ * Applies context redaction based on configuration and detections
+ * 
+ * @param context - Original context object
+ * @param detections - Sensitive content detections
+ * @param config - Configuration for redaction
+ * @param redactedProperties - Array to track redacted properties
+ * @param redactionHints - Object to store redaction hints
+ * @returns Sanitized context object
+ */
+function _applyContextRedaction(
+  context: Record<string, unknown>,
+  detections: SensitiveContextDetection[],
+  config: ErrorContextConfig,
+  redactedProperties: string[],
+  redactionHints: Record<string, string>
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+
+  // Helper to check if a property should be preserved
+  const isAllowedProperty = (key: string): boolean => {
+    return config.allowedProperties.includes(key) || 
+           config.allowedProperties.includes('*');
+  };
+
+  // Helper to check if a path has sensitive content
+  const hasSensitiveContent = (path: string): boolean => {
+    return detections.some(d => 
+      d.propertyPath === path || 
+      d.propertyPath.startsWith(path + '.') ||
+      path.startsWith(d.propertyPath + '.')
+    );
+  };
+
+  // Helper to get the detection for a path
+  const getDetection = (path: string): SensitiveContextDetection | undefined => {
+    return detections.find(d => d.propertyPath === path);
+  };
+
+  for (const [key, value] of Object.entries(context)) {
+    const hasDetection = hasSensitiveContent(key);
+    const isAllowed = isAllowedProperty(key);
+
+    if (config.redactionLevel === 'none') {
+      // No redaction - include everything
+      result[key] = value;
+    } else if (config.redactionLevel === 'full') {
+      // Full redaction - only include explicitly allowed properties
+      if (isAllowed) {
+        result[key] = value;
+      } else {
+        redactedProperties.push(key);
+        if (config.includeContextHints) {
+          redactionHints[key] = 'Property redacted (full redaction mode)';
+        }
+      }
+    } else if (config.redactionLevel === 'partial') {
+      // Partial redaction - remove detected sensitive content
+      if (hasDetection) {
+        redactedProperties.push(key);
+        const detection = getDetection(key);
+        if (config.includeContextHints && detection) {
+          redactionHints[key] = detection.hint;
+        } else if (config.includeContextHints) {
+          redactionHints[key] = 'Sensitive content detected';
+        }
+      } else {
+        // Not sensitive - include it (potentially with nested sanitization)
+        result[key] = config.sanitizeNestedObjects ? 
+          _sanitizeNestedValue(value, `${key}`, detections, config) : 
+          value;
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Sanitizes nested values in objects and arrays
+ * 
+ * @param value - Value to sanitize
+ * @param path - Current property path
+ * @param detections - Sensitive content detections
+ * @param config - Configuration for sanitization
+ * @returns Sanitized value
+ */
+function _sanitizeNestedValue(
+  value: unknown,
+  path: string,
+  detections: SensitiveContextDetection[],
+  config: ErrorContextConfig
+): unknown {
+  if (typeof value === 'object' && value !== null) {
+    if (Array.isArray(value)) {
+      return value.map((item, index) => {
+        const itemPath = `${path}[${index}]`;
+        const hasDetection = detections.some(d => d.propertyPath === itemPath);
+        return hasDetection ? '[redacted]' : _sanitizeNestedValue(item, itemPath, detections, config);
+      });
+    } else {
+      const result: Record<string, unknown> = {};
+      Object.entries(value as Record<string, unknown>).forEach(([key, val]) => {
+        const nestedPath = `${path}.${key}`;
+        const hasDetection = detections.some(d => d.propertyPath === nestedPath);
+        if (!hasDetection) {
+          result[key] = _sanitizeNestedValue(val, nestedPath, detections, config);
+        }
+      });
+      return result;
+    }
+  }
+  return value;
+}
+
+/**
+ * Counts the total number of properties in a nested object
+ * 
+ * @param obj - Object to count properties in
+ * @returns Total property count
+ */
+function _countProperties(obj: Record<string, unknown>): number {
+  let count = 0;
+  
+  function countRecursive(value: unknown): void {
+    if (typeof value === 'object' && value !== null) {
+      if (Array.isArray(value)) {
+        count += value.length;
+        value.forEach(item => countRecursive(item));
+      } else {
+        const entries = Object.entries(value as Record<string, unknown>);
+        count += entries.length;
+        entries.forEach(([, val]) => countRecursive(val));
+      }
+    }
+  }
+  
+  countRecursive(obj);
+  return count;
+}
+
+/**
+ * Removes dangerous properties that could be used for context injection attacks
+ * 
+ * @param obj - Object to clean
+ * @param visited - Set to track visited objects (for circular reference protection)
+ * @returns Cleaned object without dangerous properties
+ */
+function _removeDangerousProperties(
+  obj: Record<string, unknown>, 
+  visited: WeakSet<object> = new WeakSet()
+): Record<string, unknown> {
+  // Check for circular reference
+  if (visited.has(obj)) {
+    return {}; // Return empty object for circular references
+  }
+  visited.add(obj);
+  
+  const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
+  const cleaned: Record<string, unknown> = {};
+  
+  for (const [key, value] of Object.entries(obj)) {
+    // Skip dangerous keys
+    if (dangerousKeys.includes(key)) {
+      continue;
+    }
+    
+    // Recursively clean nested objects
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      try {
+        cleaned[key] = _removeDangerousProperties(value as Record<string, unknown>, visited);
+      } catch {
+        // If we can't process it safely, skip it
+        continue;
+      }
+    } else {
+      cleaned[key] = value;
+    }
+  }
+  
+  return cleaned;
+}

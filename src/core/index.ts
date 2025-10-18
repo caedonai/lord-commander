@@ -94,6 +94,17 @@ export {
   type InputValidationViolation
 } from './foundation/input-validation.js';
 
+// Error sanitization utilities (Task 1.3.3 - New Context Sanitization)
+export {
+  sanitizeErrorContext,
+  createSafeErrorForForwarding,
+  analyzeErrorContextSecurity,
+  type ErrorContextConfig,
+  type SanitizedErrorContext,
+  type SensitiveContextDetection,
+  DEFAULT_ERROR_CONTEXT_CONFIG
+} from './foundation/error-sanitization.js';
+
 // User interface utilities
 export { 
   createLogger,
