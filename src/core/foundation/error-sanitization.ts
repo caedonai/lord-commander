@@ -677,115 +677,360 @@ function _sanitizeStackSanitized(
 /**
  * Secure path sanitization using simple string operations to prevent ReDoS
  */
+/**
+ * Sanitizes file paths in stack traces to prevent information disclosure
+ * 
+ * Implements comprehensive path sanitization following SOLID principles by breaking
+ * down the sanitization process into focused, single-responsibility functions.
+ * Each step handles a specific category of path patterns to prevent information
+ * leakage while maintaining stack trace readability for debugging.
+ * 
+ * @param stack - The stack trace string to sanitize
+ * @returns Sanitized stack trace with sensitive paths redacted
+ * 
+ * @example
+ * ```typescript
+ * const unsafeStack = "Error: Test\\n  at /Users/admin/secret/file.js:10:5";
+ * const safe = _sanitizePaths(unsafeStack);
+ * // Result: "Error: Test\\n  at /Users/***"
+ * ```
+ * 
+ * @security Prevents disclosure of user directories, system paths, and sensitive files
+ * @internal This is a private function used by sanitizeStackTrace
+ */
 function _sanitizePaths(stack: string): string {
   let sanitized = stack;
   
-  // Remove control characters first to prevent injection, but preserve newlines and tabs
-  sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
+  // Apply sanitization steps in logical order
+  sanitized = _sanitizeControlCharacters(sanitized);
+  sanitized = _sanitizeNodeModulesPaths(sanitized);
+  sanitized = _sanitizePathTraversal(sanitized);
+  sanitized = _sanitizeUserDirectories(sanitized);
+  sanitized = _sanitizeSystemDirectories(sanitized);
+  sanitized = _sanitizeProjectDirectories(sanitized);
+  sanitized = _sanitizeUncAndDevicePaths(sanitized);
+  sanitized = _sanitizeSensitiveFiles(sanitized);
+  sanitized = _sanitizeBuildDirectories(sanitized);
+  sanitized = _cleanupRepeatingCharacters(sanitized);
   
-  // Handle node_modules paths first to ensure consistent formatting before other sanitization
-  // This ensures we get 'node_modules/package/index.js' format consistently
-  // Pattern 1: Full path with subdirectories: /path/to/node_modules/package/file.js -> node_modules/package/file.js
-  sanitized = sanitized.replace(/[^\/\n\r\t \(\)]*\/[^\/\n\r\t \(\)]*\/[^\/\n\r\t \(\)]*\/node_modules\/([^\\\/\n\r\t \)]+)\/+([^\\\/\n\r\t \)]+)/g, 'node_modules/$1/$2');
-  // Pattern 2: Simple path with node_modules: /something/node_modules/package -> node_modules/package/
-  sanitized = sanitized.replace(/[^\/\n\r\t \(\)]*\/[^\/\n\r\t \(\)]*\/node_modules\/([^\\\/\n\r\t \)]+)/g, 'node_modules/$1/');
-  // Pattern 3: Windows style: C:\path\node_modules\package\file -> node_modules/package/file  
-  sanitized = sanitized.replace(/C:\\[^\\]*\\[^\\]*\\node_modules\\([^\\\/\n\r\t \)]+)\\([^\\\/\n\r\t \)]+)/g, 'node_modules/$1/$2');
-  sanitized = sanitized.replace(/C:\\[^\\]*\\node_modules\\([^\\\/\n\r\t \)]+)/g, 'node_modules/$1/');
+  return sanitized;
+}
+
+/**
+ * Removes control characters while preserving essential formatting
+ * 
+ * Follows Single Responsibility Principle by focusing solely on control character
+ * sanitization. Removes potentially dangerous control characters that could be used
+ * for terminal manipulation attacks while preserving newlines and tabs needed for
+ * proper stack trace formatting.
+ * 
+ * @param input - The input string to sanitize
+ * @returns String with control characters removed, preserving newlines and tabs
+ * 
+ * @example
+ * ```typescript
+ * const malicious = "Error\x07\x1B[31m malicious content";
+ * const safe = _sanitizeControlCharacters(malicious);
+ * // Result: "Error malicious content" (bell and ANSI escape removed)
+ * ```
+ * 
+ * @security Prevents terminal manipulation via control character injection
+ * @internal Private helper function for path sanitization
+ */
+function _sanitizeControlCharacters(input: string): string {
+  // Remove control characters but preserve newlines (\x0A) and tabs (\x09)
+  return input.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
+}
+
+/**
+ * Handles node_modules path sanitization with consistent formatting
+ * Ensures DRY principle by centralizing node_modules logic
+ */
+function _sanitizeNodeModulesPaths(input: string): string {
+  let result = input;
   
-  // Aggressive path traversal blocking
-  sanitized = sanitized.replace(/\.\.[\\/]/g, '[PATH-TRAVERSAL]/');
-  sanitized = sanitized.replace(/[\\/]\.\.$/gm, '/[PATH-TRAVERSAL]');
-  sanitized = sanitized.replace(/\.\.[\\/]\.\.[\\/]/g, '[PATH-TRAVERSAL]/');
+  // Handle node_modules paths first to ensure consistent formatting
+  // Pattern 1: Full path with subdirectories
+  result = result.replace(/[^\/\n\r\t \(\)]*\/[^\/\n\r\t \(\)]*\/[^\/\n\r\t \(\)]*\/node_modules\/([^\\\/\n\r\t \)]+)\/+([^\\\/\n\r\t \)]+)/g, 'node_modules/$1/$2');
   
-  // User directories - be very specific about path patterns (avoid \s to prevent newline matching)
-  // Unix-style paths first
-  sanitized = sanitized.replace(/\/Users\/[^\/\n\r\t \)\:]+/g, '/Users/***');
-  sanitized = sanitized.replace(/\/home\/[^\/\n\r\t \)\:]+/g, '/home/***');
+  // Pattern 2: Simple path with node_modules
+  result = result.replace(/[^\/\n\r\t \(\)]*\/[^\/\n\r\t \(\)]*\/node_modules\/([^\\\/\n\r\t \)]+)/g, 'node_modules/$1/');
   
-  // Windows paths - handle the exact pattern from test (be more specific about what we match)
-  // Only match actual Windows user paths, not already-sanitized ones
-  sanitized = sanitized.replace(/C:\\Users\\[^\\*\n\r]+\\[^\\\n\r]*\\[^\\\n\r]*\\[^\\\n\r]*\\[^\\\n\r]*\\[^\\\n\r]*/g, 'C:\\Users\\***');
-  sanitized = sanitized.replace(/C:\\Users\\[^\\*\n\r]+\\[^\\\n\r]*\\[^\\\n\r]*\\[^\\\n\r]*\\[^\\\n\r]*/g, 'C:\\Users\\***');  
-  sanitized = sanitized.replace(/C:\\Users\\[^\\*\n\r]+\\[^\\\n\r]*\\[^\\\n\r]*/g, 'C:\\Users\\***');
-  sanitized = sanitized.replace(/C:\\Users\\[^\\*\n\r]+\\[^\\\n\r]*/g, 'C:\\Users\\***');
-  sanitized = sanitized.replace(/C:\\Users\\[^\\*\n\r]+$/gm, 'C:\\Users\\***');
+  // Pattern 3: Windows style paths
+  result = result.replace(/C:\\[^\\]*\\[^\\]*\\node_modules\\([^\\\/\n\r\t \)]+)\\([^\\\/\n\r\t \)]+)/g, 'node_modules/$1/$2');
+  result = result.replace(/C:\\[^\\]*\\node_modules\\([^\\\/\n\r\t \)]+)/g, 'node_modules/$1/');
   
-  // Remove any leftover long sequences of repeating characters
-  sanitized = sanitized.replace(/([a-z])\1{20,}/gi, '[REPEATED-CHARS]');
+  return result;
+}
+
+/**
+ * Blocks path traversal attacks by sanitizing .. patterns
+ * Focused on security-specific path traversal prevention
+ */
+function _sanitizePathTraversal(input: string): string {
+  return input
+    .replace(/\.\.[\\/]/g, '[PATH-TRAVERSAL]/')
+    .replace(/[\\/]\.\.$/gm, '/[PATH-TRAVERSAL]')
+    .replace(/\.\.[\\/]\.\.[\\/]/g, '[PATH-TRAVERSAL]/');
+}
+
+/**
+ * Sanitizes user directory paths with cross-platform support
+ * 
+ * Handles mixed path separators and Windows-specific patterns to prevent
+ * disclosure of sensitive user directory information. Processes Windows
+ * backslash patterns first (most specific) then handles mixed separator
+ * attack patterns that combine forward and backward slashes.
+ * 
+ * @param input - The input string containing potential user directory paths
+ * @returns String with user directory paths sanitized to generic patterns
+ * 
+ * @example
+ * ```typescript
+ * const paths = "at C:\\Users\\administrator\\secrets\\file.js:10";
+ * const safe = _sanitizeUserDirectories(paths);
+ * // Result: "at C:\\Users\\***"
+ * ```
+ * 
+ * @security Prevents disclosure of usernames and user directory structures
+ * @internal Private helper for comprehensive path sanitization
+ */
+function _sanitizeUserDirectories(input: string): string {
+  let result = input;
   
-  // System directories - exact string matching (but skip paths containing node_modules)
-  // System directories with more comprehensive patterns
+  // Unix-style user paths
+  result = result.replace(/\/Users\/[^\/\n\r\t \)\:]+/g, '/Users/***');
+  result = result.replace(/\/home\/[^\/\n\r\t \)\:]+/g, '/home/***');
+  
+  // Pure Windows backslash patterns first (most specific to least specific)
+  // This preserves the expected C:\Users\*** format
+  const windowsUserPatterns = [
+    /C:\\Users\\[^\\*\n\r]+\\[^\\\n\r]*\\[^\\\n\r]*\\[^\\\n\r]*\\[^\\\n\r]*\\[^\\\n\r]*/g,
+    /C:\\Users\\[^\\*\n\r]+\\[^\\\n\r]*\\[^\\\n\r]*\\[^\\\n\r]*\\[^\\\n\r]*/g,
+    /C:\\Users\\[^\\*\n\r]+\\[^\\\n\r]*\\[^\\\n\r]*/g,
+    /C:\\Users\\[^\\*\n\r]+\\[^\\\n\r]*/g,
+    /C:\\Users\\[^\\*\n\r]+$/gm
+  ];
+  
+  windowsUserPatterns.forEach(pattern => {
+    result = result.replace(pattern, 'C:\\Users\\***');
+  });
+  
+  // Mixed path separator patterns (e.g., C:/Users\\admin/) handled after pure Windows paths
+  // This catches any remaining mixed patterns
+  result = result.replace(/C:[\\/]Users[\\/\\]+[^\/\\\n\r\t \)\:*]+[\\/]/g, 'C:\\Users\\***');
+  
+  return result;
+}
+
+/**
+ * Sanitizes system directory paths while preserving node_modules handling
+ * Implements Open/Closed Principle by allowing path list extension
+ */
+function _sanitizeSystemDirectories(input: string): string {
   const systemPaths = [
     '/etc/', '/root/', '/opt/', '/var/', '/usr/', '/bin/', '/sbin/',
     'C:\\Windows\\', 'C:\\Program Files\\', 'C:\\ProgramData\\'
   ];
 
-  systemPaths.forEach(path => {
-    if (sanitized.includes(path)) {
-      // Skip lines that contain node_modules - they should be handled by node_modules logic
-      const lines = sanitized.split('\n');
-      const processedLines = lines.map(line => {
-        if (line.includes('node_modules')) {
-          return line; // Don't sanitize system paths in node_modules lines
-        }
-        const regex = new RegExp(path.replace(/[\\\/]/g, '[\\\\/]') + '[^\\\\/\\n\\r\\t ]*', 'gi');
-        return line.replace(regex, path + '***');
-      });
-      sanitized = processedLines.join('\n');
-    }
+  return _sanitizePathList(input, systemPaths, (line) => {
+    // Skip lines containing node_modules - they have dedicated handling
+    return !line.includes('node_modules');
   });
-  
-  // Remove the cleanup logic since we're not sanitizing node_modules paths above  // Project and workspace directories - be more conservative  
+}
+
+/**
+ * Sanitizes project and workspace directories
+ * Conservative approach to avoid breaking legitimate stack traces
+ */
+function _sanitizeProjectDirectories(input: string): string {
   const projectPaths = [
     '/workspace/', '/project/', '/src/', '/dist/', '/build/'
-    // Removed '/app/' as it's too generic and breaks stack traces
   ];
   
+  let result = input;
+  
   projectPaths.forEach(path => {
-    if (sanitized.includes(path)) {
-      // Use [^\\\/\n\r\t ]* to exclude newlines specifically  
+    if (result.includes(path)) {
       const regex = new RegExp(path.replace(/[\\\/]/g, '[\\\\/]') + '[^\\\\/\\n\\r\\t \\)]*', 'gi');
-      sanitized = sanitized.replace(regex, path + '***');
+      result = result.replace(regex, path + '***');
     }
   });
   
-  // Handle more complex workspace patterns (avoid \s to prevent newline matching)
-  sanitized = sanitized.replace(/\/mnt\/[^\/\n\r\t \)\:]+\/[^\/\n\r\t \)\:]+/g, '/mnt/***/***');
+  // Handle complex workspace patterns
+  result = result.replace(/\/mnt\/[^\/\n\r\t \)\:]+\/[^\/\n\r\t \)\:]+/g, '/mnt/***/***');
   
-  // Windows UNC and device paths - be more aggressive (avoid \s to prevent newline matching)
-  sanitized = sanitized.replace(/\\\\[^\\\/\n\r\t ]+\\[^\\\/\n\r\t ]*/g, '\\\\[SERVER]\\[SHARE]');
-  sanitized = sanitized.replace(/\\\\\?\\/g, '\\\\[DEVICE]\\');
-  sanitized = sanitized.replace(/\\\\\.\\[^\\\/\n\r\t ]*/g, '\\\\.\\[DEVICE]');
+  return result;
+}
+
+/**
+ * Sanitizes Windows UNC paths and device paths with comprehensive security
+ * 
+ * Handles device name sanitization and dangerous device blocking to prevent
+ * access to sensitive Windows system resources. Processes UNC paths, device
+ * paths, and dangerous device names that could expose system internals.
+ * 
+ * @param input - The input string containing potential UNC/device paths
+ * @returns String with UNC and device paths sanitized
+ * 
+ * @example
+ * ```typescript
+ * const dangerous = "at \\\\.\\GLOBALROOT\\Device\\PhysicalDrive0";
+ * const safe = _sanitizeUncAndDevicePaths(dangerous);
+ * // Result: "at \\\\.\\[DEVICE]"
+ * ```
+ * 
+ * @security Prevents access to Windows device paths and network shares
+ * @internal Private helper for Windows-specific path sanitization
+ */
+function _sanitizeUncAndDevicePaths(input: string): string {
+  let result = input;
   
-  // Remove specific dangerous device names - only when they appear as device paths
+  // UNC and device path patterns
+  result = result.replace(/\\\\[^\\\/\n\r\t ]+\\[^\\\/\n\r\t ]*/g, '\\\\[SERVER]\\[SHARE]');
+  result = result.replace(/\\\\\?\\/g, '\\\\[DEVICE]\\');
+  result = result.replace(/\\\\\.\\[^\\\/\n\r\t ]*/g, '\\\\.\\[DEVICE]');
+  
+  // Dangerous device name sanitization
   const dangerousDevices = ['PhysicalDrive0', 'GLOBALROOT', 'Device', 'CON', 'PRN', 'AUX', 'NUL'];
-  dangerousDevices.forEach(device => {
-    // Only replace when they appear as device paths, not in filenames
-    const deviceRegex = new RegExp(`\\\\\\\\[^\\\\]*\\\\${device}\\b`, 'gi');
-    sanitized = sanitized.replace(deviceRegex, `\\\\[SERVER]\\[DEVICE]`);
-    const driveRegex = new RegExp(`\\b${device}:`, 'gi');
-    sanitized = sanitized.replace(driveRegex, '[DEVICE]:');
+  result = _sanitizeDangerousDeviceNames(result, dangerousDevices);
+  
+  // Drive roots and Unix device paths
+  result = result.replace(/[A-Z]:\\$/gm, '[DRIVE]:\\');
+  result = result.replace(/\/dev\/[^\/\n\r\t ]*/g, '/dev/[DEVICE]');
+  
+  return result;
+}
+
+/**
+ * Sanitizes dangerous Windows device names with multiple pattern matching
+ * 
+ * Implements comprehensive device name blocking using multiple pattern matching
+ * strategies to catch device names in various contexts (UNC paths, standalone
+ * references, drive patterns). Helps prevent exposure of sensitive Windows
+ * system devices and hardware identifiers.
+ * 
+ * @param input - The input string to scan for dangerous device names
+ * @param devices - Array of dangerous device names to sanitize
+ * @returns String with dangerous device names replaced with generic placeholders
+ * 
+ * @example
+ * ```typescript
+ * const dangerous = "Error at PhysicalDrive0: Access denied";
+ * const safe = _sanitizeDangerousDeviceNames(dangerous, ['PhysicalDrive0']);
+ * // Result: "Error at [DEVICE]: Access denied"
+ * ```
+ * 
+ * @security Prevents disclosure of hardware device names and system identifiers
+ * @internal Private helper implementing DRY principle for device name sanitization
+ */
+function _sanitizeDangerousDeviceNames(input: string, devices: string[]): string {
+  let result = input;
+  
+  devices.forEach(device => {
+    const patterns = [
+      // Device names in UNC paths (pre-processing)
+      { regex: new RegExp(`\\\\\\\\[^\\\\]*\\\\${device}\\b`, 'gi'), replacement: '\\\\[SERVER]\\[DEVICE]' },
+      // Device names after UNC processing
+      { regex: new RegExp(`\\\\\\\\\\[SERVER\\]\\\\\\[SHARE\\]\\\\${device}\\b`, 'gi'), replacement: '\\\\[SERVER]\\[SHARE]\\[DEVICE]' },
+      // Standalone device references
+      { regex: new RegExp(`\\b${device}\\b`, 'gi'), replacement: '[DEVICE]' },
+      // Device colon patterns (e.g., PhysicalDrive0:)
+      { regex: new RegExp(`\\b${device}:`, 'gi'), replacement: '[DEVICE]:' }
+    ];
+    
+    patterns.forEach(({ regex, replacement }) => {
+      result = result.replace(regex, replacement);
+    });
   });
   
-  // Drive roots and device paths (avoid \s to prevent newline matching)
-  sanitized = sanitized.replace(/[A-Z]:\\$/gm, '[DRIVE]:\\');
-  sanitized = sanitized.replace(/\/dev\/[^\/\n\r\t ]*/g, '/dev/[DEVICE]');
-  
-  // Node modules - preserve filenames but sanitize leading paths (avoid \s to prevent newline matching)
-  sanitized = sanitized.replace(/[^\/\n\r\t \)]*[\\/]node_modules[\\/]([^\\\/\n\r\t \)\:]+[\\/][^\\\/\n\r\t \)\:]+)/g, 'node_modules/$1');
-  
-  // Build directories (avoid \s to prevent newline matching)
-  sanitized = sanitized.replace(/[\\/](dist|build|out)[\\/][^\\\/\n\r\t \)\:]*/g, '/$1/***');
-  
-  // Sensitive files
+  return result;
+}
+
+/**
+ * Sanitizes sensitive file references
+ * Follows DRY principle with configurable file list
+ */
+function _sanitizeSensitiveFiles(input: string): string {
   const sensitiveFiles = ['passwd', 'shadow', 'hosts', 'secrets.txt', '.env', '.ssh'];
+  let result = input;
+  
   sensitiveFiles.forEach(file => {
     const fileRegex = new RegExp(file.replace('.', '\\.'), 'gi');
-    sanitized = sanitized.replace(fileRegex, '[REDACTED]');
+    result = result.replace(fileRegex, '[REDACTED]');
   });
   
-  return sanitized;
+  return result;
+}
+
+/**
+ * Sanitizes build directory paths
+ * Focused helper for build-specific path handling
+ */
+function _sanitizeBuildDirectories(input: string): string {
+  return input.replace(/[\\/](dist|build|out)[\\/][^\\\/\n\r\t \)\:]*/g, '/$1/***');
+}
+
+/**
+ * Cleans up repeating character sequences that might indicate injection attempts
+ * Security-focused cleanup function
+ */
+function _cleanupRepeatingCharacters(input: string): string {
+  return input.replace(/([a-z])\1{20,}/gi, '[REPEATED-CHARS]');
+}
+
+/**
+ * Generic helper for sanitizing path lists with optional filtering
+ * 
+ * Implements DRY principle for path list processing by providing a reusable
+ * function that can handle different types of path sanitization with optional
+ * line-level filtering. Supports both simple global replacement and complex
+ * line-by-line processing with custom filter functions.
+ * 
+ * @param input - The input string to sanitize
+ * @param paths - Array of path patterns to sanitize
+ * @param shouldProcess - Optional filter function for line-level processing
+ * @returns String with specified paths sanitized according to the configuration
+ * 
+ * @example
+ * ```typescript
+ * const text = "Error at /etc/passwd\\n  at /node_modules/pkg/index.js";
+ * const safe = _sanitizePathList(text, ['/etc/'], (line) => !line.includes('node_modules'));
+ * // Result: "Error at /etc/***\\n  at /node_modules/pkg/index.js" (node_modules preserved)
+ * ```
+ * 
+ * @security Provides flexible path sanitization with preservation of legitimate paths
+ * @internal Private helper implementing DRY principle for path processing
+ */
+function _sanitizePathList(
+  input: string, 
+  paths: string[], 
+  shouldProcess?: (line: string) => boolean
+): string {
+  let result = input;
+  
+  paths.forEach(path => {
+    if (result.includes(path)) {
+      if (shouldProcess) {
+        // Line-by-line processing with filtering
+        const lines = result.split('\n');
+        const processedLines = lines.map(line => {
+          if (!shouldProcess(line)) {
+            return line; // Skip processing for filtered lines
+          }
+          const regex = new RegExp(path.replace(/[\\\/]/g, '[\\\\/]') + '[^\\\\/\\n\\r\\t ]*', 'gi');
+          return line.replace(regex, path + '***');
+        });
+        result = processedLines.join('\n');
+      } else {
+        // Simple global replacement
+        const regex = new RegExp(path.replace(/[\\\/]/g, '[\\\\/]') + '[^\\\\/\\n\\r\\t ]*', 'gi');
+        result = result.replace(regex, path + '***');
+      }
+    }
+  });
+  
+  return result;
 }
 
 function _processSanitizationChunk(chunk: string, config: ErrorSanitizationConfig): string {

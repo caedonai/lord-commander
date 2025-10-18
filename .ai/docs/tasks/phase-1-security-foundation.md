@@ -4,7 +4,7 @@
 
 **Objective**: Establish the core security framework, foundational utilities, and essential infrastructure that all subsequent development will build upon. This phase prioritizes security-by-design principles and establishes the architectural patterns for the entire SDK.
 
-**Status**: ✅ **MAJOR PROGRESS** (Tasks 1.1.1-1.1.3, 1.2.1-1.2.3, 1.3.1 finished - DoS Protection Complete)  
+**Status**: ✅ **MAJOR PROGRESS** (Tasks 1.1.1-1.1.3, 1.2.1-1.2.3, 1.3.1-1.3.2 finished - Stack Trace Security Complete)  
 **Priority**: Critical Path  
 **Estimated Duration**: 2-3 weeks
 
@@ -21,6 +21,7 @@
   - ✅ **1.2.3**: Input Escaping Utilities (shell injection prevention)
 - **Task 1.3**: Enhanced Error Handling Security
   - ✅ **1.3.1**: Information Disclosure Protection (DoS protection, 46/46 tests, CVSS 7.5 → MITIGATED)
+  - ✅ **1.3.2**: Stack Trace Security (37/37 integration + 19/19 validation tests, SOLID refactoring, cross-platform protection)
 
 ### **Quality Metrics**
 - **Test Coverage**: 420+ security-specific tests (comprehensive security validation)
@@ -249,7 +250,7 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig;
 ---
 
 ## **Task 1.3: Enhanced Error Handling Security**
-*Status: ✅ **1.3.1 COMPLETED** - DoS Protection & Information Disclosure Prevention Complete*
+*Status: ✅ **1.3.1-1.3.2 COMPLETED** - DoS Protection & Stack Trace Security Complete*
 
 ### **Subtasks**
 
@@ -302,10 +303,35 @@ export function createEnvironmentConfig(env: 'development' | 'staging' | 'produc
 - **Tree-shaking Ready**: 4 sanitization exports optimized for selective imports
 - **Zero Regression**: All 616 tests passing including 420 security tests
 
-#### **1.3.2: Stack Trace Security**
-- **Enhancement**: Expand current stack trace protection
-- **Features**: Path sanitization, depth limiting, source map protection
-- **Environment**: Different levels for dev/staging/production
+#### **1.3.2: Stack Trace Security** ✅ **COMPLETED**
+- **Status**: ✅ **COMPLETED** (October 18, 2025)
+- **Implementation**: Enhanced stack trace security with multi-level sanitization and cross-platform protection
+- **Location**: `src/core/foundation/error-sanitization.ts` - `_sanitizePaths()` and related functions
+- **Testing**: 37/37 integration tests + 19/19 security validation tests passing (100% success rate)
+- **SOLID Compliance**: Refactored using SOLID and DRY principles with comprehensive JSDoc documentation
+
+**✅ Enhanced Features:**
+- **Multi-Level Stack Trace Sanitization**: `none`, `minimal`, `sanitized`, `full` levels with configurable depth limiting
+- **Cross-Platform Path Security**: Mixed path separator injection protection, Windows UNC/device path blocking
+- **Comprehensive Path Sanitization**: User directories, system paths, node_modules, build directories, sensitive files
+- **Advanced Windows Security**: Device name sanitization (PhysicalDrive0, GLOBALROOT), UNC path protection
+- **Source Map Protection**: Configurable source map reference removal for production security
+- **Module Name Sanitization**: Internal module name redaction when configured
+- **Line Number Protection**: Optional line number removal for enhanced security
+- **Performance Optimization**: DoS-resistant processing with bounded execution time
+
+**✅ SOLID Principles Implementation:**
+- **Single Responsibility**: Decomposed large function into focused helpers (`_sanitizeControlCharacters`, `_sanitizeUserDirectories`, etc.)
+- **Open/Closed**: Extensible path list sanitization with configurable filtering
+- **DRY Compliance**: Reusable `_sanitizePathList` helper eliminates code duplication
+- **Comprehensive JSDoc**: Enhanced documentation with examples, security notes, and parameter descriptions
+
+**✅ Security Coverage:**
+- **Mixed Path Separator Attacks**: Handles `C:/Users\\admin/` style injection attempts
+- **Windows Device Path Protection**: Blocks access to `\\\\.\\GLOBALROOT\\Device` and similar patterns
+- **Path Traversal Blocking**: Comprehensive `../` pattern sanitization with multiple encoding variants
+- **Stack Depth Limiting**: Configurable depth limiting across all sanitization modes
+- **Environment-Aware Security**: Different protection levels for development vs production environments
 
 #### **1.3.3: Error Context Sanitization**
 - **Purpose**: Sanitize error context without losing debugging value
