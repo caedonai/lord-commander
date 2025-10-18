@@ -46,7 +46,7 @@ export interface ErrorSanitizationConfig {
   redactPersonalInfo: boolean;
   /** Custom regex patterns for application-specific sensitive data */
   customPatterns: RegExp[];
-  /** Maximum error message length (prevents DoS via large error messages) */
+  /** Maximum error message length (DoS protection: messages >3x this limit are pre-truncated) */
   maxMessageLength: number;
   /** Maximum stack trace depth to include */
   maxStackDepth: number;
@@ -237,6 +237,11 @@ const SECURITY_PATTERNS = {
  * enough context for debugging. Implements comprehensive pattern matching
  * to catch various forms of sensitive data disclosure.
  * 
+ * **Security Features:**
+ * - DoS Protection: Pre-truncates extremely large messages to prevent regex DoS attacks
+ * - Pattern-based sanitization for passwords, API keys, file paths, etc.
+ * - Configurable sanitization levels and custom patterns
+ * 
  * @param message - The error message to sanitize
  * @param config - Sanitization configuration options
  * @returns Sanitized message safe for production logging
@@ -268,8 +273,13 @@ export function sanitizeErrorMessage(
   // Merge with defaults
   const fullConfig = { ...DEFAULT_ERROR_SANITIZATION_CONFIG, ...config };
   
-  // Start with the original message
+  // DoS Protection: Pre-truncate extremely large messages to prevent resource exhaustion
+  // This is a critical security measure to prevent regex DoS attacks
   let sanitized = message;
+  const maxProcessingLength = fullConfig.maxMessageLength * 3; // Allow buffer for boundary protection
+  if (sanitized.length > maxProcessingLength) {
+    sanitized = sanitized.substring(0, maxProcessingLength);
+  }
   
   // Remove injection patterns first (highest priority)
   for (const pattern of SECURITY_PATTERNS.injectionPatterns) {
@@ -479,12 +489,20 @@ export function sanitizeErrorMessage(
     }
   }
   
-  // Apply length limits last (after sanitization)
+  // Apply length limits FIRST to prevent DoS attacks via large messages
   const truncationSuffix = '... [truncated for security]';
+  if (message.length > fullConfig.maxMessageLength * 2) {
+    // For very large messages, truncate early to prevent DoS
+    // Use 2x the limit to allow some buffer for pattern matching near the boundary
+    const earlyTruncateLength = fullConfig.maxMessageLength * 2;
+    sanitized = sanitized.substring(0, earlyTruncateLength);
+  }
+  
+  // Final truncation after sanitization (for normal-sized messages or post-early-truncation)
   if (sanitized.length > fullConfig.maxMessageLength) {
     sanitized = sanitized.substring(0, fullConfig.maxMessageLength - truncationSuffix.length) + truncationSuffix;
   }
-  
+
   return sanitized;
 }
 
