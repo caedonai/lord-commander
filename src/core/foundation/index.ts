@@ -22,3 +22,6 @@ export * from './framework-security.js';
 
 // Export input validation utilities
 export * from './input-validation.js';
+
+// Export error sanitization utilities
+export * from './error-sanitization.js';

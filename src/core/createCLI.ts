@@ -207,18 +207,12 @@ export async function executeErrorHandlerSafely(
 
 /**
  * Check if debug mode is enabled via environment variables or CLI arguments
- * In production, debug mode is disabled regardless of flags for security
+ * 
+ * @deprecated Use enhanced function from foundation/error-sanitization.ts
+ * @returns true if debug mode is enabled, false otherwise
  */
 function isDebugMode(): boolean {
-    // Security: Never enable debug mode in production
-    if (process.env.NODE_ENV === 'production') {
-        return false;
-    }
-    
-    return process.env.DEBUG === 'true' || 
-           process.env.NODE_ENV === 'development' ||
-           process.argv.includes('--debug') ||
-           process.argv.includes('--verbose');
+    return enhancedIsDebugMode();
 }
 
 /**
@@ -382,108 +376,44 @@ function sanitizeErrorObject(error: Error, securityConfig = DEFAULT_SECURITY_CON
     return sanitizedError;
 }
 
+// Import enhanced error sanitization functions
+import { 
+    sanitizeErrorMessage as enhancedSanitizeErrorMessage,
+    sanitizeStackTrace as enhancedSanitizeStackTrace,
+    shouldShowDetailedErrors as enhancedShouldShowDetailedErrors,
+    isDebugMode as enhancedIsDebugMode
+} from './foundation/error-sanitization.js';
+
 /**
  * Sanitize error message to remove potentially sensitive information
- * Enhanced to catch more patterns and provide comprehensive protection
+ * 
+ * @deprecated Use enhanced sanitization from foundation/error-sanitization.ts
+ * @param message - The error message to sanitize
+ * @returns Sanitized message safe for production use
  */
 function sanitizeErrorMessage(message: string): string {
-    // Handle null/undefined/empty messages
-    if (!message) return '';
-    
-    // Apply memory protection first
-    const truncatedMessage = truncateErrorMessage(message);
-    
-    return truncatedMessage
-        // Remove potential injection patterns first (before other processing)
-        .replace(/<[^>]*>/g, '') // Remove HTML/XML tags completely
-        .replace(/javascript:[^;\s]*/gi, '') // Remove javascript: URLs
-        .replace(/alert\s*\([^)]*\)/gi, '') // Remove alert() calls
-        .replace(/eval\s*\([^)]*\)/gi, '') // Remove eval() calls
-        .replace(/on\w+\s*=\s*[^>\s]*/gi, '') // Remove event handlers
-        .replace(/[\x00-\x1F\x7F]/g, '') // Remove control characters
-        
-        // Generic patterns for common sensitive data (processed first to preserve casing)
-        .replace(/API_KEY[=:-][^\s,;}]+/g, 'API_KEY=***')
-        .replace(/TOKEN[=:-][^\s,;}]+/g, 'TOKEN=***')
-        .replace(/SECRET[=:-][^\s,;}]+/g, 'SECRET=***')
-        .replace(/PWD[=:-][^\s,;}]+/g, 'PWD=***')
-        .replace(/([A-Z_]*SECRET[A-Z_]*)-[^\s,;}]+/gi, '$1=***') // Handle SECRET-data pattern
-        .replace(/(key|secret|token|password|pass|pwd)[=:-][^\s,;}]+/gi, '$1=***')
-        
-        // Passwords and secrets (more specific patterns)
-        .replace(/password[=:]\s*\S+/gi, 'password=***')
-        .replace(/passwd[=:]\s*\S+/gi, 'passwd=***')
-        .replace(/private[_-]?key[=:]\s*\S+/gi, 'private_key=***')
-        
-        // API keys and tokens (kept only for patterns not covered above)
-        .replace(/access[_-]?token[=:]\s*\S+/gi, 'access_token=***')
-        .replace(/bearer[=:]\s*\S+/gi, 'bearer=***')
-        .replace(/authorization[=:]\s*[^\s]+(\s+[^\s]+)*/gi, 'authorization=***')
-        
-        // Database and connection strings
-        .replace(/connection[_-]?string[=:]\s*\S+/gi, 'connection_string=***')
-        .replace(/(mongodb|mysql|postgres|redis):\/\/[^\s]+/gi, '$1://***')
-        .replace(/host[=:]\s*\S+/gi, 'host=***')
-        .replace(/database[=:]\s*\S+/gi, 'database=***')
-        
-        // File paths that might contain sensitive info
-        .replace(/\/Users\/[^\/\s]+(?:\/[^\/\s]*)*(?:\/[^\/\s]+)?/g, '/Users/***/')
-        .replace(/C:[\/\\]Users[\/\\][^\/\\\s]+(?:[\/\\][^\/\\\s]*)*(?:[\/\\][^\/\\\s]+)?/g, 'C:\\Users\\***\\')
-        .replace(/\/home\/[^\/\s]+(?:\/[^\/\s]*)*(?:\/[^\/\s]+)?/g, '/home/***/')
-        
-        // Email addresses and usernames
-        .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '***@***.***')
-        .replace(/username[=:]\s*\S+/gi, 'username=***')
-        .replace(/user[=:]\s*\S+/gi, 'user=***')
-        
-        // Credit card and financial information
-        .replace(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/g, '****-****-****-****')
-        .replace(/\b\d{3}-\d{2}-\d{4}\b/g, '***-**-****') // SSN pattern
-        
-        // IP addresses and network info
-        .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '***.***.***.***')
-        .replace(/port[=:]\s*\d+/gi, 'port=***')
-        
-        .replace(/['"](sk|pk|tok|key)-[a-zA-Z0-9_-]+['"]/g, '"***"');
+    return enhancedSanitizeErrorMessage(message);
 }
 
 /**
  * Sanitize stack trace to remove sensitive file paths and internal details
+ * 
+ * @deprecated Use enhanced sanitization from foundation/error-sanitization.ts
+ * @param stack - The stack trace string to sanitize
+ * @returns Sanitized stack trace safe for production use
  */
 function sanitizeStackTrace(stack: string): string {
-    if (!stack) return stack;
-    
-    const isProduction = process.env.NODE_ENV === 'production';
-    if (isProduction) {
-        // In production, completely remove stack traces for security
-        return '';
-    }
-    
-    return stack
-        // Remove absolute file paths, keep relative ones
-        .replace(/\/.*?\/node_modules/g, 'node_modules')
-        .replace(/C:\\.*?\\node_modules/g, 'node_modules')
-        // Remove user home directory paths
-        .replace(/\/Users\/[^\/]+/g, '/Users/***')
-        .replace(/C:\\Users\\[^\\]+/g, 'C:\\Users\\***')
-        // Remove other potentially sensitive paths
-        .replace(/\/home\/[^\/]+/g, '/home/***')
-        .replace(/\/opt\/[^\/]+/g, '/opt/***')
-        // Limit stack trace depth in development
-        .split('\n').slice(0, 10).join('\n');
+    return enhancedSanitizeStackTrace(stack);
 }
 
 /**
  * Check if we should show detailed error information
+ * 
+ * @deprecated Use enhanced function from foundation/error-sanitization.ts
+ * @returns true if detailed errors should be shown, false otherwise
  */
 function shouldShowDetailedErrors(): boolean {
-    // Never show detailed errors in production
-    if (process.env.NODE_ENV === 'production') {
-        return false;
-    }
-    
-    // Show detailed errors in development/debug mode
-    return isDebugMode();
+    return enhancedShouldShowDetailedErrors();
 }
 
 // Re-export log injection protection functions from foundation module
@@ -720,3 +650,11 @@ export {
     shouldShowDetailedErrors,
     formatErrorForDisplay
 };
+
+// Re-export enhanced error sanitization functions from foundation module
+export { 
+    sanitizeErrorForProduction,
+    createEnvironmentConfig,
+    type ErrorSanitizationConfig,
+    DEFAULT_ERROR_SANITIZATION_CONFIG
+} from './foundation/error-sanitization.js';

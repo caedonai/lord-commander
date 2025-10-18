@@ -18,8 +18,11 @@ const EXPECTED_EXPORTS = {
     // Foundation - Input Validation (new in Task 1.2.1)
     inputValidation: ['validateProjectName', 'validatePackageManager', 'sanitizeCommandArgs', 'sanitizePath', 'validateInput', 'DEFAULT_VALIDATION_CONFIG', 'TRUSTED_PACKAGE_MANAGERS', 'PROJECT_NAME_PATTERNS', 'SHELL_METACHARACTERS'],
     
+    // Foundation - Error Sanitization (new in Task 1.3.1)
+    errorSanitization: ['sanitizeErrorMessage', 'sanitizeStackTrace', 'shouldShowDetailedErrors', 'isDebugMode'],
+    
     // CLI creation (from actual exports)
-    cli: ['Command', 'createCLI', 'registerBuiltinCommands', 'registerCommands', 'validateErrorHandler', 'executeErrorHandlerSafely', 'ErrorHandlerValidationError', 'sanitizeErrorMessage', 'sanitizeStackTrace', 'sanitizeErrorObject', 'truncateErrorMessage', 'getObjectMemorySize', 'isDebugMode', 'shouldShowDetailedErrors', 'formatErrorForDisplay'],
+    cli: ['Command', 'createCLI', 'registerBuiltinCommands', 'registerCommands', 'validateErrorHandler', 'executeErrorHandlerSafely', 'ErrorHandlerValidationError', 'sanitizeErrorObject', 'truncateErrorMessage', 'getObjectMemorySize', 'formatErrorForDisplay'],
     
     // Autocomplete system (from actual exports)
     autocomplete: ['analyzeProgram', 'checkCompletionStatus', 'detectShell', 'generateBashCompletion', 'generateCompletion', 'generateCompletionScript', 'generateFishCompletion', 'generatePowerShellCompletion', 'generateZshCompletion', 'installCompletion', 'uninstallCompletion'],
