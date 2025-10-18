@@ -1579,10 +1579,7 @@ export function sanitizeErrorContext(
   additionalContext: Record<string, unknown> = {},
   config: Partial<ErrorContextConfig> = {}
 ): SanitizedErrorContext {
-  const fullConfig: ErrorContextConfig = {
-    ...DEFAULT_ERROR_CONTEXT_CONFIG,
-    ...config
-  };
+  const fullConfig: ErrorContextConfig = _mergeConfigSafely(DEFAULT_ERROR_CONTEXT_CONFIG, config);
 
   const startTime = Date.now();
   const redactedProperties: string[] = [];
@@ -1595,19 +1592,72 @@ export function sanitizeErrorContext(
     ? _generateSecureErrorId(error)
     : `ERR_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
-  // Build initial context with security filtering
-  const rawContext: Record<string, unknown> = {
-    message: error.message,
-    name: error.name,
-    ...additionalContext
-  };
+  // Build initial context with security filtering and safe error property access
+  const rawContext: Record<string, unknown> = {};
+  
+  // Safely extract error properties with sanitization
+  let messageSanitized = false;
+  try {
+    const rawMessage = error.message || 'Unknown error';
+    // Use existing sanitization from Tasks 1.3.1-1.3.2
+    const sanitizedMessage = sanitizeErrorMessage(rawMessage);
+    rawContext.message = sanitizedMessage;
+    // Check if sanitization actually changed the message
+    messageSanitized = sanitizedMessage !== rawMessage;
+  } catch {
+    rawContext.message = 'Error message access failed';
+  }
+  
+  try {
+    rawContext.name = error.name || 'Error';
+  } catch {
+    rawContext.name = 'Error';
+  }
+  
+  // Safely extract all enumerable properties from the error object
+  try {
+    for (const key in error) {
+      if (key !== 'message' && key !== 'name' && key !== 'stack') {
+        try {
+          const value = (error as any)[key];
+          if (value !== undefined) {
+            rawContext[key] = value;
+          }
+        } catch {
+          // Skip properties that throw during access
+        }
+      }
+    }
+  } catch {
+    // Ignore if property enumeration fails
+  }
+  
+  // Add additional context safely
+  Object.assign(rawContext, additionalContext);
 
   // Remove dangerous properties that could be used for injection attacks
   const initialContext = _removeDangerousProperties(rawContext);
+  
+  // Early detection of problematic context structure before processing
+  try {
+    JSON.stringify(rawContext);
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('circular')) {
+      securityWarnings.push('Circular reference detected in raw context');
+    } else {
+      securityWarnings.push('Context serialization error detected');
+    }
+  }
 
   // Add error code if available and preservation is enabled
-  if (fullConfig.preserveErrorCodes && 'code' in error) {
-    initialContext.code = error.code;
+  if (fullConfig.preserveErrorCodes) {
+    try {
+      if ('code' in error && error.code !== undefined) {
+        initialContext.code = error.code;
+      }
+    } catch {
+      // Ignore if code property access fails
+    }
   }
 
   // Add timestamp if preservation is enabled
@@ -1623,7 +1673,7 @@ export function sanitizeErrorContext(
       contextSize += value.length;
     } else if (typeof value === 'object' && value !== null) {
       try {
-        contextSize += JSON.stringify(value).length;
+        contextSize += _safeJsonStringify(value).length;
       } catch {
         contextSize += 1000; // Estimate for objects we can't serialize
       }
@@ -1645,13 +1695,39 @@ export function sanitizeErrorContext(
   } else {
     try {
       // Test if we can safely serialize the context
-      JSON.stringify(initialContext);
+      _safeJsonStringify(initialContext);
       processedContext = initialContext;
     } catch (error) {
-      // Handle circular references
-      securityWarnings.push('Circular reference detected in context - applying safe serialization');
+      // Handle circular references or other serialization issues
+      securityWarnings.push('Serialization error detected in context - applying safe fallback');
       processedContext = _removeDangerousProperties(initialContext);
     }
+  }
+
+  // Additional security checks for problematic context structure
+  try {
+    // Check for circular references more explicitly
+    JSON.stringify(processedContext);
+  } catch (error) {
+    if (error instanceof TypeError && error.message.includes('circular')) {
+      securityWarnings.push('Circular reference detected in context structure');
+    }
+  }
+
+  // Check for properties that throw during access
+  let hasThrowingProperties = false;
+  for (const [, value] of Object.entries(processedContext)) {
+    try {
+      // Try to access the value to see if it throws
+      JSON.stringify(value);
+    } catch {
+      hasThrowingProperties = true;
+      break;
+    }
+  }
+  
+  if (hasThrowingProperties) {
+    securityWarnings.push('Properties with access errors detected in context');
   }
 
   // Detect and handle sensitive content
@@ -1666,16 +1742,24 @@ export function sanitizeErrorContext(
     redactionHints
   );
 
-  // Update flags based on detections
-  hadSensitiveData = sensitiveDetections.length > 0;
+  // Update flags based on detections and message sanitization
+  hadSensitiveData = sensitiveDetections.length > 0 || messageSanitized;
   
   // Add security warnings for high-severity detections
   sensitiveDetections
     .filter(d => d.severity === 'high' || d.severity === 'critical')
     .forEach(d => securityWarnings.push(`${d.sensitiveType} detected in ${d.propertyPath}`));
 
-  // Final size check
-  const finalSize = JSON.stringify(sanitizedContext).length;
+  // Final size check with safe JSON serialization
+  let finalSize: number;
+  try {
+    finalSize = _safeJsonStringify(sanitizedContext).length;
+  } catch (error) {
+    // If we can't serialize safely, estimate size and add warning
+    finalSize = Object.keys(sanitizedContext).length * 50; // Rough estimate
+    securityWarnings.push('Unable to calculate exact context size - using safe defaults');
+  }
+  
   if (finalSize > fullConfig.maxContextLength) {
     securityWarnings.push('Context size exceeded limits after sanitization');
     // Further truncate if needed
@@ -1693,10 +1777,22 @@ export function sanitizeErrorContext(
     securityWarnings.push(`Context sanitization took ${processingTime}ms - consider reducing context size`);
   }
 
+  // Safely extract final error code
+  let finalErrorCode: string | number | undefined;
+  if (fullConfig.preserveErrorCodes) {
+    try {
+      if ('code' in error && error.code !== undefined) {
+        finalErrorCode = error.code as string | number;
+      }
+    } catch {
+      // Ignore if code property access fails
+    }
+  }
+
   return {
     errorId,
     context: sanitizedContext,
-    code: fullConfig.preserveErrorCodes && 'code' in error ? error.code as string | number : undefined,
+    code: finalErrorCode,
     timestamp,
     redactedProperties,
     securityWarnings,
@@ -1781,9 +1877,85 @@ export function createSafeErrorForForwarding(
     redactPersonalInfo: true
   });
 
+  // Apply aggressive size limiting for telemetry systems
+  let finalContext = sanitized.context;
+  let finalSecurityWarnings = [...sanitized.securityWarnings];
+  
+  // Calculate the size of the result so far
+  let currentSize = JSON.stringify({
+    errorId: sanitized.errorId,
+    message: sanitizedMessage,
+    type: error.name || 'Error',
+    timestamp: sanitized.timestamp || new Date().toISOString(),
+    context: finalContext
+  }).length;
+  
+  // If the payload is too large, apply aggressive reduction for telemetry
+  const maxTelemetrySize = 8000; // Target under 10KB with some buffer
+  if (currentSize > maxTelemetrySize) {
+    finalSecurityWarnings.push('Payload size exceeded telemetry limits - applying aggressive reduction');
+    
+    // Priority order for property preservation
+    const priorityProperties = ['timestamp', 'level', 'operation', 'component', 'status'];
+    const reducedContext: Record<string, unknown> = {};
+    
+    // First, preserve high-priority properties
+    for (const prop of priorityProperties) {
+      if (prop in finalContext) {
+        reducedContext[prop] = finalContext[prop];
+      }
+    }
+    
+    // Then add other properties until we hit the size limit
+    const remainingProperties = Object.keys(finalContext).filter(key => !priorityProperties.includes(key));
+    for (const prop of remainingProperties) {
+      const testContext = { ...reducedContext, [prop]: finalContext[prop] };
+      const testSize = JSON.stringify({
+        errorId: sanitized.errorId,
+        message: sanitizedMessage,
+        type: error.name || 'Error',
+        timestamp: sanitized.timestamp || new Date().toISOString(),
+        context: testContext
+      }).length;
+      
+      if (testSize < maxTelemetrySize) {
+        reducedContext[prop] = finalContext[prop];
+      } else {
+        // Try with truncated property value if it's a string
+        if (typeof finalContext[prop] === 'string') {
+          const truncated = (finalContext[prop] as string).substring(0, 50) + '...[truncated]';
+          const testTruncatedContext = { ...reducedContext, [prop]: truncated };
+          const testTruncatedSize = JSON.stringify({
+            errorId: sanitized.errorId,
+            message: sanitizedMessage,
+            type: error.name || 'Error',
+            timestamp: sanitized.timestamp || new Date().toISOString(),
+            context: testTruncatedContext
+          }).length;
+          
+          if (testTruncatedSize < maxTelemetrySize) {
+            reducedContext[prop] = truncated;
+          }
+        }
+        // If we can't fit it even truncated, stop adding properties
+        break;
+      }
+    }
+    
+    finalContext = reducedContext;
+  }
+
+  // Limit security warnings for telemetry to prevent payload bloat
+  const maxTelemetryWarnings = 10;
+  if (finalSecurityWarnings.length > maxTelemetryWarnings) {
+    const warningCount = finalSecurityWarnings.length;
+    finalSecurityWarnings = finalSecurityWarnings.slice(0, maxTelemetryWarnings);
+    finalSecurityWarnings.push(`... and ${warningCount - maxTelemetryWarnings} more security warnings (truncated for telemetry)`);
+  }
+
   // Determine severity based on error type and sensitive data detection
   let severity: 'low' | 'medium' | 'high' = 'low';
-  if (sanitized.hadSensitiveData || sanitized.securityWarnings.length > 0) {
+  if (sanitized.hadSensitiveData || finalSecurityWarnings.length > 0) {
     severity = 'medium';
   }
   if (error.name === 'SecurityError' || error.message.toLowerCase().includes('security')) {
@@ -1795,12 +1967,12 @@ export function createSafeErrorForForwarding(
     message: sanitizedMessage,
     type: error.name || 'Error',
     timestamp: sanitized.timestamp || new Date().toISOString(),
-    context: sanitized.context,
+    context: finalContext,
     severity,
     metadata: {
       hadSensitiveData: sanitized.hadSensitiveData,
       redactedCount: sanitized.redactedProperties.length,
-      securityWarnings: sanitized.securityWarnings
+      securityWarnings: finalSecurityWarnings
     }
   };
 }
@@ -2266,4 +2438,130 @@ function _removeDangerousProperties(
   }
   
   return cleaned;
+}
+
+/**
+ * Safe JSON stringification that handles problematic data types
+ * 
+ * @param obj - Object to stringify
+ * @returns JSON string or fallback representation
+ */
+function _safeJsonStringify(obj: unknown): string {
+  try {
+    return JSON.stringify(obj, (_key, value) => {
+      // Handle BigInt
+      if (typeof value === 'bigint') {
+        return `[BigInt: ${value.toString()}]`;
+      }
+      
+      // Handle functions
+      if (typeof value === 'function') {
+        return `[Function: ${value.name || 'anonymous'}]`;
+      }
+      
+      // Handle symbols
+      if (typeof value === 'symbol') {
+        return `[Symbol: ${value.toString()}]`;
+      }
+      
+      // Handle undefined (normally omitted)
+      if (value === undefined) {
+        return '[Undefined]';
+      }
+      
+      // Handle RegExp
+      if (value instanceof RegExp) {
+        return `[RegExp: ${value.toString()}]`;
+      }
+      
+      // Handle Date
+      if (value instanceof Date) {
+        return value.toISOString();
+      }
+      
+      // Handle Buffer and typed arrays
+      if (value instanceof Buffer) {
+        return `[Buffer: ${value.length} bytes]`;
+      }
+      
+      if (value instanceof Uint8Array) {
+        return `[Uint8Array: ${value.length} bytes]`;
+      }
+      
+      if (value instanceof ArrayBuffer) {
+        return `[ArrayBuffer: ${value.byteLength} bytes]`;
+      }
+      
+      return value;
+    });
+  } catch (error) {
+    // Fallback for objects that can't be stringified
+    return `[Object: ${typeof obj}]`;
+  }
+}
+
+/**
+ * Safely merges configuration objects, handling invalid values
+ * 
+ * @param defaultConfig - Default configuration
+ * @param userConfig - User-provided configuration
+ * @returns Merged configuration with fallbacks for invalid values
+ */
+function _mergeConfigSafely(
+  defaultConfig: ErrorContextConfig,
+  userConfig: Partial<ErrorContextConfig>
+): ErrorContextConfig {
+  const merged: ErrorContextConfig = { ...defaultConfig };
+  
+  if (!userConfig || typeof userConfig !== 'object') {
+    return merged;
+  }
+  
+  // Safely merge each property with validation
+  if (typeof userConfig.redactionLevel === 'string' && 
+      ['none', 'partial', 'full'].includes(userConfig.redactionLevel)) {
+    merged.redactionLevel = userConfig.redactionLevel;
+  }
+  
+  if (typeof userConfig.maxContextLength === 'number' && userConfig.maxContextLength >= 0) {
+    merged.maxContextLength = userConfig.maxContextLength;
+  }
+  
+  if (Array.isArray(userConfig.allowedProperties)) {
+    merged.allowedProperties = userConfig.allowedProperties.filter(prop => 
+      typeof prop === 'string'
+    );
+  }
+  
+  if (Array.isArray(userConfig.customContextPatterns)) {
+    merged.customContextPatterns = userConfig.customContextPatterns.filter(pattern => 
+      pattern instanceof RegExp
+    );
+  }
+  
+  if (typeof userConfig.preserveTimestamps === 'boolean') {
+    merged.preserveTimestamps = userConfig.preserveTimestamps;
+  }
+  
+  if (typeof userConfig.preserveErrorCodes === 'boolean') {
+    merged.preserveErrorCodes = userConfig.preserveErrorCodes;
+  }
+  
+  if (typeof userConfig.generateSecureIds === 'boolean') {
+    merged.generateSecureIds = userConfig.generateSecureIds;
+  }
+  
+  if (typeof userConfig.sanitizeNestedObjects === 'boolean') {
+    merged.sanitizeNestedObjects = userConfig.sanitizeNestedObjects;
+  }
+  
+  if (typeof userConfig.includeContextHints === 'boolean') {
+    merged.includeContextHints = userConfig.includeContextHints;
+  }
+  
+  if (typeof userConfig.sanitizeFunctionNames === 'boolean') {
+    merged.sanitizeFunctionNames = userConfig.sanitizeFunctionNames;
+  }
+  
+  return merged;
 }
