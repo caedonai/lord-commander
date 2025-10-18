@@ -78,6 +78,21 @@ export {
   type FrameworkBuildConfig
 } from './foundation/framework-security.js';
 
+// Input validation utilities (Task 1.2.1)
+export {
+  validateProjectName,
+  validatePackageManager,
+  sanitizeCommandArgs,
+  sanitizePath,
+  validateInput,
+  DEFAULT_VALIDATION_CONFIG,
+  TRUSTED_PACKAGE_MANAGERS,
+  PROJECT_NAME_PATTERNS,
+  type ValidationConfig,
+  type ValidationResult,
+  type InputValidationViolation
+} from './foundation/input-validation.js';
+
 // User interface utilities
 export { 
   createLogger,

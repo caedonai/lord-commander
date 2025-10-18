@@ -19,3 +19,6 @@ export * from './security-patterns.js';
 
 // Export framework security detection utilities
 export * from './framework-security.js';
+
+// Export input validation utilities
+export * from './input-validation.js';

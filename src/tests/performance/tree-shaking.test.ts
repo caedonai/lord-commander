@@ -15,6 +15,9 @@ const EXPECTED_EXPORTS = {
     // Foundation - Security Patterns (from Task 1.1.2)
     securityPatterns: ['PATH_TRAVERSAL_PATTERNS', 'COMMAND_INJECTION_PATTERNS', 'SCRIPT_INJECTION_PATTERNS', 'PRIVILEGE_ESCALATION_PATTERNS', 'FILE_SYSTEM_PATTERNS', 'NETWORK_PATTERNS', 'INPUT_VALIDATION_PATTERNS', 'analyzeInputSecurity', 'isPathSafe', 'isCommandSafe', 'isProjectNameSafe'],
     
+    // Foundation - Input Validation (new in Task 1.2.1)
+    inputValidation: ['validateProjectName', 'validatePackageManager', 'sanitizeCommandArgs', 'sanitizePath', 'validateInput', 'DEFAULT_VALIDATION_CONFIG', 'TRUSTED_PACKAGE_MANAGERS', 'PROJECT_NAME_PATTERNS'],
+    
     // CLI creation (from actual exports)
     cli: ['Command', 'createCLI', 'registerBuiltinCommands', 'registerCommands', 'validateErrorHandler', 'executeErrorHandlerSafely', 'ErrorHandlerValidationError', 'sanitizeErrorMessage', 'sanitizeStackTrace', 'sanitizeErrorObject', 'truncateErrorMessage', 'getObjectMemorySize', 'isDebugMode', 'shouldShowDetailedErrors', 'formatErrorForDisplay'],
     

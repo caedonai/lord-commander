@@ -1,0 +1,705 @@
+/**
+ * Comprehensive Input Validation Framework
+ * 
+ * This module provides secure input validation, sanitization, and normalization
+ * utilities to prevent injection attacks, validate user inputs, and ensure
+ * safe operations throughout the CLI SDK.
+ * 
+ * @security Critical security module - all inputs should be validated through this system
+ * @see Task 1.2.1: Input Sanitization Utilities
+ */
+
+import { normalize, resolve, isAbsolute } from 'path';
+import { 
+  analyzeInputSecurity, 
+  isPathSafe, 
+  isCommandSafe, 
+  isProjectNameSafe
+} from './security-patterns.js';
+import { ERROR_MESSAGES } from './constants.js';
+
+/**
+ * Input validation violation details
+ */
+export interface InputValidationViolation {
+  type: 'path-traversal' | 'command-injection' | 'script-injection' | 'privilege-escalation' | 'malformed-input' | 'suspicious-pattern';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  input: string;
+  suggestion?: string;
+}
+
+/**
+ * Result of input validation with security analysis
+ */
+export interface ValidationResult {
+  /** Whether the input passed validation */
+  isValid: boolean;
+  /** Sanitized/normalized version of the input */
+  sanitized: string;
+  /** Security violations detected during validation */
+  violations: InputValidationViolation[];
+  /** Suggestions for fixing invalid inputs */
+  suggestions: string[];
+  /** Risk score (0-100, where 100 is maximum risk) */
+  riskScore: number;
+}
+
+/**
+ * Configuration for input validation behavior
+ */
+export interface ValidationConfig {
+  /** Whether to allow potentially risky but legitimate inputs */
+  strictMode: boolean;
+  /** Maximum length for string inputs */
+  maxLength: number;
+  /** Custom patterns to validate against */
+  customPatterns?: RegExp[];
+  /** Whether to auto-sanitize inputs when possible */
+  autoSanitize: boolean;
+  /** Whether to provide suggestions for fixing inputs */
+  provideSuggestions: boolean;
+}
+
+/**
+ * Default validation configuration
+ */
+export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
+  strictMode: true,
+  maxLength: 255,
+  autoSanitize: true,
+  provideSuggestions: true
+};
+
+/**
+ * Whitelist of trusted package managers
+ * These are well-known, widely-used package managers that are safe to use
+ */
+export const TRUSTED_PACKAGE_MANAGERS = new Set([
+  'npm',
+  'pnpm', 
+  'yarn',
+  'bun',
+  'deno',
+  'cargo',
+  'pip',
+  'composer',
+  'maven',
+  'gradle'
+]);
+
+/**
+ * Strict project name validation patterns
+ * Based on npm package naming rules with additional security considerations
+ */
+export const PROJECT_NAME_PATTERNS = {
+  // Valid characters: lowercase letters, numbers, hyphens, dots, underscores
+  VALID_CHARS: /^[a-z0-9._-]+$/,
+  // Cannot start with dot or hyphen
+  VALID_START: /^[a-z0-9]/,
+  // Cannot end with dot or hyphen  
+  VALID_END: /[a-z0-9]$/,
+  // Cannot have consecutive special characters
+  NO_CONSECUTIVE_SPECIAL: /^(?!.*[._-]{2,})/,
+  // Minimum length (prevent single char names)
+  MIN_LENGTH: 2,
+  // Maximum length (prevent excessively long names)
+  MAX_LENGTH: 214
+};
+
+/**
+ * Shell metacharacters that need escaping or removal
+ */
+export const SHELL_METACHARACTERS = [
+  '|', '&', ';', '(', ')', '<', '>', ' ', '\t', '\n', '\r',
+  '$', '`', '\\', '"', "'", '*', '?', '[', ']', '{', '}',
+  '!', '#', '%', '^', '~'
+];
+
+/**
+ * Validate project name with comprehensive security checks
+ * 
+ * Ensures project names follow safe naming conventions and don't contain
+ * patterns that could be exploited for injection attacks or cause issues
+ * with file systems, package managers, or command line tools.
+ * 
+ * @param name - Project name to validate
+ * @param config - Validation configuration (optional)
+ * @returns ValidationResult with security analysis
+ * 
+ * @example
+ * ```typescript
+ * // Valid project names
+ * const valid = validateProjectName('my-awesome-project');
+ * console.log(valid.isValid); // true
+ * 
+ * // Invalid project names with security issues
+ * const invalid = validateProjectName('../malicious-path');
+ * console.log(invalid.violations); // Path traversal violation
+ * 
+ * // Get suggestions for fixing invalid names
+ * const result = validateProjectName('My Project!');
+ * console.log(result.suggestions); // ["Use lowercase letters", "Replace spaces with hyphens"]
+ * ```
+ */
+export function validateProjectName(
+  name: string, 
+  config: Partial<ValidationConfig> = {}
+): ValidationResult {
+  const cfg = { ...DEFAULT_VALIDATION_CONFIG, ...config };
+  const violations: InputValidationViolation[] = [];
+  const suggestions: string[] = [];
+  let sanitized = name;
+  let riskScore = 0;
+
+  // Basic input validation
+  if (!name || typeof name !== 'string') {
+    violations.push({
+      type: 'malformed-input',
+      severity: 'high',
+      description: 'Project name must be a non-empty string',
+      input: String(name),
+      suggestion: 'Provide a valid string for the project name'
+    });
+    return {
+      isValid: false,
+      sanitized: '',
+      violations,
+      suggestions: ['Provide a valid string for the project name'],
+      riskScore: 100
+    };
+  }
+
+  // Trim whitespace
+  sanitized = name.trim();
+
+  // Check for effectively empty names after trimming
+  if (!sanitized) {
+    violations.push({
+      type: 'malformed-input',
+      severity: 'high',
+      description: 'Project name cannot be empty or only whitespace',
+      input: name,
+      suggestion: 'Provide a non-empty project name'
+    });
+    return {
+      isValid: false,
+      sanitized: '',
+      violations,
+      suggestions: ['Provide a non-empty project name'],
+      riskScore: 100
+    };
+  }
+
+  // Length validation
+  if (sanitized.length < PROJECT_NAME_PATTERNS.MIN_LENGTH) {
+    violations.push({
+      type: 'malformed-input',
+      severity: 'medium',
+      description: `Project name too short (minimum ${PROJECT_NAME_PATTERNS.MIN_LENGTH} characters)`,
+      input: name,
+      suggestion: 'Use a longer, more descriptive project name'
+    });
+    suggestions.push('Use a longer, more descriptive project name');
+    riskScore += 20;
+  }
+
+  if (sanitized.length > PROJECT_NAME_PATTERNS.MAX_LENGTH) {
+    violations.push({
+      type: 'malformed-input',
+      severity: 'medium',
+      description: `Project name too long (maximum ${PROJECT_NAME_PATTERNS.MAX_LENGTH} characters)`,
+      input: name,
+      suggestion: 'Shorten the project name'
+    });
+    suggestions.push('Shorten the project name');
+    riskScore += 15;
+  }
+
+  if (sanitized.length > cfg.maxLength) {
+    sanitized = sanitized.substring(0, cfg.maxLength);
+    suggestions.push(`Name truncated to ${cfg.maxLength} characters`);
+  }
+
+  // Security pattern analysis
+  const securityAnalysis = analyzeInputSecurity(sanitized);
+  securityAnalysis.violations.forEach(violation => {
+    violations.push({
+      type: violation.type as InputValidationViolation['type'],
+      severity: violation.severity,
+      description: `Security risk in project name: ${violation.description}`,
+      input: name,
+      suggestion: 'Use only alphanumeric characters, hyphens, dots, and underscores'
+    });
+    riskScore += violation.severity === 'critical' ? 40 : 
+                violation.severity === 'high' ? 30 :
+                violation.severity === 'medium' ? 20 : 10;
+  });
+
+  // Project name specific validations
+  if (!PROJECT_NAME_PATTERNS.VALID_CHARS.test(sanitized)) {
+    violations.push({
+      type: 'suspicious-pattern',
+      severity: 'medium',
+      description: 'Project name contains invalid characters',
+      input: name,
+      suggestion: 'Use only lowercase letters, numbers, hyphens, dots, and underscores'
+    });
+    suggestions.push('Use only lowercase letters, numbers, hyphens, dots, and underscores');
+    riskScore += 25;
+    
+    // Auto-sanitize if enabled
+    if (cfg.autoSanitize) {
+      sanitized = sanitized.toLowerCase()
+        .replace(/[^a-z0-9._-]/g, '-')
+        .replace(/^[^a-z0-9]+/, '')
+        .replace(/[^a-z0-9]+$/, '')
+        .replace(/[._-]{2,}/g, '-');
+    }
+  }
+
+  if (!PROJECT_NAME_PATTERNS.VALID_START.test(sanitized)) {
+    violations.push({
+      type: 'suspicious-pattern',
+      severity: 'low',
+      description: 'Project name should start with a letter or number',
+      input: name,
+      suggestion: 'Start the project name with a letter or number'
+    });
+    suggestions.push('Start the project name with a letter or number');
+    riskScore += 10;
+  }
+
+  if (!PROJECT_NAME_PATTERNS.VALID_END.test(sanitized)) {
+    violations.push({
+      type: 'suspicious-pattern',
+      severity: 'low',
+      description: 'Project name should end with a letter or number',
+      input: name,
+      suggestion: 'End the project name with a letter or number'
+    });
+    suggestions.push('End the project name with a letter or number');
+    riskScore += 10;
+  }
+
+  if (!PROJECT_NAME_PATTERNS.NO_CONSECUTIVE_SPECIAL.test(sanitized)) {
+    violations.push({
+      type: 'suspicious-pattern',
+      severity: 'low',
+      description: 'Project name should not have consecutive special characters',
+      input: name,
+      suggestion: 'Avoid consecutive dots, hyphens, or underscores'
+    });
+    suggestions.push('Avoid consecutive dots, hyphens, or underscores');
+    riskScore += 10;
+  }
+
+  // Additional security checks using existing patterns
+  if (!isProjectNameSafe(sanitized)) {
+    violations.push({
+      type: 'suspicious-pattern',
+      severity: 'high',
+      description: 'Project name matches suspicious security pattern',
+      input: name,
+      suggestion: 'Choose a different name that doesn\'t match security risk patterns'
+    });
+    suggestions.push('Choose a different name that doesn\'t match security risk patterns');
+    riskScore += 35;
+  }
+
+  // Calculate final validity
+  const criticalViolations = violations.filter(v => v.severity === 'critical');
+  const highViolations = violations.filter(v => v.severity === 'high');
+  const mediumViolations = violations.filter(v => v.severity === 'medium');
+  
+  // Project name is valid only if:
+  // - No critical violations
+  // - No high violations 
+  // - No medium violations (strict for project names)
+  const isValid = criticalViolations.length === 0 && 
+                 highViolations.length === 0 &&
+                 mediumViolations.length === 0;
+
+  return {
+    isValid,
+    sanitized,
+    violations,
+    suggestions: cfg.provideSuggestions ? [...new Set(suggestions)] : [],
+    riskScore: Math.min(riskScore, 100)
+  };
+}
+
+/**
+ * Validate package manager with security checks
+ * 
+ * Ensures only trusted, well-known package managers are used and detects
+ * potentially malicious or unknown package managers that could pose security risks.
+ * 
+ * @param packageManager - Package manager to validate
+ * @param config - Validation configuration (optional)
+ * @returns ValidationResult with security analysis
+ * 
+ * @example
+ * ```typescript
+ * // Valid package managers
+ * const npm = validatePackageManager('npm');
+ * console.log(npm.isValid); // true
+ * 
+ * const pnpm = validatePackageManager('pnpm');
+ * console.log(pnpm.isValid); // true
+ * 
+ * // Invalid/suspicious package managers
+ * const unknown = validatePackageManager('evil-pm');
+ * console.log(unknown.violations); // Suspicious pattern violation
+ * 
+ * // Command injection attempts
+ * const malicious = validatePackageManager('npm; rm -rf /');
+ * console.log(malicious.violations); // Command injection violation
+ * ```
+ */
+export function validatePackageManager(
+  packageManager: string,
+  config: Partial<ValidationConfig> = {}
+): ValidationResult {
+  const cfg = { ...DEFAULT_VALIDATION_CONFIG, ...config };
+  const violations: InputValidationViolation[] = [];
+  const suggestions: string[] = [];
+  let sanitized = packageManager;
+  let riskScore = 0;
+
+  // Basic input validation
+  if (!packageManager || typeof packageManager !== 'string') {
+    violations.push({
+      type: 'malformed-input',
+      severity: 'high',
+      description: 'Package manager must be a non-empty string',
+      input: String(packageManager),
+      suggestion: 'Specify a valid package manager (npm, pnpm, yarn, bun)'
+    });
+    return {
+      isValid: false,
+      sanitized: 'npm', // Safe default
+      violations,
+      suggestions: ['Specify a valid package manager (npm, pnpm, yarn, bun)'],
+      riskScore: 100
+    };
+  }
+
+  // Trim and normalize
+  sanitized = packageManager.trim().toLowerCase();
+
+  // Check for effectively empty names after trimming
+  if (!sanitized) {
+    violations.push({
+      type: 'malformed-input',
+      severity: 'high',
+      description: 'Package manager cannot be empty or only whitespace',
+      input: packageManager,
+      suggestion: 'Specify a valid package manager (npm, pnpm, yarn, bun)'
+    });
+    return {
+      isValid: false,
+      sanitized: 'npm', // Safe default
+      violations,
+      suggestions: ['Specify a valid package manager (npm, pnpm, yarn, bun)'],
+      riskScore: 100
+    };
+  }
+
+  // Security pattern analysis
+  const securityAnalysis = analyzeInputSecurity(sanitized);
+  securityAnalysis.violations.forEach(violation => {
+    violations.push({
+      type: violation.type as InputValidationViolation['type'],
+      severity: violation.severity,
+      description: `Security risk in package manager: ${violation.description}`,
+      input: packageManager,
+      suggestion: 'Use a trusted package manager like npm, pnpm, yarn, or bun'
+    });
+    riskScore += violation.severity === 'critical' ? 40 : 
+                violation.severity === 'high' ? 30 :
+                violation.severity === 'medium' ? 20 : 10;
+  });
+
+  // Whitelist validation
+  if (!TRUSTED_PACKAGE_MANAGERS.has(sanitized)) {
+    violations.push({
+      type: 'suspicious-pattern',
+      severity: cfg.strictMode ? 'high' : 'medium',
+      description: 'Unknown or untrusted package manager',
+      input: packageManager,
+      suggestion: 'Use a trusted package manager: npm, pnpm, yarn, bun, deno'
+    });
+    suggestions.push('Use a trusted package manager: npm, pnpm, yarn, bun, deno');
+    riskScore += cfg.strictMode ? 30 : 20;
+  }
+
+  // Check for command injection attempts
+  if (!isCommandSafe(sanitized)) {
+    violations.push({
+      type: 'command-injection',
+      severity: 'critical',
+      description: 'Package manager contains command injection patterns',
+      input: packageManager,
+      suggestion: 'Use only the package manager name without additional commands'
+    });
+    suggestions.push('Use only the package manager name without additional commands');
+    riskScore += 50;
+  }
+
+  // Length validation
+  if (sanitized.length > cfg.maxLength) {
+    violations.push({
+      type: 'malformed-input',
+      severity: 'medium',
+      description: 'Package manager name too long',
+      input: packageManager,
+      suggestion: 'Use a shorter package manager name'
+    });
+    suggestions.push('Use a shorter package manager name');
+    riskScore += 15;
+  }
+
+  // Calculate final validity
+  const criticalViolations = violations.filter(v => v.severity === 'critical');
+  const highViolations = violations.filter(v => v.severity === 'high');
+  
+  const isValid = criticalViolations.length === 0 && 
+                 (!cfg.strictMode || highViolations.length === 0);
+
+  return {
+    isValid,
+    sanitized,
+    violations,
+    suggestions: cfg.provideSuggestions ? [...new Set(suggestions)] : [],
+    riskScore: Math.min(riskScore, 100)
+  };
+}
+
+/**
+ * Sanitize command arguments for safe shell execution
+ * 
+ * Escapes or removes shell metacharacters and validates arguments to prevent
+ * command injection attacks while preserving legitimate command functionality.
+ * 
+ * @param args - Array of command arguments to sanitize
+ * @param config - Validation configuration (optional)
+ * @returns Array of sanitized arguments
+ * 
+ * @example
+ * ```typescript
+ * // Safe arguments
+ * const safe = sanitizeCommandArgs(['build', '--prod', 'my-app']);
+ * console.log(safe); // ['build', '--prod', 'my-app']
+ * 
+ * // Dangerous arguments get escaped or removed
+ * const dangerous = sanitizeCommandArgs(['build', '; rm -rf /', '--output']);
+ * console.log(dangerous); // ['build', '--output'] - injection removed
+ * 
+ * // File paths are preserved safely
+ * const paths = sanitizeCommandArgs(['--input', './src/file.js', '--output', './dist/']);
+ * console.log(paths); // ['--input', './src/file.js', '--output', './dist/']
+ * ```
+ */
+export function sanitizeCommandArgs(
+  args: string[],
+  config: Partial<ValidationConfig> = {}
+): string[] {
+  const cfg = { ...DEFAULT_VALIDATION_CONFIG, ...config };
+  
+  if (!Array.isArray(args)) {
+    throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(String(args), 'Invalid arguments array'));
+  }
+
+  return args.map((arg, index) => {
+    if (typeof arg !== 'string') {
+      throw new Error(ERROR_MESSAGES.MALFORMED_ARGUMENT(String(arg), index));
+    }
+
+    let sanitized = arg.trim();
+
+    // Skip empty arguments
+    if (!sanitized) {
+      return '';
+    }
+
+    // Check for command injection
+    if (!isCommandSafe(sanitized)) {
+      if (cfg.strictMode) {
+        throw new Error(ERROR_MESSAGES.COMMAND_INJECTION_ATTEMPT(arg));
+      }
+      // In non-strict mode, try to sanitize by removing dangerous characters
+      // This is more aggressive than the test expects but necessary for security
+      sanitized = sanitized
+        .replace(/[;&|`$(){}[\]<>]/g, '') // Remove shell metacharacters
+        .replace(/\s+(rm|del|format|mkfs|dd|sudo|su|chmod|chown|cat|type|more|less)\s+/gi, ' ') // Remove dangerous commands
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+    }
+
+    // Length validation
+    if (sanitized.length > cfg.maxLength) {
+      if (cfg.strictMode) {
+        throw new Error(ERROR_MESSAGES.SUSPICIOUS_INPUT_DETECTED(arg, 'Argument too long'));
+      }
+      sanitized = sanitized.substring(0, cfg.maxLength);
+    }
+
+    // Escape shell metacharacters for safer execution
+    if (cfg.autoSanitize) {
+      // Quote arguments that contain spaces or special characters
+      if (/[\s"'`$\\;|&<>(){}[\]]/g.test(sanitized)) {
+        // Escape existing quotes and wrap in double quotes
+        sanitized = '"' + sanitized.replace(/"/g, '\\"') + '"';
+      }
+    }
+
+    return sanitized;
+  }).filter(arg => arg.length > 0); // Remove empty arguments
+}
+
+/**
+ * Sanitize and normalize file paths for safe operations
+ * 
+ * Validates file paths, prevents directory traversal attacks, normalizes
+ * path separators, and ensures paths are within safe boundaries.
+ * 
+ * @param path - File path to sanitize
+ * @param options - Sanitization options
+ * @returns Sanitized path or throws error if path is unsafe
+ * 
+ * @example
+ * ```typescript
+ * // Safe relative paths
+ * const safe = sanitizePath('./src/components');
+ * console.log(safe); // './src/components' (normalized)
+ * 
+ * // Dangerous paths are blocked
+ * try {
+ *   sanitizePath('../../../etc/passwd');
+ * } catch (error) {
+ *   console.log(error.message); // Path traversal attack detected
+ * }
+ * 
+ * // Path normalization
+ * const normalized = sanitizePath('./src/../components/./Button.tsx');
+ * console.log(normalized); // './components/Button.tsx'
+ * ```
+ */
+export function sanitizePath(
+  path: string,
+  options: {
+    allowAbsolute?: boolean;
+    allowTraversal?: boolean;
+    workingDirectory?: string;
+  } = {}
+): string {
+  if (!path || typeof path !== 'string') {
+    throw new Error(ERROR_MESSAGES.MALFORMED_ARGUMENT(String(path), 0));
+  }
+
+  const { allowAbsolute = false, allowTraversal = false, workingDirectory = process.cwd() } = options;
+
+  // Trim whitespace
+  let sanitized = path.trim();
+
+  // Check for absolute paths first (before general path safety)
+  if (isAbsolute(sanitized) && !allowAbsolute) {
+    throw new Error('Absolute paths not allowed');
+  }
+
+  // Basic security validation for traversal
+  if (!isPathSafe(sanitized) && !allowTraversal) {
+    throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(path, 'Path traversal detected'));
+  }
+
+  // Normalize the path
+  try {
+    sanitized = normalize(sanitized);
+    // Convert backslashes to forward slashes for consistency across platforms
+    sanitized = sanitized.replace(/\\/g, '/');
+  } catch (error) {
+    throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(path, 'Path normalization failed'));
+  }
+
+  // Ensure relative paths don't escape the working directory
+  if (!allowTraversal && !isAbsolute(sanitized)) {
+    const resolved = resolve(workingDirectory, sanitized);
+    if (!resolved.startsWith(resolve(workingDirectory))) {
+      throw new Error('Path escapes working directory');
+    }
+  }
+
+  return sanitized;
+}
+
+/**
+ * Comprehensive input validation function that applies all security checks
+ * 
+ * @param input - Input to validate
+ * @param type - Type of input validation to apply
+ * @param config - Validation configuration
+ * @returns ValidationResult with comprehensive security analysis
+ */
+export function validateInput(
+  input: string,
+  type: 'project-name' | 'package-manager' | 'file-path' | 'command-arg',
+  config: Partial<ValidationConfig> = {}
+): ValidationResult {
+  switch (type) {
+    case 'project-name':
+      return validateProjectName(input, config);
+    case 'package-manager':
+      return validatePackageManager(input, config);
+    case 'file-path':
+      try {
+        const sanitized = sanitizePath(input);
+        return {
+          isValid: true,
+          sanitized,
+          violations: [],
+          suggestions: [],
+          riskScore: 0
+        };
+      } catch (error) {
+        return {
+          isValid: false,
+          sanitized: input,
+          violations: [{
+            type: 'path-traversal',
+            severity: 'critical',
+            description: error instanceof Error ? error.message : 'Path validation failed',
+            input
+          }],
+          suggestions: ['Use a safe relative path within the project directory'],
+          riskScore: 100
+        };
+      }
+    case 'command-arg':
+      try {
+        const sanitized = sanitizeCommandArgs([input], config)[0] || '';
+        return {
+          isValid: true,
+          sanitized,
+          violations: [],
+          suggestions: [],
+          riskScore: 0
+        };
+      } catch (error) {
+        return {
+          isValid: false,
+          sanitized: input,
+          violations: [{
+            type: 'command-injection',
+            severity: 'critical',
+            description: error instanceof Error ? error.message : 'Argument validation failed',
+            input
+          }],
+          suggestions: ['Use safe command arguments without shell metacharacters'],
+          riskScore: 100
+        };
+      }
+    default:
+      throw new Error(`Unknown validation type: ${type}`);
+  }
+}

@@ -319,6 +319,15 @@ export const ERROR_MESSAGES = {
     `Command injection attempt detected in input: "${input}". Operation blocked.`,
     
   /**
+   * Error message for malformed arguments
+   * @param argument - The malformed argument
+   * @param index - The index of the argument in the array
+   * @returns Formatted error message with argument details
+   */
+  MALFORMED_ARGUMENT: (argument: string, index: number) =>
+    `Malformed argument at index ${index}: "${argument}". Arguments must be valid strings.`,
+    
+  /**
    * Error message for unsafe file operations
    * @param operation - The file operation that was blocked
    * @param path - The unsafe path for the operation
