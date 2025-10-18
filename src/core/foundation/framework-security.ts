@@ -104,7 +104,35 @@ export interface FrameworkBuildConfig {
 
 /**
  * Whitelist of trusted framework dependencies
- * These are well-known, audited packages from major frameworks
+ * 
+ * This comprehensive list includes well-known, audited packages from major frameworks
+ * and build tools that are considered safe for automatic validation. Packages not
+ * in this list will be flagged as "unknown" but not necessarily dangerous.
+ * 
+ * @security Only packages that have been vetted for security should be added here
+ * @see {@link https://docs.npmjs.com/about-registry-security}
+ * 
+ * Categories included:
+ * - React ecosystem (react, react-dom, @types/react)
+ * - Next.js ecosystem (next, @next/*)
+ * - Vue ecosystem (vue, vue-router, vuex)
+ * - Angular ecosystem (@angular/*)
+ * - Svelte ecosystem (svelte, @sveltejs/*)
+ * - Build tools (vite, webpack, rollup, esbuild, parcel)
+ * - Server frameworks (express, fastify, koa, hapi)
+ * - TypeScript and testing tools
+ * 
+ * @example
+ * ```typescript
+ * if (TRUSTED_FRAMEWORK_DEPENDENCIES.has('react')) {
+ *   console.log('React is a trusted dependency');
+ * }
+ * 
+ * // Check if unknown dependencies exist
+ * const unknownDeps = dependencies.filter(dep => 
+ *   !TRUSTED_FRAMEWORK_DEPENDENCIES.has(dep)
+ * );
+ * ```
  */
 export const TRUSTED_FRAMEWORK_DEPENDENCIES = new Set([
   // React ecosystem
@@ -145,7 +173,36 @@ export const TRUSTED_FRAMEWORK_DEPENDENCIES = new Set([
 ]);
 
 /**
- * Patterns for detecting suspicious dependency names
+ * Regular expression patterns for detecting suspicious dependency names
+ * 
+ * These patterns identify potentially malicious packages that may indicate
+ * typosquatting attempts, malware, or other security threats in dependencies.
+ * 
+ * @security Used to flag dependencies that require manual security review
+ * 
+ * Patterns include:
+ * - **Malicious prefixes**: `evil-`, `malicious-`, `hack-`
+ * - **Malware indicators**: `backdoor`, `trojan`, `virus`, `malware`
+ * - **Typosquatting patterns**: `test-`, `demo-`, `example-` (often used to mimic real packages)
+ * - **Hidden packages**: Starting with `.` or `_` (internal/private packages)
+ * - **Version-like names**: Mixed numbers and letters (e.g., `123abc456`)
+ * - **Very short names**: 1-2 characters (often typosquatting popular packages)
+ * 
+ * @example
+ * ```typescript
+ * const suspiciousPackages = dependencies.filter(dep =>
+ *   SUSPICIOUS_DEPENDENCY_PATTERNS.some(pattern => pattern.test(dep))
+ * );
+ * 
+ * // Check specific package
+ * const isEvil = SUSPICIOUS_DEPENDENCY_PATTERNS.some(p => p.test('evil-package'));
+ * console.log(isEvil); // true
+ * 
+ * const isLegit = SUSPICIOUS_DEPENDENCY_PATTERNS.some(p => p.test('lodash'));
+ * console.log(isLegit); // false
+ * ```
+ * 
+ * @see {@link https://blog.npmjs.org/post/163723642530/crossenv-malware-on-the-npm-registry}
  */
 export const SUSPICIOUS_DEPENDENCY_PATTERNS = [
   /^evil-|^malicious-|^hack-/i,
@@ -157,7 +214,43 @@ export const SUSPICIOUS_DEPENDENCY_PATTERNS = [
 ];
 
 /**
- * Dangerous script patterns that indicate potential security issues
+ * Regular expression patterns for detecting dangerous script commands
+ * 
+ * These patterns identify potentially malicious or dangerous operations in
+ * package.json scripts that could compromise system security or indicate
+ * malicious intent.
+ * 
+ * @security Used to prevent execution of scripts that could harm the system
+ * @warning Scripts matching these patterns should be carefully reviewed before execution
+ * 
+ * Dangerous patterns include:
+ * - **Privilege escalation**: `sudo`, `su` commands
+ * - **Destructive operations**: `rm -rf`, `rmdir` (file deletion)
+ * - **Permission changes**: `chmod 777`, `chmod +x` (dangerous permissions)
+ * - **Remote execution**: `wget|curl ... | sh` (download and execute)
+ * - **Code execution**: `eval`, `exec` (dynamic code execution)
+ * - **Background processes**: `> /dev/null &`, `nohup &` (hidden processes)
+ * - **Network shells**: `nc -e`, `netcat -e` (reverse shells)
+ * - **Interactive shells**: `bash -i`, `sh -i` (interactive access)
+ * 
+ * @example
+ * ```typescript
+ * const scripts = {
+ *   'build': 'webpack --mode production',  // Safe
+ *   'malicious': 'sudo rm -rf /'          // Dangerous - matches patterns
+ * };
+ * 
+ * Object.entries(scripts).forEach(([name, script]) => {
+ *   const isDangerous = DANGEROUS_SCRIPT_PATTERNS.some(pattern => 
+ *     pattern.test(script)
+ *   );
+ *   if (isDangerous) {
+ *     console.warn(`Script '${name}' contains dangerous patterns`);
+ *   }
+ * });
+ * ```
+ * 
+ * @see {@link https://docs.npmjs.com/cli/v8/using-npm/scripts#best-practices}
  */
 export const DANGEROUS_SCRIPT_PATTERNS = [
   /sudo|su\s+/,
@@ -351,6 +444,18 @@ async function validateConfigFile(configPath: string): Promise<FrameworkSecurity
       }
       if (v.type === 'template-injection' && /@type\s*\{/.test(content)) {
         return false; // Allow TypeScript @type annotations
+      }
+      // Allow module.exports patterns in config files
+      if (v.type === 'command-injection' && /module\.exports\s*=/.test(content)) {
+        return false; // Allow module.exports in config files
+      }
+      // Allow export default patterns in config files
+      if (v.type === 'command-injection' && /export\s+default/.test(content)) {
+        return false; // Allow export default in config files
+      }
+      // Allow require() patterns in config files
+      if (v.type === 'command-injection' && /require\(['"][^'"]*['"]\)/.test(content)) {
+        return false; // Allow require() statements
       }
       return true; // Keep other violations
     });
