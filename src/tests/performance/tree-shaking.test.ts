@@ -16,7 +16,7 @@ const EXPECTED_EXPORTS = {
     securityPatterns: ['PATH_TRAVERSAL_PATTERNS', 'COMMAND_INJECTION_PATTERNS', 'SCRIPT_INJECTION_PATTERNS', 'PRIVILEGE_ESCALATION_PATTERNS', 'FILE_SYSTEM_PATTERNS', 'NETWORK_PATTERNS', 'INPUT_VALIDATION_PATTERNS', 'analyzeInputSecurity', 'isPathSafe', 'isCommandSafe', 'isProjectNameSafe'],
     
     // Foundation - Input Validation (new in Task 1.2.1)
-    inputValidation: ['validateProjectName', 'validatePackageManager', 'sanitizeCommandArgs', 'sanitizePath', 'validateInput', 'DEFAULT_VALIDATION_CONFIG', 'TRUSTED_PACKAGE_MANAGERS', 'PROJECT_NAME_PATTERNS'],
+    inputValidation: ['validateProjectName', 'validatePackageManager', 'sanitizeCommandArgs', 'sanitizePath', 'validateInput', 'DEFAULT_VALIDATION_CONFIG', 'TRUSTED_PACKAGE_MANAGERS', 'PROJECT_NAME_PATTERNS', 'SHELL_METACHARACTERS'],
     
     // CLI creation (from actual exports)
     cli: ['Command', 'createCLI', 'registerBuiltinCommands', 'registerCommands', 'validateErrorHandler', 'executeErrorHandlerSafely', 'ErrorHandlerValidationError', 'sanitizeErrorMessage', 'sanitizeStackTrace', 'sanitizeErrorObject', 'truncateErrorMessage', 'getObjectMemorySize', 'isDebugMode', 'shouldShowDetailedErrors', 'formatErrorForDisplay'],
@@ -70,7 +70,7 @@ describe('Tree-shaking Tests', () => {
           } else if (category === 'constants') {
             // Constants can be strings, arrays, objects - just check they're defined
             expect(coreModule[funcName], `${funcName} should be a defined constant`).toBeDefined();
-          } else if (funcName.startsWith('ERROR_') || funcName.endsWith('_PATTERNS') || funcName.endsWith('_COMMANDS') || funcName.endsWith('_CONFIG') || funcName === 'BRANDING' || funcName.includes('_DEPENDENCIES') || funcName.startsWith('TRUSTED_') || funcName.startsWith('SUSPICIOUS_') || funcName.startsWith('DANGEROUS_')) {
+          } else if (funcName.startsWith('ERROR_') || funcName.endsWith('_PATTERNS') || funcName.endsWith('_COMMANDS') || funcName.endsWith('_CONFIG') || funcName === 'BRANDING' || funcName.includes('_DEPENDENCIES') || funcName.startsWith('TRUSTED_') || funcName.startsWith('SUSPICIOUS_') || funcName.startsWith('DANGEROUS_') || funcName.endsWith('_METACHARACTERS')) {
             // Constants handling for backwards compatibility and new framework security constants
             expect(coreModule[funcName], `${funcName} should be a defined constant`).toBeDefined();
           } else {

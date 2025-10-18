@@ -19,7 +19,21 @@ import {
 import { ERROR_MESSAGES } from './constants.js';
 
 /**
- * Input validation violation details
+ * Input validation violation details with security classification
+ * 
+ * Represents a security violation detected during input validation,
+ * including the type of attack, severity level, and remediation suggestions.
+ * 
+ * @example
+ * ```typescript
+ * const violation: InputValidationViolation = {
+ *   type: 'command-injection',
+ *   severity: 'critical',
+ *   description: 'Shell metacharacters detected in command argument',
+ *   input: 'build; rm -rf /',
+ *   suggestion: 'Remove shell metacharacters from command arguments'
+ * };
+ * ```
  */
 export interface InputValidationViolation {
   type: 'path-traversal' | 'command-injection' | 'script-injection' | 'privilege-escalation' | 'malformed-input' | 'suspicious-pattern';
@@ -30,7 +44,27 @@ export interface InputValidationViolation {
 }
 
 /**
- * Result of input validation with security analysis
+ * Comprehensive input validation result with security analysis
+ * 
+ * Contains validation status, sanitized input, detailed violation information,
+ * remediation suggestions, and quantitative risk assessment.
+ * 
+ * @example
+ * ```typescript
+ * const result: ValidationResult = {
+ *   isValid: false,
+ *   sanitized: 'safe-project-name',
+ *   violations: [{
+ *     type: 'malformed-input',
+ *     severity: 'medium',
+ *     description: 'Project name contains uppercase letters',
+ *     input: 'MyProject',
+ *     suggestion: 'Use lowercase letters only'
+ *   }],
+ *   suggestions: ['Use lowercase letters only'],
+ *   riskScore: 25
+ * };
+ * ```
  */
 export interface ValidationResult {
   /** Whether the input passed validation */
@@ -46,7 +80,30 @@ export interface ValidationResult {
 }
 
 /**
- * Configuration for input validation behavior
+ * Configuration options for customizing input validation behavior
+ * 
+ * Allows fine-tuning of validation rules, security strictness, length limits,
+ * sanitization behavior, and user guidance features.
+ * 
+ * @example
+ * ```typescript
+ * // Strict security configuration
+ * const strictConfig: ValidationConfig = {
+ *   strictMode: true,
+ *   maxLength: 100,
+ *   autoSanitize: false,
+ *   provideSuggestions: true,
+ *   customPatterns: [/^[a-z-]+$/]
+ * };
+ * 
+ * // Lenient configuration for development
+ * const lenientConfig: ValidationConfig = {
+ *   strictMode: false,
+ *   maxLength: 500,
+ *   autoSanitize: true,
+ *   provideSuggestions: true
+ * };
+ * ```
  */
 export interface ValidationConfig {
   /** Whether to allow potentially risky but legitimate inputs */
@@ -62,7 +119,22 @@ export interface ValidationConfig {
 }
 
 /**
- * Default validation configuration
+ * Default validation configuration for all input validation functions
+ * 
+ * Provides secure defaults with strict validation enabled, reasonable length limits,
+ * automatic sanitization, and helpful suggestions for invalid inputs.
+ * 
+ * @example
+ * ```typescript
+ * // Use default configuration
+ * const result = validateProjectName('my-project');
+ * 
+ * // Override specific settings
+ * const custom = validateProjectName('my-project', { 
+ *   strictMode: false,
+ *   maxLength: 100 
+ * });
+ * ```
  */
 export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
   strictMode: true,
@@ -72,8 +144,25 @@ export const DEFAULT_VALIDATION_CONFIG: ValidationConfig = {
 };
 
 /**
- * Whitelist of trusted package managers
- * These are well-known, widely-used package managers that are safe to use
+ * Whitelist of trusted package managers for security validation
+ * 
+ * Contains well-known, widely-used package managers that have been vetted
+ * for security and are safe to use. Only package managers in this set
+ * will be accepted by the validation functions.
+ * 
+ * Includes: npm, pnpm, yarn, bun, deno, cargo (Rust), pip (Python),
+ * composer (PHP), maven (Java), gradle (Java/Android)
+ * 
+ * @example
+ * ```typescript
+ * // Check if package manager is trusted
+ * if (TRUSTED_PACKAGE_MANAGERS.has('npm')) {
+ *   console.log('npm is trusted');
+ * }
+ * 
+ * // Get all trusted package managers
+ * const trusted = Array.from(TRUSTED_PACKAGE_MANAGERS);
+ * ```
  */
 export const TRUSTED_PACKAGE_MANAGERS = new Set([
   'npm',
@@ -89,8 +178,30 @@ export const TRUSTED_PACKAGE_MANAGERS = new Set([
 ]);
 
 /**
- * Strict project name validation patterns
- * Based on npm package naming rules with additional security considerations
+ * Project name validation patterns with security considerations
+ * 
+ * Defines strict validation rules for project names based on npm package naming
+ * conventions with additional security constraints to prevent injection attacks
+ * and ensure cross-platform compatibility.
+ * 
+ * Rules:
+ * - Only lowercase letters, numbers, hyphens, dots, underscores
+ * - Cannot start or end with dot or hyphen
+ * - No consecutive special characters
+ * - Length between 2-214 characters (npm limits)
+ * 
+ * @example
+ * ```typescript
+ * // Valid project names
+ * 'my-project'     // ✅ Valid
+ * 'my.package'     // ✅ Valid  
+ * 'project123'     // ✅ Valid
+ * 
+ * // Invalid project names
+ * '-project'       // ❌ Starts with hyphen
+ * 'Project'        // ❌ Uppercase letters
+ * 'my--project'    // ❌ Consecutive hyphens
+ * ```
  */
 export const PROJECT_NAME_PATTERNS = {
   // Valid characters: lowercase letters, numbers, hyphens, dots, underscores
@@ -108,7 +219,26 @@ export const PROJECT_NAME_PATTERNS = {
 };
 
 /**
- * Shell metacharacters that need escaping or removal
+ * Shell metacharacters that pose security risks in command arguments
+ * 
+ * Contains characters that have special meaning in shell environments and
+ * could be exploited for command injection attacks. These characters are
+ * escaped or removed during argument sanitization.
+ * 
+ * Includes: pipes (|), redirects (<>), logic operators (&;), substitution ($`),
+ * wildcards (*?), brackets ([]{()}), quotes ("'), and control characters.
+ * 
+ * @example
+ * ```typescript
+ * // Check if argument contains dangerous characters
+ * const hasMetaChar = SHELL_METACHARACTERS.some(char => 
+ *   userInput.includes(char)
+ * );
+ * 
+ * // Used internally by sanitizeCommandArgs()
+ * const clean = sanitizeCommandArgs(['build', 'file;rm -rf /']);
+ * // Returns: ['build', 'file'] - injection removed
+ * ```
  */
 export const SHELL_METACHARACTERS = [
   '|', '&', ';', '(', ')', '<', '>', ' ', '\t', '\n', '\r',
@@ -670,10 +800,39 @@ export function sanitizePath(
 /**
  * Comprehensive input validation function that applies all security checks
  * 
- * @param input - Input to validate
- * @param type - Type of input validation to apply
- * @param config - Validation configuration
+ * Universal validation function that automatically applies the appropriate
+ * validation rules based on input type. Routes to specialized validators
+ * with consistent security analysis and violation reporting.
+ * 
+ * @param input - Input string to validate
+ * @param type - Type of input validation to apply ('project-name' | 'package-manager' | 'file-path' | 'command-arg')
+ * @param config - Validation configuration options (optional)
  * @returns ValidationResult with comprehensive security analysis
+ * 
+ * @example
+ * ```typescript
+ * // Project name validation
+ * const projectResult = validateInput('my-awesome-app', 'project-name');
+ * console.log(projectResult.isValid); // true
+ * 
+ * // Package manager validation
+ * const pmResult = validateInput('npm', 'package-manager');
+ * console.log(pmResult.isValid); // true
+ * 
+ * // File path validation
+ * const pathResult = validateInput('./src/components', 'file-path');
+ * console.log(pathResult.isValid); // true
+ * 
+ * // Command argument validation
+ * const argResult = validateInput('--output', 'command-arg');
+ * console.log(argResult.isValid); // true
+ * 
+ * // Security violation detection
+ * const malicious = validateInput('../../../etc/passwd', 'file-path');
+ * console.log(malicious.violations); // Path traversal violation
+ * ```
+ * 
+ * @throws {Error} For invalid validation types
  */
 export function validateInput(
   input: string,

@@ -88,6 +88,7 @@ export {
   DEFAULT_VALIDATION_CONFIG,
   TRUSTED_PACKAGE_MANAGERS,
   PROJECT_NAME_PATTERNS,
+  SHELL_METACHARACTERS,
   type ValidationConfig,
   type ValidationResult,
   type InputValidationViolation

