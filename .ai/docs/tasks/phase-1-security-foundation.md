@@ -97,7 +97,7 @@ export function isProjectNameSafe(name: string): boolean;
   - 23 additional comprehensive edge case tests
 
 #### **1.1.3: Framework Detection Patterns**
-- **Status**: 🔄 **PENDING** - Moved to Task 1.2
+- **Status**: 🔄 **PENDING**
 - **Enhancement**: Expand existing patterns with security considerations
 - **Security**: Validate framework configs before trusting them
 - **Validation**: Ensure framework detection doesn't enable attacks

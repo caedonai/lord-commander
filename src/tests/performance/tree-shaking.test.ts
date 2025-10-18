@@ -6,8 +6,14 @@ const EXPECTED_EXPORTS = {
     // Foundation - Constants (from actual exports)
     constants: ['BRANDING', 'CLI_CONFIG_PATHS', 'DEFAULT_IGNORE_PATTERNS', 'DEFAULT_PORTS', 'ERROR_MESSAGES', 'FILE_EXTENSIONS', 'FRAMEWORK_PATTERNS', 'GIT_PATTERNS', 'PACKAGE_MANAGER_COMMANDS', 'TELEMETRY_CONFIG', 'TEMP_DIR_PREFIX'],
     
+    // Foundation - Framework Security (new in Task 1.1.3)
+    frameworkSecurity: ['detectFrameworkSecurely', 'getFrameworkSecurityRecommendations', 'isFrameworkSafe', 'TRUSTED_FRAMEWORK_DEPENDENCIES', 'SUSPICIOUS_DEPENDENCY_PATTERNS', 'DANGEROUS_SCRIPT_PATTERNS'],
+    
     // Foundation - Errors (from actual exports)
     errors: ['CLIError', 'ConfigurationError', 'ERROR_RECOVERY_SUGGESTIONS', 'FileSystemError', 'NetworkError', 'ProcessError', 'UserCancelledError', 'ValidationError', 'formatError', 'getRecoverySuggestion', 'gracefulExit', 'handleCancel', 'isCancel', 'setupGlobalErrorHandlers', 'withErrorHandling'],
+    
+    // Foundation - Security Patterns (from Task 1.1.2)
+    securityPatterns: ['PATH_TRAVERSAL_PATTERNS', 'COMMAND_INJECTION_PATTERNS', 'SCRIPT_INJECTION_PATTERNS', 'PRIVILEGE_ESCALATION_PATTERNS', 'FILE_SYSTEM_PATTERNS', 'NETWORK_PATTERNS', 'INPUT_VALIDATION_PATTERNS', 'analyzeInputSecurity', 'isPathSafe', 'isCommandSafe', 'isProjectNameSafe'],
     
     // CLI creation (from actual exports)
     cli: ['Command', 'createCLI', 'registerBuiltinCommands', 'registerCommands', 'validateErrorHandler', 'executeErrorHandlerSafely', 'ErrorHandlerValidationError', 'sanitizeErrorMessage', 'sanitizeStackTrace', 'sanitizeErrorObject', 'truncateErrorMessage', 'getObjectMemorySize', 'isDebugMode', 'shouldShowDetailedErrors', 'formatErrorForDisplay'],
@@ -61,8 +67,8 @@ describe('Tree-shaking Tests', () => {
           } else if (category === 'constants') {
             // Constants can be strings, arrays, objects - just check they're defined
             expect(coreModule[funcName], `${funcName} should be a defined constant`).toBeDefined();
-          } else if (funcName.startsWith('ERROR_') || funcName.endsWith('_PATTERNS') || funcName.endsWith('_COMMANDS') || funcName.endsWith('_CONFIG') || funcName === 'BRANDING') {
-            // Legacy constants handling for backwards compatibility
+          } else if (funcName.startsWith('ERROR_') || funcName.endsWith('_PATTERNS') || funcName.endsWith('_COMMANDS') || funcName.endsWith('_CONFIG') || funcName === 'BRANDING' || funcName.includes('_DEPENDENCIES') || funcName.startsWith('TRUSTED_') || funcName.startsWith('SUSPICIOUS_') || funcName.startsWith('DANGEROUS_')) {
+            // Constants handling for backwards compatibility and new framework security constants
             expect(coreModule[funcName], `${funcName} should be a defined constant`).toBeDefined();
           } else {
             expect(typeof coreModule[funcName], `${funcName} should be a function`).toBe('function');

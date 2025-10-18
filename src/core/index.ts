@@ -46,6 +46,38 @@ export {
   setupGlobalErrorHandlers
 } from './foundation/errors.js';
 
+// Security patterns and validation (Task 1.1.2)
+export {
+  PATH_TRAVERSAL_PATTERNS,
+  COMMAND_INJECTION_PATTERNS,
+  SCRIPT_INJECTION_PATTERNS,
+  PRIVILEGE_ESCALATION_PATTERNS,
+  FILE_SYSTEM_PATTERNS,
+  NETWORK_PATTERNS,
+  INPUT_VALIDATION_PATTERNS,
+  analyzeInputSecurity,
+  isPathSafe,
+  isCommandSafe,
+  isProjectNameSafe,
+  type SecurityAnalysisResult,
+  type SecurityViolation
+} from './foundation/security-patterns.js';
+
+// Framework security detection (Task 1.1.3)
+export {
+  detectFrameworkSecurely,
+  getFrameworkSecurityRecommendations,
+  isFrameworkSafe,
+  TRUSTED_FRAMEWORK_DEPENDENCIES,
+  SUSPICIOUS_DEPENDENCY_PATTERNS,
+  DANGEROUS_SCRIPT_PATTERNS,
+  type SecureFrameworkInfo,
+  type FrameworkSecurityResult,
+  type FrameworkSecurityViolation,
+  type FrameworkDependencyInfo,
+  type FrameworkBuildConfig
+} from './foundation/framework-security.js';
+
 // User interface utilities
 export { 
   createLogger,
