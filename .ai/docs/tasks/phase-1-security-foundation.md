@@ -392,7 +392,7 @@ export const SECURITY_TEST_SUITE: SecurityTestCase[];
 
 ### **External Dependencies**
 - **Commander.js**: Foundation for command parsing
-- **Execa**: Secure process execution (Phase 2 dependency)
+- **Execa**: Replaces exec for more secure process execution (Phase 2 dependency)
 - **Vitest**: Testing framework integration
 - **Node.js APIs**: File system, process, path modules
 
