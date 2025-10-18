@@ -326,8 +326,8 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
       it('should apply message length limits', () => {
         const longMessage = 'A'.repeat(1000);
         const result = sanitizeErrorMessage(longMessage, { maxMessageLength: 100 });
-        expect(result).toHaveLength(103); // 100 + "...[truncated for security]".length
-        expect(result).toMatch(/\.\.\.\[truncated for security\]$/);
+        expect(result).toHaveLength(100); // Total length limited to maxMessageLength
+        expect(result).toMatch(/\.\.\. \[truncated for security\]$/);
       });
     });
 
@@ -573,7 +573,8 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
     it('should handle large error messages efficiently', () => {
       const largeMessage = 'Error: '.repeat(10000) + 'password=secret';
       const start = Date.now();
-      const result = sanitizeErrorMessage(largeMessage);
+      // Use higher max length for performance test to ensure pattern isn't truncated
+      const result = sanitizeErrorMessage(largeMessage, { maxMessageLength: 100000 });
       const duration = Date.now() - start;
       
       expect(duration).toBeLessThan(100); // Should complete within 100ms

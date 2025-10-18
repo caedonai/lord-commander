@@ -6,12 +6,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { 
   createCLI,
+  formatErrorForDisplay
+} from '../../core/createCLI.js';
+import { 
   sanitizeErrorMessage,
   sanitizeStackTrace,
   isDebugMode,
-  shouldShowDetailedErrors,
-  formatErrorForDisplay
-} from '../../core/createCLI.js';
+  shouldShowDetailedErrors
+} from '../../core/foundation/error-sanitization.js';
 
 describe('Error Message Content Disclosure Security', () => {
   let originalNodeEnv: string | undefined;

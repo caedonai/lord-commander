@@ -205,15 +205,7 @@ export async function executeErrorHandlerSafely(
     }
 }
 
-/**
- * Check if debug mode is enabled via environment variables or CLI arguments
- * 
- * @deprecated Use enhanced function from foundation/error-sanitization.ts
- * @returns true if debug mode is enabled, false otherwise
- */
-function isDebugMode(): boolean {
-    return enhancedIsDebugMode();
-}
+
 
 /**
  * Format error for user-friendly display with appropriate detail level
@@ -223,16 +215,16 @@ function formatErrorForDisplay(error: Error, options: { showStack?: boolean } = 
     const { showStack = false } = options;
     
     // Security: Use shouldShowDetailedErrors for production safety
-    const showDetails = shouldShowDetailedErrors();
+    const showDetails = enhancedShouldShowDetailedErrors();
     const actualShowStack = showStack && showDetails;
     
     // Sanitize the error message
-    const sanitizedMessage = showDetails ? error.message : sanitizeErrorMessage(error.message);
+    const sanitizedMessage = showDetails ? error.message : enhancedSanitizeErrorMessage(error.message);
     
     // Create sanitized error for display
     const displayError = new Error(sanitizedMessage);
     if (actualShowStack && error.stack) {
-        displayError.stack = sanitizeStackTrace(error.stack);
+        displayError.stack = enhancedSanitizeStackTrace(error.stack);
     }
     
     // Use the formatError utility but with security-conscious defaults
@@ -341,7 +333,7 @@ function sanitizeErrorObject(error: Error, securityConfig = DEFAULT_SECURITY_CON
     }
     
     // Create a new error with sanitized message (handles truncation internally)
-    const sanitizedMessage = sanitizeErrorMessage(error.message || '');
+    const sanitizedMessage = enhancedSanitizeErrorMessage(error.message || '');
     const sanitizedError = new Error(sanitizedMessage);
     sanitizedError.name = error.name;
     
@@ -349,7 +341,7 @@ function sanitizeErrorObject(error: Error, securityConfig = DEFAULT_SECURITY_CON
     if (error.stack) {
         const stackLines = error.stack.split('\n');
         const limitedStack = stackLines.slice(0, securityConfig.maxStackTraceDepth);
-        sanitizedError.stack = sanitizeStackTrace(limitedStack.join('\n'));
+        sanitizedError.stack = enhancedSanitizeStackTrace(limitedStack.join('\n'));
     } else {
         // If original error had no stack, remove the auto-generated stack
         Object.defineProperty(sanitizedError, 'stack', {
@@ -384,37 +376,7 @@ import {
     isDebugMode as enhancedIsDebugMode
 } from './foundation/error-sanitization.js';
 
-/**
- * Sanitize error message to remove potentially sensitive information
- * 
- * @deprecated Use enhanced sanitization from foundation/error-sanitization.ts
- * @param message - The error message to sanitize
- * @returns Sanitized message safe for production use
- */
-function sanitizeErrorMessage(message: string): string {
-    return enhancedSanitizeErrorMessage(message);
-}
 
-/**
- * Sanitize stack trace to remove sensitive file paths and internal details
- * 
- * @deprecated Use enhanced sanitization from foundation/error-sanitization.ts
- * @param stack - The stack trace string to sanitize
- * @returns Sanitized stack trace safe for production use
- */
-function sanitizeStackTrace(stack: string): string {
-    return enhancedSanitizeStackTrace(stack);
-}
-
-/**
- * Check if we should show detailed error information
- * 
- * @deprecated Use enhanced function from foundation/error-sanitization.ts
- * @returns true if detailed errors should be shown, false otherwise
- */
-function shouldShowDetailedErrors(): boolean {
-    return enhancedShouldShowDetailedErrors();
-}
 
 // Re-export log injection protection functions from foundation module
 export { sanitizeLogOutput, sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig } from './foundation/log-security.js';
@@ -532,14 +494,14 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
                     // If custom error handler throws, fall back to default behavior with enhanced logging
                     logger.error('Custom error handler failed:');
                     const handlerErr = handlerError instanceof Error ? handlerError : new Error(String(handlerError));
-                    logger.error(formatErrorForDisplay(handlerErr, { showStack: isDebugMode() }));
+                    logger.error(formatErrorForDisplay(handlerErr, { showStack: enhancedIsDebugMode() }));
                     logger.error('\nOriginal command error:');
-                    logger.error(formatErrorForDisplay(error, { showStack: isDebugMode() }));
+                    logger.error(formatErrorForDisplay(error, { showStack: enhancedIsDebugMode() }));
                     process.exit(1);
                 }
             } else {
                 // Enhanced default error handling with security-conscious approach
-                const showDetails = shouldShowDetailedErrors();
+                const showDetails = enhancedShouldShowDetailedErrors();
                 
                 if (showDetails) {
                     // Development: Show detailed information
@@ -547,7 +509,7 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
                     logger.error(formatErrorForDisplay(error, { showStack: true }));
                 } else {
                     // Production: Show minimal, sanitized information
-                    const sanitizedMessage = sanitizeErrorMessage(error.message);
+                    const sanitizedMessage = enhancedSanitizeErrorMessage(error.message);
                     logger.error(`Application error: ${sanitizedMessage}`);
                     logger.error('Please contact support for assistance.');
                 }
@@ -639,20 +601,20 @@ async function handleAutocompleteSetup(program: Command, options: CreateCliOptio
     (program as any)._autocompleteContext = analyzeProgram(program);
 }
 
-// Export sanitization functions for testing and external use
+// Export memory protection and display functions
 export {
-    sanitizeErrorMessage,
-    sanitizeStackTrace,
     sanitizeErrorObject,
     truncateErrorMessage,
     getObjectMemorySize,
-    isDebugMode,
-    shouldShowDetailedErrors,
     formatErrorForDisplay
 };
 
 // Re-export enhanced error sanitization functions from foundation module
 export { 
+    sanitizeErrorMessage,
+    sanitizeStackTrace,
+    isDebugMode,
+    shouldShowDetailedErrors,
     sanitizeErrorForProduction,
     createEnvironmentConfig,
     type ErrorSanitizationConfig,

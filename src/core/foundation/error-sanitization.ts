@@ -86,14 +86,16 @@ export const DEFAULT_ERROR_SANITIZATION_CONFIG: ErrorSanitizationConfig = {
 const SECURITY_PATTERNS = {
   // Password and authentication patterns
   passwords: [
-    // Direct password patterns
-    /password[=:]\s*[^\s,;}]+/gi,
-    /passwd[=:]\s*[^\s,;}]+/gi,
-    /pwd[=:]\s*[^\s,;}]+/gi,
-    /pass[=:]\s*[^\s,;}]+/gi,
+    // Direct password patterns (include variants with numbers/underscores)
+    /password[0-9_]*[=:]\s*[^\s,;}]+/gi,
+    /passwd[0-9_]*[=:]\s*[^\s,;}]+/gi,
+    /pwd[0-9_]*[=:]\s*[^\s,;}]+/gi,
+    /pass[0-9_]*[=:]\s*[^\s,;}]+/gi,
+    // Secret patterns (both with and without key suffix, include variants with numbers)
+    /secret[0-9_]*[=:]\s*[^\s,;}]+/gi,
+    /secret[_-]?key[0-9_]*[=:]\s*[^\s,;}]+/gi,
     // Private keys and certificates
     /private[_-]?key[=:]\s*[^\s,;}]+/gi,
-    /secret[_-]?key[=:]\s*[^\s,;}]+/gi,
     /cert[_-]?key[=:]\s*[^\s,;}]+/gi,
     // Authentication tokens
     /auth[_-]?token[=:]\s*[^\s,;}]+/gi,
@@ -111,13 +113,16 @@ const SECURITY_PATTERNS = {
     /TOKEN[=:-][^\s,;}]+/g,
     /SECRET[=:-][^\s,;}]+/g,
     /ACCESS_KEY[=:-][^\s,;}]+/g,
-    // Case-insensitive variants
-    /api[_-]?key[=:]\s*[^\s,;}]+/gi,
-    /access[_-]?key[=:]\s*[^\s,;}]+/gi,
-    /secret[_-]?access[_-]?key[=:]\s*[^\s,;}]+/gi,
+    // Case-insensitive variants (include variants with numbers)
+    /api[_-]?key[0-9_]*[=:]\s*[^\s,;}]+/gi,
+    /access[_-]?key[0-9_]*[=:]\s*[^\s,;}]+/gi,
+    /secret[_-]?access[_-]?key[0-9_]*[=:]\s*[^\s,;}]+/gi,
+    // Simple token patterns (must be before more specific ones, avoid already sanitized values)
+    /token[=:]\s*(?!\*\*\*)[^\s,;}]+/gi,
     // Bearer tokens
     /bearer[=:]\s*[^\s,;}]+/gi,
     /authorization[=:]\s*bearer\s+[^\s,;}]+/gi,
+    /authorization[=:]\s*Basic\s+[^\s,;}]+/gi,
     // OAuth and JWT tokens
     /access[_-]?token[=:]\s*[^\s,;}]+/gi,
     /refresh[_-]?token[=:]\s*[^\s,;}]+/gi,
@@ -136,24 +141,29 @@ const SECURITY_PATTERNS = {
   databaseUrls: [
     // Connection strings with credentials
     /(mongodb|mysql|postgres|postgresql|redis|sqlite|oracle|mssql):\/\/[^\s@]+:[^\s@]+@[^\s,;}]+/gi,
-    // Full connection strings (must have equals or colon)
+    // Full connection strings (must have equals or colon, allow semicolons in values)
     /connection[_-]?string[=:]\s*[^\s,}]+/gi,
-    /database[_-]?url[=:]\s*[^\s,}]+/gi,
-    /db[_-]?url[=:]\s*[^\s,}]+/gi,
+    /database[_-]?url[=:]\s*[^\s,;}]+/gi,
+    /db[_-]?url[=:]\s*[^\s,;}]+/gi,
     // Database credentials (must have equals or colon)
-    /db[_-]?password[=:]\s*[^\s,}]+/gi,
-    /database[_-]?password[=:]\s*[^\s,}]+/gi,
-    /db[_-]?user[=:]\s*[^\s,}]+/gi,
-    /database[_-]?user[=:]\s*[^\s,}]+/gi,
+    /database[=:]\s*[^\s,;}]+/gi,
+    /db[_-]?password[=:]\s*[^\s,;}]+/gi,
+    /database[_-]?password[=:]\s*[^\s,;}]+/gi,
+    /db[_-]?user[=:]\s*[^\s,;}]+/gi,
+    /database[_-]?user[=:]\s*[^\s,;}]+/gi,
+    // Network info patterns (host, user, port)
+    /host[=:]\s*[^\s,;}]+/gi,
+    /user[=:]\s*[^\s,;}]+/gi,
+    /port[=:]\s*[^\s,;}]+/gi,
   ],
 
   // File paths that might contain sensitive information
   filePaths: [
-    // User directories with potential sensitive files
-    /\/Users\/[^\/\s]+\/(?:Desktop|Documents|Downloads|\.ssh|\.aws|\.config)[^\/\s]*(?:\/[^\s]*)?/g,
-    /C:[\/\\]Users[\/\\][^\/\\\s]+[\/\\](?:Desktop|Documents|Downloads|\.ssh|\.aws|\.config)[^\/\\\s]*(?:[\/\\][^\s]*)?/g,
-    /\/home\/[^\/\s]+\/(?:Desktop|Documents|Downloads|\.ssh|\.aws|\.config)[^\/\s]*(?:\/[^\s]*)?/g,
-    // Config and credential files
+    // User directories (must be first to handle before config files)
+    /\/Users\/[^\/\s]+/g,
+    /C:[\\\/]+Users[\\\/]+[^\\\/\s]+/g,
+    /\/home\/[^\/\s]+/g,
+    // Config and credential files (will only match if not already handled by user dir patterns)
     /[^\/\\\s]*(?:config|credential|secret|key|token|password)[^\/\\\s]*\.(?:json|yaml|yml|toml|ini|env|conf)/gi,
     // Hidden files and directories that might contain secrets
     /\/\.[^\/\s]*(?:secret|key|token|credential|auth)[^\/\s]*/gi,
@@ -212,7 +222,7 @@ const SECURITY_PATTERNS = {
     /javascript:[^;\s]*/gi,
     /alert\s*\([^)]*\)/gi,
     /eval\s*\([^)]*\)/gi,
-    /on\w+\s*=\s*[^>\s]*/gi,
+    /\bon(click|load|error|focus|blur|change|submit|keydown|keyup|mouseover|mouseout)\s*=\s*[^>\s]*/gi,
     // Control characters
     /[\x00-\x1F\x7F]/g,
     // ANSI escape sequences
@@ -258,15 +268,17 @@ export function sanitizeErrorMessage(
   // Merge with defaults
   const fullConfig = { ...DEFAULT_ERROR_SANITIZATION_CONFIG, ...config };
   
-  // Apply length limits first (prevent DoS)  
-  const truncationSuffix = '...[truncated for security]';
-  let sanitized = message.length > fullConfig.maxMessageLength 
-    ? message.substring(0, fullConfig.maxMessageLength - 24) + truncationSuffix
-    : message;
+  // Start with the original message
+  let sanitized = message;
   
   // Remove injection patterns first (highest priority)
   for (const pattern of SECURITY_PATTERNS.injectionPatterns) {
     sanitized = sanitized.replace(pattern, '');
+  }
+  
+  // Apply custom patterns first (they can be more specific than built-in patterns)
+  for (const pattern of fullConfig.customPatterns) {
+    sanitized = sanitized.replace(pattern, '***');
   }
   
   // Apply sanitization based on configuration
@@ -306,11 +318,26 @@ export function sanitizeErrorMessage(
         // Preserve the key name but redact the value
         const equalIndex = match.indexOf('=');
         const colonIndex = match.indexOf(':');
-        const separatorIndex = equalIndex !== -1 ? equalIndex : colonIndex;
+        const dashIndex = match.indexOf('-');
+        
+        // Find the first separator that exists
+        let separatorIndex = -1;
+        let separator = '=';
+        
+        if (equalIndex !== -1) {
+          separatorIndex = equalIndex;
+          separator = '=';
+        } else if (colonIndex !== -1) {
+          separatorIndex = colonIndex;
+          separator = '='; // Standardize to = for output
+        } else if (dashIndex !== -1) {
+          separatorIndex = dashIndex;
+          separator = '='; // Standardize to = for output
+        }
         
         if (separatorIndex !== -1) {
           const keyPart = match.substring(0, separatorIndex);
-          return keyPart + '=***';
+          return keyPart + separator + '***';
         }
         return '***';
       });
@@ -357,19 +384,45 @@ export function sanitizeErrorMessage(
   }
   
   if (fullConfig.redactFilePaths) {
-    for (const pattern of SECURITY_PATTERNS.filePaths) {
-      sanitized = sanitized.replace(pattern, (match) => {
-        // Preserve directory structure but redact sensitive parts
-        if (match.includes('/Users/')) {
-          return match.replace(/\/Users\/[^\/\s]+/, '/Users/***');
-        } else if (match.includes('C:\\Users\\')) {
-          return match.replace(/C:\\Users\\[^\\\\s]+/, 'C:\\Users\\***');
-        } else if (match.includes('/home/')) {
-          return match.replace(/\/home\/[^\/\s]+/, '/home/***');
+    // Apply user directory patterns first - replace usernames but preserve rest of path
+    sanitized = sanitized
+      .replace(/\/Users\/[^\/\s]+/g, '/Users/***')
+      .replace(/C:[\\\/]+Users[\\\/]+[^\\\/\s]+/g, (match) => {
+        // Preserve the original path separators
+        const separators = match.match(/[\\\/]+/g);
+        if (separators && separators.length >= 2) {
+          const driveAndUsers = 'C:' + separators[0] + 'Users' + separators[1];
+          return driveAndUsers + '***';
         }
-        // For config files, preserve the filename pattern
+        return 'C:\\Users\\***'; // Fallback
+      })
+      .replace(/\/home\/[^\/\s]+/g, '/home/***');
+    
+    // Apply other file path patterns only to files not in user directories
+    const otherFilePatterns = SECURITY_PATTERNS.filePaths.slice(3); // Skip user dir patterns
+    
+    for (const pattern of otherFilePatterns) {
+      sanitized = sanitized.replace(pattern, (match, offset, string) => {
+        // Check if this match is within a user directory that was already sanitized
+        const beforeMatch = string.substring(0, offset);
+        const isInUserDir = beforeMatch.includes('Users\\***') || 
+                           beforeMatch.includes('Users/***') || 
+                           beforeMatch.includes('home/***');
+        
+        if (isInUserDir) {
+          return match; // Don't modify if in user directory
+        }
+        
+        // For config files and sensitive filenames in other locations
         if (match.includes('.')) {
-          return match.replace(/\/[^\/]+\//, '/***/');
+          // If it's a full path, preserve directory structure
+          if (match.includes('/') || match.includes('\\')) {
+            return match.replace(/\/[^\/]+\//, '/***/');
+          } else {
+            // For just filenames, replace with generic filename
+            const extension = match.substring(match.lastIndexOf('.'));
+            return '***' + extension;
+          }
         }
         return '***';
       });
@@ -402,8 +455,8 @@ export function sanitizeErrorMessage(
   if (fullConfig.redactPersonalInfo) {
     for (const pattern of SECURITY_PATTERNS.personalInfo) {
       sanitized = sanitized.replace(pattern, (match) => {
-        if (match.includes('@') && /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(match)) {
-          return '***@***.***'; // Email
+        if (match.includes('@') && /[a-zA-Z0-9._%+-]+@(?:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|localhost)/.test(match)) {
+          return '***@***.***'; // Email (including localhost)
         } else if (/\b(?:\d{4}[\s-]?){3}\d{4}\b/.test(match)) {
           return '****-****-****-****'; // Credit card
         } else if (/\b\d{3}-\d{2}-\d{4}\b/.test(match)) {
@@ -426,9 +479,10 @@ export function sanitizeErrorMessage(
     }
   }
   
-  // Apply custom patterns
-  for (const pattern of fullConfig.customPatterns) {
-    sanitized = sanitized.replace(pattern, '***');
+  // Apply length limits last (after sanitization)
+  const truncationSuffix = '... [truncated for security]';
+  if (sanitized.length > fullConfig.maxMessageLength) {
+    sanitized = sanitized.substring(0, fullConfig.maxMessageLength - truncationSuffix.length) + truncationSuffix;
   }
   
   return sanitized;
