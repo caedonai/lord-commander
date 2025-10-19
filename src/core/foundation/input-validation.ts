@@ -1181,7 +1181,7 @@ export function sanitizePath(
   }
 
   // Final general security check for remaining patterns
-  if (!isPathSafe(sanitized) && !allowTraversal) {
+  if (!isPathSafe(sanitized) && !allowTraversal && !allowAbsolute) {
     throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(path, 'Path traversal detected'));
   }
 

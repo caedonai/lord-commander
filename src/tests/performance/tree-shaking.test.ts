@@ -21,6 +21,9 @@ const EXPECTED_EXPORTS = {
     // Foundation - Error Sanitization (Task 1.3.1 + 1.3.3)
     errorSanitization: ['sanitizeErrorMessage', 'sanitizeStackTrace', 'shouldShowDetailedErrors', 'isDebugMode', 'sanitizeErrorContext', 'createSafeErrorForForwarding', 'analyzeErrorContextSecurity'],
     
+    // Foundation - Security Violation Detection (Task 1.2.2) - Note: Currently not bundled due to build issues
+    // securityViolationDetection: ['SecurityViolationDetector', 'defaultSecurityViolationDetector', 'DEFAULT_RISK_SCORING_CONFIG'],
+    
     // CLI creation (from actual exports)
     cli: ['Command', 'createCLI', 'registerBuiltinCommands', 'registerCommands', 'validateErrorHandler', 'executeErrorHandlerSafely', 'ErrorHandlerValidationError', 'sanitizeErrorObject', 'truncateErrorMessage', 'getObjectMemorySize', 'formatErrorForDisplay'],
     

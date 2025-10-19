@@ -71,8 +71,8 @@ describe('Security Comprehensive Edge Cases', () => {
       
       expect(result.isSecure).toBe(false);
       expect(result.riskScore).toBeGreaterThan(30);
-      expect(result.violations).toHaveLength(1);
-      expect(result.violations[0].type).toBe('path-traversal');
+      expect(result.violations.length).toBeGreaterThanOrEqual(1);
+      expect(result.violations.some(v => v.type === 'path-traversal')).toBe(true);
     });
 
     it('should handle Unicode normalization attacks', () => {

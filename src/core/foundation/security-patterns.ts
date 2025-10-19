@@ -186,6 +186,195 @@ export const ADVANCED_ATTACK_PATTERNS = {
 } as const;
 
 /**
+ * Deserialization attack patterns
+ * Detects attempts to inject malicious serialized objects
+ */
+export const DESERIALIZATION_PATTERNS = {
+  // Java serialization
+  JAVA_SERIALIZED: /\xac\xed\x00\x05|rO0AB/g,
+  JAVA_GADGETS: /\b(Runtime|ProcessBuilder|InvokerTransformer|CommonsCollections|JRMP|LDAP)\b/gi,
+  
+  // .NET serialization
+  DOTNET_BINARY: /\x00\x01\x00\x00\x00\xff\xff\xff\xff/g,
+  DOTNET_GADGETS: /\b(ObjectStateFormatter|LosFormatter|BinaryFormatter|TypeConfuseDelegate)\b/gi,
+  
+  // Python pickle
+  PYTHON_PICKLE: /\x80[\x02-\x04]|c__builtin__|cos\nsystem/g,
+  PYTHON_REDUCE: /__reduce__|__reduce_ex__/g,
+  
+  // PHP serialization
+  PHP_SERIALIZED: /[Oo]:[0-9]+:"/g,
+  PHP_GADGETS: /\b(POP|Monolog|Doctrine|Guzzle|Symfony)\b/gi,
+  
+  // Node.js serialization
+  NODEJS_SERIALIZE: /"__js_function"|"__js_date"|"__js_regexp"/g,
+  
+  // Generic dangerous patterns
+  DANGEROUS_CLASSES: /\b(eval|exec|system|shell_exec|file_get_contents|fopen|include|require)\b/gi,
+} as const;
+
+/**
+ * XXE (XML External Entity) attack patterns
+ * Detects XML external entity injection attempts
+ */
+export const XXE_PATTERNS = {
+  // External entity declarations
+  EXTERNAL_ENTITY: /<!ENTITY[^>]+SYSTEM[^>]+>/gi,
+  PUBLIC_ENTITY: /<!ENTITY[^>]+PUBLIC[^>]+>/gi,
+  
+  // Parameter entities
+  PARAMETER_ENTITY: /<!ENTITY\s+%[^>]+>/gi,
+  
+  // Entity references
+  ENTITY_REFERENCE: /&[a-zA-Z_][a-zA-Z0-9_]*;/g,
+  
+  // DOCTYPE declarations with external references
+  DOCTYPE_EXTERNAL: /<!DOCTYPE[^>]+SYSTEM[^>]*>/gi,
+  DOCTYPE_PUBLIC: /<!DOCTYPE[^>]+PUBLIC[^>]*>/gi,
+  
+  // XML inclusion
+  XML_INCLUSION: /<xi:include[^>]*>/gi,
+  
+  // Suspicious protocols in XML
+  XML_PROTOCOLS: /\b(file|ftp|http|https|gopher|jar|netdoc):/gi,
+  
+  // XML bomb patterns (billion laughs)
+  XML_BOMB: /&lol[0-9]*;|&lol[0-9]*lol[0-9]*;/gi,
+} as const;
+
+/**
+ * SSTI (Server-Side Template Injection) attack patterns
+ * Detects template injection attempts in various template engines
+ */
+export const SSTI_PATTERNS = {
+  // Jinja2/Django templates
+  JINJA2_INJECTION: /\{\{.*?(\.|_|config|request|session|g).*?\}\}/gi,
+  JINJA2_DANGEROUS: /\{\{.*?(popen|system|eval|exec|import|builtins|globals).*?\}\}/gi,
+  
+  // Twig templates
+  TWIG_INJECTION: /\{\{.*?(\.|_self|app).*?\}\}/gi,
+  TWIG_DANGEROUS: /\{\{.*?(system|exec|shell_exec|passthru).*?\}\}/gi,
+  
+  // Handlebars templates
+  HANDLEBARS_INJECTION: /\{\{.*?(constructor|prototype|process|require).*?\}\}/gi,
+  
+  // FreeMarker templates
+  FREEMARKER_INJECTION: /<#assign|<#import|<#include|\$\{.*?new.*?\}/gi,
+  FREEMARKER_DANGEROUS: /\$\{.*?(freemarker\.template\.utility\.Execute|ObjectConstructor).*?\}/gi,
+  
+  // Velocity templates
+  VELOCITY_INJECTION: /#set\s*\(\s*\$.*?=|#evaluate|\$\{.*?Class.*?\}/gi,
+  
+  // Smarty templates
+  SMARTY_INJECTION: /\{php\}|\{\/php\}|\{literal\}|\{\/literal\}/gi,
+  
+  // Generic template patterns
+  TEMPLATE_EXECUTION: /\{\{.*?(eval|exec|system|import|require|constructor).*?\}\}/gi,
+  TEMPLATE_OBJECT_ACCESS: /\{\{.*?(__.*__|prototype|constructor|process).*?\}\}/gi,
+} as const;
+
+/**
+ * LDAP injection attack patterns
+ * Detects LDAP injection attempts in search filters
+ */
+export const LDAP_PATTERNS = {
+  // LDAP filter injection
+  LDAP_FILTER_INJECTION: /[()&|!*\\]/g,
+  
+  // LDAP special characters that need escaping
+  LDAP_SPECIAL_CHARS: /[\\*()\\0]/g,
+  
+  // LDAP search operators
+  LDAP_OPERATORS: /[&|!]|\*.*\*/g,
+  
+  // LDAP attribute injection
+  LDAP_ATTRIBUTE_INJECTION: /[=<>~]/g,
+  
+  // Common LDAP attributes used in attacks
+  LDAP_DANGEROUS_ATTRIBUTES: /\b(objectClass|cn|uid|userPassword|memberOf|dn)\s*[=]/gi,
+  
+  // LDAP DN injection
+  LDAP_DN_INJECTION: /[,+=\\#<>;]/g,
+} as const;
+
+/**
+ * XPath injection attack patterns
+ * Detects XPath injection attempts in XML queries
+ */
+export const XPATH_PATTERNS = {
+  // XPath injection operators
+  XPATH_OPERATORS: /['"]\s*or\s*['"]/gi,
+  XPATH_AND_OR: /\b(and|or)\s+['"]/gi,
+  
+  // XPath functions that can be dangerous
+  XPATH_FUNCTIONS: /\b(substring|contains|starts-with|string-length|position|last|count)\s*\(/gi,
+  
+  // XPath axes that can be used for traversal
+  XPATH_AXES: /\b(parent|ancestor|descendant|following|preceding|child|attribute)::/gi,
+  
+  // XPath comment injection
+  XPATH_COMMENTS: /\(:.*?:\)/g,
+  
+  // Boolean-based XPath injection
+  XPATH_BOOLEAN: /['"]\s*(=|!=)\s*['"]/gi,
+  XPATH_TRUE_FALSE: /\b(true|false)\s*\(\s*\)/gi,
+  
+  // XPath string manipulation for injection
+  XPATH_CONCAT: /concat\s*\(/gi,
+  XPATH_NORMALIZE: /normalize-space\s*\(/gi,
+} as const;
+
+/**
+ * Expression Language (EL) injection patterns
+ * Detects EL injection in Java/JSP environments
+ */
+export const EXPRESSION_LANGUAGE_PATTERNS = {
+  // JSP EL injection
+  JSP_EL: /\$\{.*?\}/g,
+  JSP_EL_DANGEROUS: /\$\{.*?(Runtime|ProcessBuilder|System|Class|Method).*?\}/gi,
+  
+  // Spring EL injection
+  SPRING_EL: /#\{.*?\}/g,
+  SPRING_EL_DANGEROUS: /#\{.*?(T\(|new |Runtime|ProcessBuilder|System\.getProperty).*?\}/gi,
+  
+  // OGNL (Struts) injection
+  OGNL_INJECTION: /%\{.*?\}|@.*?@/g,
+  OGNL_DANGEROUS: /%\{.*?(Runtime|ProcessBuilder|System|@java\.lang).*?\}/gi,
+  
+  // MVEL injection
+  MVEL_INJECTION: /\$\{.*?\}|@\{.*?\}/g,
+  
+  // Unified EL dangerous patterns
+  EL_EXECUTION: /\$\{.*?(Runtime\.getRuntime\(\)|ProcessBuilder|System\.exit).*?\}/gi,
+  EL_REFLECTION: /\$\{.*?(Class\.forName|getClass\(\)|getDeclaredMethod).*?\}/gi,
+} as const;
+
+/**
+ * CSV injection attack patterns
+ * Detects formula injection in CSV/spreadsheet exports
+ */
+export const CSV_INJECTION_PATTERNS = {
+  // Formula starters
+  FORMULA_STARTERS: /^[\s]*[=+\-@]/,
+  
+  // Dangerous Excel/Calc functions
+  DANGEROUS_FUNCTIONS: /\b(HYPERLINK|IMPORTXML|WEBSERVICE|INDIRECT|OFFSET)\s*\(/gi,
+  
+  // System command execution in formulas
+  SYSTEM_COMMANDS: /\b(cmd|powershell|bash|sh|calc|notepad)\b/gi,
+  
+  // DDE (Dynamic Data Exchange) attacks
+  DDE_INJECTION: /=.*?\|.*?\!/gi,
+  DDE_COMMANDS: /=cmd\|.*?\!|=powershell\|.*?\!/gi,
+  
+  // CSV field injection
+  CSV_FIELD_INJECTION: /[",;\r\n]/g,
+  
+  // Hyperlink injection
+  HYPERLINK_INJECTION: /=HYPERLINK\s*\(/gi,
+} as const;
+
+/**
  * Input validation patterns
  * Common patterns for validating user inputs
  */
@@ -440,6 +629,179 @@ export function analyzeInputSecurity(input: string): SecurityAnalysisResult {
       recommendation: 'Avoid accessing object prototype properties'
     });
     riskScore += 35;
+  }
+
+  // Check deserialization attacks
+  if (DESERIALIZATION_PATTERNS.JAVA_SERIALIZED.test(input) || 
+      DESERIALIZATION_PATTERNS.PYTHON_PICKLE.test(input) ||
+      DESERIALIZATION_PATTERNS.PHP_SERIALIZED.test(input)) {
+    violations.push({
+      type: 'deserialization',
+      pattern: 'unsafe-deserialization',
+      severity: 'critical',
+      description: 'Unsafe deserialization pattern detected',
+      recommendation: 'Use safe deserialization libraries with type validation'
+    });
+    riskScore += 45;
+  }
+
+  if (DESERIALIZATION_PATTERNS.DANGEROUS_CLASSES.test(input)) {
+    violations.push({
+      type: 'deserialization',
+      pattern: 'dangerous-classes',
+      severity: 'critical',
+      description: 'Dangerous class references for deserialization detected',
+      recommendation: 'Avoid deserializing untrusted data with dangerous classes'
+    });
+    riskScore += 40;
+  }
+
+  // Check XXE attacks
+  if (XXE_PATTERNS.EXTERNAL_ENTITY.test(input) || 
+      XXE_PATTERNS.DOCTYPE_EXTERNAL.test(input)) {
+    violations.push({
+      type: 'xxe',
+      pattern: 'external-entity',
+      severity: 'high',
+      description: 'XML External Entity (XXE) attack detected',
+      recommendation: 'Disable external entity processing in XML parsers'
+    });
+    riskScore += 35;
+  }
+
+  if (XXE_PATTERNS.XML_BOMB.test(input)) {
+    violations.push({
+      type: 'xxe',
+      pattern: 'xml-bomb',
+      severity: 'high',
+      description: 'XML bomb (billion laughs) attack detected',
+      recommendation: 'Implement XML parsing limits and disable entity expansion'
+    });
+    riskScore += 30;
+  }
+
+  // Check SSTI attacks
+  if (SSTI_PATTERNS.JINJA2_INJECTION.test(input) ||
+      SSTI_PATTERNS.JINJA2_DANGEROUS.test(input) || 
+      SSTI_PATTERNS.TWIG_DANGEROUS.test(input) ||
+      SSTI_PATTERNS.FREEMARKER_DANGEROUS.test(input)) {
+    violations.push({
+      type: 'ssti',
+      pattern: 'dangerous-template-injection',
+      severity: 'critical',
+      description: 'Dangerous server-side template injection detected',
+      recommendation: 'Use template sandboxing and avoid dangerous functions'
+    });
+    riskScore += 40;
+  }
+
+  if (SSTI_PATTERNS.TEMPLATE_EXECUTION.test(input) ||
+      SSTI_PATTERNS.TEMPLATE_OBJECT_ACCESS.test(input)) {
+    violations.push({
+      type: 'ssti',
+      pattern: 'template-execution',
+      severity: 'high',
+      description: 'Template execution or object access injection detected',
+      recommendation: 'Sanitize template inputs and restrict object access'
+    });
+    riskScore += 35;
+  }
+
+  // Check LDAP injection
+  if (LDAP_PATTERNS.LDAP_FILTER_INJECTION.test(input)) {
+    violations.push({
+      type: 'ldap-injection',
+      pattern: 'ldap-filter-injection',
+      severity: 'high',
+      description: 'LDAP filter injection attempt detected',
+      recommendation: 'Escape LDAP special characters and use parameterized queries'
+    });
+    riskScore += 30;
+  }
+
+  if (LDAP_PATTERNS.LDAP_DANGEROUS_ATTRIBUTES.test(input)) {
+    violations.push({
+      type: 'ldap-injection',
+      pattern: 'ldap-attribute-injection',
+      severity: 'medium',
+      description: 'LDAP attribute injection attempt detected',
+      recommendation: 'Validate LDAP attribute names and values'
+    });
+    riskScore += 25;
+  }
+
+  // Check XPath injection
+  if (XPATH_PATTERNS.XPATH_OPERATORS.test(input) ||
+      XPATH_PATTERNS.XPATH_AND_OR.test(input)) {
+    violations.push({
+      type: 'xpath-injection',
+      pattern: 'xpath-injection',
+      severity: 'high',
+      description: 'XPath injection attempt detected',
+      recommendation: 'Use parameterized XPath queries and escape special characters'
+    });
+    riskScore += 30;
+  }
+
+  if (XPATH_PATTERNS.XPATH_FUNCTIONS.test(input)) {
+    violations.push({
+      type: 'xpath-injection',
+      pattern: 'xpath-function-abuse',
+      severity: 'medium',
+      description: 'Suspicious XPath function usage detected',
+      recommendation: 'Validate XPath function usage and parameters'
+    });
+    riskScore += 20;
+  }
+
+  // Check Expression Language injection
+  if (EXPRESSION_LANGUAGE_PATTERNS.JSP_EL_DANGEROUS.test(input) ||
+      EXPRESSION_LANGUAGE_PATTERNS.SPRING_EL_DANGEROUS.test(input) ||
+      EXPRESSION_LANGUAGE_PATTERNS.OGNL_DANGEROUS.test(input)) {
+    violations.push({
+      type: 'expression-injection',
+      pattern: 'dangerous-el-injection',
+      severity: 'critical',
+      description: 'Dangerous Expression Language injection detected',
+      recommendation: 'Avoid EL evaluation with untrusted input and use safe evaluation contexts'
+    });
+    riskScore += 40;
+  }
+
+  if (EXPRESSION_LANGUAGE_PATTERNS.EL_EXECUTION.test(input) ||
+      EXPRESSION_LANGUAGE_PATTERNS.EL_REFLECTION.test(input)) {
+    violations.push({
+      type: 'expression-injection',
+      pattern: 'el-execution',
+      severity: 'critical',
+      description: 'Expression Language execution or reflection detected',
+      recommendation: 'Disable dangerous EL functions and reflection access'
+    });
+    riskScore += 35;
+  }
+
+  // Check CSV injection
+  if (CSV_INJECTION_PATTERNS.FORMULA_STARTERS.test(input)) {
+    violations.push({
+      type: 'csv-injection',
+      pattern: 'formula-injection',
+      severity: 'medium',
+      description: 'CSV formula injection attempt detected',
+      recommendation: 'Escape formula characters in CSV exports'
+    });
+    riskScore += 25;
+  }
+
+  if (CSV_INJECTION_PATTERNS.DANGEROUS_FUNCTIONS.test(input) ||
+      CSV_INJECTION_PATTERNS.DDE_INJECTION.test(input)) {
+    violations.push({
+      type: 'csv-injection',
+      pattern: 'dangerous-csv-functions',
+      severity: 'high',
+      description: 'Dangerous CSV functions or DDE injection detected',
+      recommendation: 'Block dangerous functions and DDE commands in CSV exports'
+    });
+    riskScore += 30;
   }
 
   return {

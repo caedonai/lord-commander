@@ -18,6 +18,9 @@ export * from './log-security.js';
 export * from './security-patterns.js';
 export { ADVANCED_ATTACK_PATTERNS } from './security-patterns.js';
 
+// Export comprehensive security violation detection system (Task 1.2.2)
+export * from './violation-detector-exports.js';
+
 // Export framework security detection utilities
 export * from './framework-security.js';
 
