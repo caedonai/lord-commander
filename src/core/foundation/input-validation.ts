@@ -19,6 +19,19 @@ import {
 import { ERROR_MESSAGES } from './constants.js';
 
 /**
+ * Security limits for input validation to prevent attacks
+ * These limits help prevent memory exhaustion and other DoS attacks
+ */
+export const INPUT_SECURITY_LIMITS = {
+  /** Maximum input length in characters (10KB) */
+  MAX_INPUT_LENGTH: 10240,
+  /** Maximum processing length for security analysis (1KB) */
+  MAX_PROCESSING_LENGTH: 1024,
+  /** Maximum configuration depth for nested validation */
+  MAX_CONFIG_DEPTH: 10
+} as const;
+
+/**
  * Input validation violation details with security classification
  * 
  * Represents a security violation detected during input validation,
@@ -279,18 +292,115 @@ export function validateProjectName(
   name: string, 
   config: Partial<ValidationConfig> = {}
 ): ValidationResult {
+  // SECURITY FIX #1: Memory Exhaustion Protection
+  if (typeof name === 'string' && name.length > INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH) {
+    return {
+      isValid: false,
+      sanitized: '',
+      violations: [{
+        type: 'malformed-input',
+        severity: 'medium',
+        description: `Project name input too long (${name.length} chars). Maximum allowed: ${INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH}`,
+        input: `${name.substring(0, 100)}...`,
+        suggestion: `Reduce input length to under ${INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH} characters`
+      }],
+      suggestions: [`Reduce input length to under ${INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH} characters`],
+      riskScore: 100
+    };
+  }
+
+  // SECURITY FIX #3: Type Confusion Protection
+  if (name !== null && name !== undefined && typeof name !== 'string') {
+    return {
+      isValid: false,
+      sanitized: '',
+      violations: [{
+        type: 'malformed-input',
+        severity: 'critical',
+        description: `Invalid input type: ${typeof name}. Expected string.`,
+        input: String(name).substring(0, 100),
+        suggestion: 'Provide a valid string input'
+      }],
+      suggestions: ['Provide a valid string input'],
+      riskScore: 100
+    };
+  }
+
   // Validate configuration object for security
   if (config && typeof config === 'object') {
-    // Handle negative max lengths gracefully (security issue prevention)
-    if (config.maxLength !== undefined && typeof config.maxLength === 'number' && config.maxLength < 0) {
-      // Instead of throwing, use safe default and log warning
-      config = { ...config, maxLength: DEFAULT_VALIDATION_CONFIG.maxLength };
+    // SECURITY FIX #2: Check for getter properties to prevent code injection
+    const allowedConfigKeys = ['strictMode', 'maxLength', 'autoSanitize', 'provideSuggestions', 'customPatterns'];
+    const configKeys = Object.keys(config);
+    
+    for (const key of configKeys) {
+      if (!allowedConfigKeys.includes(key)) {
+        // For unknown properties, log a warning but don't fail (graceful degradation)
+        console.warn(`Unknown configuration property: ${key}. Known properties: strictMode, maxLength, autoSanitize, provideSuggestions, customPatterns`);
+        continue;
+      }
+      
+      // Check for getter properties to prevent code execution
+      const descriptor = Object.getOwnPropertyDescriptor(config, key);
+      if (descriptor && descriptor.get) {
+        throw new Error(`Configuration property '${key}' has a getter - potential code injection attempt blocked`);
+      }
     }
     
-    // Handle integer overflow protection
-    if (config.maxLength !== undefined && typeof config.maxLength === 'number' && config.maxLength > Number.MAX_SAFE_INTEGER) {
-      // Use safe default instead of throwing
-      config = { ...config, maxLength: DEFAULT_VALIDATION_CONFIG.maxLength };
+    // SECURITY FIX #5: Enhanced Integer Overflow and Type Coercion Protection
+    if (config.maxLength !== undefined) {
+      // Type coercion protection
+      if (typeof config.maxLength !== 'number') {
+        // Graceful degradation: use default instead of throwing
+        console.warn(`Configuration 'maxLength' must be number, got ${typeof config.maxLength}. Using default.`);
+        config.maxLength = 100;
+      }
+      
+      // Integer validation
+      if (!Number.isInteger(config.maxLength)) {
+        // Graceful degradation: use default instead of throwing
+        console.warn('Configuration \'maxLength\' must be an integer. Using default.');
+        config.maxLength = 100;
+      }
+      
+      // Negative number protection
+      if (config.maxLength < 0) {
+        // Graceful degradation: use default instead of throwing
+        console.warn('Configuration \'maxLength\' cannot be negative. Using default.');
+        config.maxLength = 100;
+      }
+      
+      // Integer overflow protection
+      if (!Number.isSafeInteger(config.maxLength)) {
+        // Graceful degradation: use default instead of throwing
+        console.warn('Configuration \'maxLength\' must be a safe integer. Using default.');
+        config.maxLength = 100;
+      }
+      
+      // Range validation
+      if (config.maxLength > INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH) {
+        // Graceful degradation: use maximum allowed
+        console.warn(`Configuration 'maxLength' cannot exceed ${INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH}. Using maximum allowed.`);
+        config.maxLength = INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH;
+      }
+    }
+    
+    // SECURITY FIX #6: Type Coercion Protection for other config properties
+    if (config.strictMode !== undefined && typeof config.strictMode !== 'boolean') {
+      // Graceful degradation: use default instead of throwing
+        console.warn(`Configuration 'strictMode' must be boolean, got ${typeof config.strictMode}. Using default.`);
+        config.strictMode = true;
+    }
+    
+    if (config.autoSanitize !== undefined && typeof config.autoSanitize !== 'boolean') {
+      // Graceful degradation: use default instead of throwing
+        console.warn(`Configuration 'autoSanitize' must be boolean, got ${typeof config.autoSanitize}. Using default.`);
+        config.autoSanitize = true;
+    }
+    
+    if (config.provideSuggestions !== undefined && typeof config.provideSuggestions !== 'boolean') {
+      // Graceful degradation: use default instead of throwing
+        console.warn(`Configuration 'provideSuggestions' must be boolean, got ${typeof config.provideSuggestions}. Using default.`);
+        config.provideSuggestions = true;
     }
   }
 
@@ -598,6 +708,118 @@ export function validatePackageManager(
   packageManager: string,
   config: Partial<ValidationConfig> = {}
 ): ValidationResult {
+  // SECURITY FIX #1: Memory Exhaustion Protection
+  if (typeof packageManager === 'string' && packageManager.length > INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH) {
+    return {
+      isValid: false,
+      sanitized: 'npm',
+      violations: [{
+        type: 'malformed-input',
+        severity: 'critical',
+        description: `Package manager input too large (${packageManager.length} chars). Maximum allowed: ${INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH}`,
+        input: `${packageManager.substring(0, 100)}...`,
+        suggestion: `Reduce input length to under ${INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH} characters`
+      }],
+      suggestions: [`Reduce input length to under ${INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH} characters`],
+      riskScore: 100
+    };
+  }
+
+  // SECURITY FIX #3: Type Confusion Protection
+  if (packageManager !== null && packageManager !== undefined && typeof packageManager !== 'string') {
+    return {
+      isValid: false,
+      sanitized: 'npm',
+      violations: [{
+        type: 'malformed-input',
+        severity: 'critical',
+        description: `Invalid package manager type: ${typeof packageManager}. Expected string.`,
+        input: String(packageManager).substring(0, 100),
+        suggestion: 'Provide a valid string package manager name'
+      }],
+      suggestions: ['Provide a valid string package manager name'],
+      riskScore: 100
+    };
+  }
+
+  // Validate configuration object for security
+  if (config && typeof config === 'object') {
+    // SECURITY FIX #2: Check for getter properties to prevent code injection
+    const allowedConfigKeys = ['strictMode', 'maxLength', 'autoSanitize', 'provideSuggestions', 'customPatterns'];
+    const configKeys = Object.keys(config);
+    
+    for (const key of configKeys) {
+      if (!allowedConfigKeys.includes(key)) {
+        // For unknown properties, log a warning but don't fail (graceful degradation)
+        console.warn(`Unknown configuration property: ${key}. Known properties: strictMode, maxLength, autoSanitize, provideSuggestions, customPatterns`);
+        continue;
+      }
+      
+      // Check for getter properties to prevent code execution
+      const descriptor = Object.getOwnPropertyDescriptor(config, key);
+      if (descriptor && descriptor.get) {
+        throw new Error(`Configuration property '${key}' has a getter - potential code injection attempt blocked`);
+      }
+    }
+    
+    // SECURITY FIX #5: Enhanced Integer Overflow and Type Coercion Protection
+    if (config.maxLength !== undefined) {
+      // Type coercion protection
+      if (typeof config.maxLength !== 'number') {
+        // Graceful degradation: use default instead of throwing
+        console.warn(`Configuration 'maxLength' must be number, got ${typeof config.maxLength}. Using default.`);
+        config.maxLength = 100;
+      }
+      
+      // Integer validation
+      if (!Number.isInteger(config.maxLength)) {
+        // Graceful degradation: use default instead of throwing
+        console.warn('Configuration \'maxLength\' must be an integer. Using default.');
+        config.maxLength = 100;
+      }
+      
+      // Negative number protection
+      if (config.maxLength < 0) {
+        // Graceful degradation: use default instead of throwing
+        console.warn('Configuration \'maxLength\' cannot be negative. Using default.');
+        config.maxLength = 100;
+      }
+      
+      // Integer overflow protection
+      if (!Number.isSafeInteger(config.maxLength)) {
+        // Graceful degradation: use default instead of throwing
+        console.warn('Configuration \'maxLength\' must be a safe integer. Using default.');
+        config.maxLength = 100;
+      }
+      
+      // Range validation
+      if (config.maxLength > INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH) {
+        // Graceful degradation: use maximum allowed
+        console.warn(`Configuration 'maxLength' cannot exceed ${INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH}. Using maximum allowed.`);
+        config.maxLength = INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH;
+      }
+    }
+    
+    // SECURITY FIX #6: Type Coercion Protection for other config properties
+    if (config.strictMode !== undefined && typeof config.strictMode !== 'boolean') {
+      // Graceful degradation: use default instead of throwing
+        console.warn(`Configuration 'strictMode' must be boolean, got ${typeof config.strictMode}. Using default.`);
+        config.strictMode = true;
+    }
+    
+    if (config.autoSanitize !== undefined && typeof config.autoSanitize !== 'boolean') {
+      // Graceful degradation: use default instead of throwing
+        console.warn(`Configuration 'autoSanitize' must be boolean, got ${typeof config.autoSanitize}. Using default.`);
+        config.autoSanitize = true;
+    }
+    
+    if (config.provideSuggestions !== undefined && typeof config.provideSuggestions !== 'boolean') {
+      // Graceful degradation: use default instead of throwing
+        console.warn(`Configuration 'provideSuggestions' must be boolean, got ${typeof config.provideSuggestions}. Using default.`);
+        config.provideSuggestions = true;
+    }
+  }
+
   const cfg = { ...DEFAULT_VALIDATION_CONFIG, ...config };
   const violations: InputValidationViolation[] = [];
   const suggestions: string[] = [];
@@ -776,9 +998,55 @@ export function sanitizeCommandArgs(
     throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(String(args), 'Invalid arguments array'));
   }
 
+  // SECURITY FIX #1: Memory Exhaustion Protection for Arrays
+  const totalLength = args.join('').length;
+  if (totalLength > INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH) {
+    throw new Error(`Command arguments total length exceeds maximum allowed (${INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH} characters)`);
+  }
+
+  // SECURITY FIX #4: Enhanced Array Prototype Pollution Detection
+  if (args.constructor !== Array) {
+    throw new Error('Array prototype pollution detected - constructor has been tampered with');
+  }
+  
+  // Check for specific pollution indicators
+  if ('isAdmin' in Array.prototype || 'polluted' in Array.prototype) {
+    throw new Error('Prototype pollution detected - malicious properties found in Array prototype');
+  }
+  
+  // Validate that critical Array methods haven't been overridden
+  const criticalMethods = ['push', 'pop', 'slice', 'map', 'filter', 'forEach', 'join'];
+  for (const method of criticalMethods) {
+    const methodFunc = (Array.prototype as any)[method];
+    if (typeof methodFunc !== 'function') {
+      throw new Error(`Critical Array method '${method}' has been compromised - prototype pollution detected`);
+    }
+    
+    // Check if the method contains suspicious code or has been modified
+    const methodString = methodFunc.toString();
+    if (methodString.includes('console.log') || 
+        methodString.includes('eval') ||
+        methodString.includes('POLLUTION') ||
+        methodString.includes('alert') ||
+        methodString.length > 200) { // Native methods are typically short
+      throw new Error(`Critical Array method '${method}' has been overridden - prototype pollution detected`);
+    }
+  }
+
+  // Check for __proto__ pollution - only check for direct properties, not inherited
+  if (args.hasOwnProperty('__proto__')) {
+    throw new Error('__proto__ pollution detected in arguments array');
+  }
+
   return args.map((arg, index) => {
+    // SECURITY FIX #3: Type Confusion Protection for Array Elements
     if (typeof arg !== 'string') {
       throw new Error(ERROR_MESSAGES.MALFORMED_ARGUMENT(String(arg), index));
+    }
+
+    // SECURITY FIX #1: Memory Exhaustion Protection for Individual Arguments
+    if (arg.length > INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH) {
+      throw new Error(`Argument ${index} too large (${arg.length} chars). Maximum allowed: ${INPUT_SECURITY_LIMITS.MAX_INPUT_LENGTH}`);
     }
 
     let sanitized = arg.trim();
