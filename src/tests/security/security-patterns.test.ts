@@ -253,9 +253,10 @@ describe('Security Patterns', () => {
       expect(result).not.toContain('../');
     });
 
-    it('should escape shell metacharacters', () => {
+    it('should remove shell metacharacters', () => {
       const result = sanitizeInput('cmd; rm -rf /');
-      expect(result).toContain('\\;');
+      expect(result).toBe('cmd -rf /'); // Semicolon removed entirely for better security
+      expect(result).not.toContain(';');
     });
 
     it('should remove dangerous commands', () => {

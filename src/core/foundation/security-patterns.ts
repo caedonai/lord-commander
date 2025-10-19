@@ -16,8 +16,14 @@ export const PATH_TRAVERSAL_PATTERNS = {
   
   // Advanced traversal techniques
   UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g,
+  UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g,
+  UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g,
+  ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[\/\\]/g,
   DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi,
-  MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c)/gi,
+  TRIPLE_ENCODED: /%25252e%25252e%25252f/gi,
+  OVERLONG_UTF8: /%c0%ae%c0%ae/gi,
+  OVERLONG_BACKSLASH: /%c1%9c/gi,
+  MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi,
   
   // Windows-specific traversal
   UNC_PATH: /^\\\\[^\\]+\\[^\\]/,
@@ -52,6 +58,9 @@ export const COMMAND_INJECTION_PATTERNS = {
   
   // Environment variable manipulation
   ENV_VAR_INJECTION: /\$\{[^}]*\}/g,
+  PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i,
+  IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g,
+  QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g,
   
   // Specific dangerous commands
   DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i,
@@ -121,6 +130,13 @@ export const FILE_SYSTEM_PATTERNS = {
   // Sensitive system files (Windows)
   WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i,
   
+  // Windows reserved device names
+  WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i,
+  WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s\.]|$)/i, // Fixed: device names at end or followed by space/dot
+  
+  // Windows filename edge cases (trailing dots/spaces that Windows strips)
+  WINDOWS_FILENAME_EDGE_CASES: /[\s\.]+$/,
+  
   // Configuration files
   CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i,
   
@@ -147,6 +163,26 @@ export const NETWORK_PATTERNS = {
   
   // Suspicious ports
   SUSPICIOUS_PORTS: /:(22|23|53|135|139|445|1433|1521|3306|3389|5432|5900|6379)\b/,
+} as const;
+
+/**
+ * Advanced security attack patterns
+ * Detects sophisticated attacks and bypass attempts
+ */
+export const ADVANCED_ATTACK_PATTERNS = {
+  // Homograph attacks using similar-looking characters
+  HOMOGRAPH_CYRILLIC: /[а-яё]/gi, // Cyrillic characters
+  HOMOGRAPH_GREEK: /[α-ωΑ-Ω]/g,   // Greek characters
+  HOMOGRAPH_MIXED: /[а-яёα-ωΑ-Ω]/g, // Mixed homograph scripts
+  
+  // Bidirectional text attacks
+  BIDI_OVERRIDE: /[\u202A-\u202E\u2066-\u2069\u061C]/g,
+  
+  // Prototype pollution attempts
+  PROTOTYPE_POLLUTION: /__proto__|constructor\.prototype|\.prototype\.|\.constructor/gi,
+  
+  // Zero-width and invisible characters
+  ZERO_WIDTH_CHARS: /[\u200B-\u200D\uFEFF\u2060]/g,
 } as const;
 
 /**
@@ -244,7 +280,14 @@ export function analyzeInputSecurity(input: string): SecurityAnalysisResult {
     PATH_TRAVERSAL_PATTERNS.DOTDOT_SLASH,
     PATH_TRAVERSAL_PATTERNS.DOTDOT_ENCODED,
     PATH_TRAVERSAL_PATTERNS.DOUBLE_ENCODED,
+    PATH_TRAVERSAL_PATTERNS.TRIPLE_ENCODED,
+    PATH_TRAVERSAL_PATTERNS.OVERLONG_UTF8,
+    PATH_TRAVERSAL_PATTERNS.OVERLONG_BACKSLASH,
     PATH_TRAVERSAL_PATTERNS.MIXED_ENCODED,
+    PATH_TRAVERSAL_PATTERNS.UNICODE_TRAVERSAL,
+    PATH_TRAVERSAL_PATTERNS.UNICODE_FULLWIDTH,
+    PATH_TRAVERSAL_PATTERNS.UNICODE_VARIANTS,
+    PATH_TRAVERSAL_PATTERNS.ZERO_WIDTH_INJECTION,
     PATH_TRAVERSAL_PATTERNS.UNC_PATH,
     PATH_TRAVERSAL_PATTERNS.DRIVE_ROOT,
     PATH_TRAVERSAL_PATTERNS.ROOT_PATH,
@@ -256,7 +299,7 @@ export function analyzeInputSecurity(input: string): SecurityAnalysisResult {
       type: 'path-traversal',
       pattern: 'directory-traversal',
       severity: 'critical',
-      description: 'Directory traversal attempt detected',
+      description: 'Directory traversal attempt detected (including Unicode variants)',
       recommendation: 'Use relative paths within project directory only'
     });
     riskScore += 40;
@@ -272,6 +315,20 @@ export function analyzeInputSecurity(input: string): SecurityAnalysisResult {
       recommendation: 'Remove or escape shell special characters'
     });
     riskScore += 30;
+  }
+
+  // Check advanced command injection (environment variables, IFS bypass)
+  if (COMMAND_INJECTION_PATTERNS.PATH_MANIPULATION.test(input) || 
+      COMMAND_INJECTION_PATTERNS.IFS_BYPASS.test(input) ||
+      COMMAND_INJECTION_PATTERNS.QUOTE_ESCAPING.test(input)) {
+    violations.push({
+      type: 'command-injection',
+      pattern: 'advanced-injection',
+      severity: 'critical',
+      description: 'Advanced command injection attempt detected',
+      recommendation: 'Use parameterized commands and avoid environment variable manipulation'
+    });
+    riskScore += 45;
   }
 
   // Check for dangerous commands
@@ -323,6 +380,68 @@ export function analyzeInputSecurity(input: string): SecurityAnalysisResult {
     riskScore += 45;
   }
 
+  // Check Windows device names
+  if (FILE_SYSTEM_PATTERNS.WINDOWS_DEVICE_NAMES.test(input) ||
+      FILE_SYSTEM_PATTERNS.WINDOWS_DEVICE_VARIANTS.test(input)) {
+    violations.push({
+      type: 'file-system',
+      pattern: 'windows-device-names',
+      severity: 'medium',
+      description: 'Windows reserved device name detected',
+      recommendation: 'Avoid using Windows reserved names (CON, PRN, AUX, etc.)'
+    });
+    riskScore += 20;
+  }
+
+  // Check Windows filename edge cases (trailing dots/spaces)
+  if (FILE_SYSTEM_PATTERNS.WINDOWS_FILENAME_EDGE_CASES.test(input)) {
+    violations.push({
+      type: 'file-system',
+      pattern: 'windows-filename-edge-cases',
+      severity: 'low',
+      description: 'Windows filename edge case detected (trailing dots/spaces)',
+      recommendation: 'Remove trailing dots and spaces from filenames'
+    });
+    riskScore += 10;
+  }
+
+  // Check advanced attacks
+  ADVANCED_ATTACK_PATTERNS.HOMOGRAPH_MIXED.lastIndex = 0; // Reset global regex state
+  if (ADVANCED_ATTACK_PATTERNS.HOMOGRAPH_MIXED.test(input)) {
+    violations.push({
+      type: 'advanced-attack',
+      pattern: 'homograph-attack',
+      severity: 'high',
+      description: 'Homograph attack using non-Latin characters detected',
+      recommendation: 'Use only Latin characters for identifiers'
+    });
+    riskScore += 35;
+  }
+
+  ADVANCED_ATTACK_PATTERNS.BIDI_OVERRIDE.lastIndex = 0; // Reset global regex state
+  if (ADVANCED_ATTACK_PATTERNS.BIDI_OVERRIDE.test(input)) {
+    violations.push({
+      type: 'advanced-attack',
+      pattern: 'bidirectional-text',
+      severity: 'high',
+      description: 'Bidirectional text override attack detected',
+      recommendation: 'Remove bidirectional control characters'
+    });
+    riskScore += 35;
+  }
+
+  ADVANCED_ATTACK_PATTERNS.PROTOTYPE_POLLUTION.lastIndex = 0; // Reset global regex state
+  if (ADVANCED_ATTACK_PATTERNS.PROTOTYPE_POLLUTION.test(input)) {
+    violations.push({
+      type: 'advanced-attack',
+      pattern: 'prototype-pollution',
+      severity: 'high',
+      description: 'Prototype pollution attempt detected',
+      recommendation: 'Avoid accessing object prototype properties'
+    });
+    riskScore += 35;
+  }
+
   return {
     isSecure: violations.length === 0,
     violations,
@@ -364,7 +483,14 @@ export function sanitizeInput(input: string): string {
     PATH_TRAVERSAL_PATTERNS.DOTDOT_SLASH,
     PATH_TRAVERSAL_PATTERNS.DOTDOT_ENCODED,
     PATH_TRAVERSAL_PATTERNS.DOUBLE_ENCODED,
+    PATH_TRAVERSAL_PATTERNS.TRIPLE_ENCODED,
+    PATH_TRAVERSAL_PATTERNS.OVERLONG_UTF8,
+    PATH_TRAVERSAL_PATTERNS.OVERLONG_BACKSLASH,
     PATH_TRAVERSAL_PATTERNS.MIXED_ENCODED,
+    PATH_TRAVERSAL_PATTERNS.UNICODE_TRAVERSAL,
+    PATH_TRAVERSAL_PATTERNS.UNICODE_FULLWIDTH,
+    PATH_TRAVERSAL_PATTERNS.UNICODE_VARIANTS,
+    PATH_TRAVERSAL_PATTERNS.ZERO_WIDTH_INJECTION,
     PATH_TRAVERSAL_PATTERNS.NULL_BYTE
   ];
   
@@ -375,12 +501,41 @@ export function sanitizeInput(input: string): string {
   // Remove JavaScript injection patterns
   sanitized = sanitized.replace(SCRIPT_INJECTION_PATTERNS.JAVASCRIPT_EVAL, '');
   sanitized = sanitized.replace(SCRIPT_INJECTION_PATTERNS.JAVASCRIPT_FUNCTION, '');
+  sanitized = sanitized.replace(SCRIPT_INJECTION_PATTERNS.SCRIPT_TAG, '');
+  sanitized = sanitized.replace(SCRIPT_INJECTION_PATTERNS.SQL_KEYWORDS, '');
+  sanitized = sanitized.replace(SCRIPT_INJECTION_PATTERNS.NOSQL_OPERATORS, '');
+  sanitized = sanitized.replace(SCRIPT_INJECTION_PATTERNS.TEMPLATE_INJECTION, '');
 
-  // Escape shell metacharacters
-  sanitized = sanitized.replace(/([;&|`$(){}[\]<>])/g, '\\$1');
+  // Remove shell metacharacters entirely instead of escaping (more secure for edge cases)
+  sanitized = sanitized.replace(/[;&|`$(){}[\]<>]/g, '');
 
-  // Remove dangerous commands
+  // Remove dangerous commands and keywords
   sanitized = sanitized.replace(COMMAND_INJECTION_PATTERNS.DANGEROUS_COMMANDS, '');
+  sanitized = sanitized.replace(/\b(eval|alert|script|exec|system|rm|del)\b/gi, '');
+
+  // Remove advanced attack patterns
+  sanitized = sanitized.replace(COMMAND_INJECTION_PATTERNS.PATH_MANIPULATION, '');
+  sanitized = sanitized.replace(COMMAND_INJECTION_PATTERNS.IFS_BYPASS, '');
+  sanitized = sanitized.replace(ADVANCED_ATTACK_PATTERNS.BIDI_OVERRIDE, '');
+  sanitized = sanitized.replace(ADVANCED_ATTACK_PATTERNS.ZERO_WIDTH_CHARS, '');
+  sanitized = sanitized.replace(ADVANCED_ATTACK_PATTERNS.PROTOTYPE_POLLUTION, '');
+
+  // Normalize homograph characters to safe Latin equivalents
+  sanitized = sanitized.replace(ADVANCED_ATTACK_PATTERNS.HOMOGRAPH_CYRILLIC, match => {
+    // Simple Cyrillic to Latin mapping for common homographs
+    const cyrillicToLatin: Record<string, string> = {
+      'а': 'a', 'е': 'e', 'о': 'o', 'р': 'p', 'с': 'c', 'у': 'y', 'х': 'x'
+    };
+    return cyrillicToLatin[match.toLowerCase()] || '';
+  });
+
+  sanitized = sanitized.replace(ADVANCED_ATTACK_PATTERNS.HOMOGRAPH_GREEK, match => {
+    // Simple Greek to Latin mapping for common homographs  
+    const greekToLatin: Record<string, string> = {
+      'α': 'a', 'ο': 'o', 'ρ': 'p', 'υ': 'y', 'Α': 'A', 'Ο': 'O', 'Ρ': 'P'
+    };
+    return greekToLatin[match] || '';
+  });
 
   return sanitized;
 }

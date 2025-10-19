@@ -457,6 +457,14 @@ async function validateConfigFile(configPath: string): Promise<FrameworkSecurity
       if (v.type === 'command-injection' && /require\(['"][^'"]*['"]\)/.test(content)) {
         return false; // Allow require() statements
       }
+      // Allow JavaScript object syntax (curly braces) in config files
+      if (v.type === 'command-injection' && v.pattern === 'shell-metacharacters' && /const\s+\w+\s*=\s*\{/.test(content)) {
+        return false; // Allow object declarations like "const config = {"
+      }
+      // Exclude Windows filename edge cases from file content analysis (only relevant for actual filenames)
+      if (v.type === 'file-system' && v.pattern === 'windows-filename-edge-cases') {
+        return false; // Allow trailing spaces/dots in file content (only check filenames)
+      }
       return true; // Keep other violations
     });
     

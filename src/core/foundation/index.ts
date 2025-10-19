@@ -16,6 +16,7 @@ export * from './log-security.js';
 
 // Export security patterns for input validation
 export * from './security-patterns.js';
+export { ADVANCED_ATTACK_PATTERNS } from './security-patterns.js';
 
 // Export framework security detection utilities
 export * from './framework-security.js';
