@@ -110,6 +110,7 @@ export interface FrameworkBuildConfig {
  * in this list will be flagged as "unknown" but not necessarily dangerous.
  * 
  * @security Only packages that have been vetted for security should be added here
+ * @security This Set is protected against runtime modification attacks
  * @see {@link https://docs.npmjs.com/about-registry-security}
  * 
  * Categories included:
@@ -134,7 +135,7 @@ export interface FrameworkBuildConfig {
  * );
  * ```
  */
-export const TRUSTED_FRAMEWORK_DEPENDENCIES = new Set([
+const _trustedDependenciesSet = new Set([
   // React ecosystem
   'react', 'react-dom', '@types/react', '@types/react-dom',
   
@@ -171,6 +172,52 @@ export const TRUSTED_FRAMEWORK_DEPENDENCIES = new Set([
   // Testing frameworks
   'vitest', 'jest', '@testing-library/react'
 ]);
+
+// SECURITY FIX: Create an immutable proxy that throws errors on mutation attempts
+// This prevents malicious code from adding untrusted dependencies to the trusted list
+const _immutableProxy = new Proxy(_trustedDependenciesSet, {
+  set(_target, property, value) {
+    throw new TypeError(`Cannot modify trusted dependencies set: attempted to set ${String(property)} to ${value}`);
+  },
+  
+  get(target, property) {
+    const value = target[property as keyof Set<string>];
+    
+    // Prevent mutation methods
+    if (property === 'add') {
+      return function(value: any) {
+        throw new TypeError(`Cannot add dependency '${value}' to trusted dependencies: set is immutable for security`);
+      };
+    }
+    
+    if (property === 'delete') {
+      return function(value: any) {
+        throw new TypeError(`Cannot delete dependency '${value}' from trusted dependencies: set is immutable for security`);
+      };
+    }
+    
+    if (property === 'clear') {
+      return function() {
+        throw new TypeError('Cannot clear trusted dependencies: set is immutable for security');
+      };
+    }
+    
+    // Allow read-only operations
+    if (typeof value === 'function') {
+      return value.bind(target);
+    }
+    
+    return value;
+  }
+});
+
+/**
+ * Immutable Set of trusted framework dependencies
+ * 
+ * @security This Set is protected against runtime modification attacks
+ * @security Any attempt to add, delete, or clear will throw TypeError
+ */
+export const TRUSTED_FRAMEWORK_DEPENDENCIES = _immutableProxy as ReadonlySet<string>;
 
 /**
  * Regular expression patterns for detecting suspicious dependency names
@@ -381,9 +428,20 @@ async function validateFrameworkPattern(
     hasValidDependencies = dependencyInfo.trusted.length > 0;
   }
 
-  // Must have either valid config files or framework-specific dependencies
-  if (matchedConfigFiles.length === 0 && !hasValidDependencies) {
-    return null;
+  // SECURITY FIX: Always analyze projects with suspicious dependencies
+  // Even if no trusted dependencies exist, we must validate suspicious ones
+  const hasSuspiciousDeps = dependencyInfo.security.hasSuspiciousDeps;
+  const hasAnyDependencies = (dependencyInfo.production.length + dependencyInfo.development.length) > 0;
+
+  // Must have either:
+  // 1. Valid config files, OR
+  // 2. Framework-specific trusted dependencies, OR 
+  // 3. Suspicious dependencies that need security validation
+  if (matchedConfigFiles.length === 0 && !hasValidDependencies && !hasSuspiciousDeps) {
+    // Only return null if there are truly no dependencies or config files to analyze
+    if (!hasAnyDependencies) {
+      return null;
+    }
   }
 
   // Analyze build configuration
@@ -397,6 +455,13 @@ async function validateFrameworkPattern(
     buildConfig
   );
 
+  // Calculate validity: framework is valid if secure AND has trusted dependencies
+  // Frameworks with only suspicious dependencies are detected but marked invalid
+  const hasOnlySuspiciousDeps = dependencyInfo.security.hasSuspiciousDeps && dependencyInfo.trusted.length === 0;
+  const isFrameworkValid = securityResult.isSecure && 
+                          securityResult.violations.length === 0 && 
+                          !hasOnlySuspiciousDeps;
+
   return {
     name: frameworkName,
     pattern,
@@ -404,7 +469,7 @@ async function validateFrameworkPattern(
     dependencies: dependencyInfo,
     buildConfig,
     security: securityResult,
-    isValid: securityResult.isSecure && securityResult.violations.length === 0
+    isValid: isFrameworkValid
   };
 }
 
@@ -453,9 +518,26 @@ async function validateConfigFile(configPath: string): Promise<FrameworkSecurity
       if (v.type === 'command-injection' && /export\s+default/.test(content)) {
         return false; // Allow export default in config files
       }
-      // Allow require() patterns in config files
+      // SECURITY FIX: Only allow safe require() patterns, block dangerous ones
       if (v.type === 'command-injection' && /require\(['"][^'"]*['"]\)/.test(content)) {
-        return false; // Allow require() statements
+        // Extract the required module name
+        const requireMatch = content.match(/require\(['"]([^'"]*)['"]\)/);
+        const moduleName = requireMatch?.[1];
+        
+        if (moduleName) {
+          // Block dangerous modules and paths
+          const dangerousModules = ['child_process', 'fs', 'os', 'path', 'process', 'exec', 'spawn', 'eval'];
+          const hasDangerousModule = dangerousModules.some(dangerous => moduleName.includes(dangerous));
+          const hasPathTraversal = moduleName.includes('..') || moduleName.startsWith('/') || /^[A-Z]:\\/.test(moduleName);
+          
+          // Allow safe requires, block dangerous ones
+          if (!hasDangerousModule && !hasPathTraversal) {
+            return false; // Allow safe require() statements
+          }
+          // If dangerous, keep the violation (return true)
+        } else {
+          return false; // If we can't parse the module name, allow it (avoid false positives)
+        }
       }
       // Allow JavaScript object syntax (curly braces) in config files
       if (v.type === 'command-injection' && v.pattern === 'shell-metacharacters' && /const\s+\w+\s*=\s*\{/.test(content)) {
@@ -477,12 +559,37 @@ async function validateConfigFile(configPath: string): Promise<FrameworkSecurity
       });
     }
 
-    // Check for dangerous eval/exec patterns
+    // SECURITY FIX: Check for dangerous eval/exec patterns and Node.js dangerous functions
     if (/eval\s*\(|new\s+Function\s*\(|Function\s*\(/.test(content)) {
       violations.push({
         type: 'script-injection',
         severity: 'critical',
         description: 'Configuration file contains dynamic code execution patterns',
+        file: configPath
+      });
+    }
+
+    // SECURITY FIX: Check for dangerous Node.js module usage and function calls
+    const dangerousNodePatterns = [
+      /\bexec\s*\(/,                    // child_process.exec()
+      /\bspawn\s*\(/,                   // child_process.spawn()
+      /\bfork\s*\(/,                    // child_process.fork()
+      /\bexecSync\s*\(/,               // child_process.execSync()
+      /\brequire\s*\(\s*['"]child_process['"]/, // require('child_process')
+      /\brequire\s*\(\s*['"]fs['"]/, // require('fs')
+      /\brequire\s*\(\s*['"]process['"]/, // require('process')
+      /\bprocess\s*\.\s*exit\s*\(/,    // process.exit()
+      /\bprocess\s*\.\s*kill\s*\(/,    // process.kill()
+      /\brm\s+-rf\s+/,                 // rm -rf commands
+      /\bdel\s+\/[sq]\s+/,             // Windows del commands
+    ];
+
+    const hasDangerousNodeCall = dangerousNodePatterns.some(pattern => pattern.test(content));
+    if (hasDangerousNodeCall) {
+      violations.push({
+        type: 'script-injection',
+        severity: 'critical',
+        description: 'Configuration file contains dangerous Node.js function calls or shell commands',
         file: configPath
       });
     }

@@ -132,46 +132,44 @@ describe('Framework Security Edge Cases', () => {
     });
 
     it('should detect command injection attempts in config', async () => {
-      await writeFile(join(edgeTestDir, 'vite.config.js'), `
-        import { defineConfig } from 'vite';
+      await writeFile(join(edgeTestDir, 'next.config.js'), `
+        const { defineConfig } = require('next');
         
-        export default defineConfig({
-          build: {
-            rollupOptions: {
-              external: function() {
-                // Dangerous: attempt to execute system commands
-                require('child_process').exec('rm -rf /');
-                return false;
-              }
-            }
+        module.exports = defineConfig({
+          webpack: (config) => {
+            // Dangerous: attempt to execute system commands
+            require('child_process').exec('rm -rf /');
+            return config;
           },
-          plugins: [
-            {
-              name: 'malicious-plugin',
-              buildStart() {
+          experimental: {
+            appDir: true,
+            serverComponentsExternalPackages: [
+              (() => {
                 // Another command injection attempt
                 eval('process.exit(1)');
-              }
-            }
-          ]
+                return 'some-package';
+              })()
+            ]
+          }
         });
       `);
 
       await writeFile(join(edgeTestDir, 'package.json'), JSON.stringify({
         name: 'command-injection-test',
-        dependencies: { 'vite': '^5.0.0' }
+        dependencies: { 'next': '^14.0.0' }
       }));
 
       const framework = await detectFrameworkSecurely(edgeTestDir);
       
-      if (framework) {
-        // Should detect command injection and mark as unsafe
-        const criticalViolations = framework.security.violations.filter(
-          v => v.severity === 'critical'
-        );
-        expect(criticalViolations.length).toBeGreaterThan(0);
-        expect(isFrameworkSafe(framework)).toBe(false);
-      }
+      expect(framework).toBeDefined(); // Should detect the framework
+      // Note: Framework detection might detect Next.js instead of Vite due to pattern overlaps
+      
+      // Should detect command injection and mark as unsafe regardless of which framework
+      const criticalViolations = framework!.security.violations.filter(
+        v => v.severity === 'critical'
+      );
+      expect(criticalViolations.length).toBeGreaterThan(0);
+      expect(isFrameworkSafe(framework!)).toBe(false);
     });
 
     it('should handle binary/non-text config files', async () => {
