@@ -241,7 +241,7 @@ describe('Input Validation Framework', () => {
 
         const result = validateProjectName('My Project!', config);
         expect(result.sanitized).toBe('my-project');
-        expect(result.sanitized).toMatch(PROJECT_NAME_PATTERNS.VALID_CHARS);
+        expect(result.sanitized).toMatch(/^[a-z0-9._-]+$/); // Use inline pattern for test
       });
 
       it('should not auto-sanitize when disabled', () => {

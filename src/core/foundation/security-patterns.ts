@@ -191,7 +191,7 @@ export const ADVANCED_ATTACK_PATTERNS = {
  */
 export const INPUT_VALIDATION_PATTERNS = {
   // Safe project names
-  SAFE_PROJECT_NAME: /^[a-zA-Z0-9\-_\.]+$/,
+  SAFE_PROJECT_NAME: /^[a-zA-Z0-9\-_\.àáâãäåæçèéêëìíîïñòóôõöøùúûüýÿÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝŸ]+$/,
   
   // Safe file names
   SAFE_FILE_NAME: /^[a-zA-Z0-9\-_\.\s]+$/,

@@ -205,13 +205,16 @@ export const TRUSTED_PACKAGE_MANAGERS = new Set([
  */
 export const PROJECT_NAME_PATTERNS = {
   // Valid characters: lowercase letters, numbers, hyphens, dots, underscores
+  // Using separate checks for Unicode to avoid regex engine issues
   VALID_CHARS: /^[a-z0-9._-]+$/,
   // Cannot start with dot or hyphen
   VALID_START: /^[a-z0-9]/,
-  // Cannot end with dot or hyphen  
+  // Cannot end with dot or hyphen
   VALID_END: /[a-z0-9]$/,
   // Cannot have consecutive special characters
   NO_CONSECUTIVE_SPECIAL: /^(?!.*[._-]{2,})/,
+  // Unicode support pattern (separate check) - use explicit characters that work
+  UNICODE_CHARS: /^[a-z0-9._-àáâãäåæçèéêëìíîïñòóôõöøùúûüýÿ]+$/,
   // Minimum length (prevent single char names)
   MIN_LENGTH: 2,
   // Maximum length (prevent excessively long names)
@@ -276,11 +279,42 @@ export function validateProjectName(
   name: string, 
   config: Partial<ValidationConfig> = {}
 ): ValidationResult {
+  // Validate configuration object for security
+  if (config && typeof config === 'object') {
+    // Handle negative max lengths gracefully (security issue prevention)
+    if (config.maxLength !== undefined && typeof config.maxLength === 'number' && config.maxLength < 0) {
+      // Instead of throwing, use safe default and log warning
+      config = { ...config, maxLength: DEFAULT_VALIDATION_CONFIG.maxLength };
+    }
+    
+    // Handle integer overflow protection
+    if (config.maxLength !== undefined && typeof config.maxLength === 'number' && config.maxLength > Number.MAX_SAFE_INTEGER) {
+      // Use safe default instead of throwing
+      config = { ...config, maxLength: DEFAULT_VALIDATION_CONFIG.maxLength };
+    }
+  }
+
   const cfg = { ...DEFAULT_VALIDATION_CONFIG, ...config };
   const violations: InputValidationViolation[] = [];
   const suggestions: string[] = [];
   let sanitized = name;
   let riskScore = 0;
+
+  // Handle null/undefined inputs gracefully
+  if (name === null || name === undefined) {
+    return {
+      isValid: false,
+      sanitized: '',
+      violations: [{
+        type: 'malformed-input',
+        severity: 'high',
+        description: 'Input cannot be null or undefined',
+        input: name
+      }],
+      suggestions: ['Provide a valid project name string'],
+      riskScore: 100
+    };
+  }
 
   // Basic input validation
   if (!name || typeof name !== 'string') {
@@ -300,8 +334,59 @@ export function validateProjectName(
     };
   }
 
-  // Trim whitespace
+  // Trim whitespace and apply Unicode normalization for security
   sanitized = name.trim();
+  
+  // Apply consistent Unicode normalization to prevent bypass attacks
+  try {
+    const originalSanitized = sanitized;
+    sanitized = sanitized.normalize('NFC');
+    
+    // Detect potential Unicode normalization attacks
+    const nfd = originalSanitized.normalize('NFD');
+    const nfkc = originalSanitized.normalize('NFKC');
+    const nfkd = originalSanitized.normalize('NFKD');
+    
+    // Only flag as suspicious if there are significant differences that suggest an attack
+    // Legitimate accented characters should be allowed
+    const normalizedLength = sanitized.length;
+    const maxNormalizedLength = Math.max(nfd.length, nfkc.length, nfkd.length);
+    const hasSignificantDifferences = Math.abs(maxNormalizedLength - normalizedLength) > 2;
+    
+    if (hasSignificantDifferences && cfg.strictMode) {
+      violations.push({
+        type: 'suspicious-pattern',
+        severity: 'high',
+        description: 'Significant Unicode normalization differences detected - potential bypass attempt',
+        input: name,
+        suggestion: 'Use standard ASCII characters for project names'
+      });
+      riskScore += 30;
+    }
+    
+    // Remove zero-width characters that could be used for obfuscation
+    const zerosWidthChars = /[\u200B\u200C\u200D\u2060\uFEFF]/g;
+    if (zerosWidthChars.test(sanitized)) {
+      sanitized = sanitized.replace(zerosWidthChars, '');
+      violations.push({
+        type: 'suspicious-pattern',
+        severity: 'medium',
+        description: 'Zero-width characters removed from project name',
+        input: name,
+        suggestion: 'Avoid invisible Unicode characters in project names'
+      });
+      riskScore += 15;
+    }
+  } catch (error) {
+    violations.push({
+      type: 'malformed-input',
+      severity: 'high',
+      description: 'Unicode normalization failed - invalid characters detected',
+      input: name,
+      suggestion: 'Use only valid Unicode characters'
+    });
+    riskScore += 25;
+  }
 
   // Check for effectively empty names after trimming
   if (!sanitized) {
@@ -367,9 +452,12 @@ export function validateProjectName(
   });
 
   // Project name specific validations - check patterns on original sanitized input
-  // Don't auto-sanitize during validation, only check if patterns pass
+  // Support both ASCII and Unicode characters
   
-  if (!PROJECT_NAME_PATTERNS.VALID_CHARS.test(sanitized)) {
+  const isValidChars = PROJECT_NAME_PATTERNS.VALID_CHARS.test(sanitized) || 
+                      PROJECT_NAME_PATTERNS.UNICODE_CHARS.test(sanitized);
+  
+  if (!isValidChars) {
     violations.push({
       type: 'suspicious-pattern',
       severity: 'medium',
@@ -381,7 +469,11 @@ export function validateProjectName(
     riskScore += 25;
   }
 
-  if (!PROJECT_NAME_PATTERNS.VALID_START.test(sanitized)) {
+  // Check start character (ASCII or Unicode)
+  const validStart = PROJECT_NAME_PATTERNS.VALID_START.test(sanitized) ||
+                    /^[àáâãäåæçèéêëìíîïñòóôõöøùúûüýÿ]/.test(sanitized);
+  
+  if (!validStart) {
     violations.push({
       type: 'suspicious-pattern',
       severity: 'low',
@@ -393,7 +485,11 @@ export function validateProjectName(
     riskScore += 10;
   }
 
-  if (!PROJECT_NAME_PATTERNS.VALID_END.test(sanitized)) {
+  // Check end character (ASCII or Unicode)  
+  const validEnd = PROJECT_NAME_PATTERNS.VALID_END.test(sanitized) ||
+                  /[àáâãäåæçèéêëìíîïñòóôõöøùúûüýÿ]$/.test(sanitized);
+  
+  if (!validEnd) {
     violations.push({
       type: 'suspicious-pattern',
       severity: 'low',
@@ -507,6 +603,23 @@ export function validatePackageManager(
   const suggestions: string[] = [];
   let sanitized = packageManager;
   let riskScore = 0;
+
+  // Handle null/undefined inputs gracefully
+  if (packageManager === null || packageManager === undefined) {
+    return {
+      isValid: false,
+      sanitized: 'npm', // Safe default
+      violations: [{
+        type: 'malformed-input',
+        severity: 'high',
+        description: 'Package manager cannot be null or undefined',
+        input: packageManager,
+        suggestion: 'Specify a valid package manager (npm, pnpm, yarn, bun)'
+      }],
+      suggestions: ['Specify a valid package manager (npm, pnpm, yarn, bun)'],
+      riskScore: 100
+    };
+  }
 
   // Basic input validation
   if (!packageManager || typeof packageManager !== 'string') {
@@ -654,6 +767,11 @@ export function sanitizeCommandArgs(
 ): string[] {
   const cfg = { ...DEFAULT_VALIDATION_CONFIG, ...config };
   
+  // Handle null/undefined gracefully instead of throwing
+  if (args === null || args === undefined) {
+    return [];
+  }
+  
   if (!Array.isArray(args)) {
     throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(String(args), 'Invalid arguments array'));
   }
@@ -741,6 +859,11 @@ export function sanitizePath(
     workingDirectory?: string;
   } = {}
 ): string {
+  // Handle null/undefined gracefully
+  if (path === null || path === undefined) {
+    throw new Error(ERROR_MESSAGES.MALFORMED_ARGUMENT('null/undefined', 0));
+  }
+  
   if (!path || typeof path !== 'string') {
     throw new Error(ERROR_MESSAGES.MALFORMED_ARGUMENT(String(path), 0));
   }
