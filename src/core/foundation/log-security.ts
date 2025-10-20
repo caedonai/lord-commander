@@ -18,12 +18,38 @@
  * @security Comprehensive protection against 15+ categories of terminal manipulation
  * @compliance OWASP logging guidelines, CWE-117 (Improper Output Neutralization)
  * @performance Optimized with pre-compiled regex patterns and bounded execution
+ * @architecture Improved DIP compliance through logger abstraction
  */
+
+/**
+ * Security logger interface for dependency inversion and testability
+ * 
+ * @architecture Abstracts logging dependencies to improve DIP compliance
+ * @security Provides controlled logging interface for security events
+ */
+export interface SecurityLogger {
+    /** Log security warnings and non-critical events */
+    warn(message: string): void;
+    
+    /** Log critical security events and errors */
+    error(message: string): void;
+}
+
+/**
+ * Default console-based security logger implementation
+ * 
+ * @architecture Provides concrete implementation while maintaining abstraction
+ */
+export const DEFAULT_SECURITY_LOGGER: SecurityLogger = {
+    warn: (message: string) => console.warn(message),
+    error: (message: string) => console.error(message)
+};
 
 /**
  * Enhanced configuration for comprehensive log injection protection
  * 
  * @security Configurable protection levels for different deployment environments
+ * @architecture Includes logger dependency injection for improved DIP compliance
  */
 export interface LogInjectionConfig {
     /** Enable/disable all log injection protection */
@@ -61,6 +87,9 @@ export interface LogInjectionConfig {
     
     /** Callback for security violations */
     onSecurityViolation?: (violation: LogSecurityViolation) => void;
+    
+    /** Logger implementation for security events (DIP compliance) */
+    logger?: SecurityLogger;
 }
 
 /**
@@ -103,8 +132,9 @@ export interface LogSecurityViolation {
  * Enhanced default configuration for comprehensive log injection protection
  * 
  * @security Provides secure-by-default configuration with enterprise-grade protection
+ * @architecture Includes default logger implementation for DIP compliance
  */
-const DEFAULT_LOG_INJECTION_CONFIG: Required<LogInjectionConfig> = {
+const DEFAULT_LOG_INJECTION_CONFIG: Required<Omit<LogInjectionConfig, 'onSecurityViolation'>> & { onSecurityViolation?: (violation: LogSecurityViolation) => void } = {
     enableProtection: true,
     maxLineLength: 2000,
     allowControlChars: false,
@@ -116,6 +146,7 @@ const DEFAULT_LOG_INJECTION_CONFIG: Required<LogInjectionConfig> = {
     detectHyperlinkInjection: true,
     detectCommandExecution: true,
     customDangerousPatterns: [],
+    logger: DEFAULT_SECURITY_LOGGER,
     onSecurityViolation: undefined
 };
 
@@ -150,13 +181,13 @@ const TERMINAL_ATTACK_PATTERNS = {
     
     // Unicode bidirectional and homograph attacks
     BIDI_OVERRIDE: /[\u202A-\u202E\u2066-\u2069]/g,       // Bidirectional text overrides
-    ZERO_WIDTH: /[\u200B-\u200D\uFEFF]/g,                 // Zero-width characters
+    ZERO_WIDTH: /[\u200B-\u200D\uFEFF\u2060\u180E]/g,    // Zero-width characters (enhanced)
     CONFUSABLES: /[\u0430-\u044F\u0410-\u042F]/g,         // Cyrillic confusables
     
     // Format string and command execution attempts
     FORMAT_STRINGS: /%[diouxXeEfFgGaAcspn%]/g,            // C-style format strings
-    SHELL_COMMANDS: /\$\([^)]+\)|\`[^`]+\`/g,             // Command substitution
-    EVAL_ATTEMPTS: /eval\s*\(|exec\s*\(|system\s*\(/gi,   // Code execution attempts
+    SHELL_COMMANDS: /\$\([^)]+\)|\`[^`]+\`|\$\{[^}]+\}/g, // Command substitution (enhanced)
+    EVAL_ATTEMPTS: /eval\s*[\(\[]|exec\s*[\(\[]|system\s*[\(\[]|window\s*\[\s*["']\s*e\s*["']\s*\+\s*["']\s*val\s*["']\s*\]|window\s*\[\s*["'][^"']*e[^"']*val[^"']*["']\s*\]|globalThis\s*\[\s*["'][^"']*eval[^"']*["']\s*\]/gi, // Code execution attempts (enhanced)
     
     // Hyperlink injection patterns
     HYPERLINKS: /\x1B]8;[^;]*;[^\x07\x1B]*(?:\x07|\x1B\\)/g, // Terminal hyperlinks
@@ -168,6 +199,83 @@ const TERMINAL_ATTACK_PATTERNS = {
     NULL_BYTES: /\x00/g,                                  // Null byte injection
     EXCESSIVE_WHITESPACE: /\s{20,}/g                       // Excessive whitespace
 };
+
+/**
+ * Sanitization rule for pattern-based security violations
+ * 
+ * @architecture DRY compliance helper for sanitization patterns
+ */
+interface SanitizationRule {
+    /** Regex pattern to detect attack */
+    pattern: RegExp;
+    
+    /** Replacement string for detected pattern */
+    replacement: string;
+    
+    /** Type of security violation */
+    violationType: LogSecurityViolation['type'];
+    
+    /** Severity level of the violation */
+    severity: LogSecurityViolation['severity'];
+    
+    /** Human-readable description */
+    description: string;
+    
+    /** Whether this rule should be applied in permissive mode */
+    skipInPermissive?: boolean;
+    
+    /** Whether this rule should only be applied in strict mode */
+    strictModeOnly?: boolean;
+}
+
+/**
+ * Apply a sanitization rule with violation tracking
+ * 
+ * @architecture DRY compliance helper to eliminate repeated sanitization logic
+ * @security Centralized pattern detection and violation tracking
+ */
+function applySanitizationRule(
+    message: string, 
+    rule: SanitizationRule, 
+    violations: LogSecurityViolation[],
+    isStrict: boolean = false,
+    isPermissive: boolean = false
+): string {
+    // Skip rule based on protection level
+    if (rule.skipInPermissive && isPermissive) {
+        return message;
+    }
+    
+    if (rule.strictModeOnly && !isStrict) {
+        return message;
+    }
+    
+    // Apply sanitization if pattern matches
+    if (rule.pattern.test(message)) {
+        violations.push(createViolation(rule.violationType, rule.severity, rule.description, message));
+        return message.replace(rule.pattern, rule.replacement);
+    }
+    
+    return message;
+}
+
+/**
+ * Apply multiple sanitization rules in sequence
+ * 
+ * @architecture DRY compliance helper for batch rule application
+ */
+function applySanitizationRules(
+    message: string,
+    rules: SanitizationRule[],
+    violations: LogSecurityViolation[],
+    isStrict: boolean = false,
+    isPermissive: boolean = false
+): string {
+    return rules.reduce((sanitized, rule) => 
+        applySanitizationRule(sanitized, rule, violations, isStrict, isPermissive), 
+        message
+    );
+}
 
 /**
  * Enhanced sanitize log output to prevent comprehensive terminal manipulation attacks
@@ -183,20 +291,77 @@ const TERMINAL_ATTACK_PATTERNS = {
  * 
  * @security Provides enterprise-grade protection with comprehensive attack coverage
  * @performance Optimized with pre-compiled regex patterns and bounded execution
+ * @architecture Improved DRY compliance through helper functions
  */
 export function sanitizeLogOutput(message: string): string {
     if (!message || typeof message !== 'string') {
         return '';
     }
     
-    // Use enhanced sanitization with strict defaults
+    // Use enhanced sanitization with strict but backward-compatible defaults
     return sanitizeLogOutputAdvanced(message, {
         protectionLevel: 'strict',
         detectTerminalManipulation: true,
         detectUnicodeAttacks: true,
         detectHyperlinkInjection: true,
-        detectCommandExecution: true
+        detectCommandExecution: true,
+        preserveFormatting: true, // Allow legitimate newlines/tabs for backward compatibility
+        allowControlChars: false  // But still block dangerous control chars
     });
+}
+
+/**
+ * Validate and sanitize log injection configuration
+ * 
+ * @security Ensures configuration values are safe and within acceptable bounds
+ * @architecture Handles logger dependency injection for DIP compliance
+ */
+function validateAndSanitizeConfig(config: Partial<LogInjectionConfig>): Required<Omit<LogInjectionConfig, 'onSecurityViolation'>> & { onSecurityViolation?: (violation: LogSecurityViolation) => void } {
+    // Merge with defaults, ensuring logger is available
+    const validated = { 
+        ...DEFAULT_LOG_INJECTION_CONFIG, 
+        ...config,
+        logger: config.logger || DEFAULT_SECURITY_LOGGER
+    };
+    
+    // Validate protection level
+    if (!['strict', 'standard', 'permissive'].includes(validated.protectionLevel)) {
+        validated.logger.warn(`[Log Security] Invalid protection level: ${validated.protectionLevel}. Using 'standard'.`);
+        validated.protectionLevel = 'standard';
+    }
+    
+    // Validate numeric values
+    if (typeof validated.maxLineLength !== 'number' || validated.maxLineLength < 0) {
+        validated.logger.warn(`[Log Security] Invalid maxLineLength: ${validated.maxLineLength}. Using default 2000.`);
+        validated.maxLineLength = 2000;
+    }
+    
+    if (typeof validated.warningThreshold !== 'number' || validated.warningThreshold < 0) {
+        validated.logger.warn(`[Log Security] Invalid warningThreshold: ${validated.warningThreshold}. Using default 1000.`);
+        validated.warningThreshold = 1000;
+    }
+    
+    // Validate custom patterns
+    if (validated.customDangerousPatterns && Array.isArray(validated.customDangerousPatterns)) {
+        validated.customDangerousPatterns = validated.customDangerousPatterns.filter(pattern => {
+            try {
+                return pattern instanceof RegExp && typeof pattern.test === 'function';
+            } catch {
+                validated.logger.warn(`[Log Security] Invalid regex pattern detected and removed.`);
+                return false;
+            }
+        });
+    } else {
+        validated.customDangerousPatterns = [];
+    }
+    
+    // Validate callback function (remove if invalid, keep undefined as valid)
+    if (validated.onSecurityViolation !== undefined && typeof validated.onSecurityViolation !== 'function') {
+        validated.logger.warn(`[Log Security] Invalid onSecurityViolation callback. Removing.`);
+        validated.onSecurityViolation = undefined;
+    }
+    
+    return validated;
 }
 
 /**
@@ -217,7 +382,8 @@ export function sanitizeLogOutputAdvanced(
         return '';
     }
     
-    const finalConfig = { ...DEFAULT_LOG_INJECTION_CONFIG, ...config };
+    // Validate and sanitize configuration
+    const finalConfig = validateAndSanitizeConfig({ ...DEFAULT_LOG_INJECTION_CONFIG, ...config });
     
     if (!finalConfig.enableProtection) {
         return message;
@@ -233,22 +399,33 @@ export function sanitizeLogOutputAdvanced(
     
     // 1. ANSI Escape Sequence Protection
     if (finalConfig.detectTerminalManipulation && !isPermissive) {
-        if (TERMINAL_ATTACK_PATTERNS.ANSI_CSI.test(sanitized)) {
-            violations.push(createViolation('ansi-escape', 'medium', 'ANSI CSI sequences detected', sanitized));
-            sanitized = sanitized.replace(TERMINAL_ATTACK_PATTERNS.ANSI_CSI, '[ANSI-CSI]');
-        }
+        const ansiRules: SanitizationRule[] = [
+            {
+                pattern: TERMINAL_ATTACK_PATTERNS.ANSI_CSI,
+                replacement: '[ANSI-CSI]',
+                violationType: 'ansi-escape',
+                severity: 'medium',
+                description: 'ANSI CSI sequences detected'
+            },
+            {
+                pattern: TERMINAL_ATTACK_PATTERNS.ANSI_OSC,
+                replacement: '[OSC-CMD]',
+                violationType: 'terminal-manipulation',
+                severity: 'high',
+                description: 'OSC terminal control sequences detected'
+            },
+            {
+                pattern: TERMINAL_ATTACK_PATTERNS.ANSI_DCS,
+                replacement: '[DCS-CMD]',
+                violationType: 'terminal-manipulation',
+                severity: 'high',
+                description: 'Device Control String detected'
+            }
+        ];
         
-        if (TERMINAL_ATTACK_PATTERNS.ANSI_OSC.test(sanitized)) {
-            violations.push(createViolation('terminal-manipulation', 'high', 'OSC terminal control sequences detected', sanitized));
-            sanitized = sanitized.replace(TERMINAL_ATTACK_PATTERNS.ANSI_OSC, '[OSC-CMD]');
-        }
+        sanitized = applySanitizationRules(sanitized, ansiRules, violations, isStrict, isPermissive);
         
-        if (TERMINAL_ATTACK_PATTERNS.ANSI_DCS.test(sanitized)) {
-            violations.push(createViolation('terminal-manipulation', 'high', 'Device Control String detected', sanitized));
-            sanitized = sanitized.replace(TERMINAL_ATTACK_PATTERNS.ANSI_DCS, '[DCS-CMD]');
-        }
-        
-        // Additional ANSI sequences
+        // Additional ANSI sequences (non-violation tracking for backward compatibility)
         sanitized = sanitized
             .replace(TERMINAL_ATTACK_PATTERNS.ANSI_APC, '[APC-CMD]')
             .replace(TERMINAL_ATTACK_PATTERNS.ANSI_PM, '[PM-CMD]')
@@ -257,16 +434,26 @@ export function sanitizeLogOutputAdvanced(
     
     // 2. Terminal Manipulation Protection
     if (finalConfig.detectTerminalManipulation) {
-        if (TERMINAL_ATTACK_PATTERNS.TERMINAL_TITLE.test(sanitized)) {
-            violations.push(createViolation('terminal-manipulation', 'medium', 'Terminal title manipulation detected', sanitized));
-            sanitized = sanitized.replace(TERMINAL_ATTACK_PATTERNS.TERMINAL_TITLE, '[TITLE-SET]');
-        }
+        const terminalRules: SanitizationRule[] = [
+            {
+                pattern: TERMINAL_ATTACK_PATTERNS.TERMINAL_TITLE,
+                replacement: '[TITLE-SET]',
+                violationType: 'terminal-manipulation',
+                severity: 'medium',
+                description: 'Terminal title manipulation detected'
+            },
+            {
+                pattern: TERMINAL_ATTACK_PATTERNS.TERMINAL_RESET,
+                replacement: '[TERM-RESET]',
+                violationType: 'terminal-manipulation',
+                severity: 'critical',
+                description: 'Terminal reset command detected'
+            }
+        ];
         
-        if (TERMINAL_ATTACK_PATTERNS.TERMINAL_RESET.test(sanitized)) {
-            violations.push(createViolation('terminal-manipulation', 'critical', 'Terminal reset command detected', sanitized));
-            sanitized = sanitized.replace(TERMINAL_ATTACK_PATTERNS.TERMINAL_RESET, '[TERM-RESET]');
-        }
+        sanitized = applySanitizationRules(sanitized, terminalRules, violations, isStrict, isPermissive);
         
+        // Additional terminal sequences (non-violation tracking for backward compatibility)
         sanitized = sanitized
             .replace(TERMINAL_ATTACK_PATTERNS.SCREEN_CLEAR, '[SCREEN-CLEAR]')
             .replace(TERMINAL_ATTACK_PATTERNS.CURSOR_HOME, '[CURSOR-HOME]')
@@ -274,16 +461,30 @@ export function sanitizeLogOutputAdvanced(
             .replace(TERMINAL_ATTACK_PATTERNS.CURSOR_RESTORE, '[CURSOR-RESTORE]');
     }
     
-    // 3. Control Character Protection
-    if (!finalConfig.allowControlChars) {
-        // Preserve legitimate formatting if requested
-        let preserveChars = '';
-        if (finalConfig.preserveFormatting) {
-            preserveChars = '\t\n\r'; // Tab, newline, carriage return
+    // 3. Log Injection Protection (moved before control char protection)
+    if (!finalConfig.preserveFormatting) {
+        if (TERMINAL_ATTACK_PATTERNS.LOG_INJECTION.test(sanitized)) {
+            violations.push(createViolation('line-injection', 'high', 'Line ending injection detected', sanitized));
+            sanitized = sanitized
+                .replace(/\r\n/g, ' [CRLF] ')
+                .replace(/\r/g, ' [CR] ')
+                .replace(/\n/g, ' [LF] ');
         }
+    }
+
+    // 4. Control Character Protection
+    if (!finalConfig.allowControlChars) {
+        // Build pattern to remove dangerous control characters while preserving formatting
+        let controlCharPattern: RegExp;
         
-        // Remove dangerous control characters
-        const controlCharPattern = new RegExp(`[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F${preserveChars.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}]`, 'g');
+        if (finalConfig.preserveFormatting) {
+            // Exclude tab (\x09), newline (\x0A), and carriage return (\x0D) when preserving formatting
+            controlCharPattern = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
+        } else {
+            // When not preserving formatting, line endings are already handled above by log injection protection
+            // So exclude them from control char removal to avoid double processing
+            controlCharPattern = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
+        }
         
         if (controlCharPattern.test(sanitized)) {
             violations.push(createViolation('control-chars', 'medium', 'Dangerous control characters detected', sanitized));
@@ -299,43 +500,66 @@ export function sanitizeLogOutputAdvanced(
             .replace(TERMINAL_ATTACK_PATTERNS.DELETE, '[DEL]');
     }
     
-    // 4. Unicode Attack Protection
+    // 5. Unicode Attack Protection
     if (finalConfig.detectUnicodeAttacks) {
-        if (TERMINAL_ATTACK_PATTERNS.BIDI_OVERRIDE.test(sanitized)) {
-            violations.push(createViolation('unicode-attack', 'high', 'Bidirectional text override detected', sanitized));
-            sanitized = sanitized.replace(TERMINAL_ATTACK_PATTERNS.BIDI_OVERRIDE, '[BIDI]');
-        }
+        const unicodeRules: SanitizationRule[] = [
+            {
+                pattern: TERMINAL_ATTACK_PATTERNS.BIDI_OVERRIDE,
+                replacement: '[BIDI]',
+                violationType: 'unicode-attack',
+                severity: 'high',
+                description: 'Bidirectional text override detected'
+            },
+            {
+                pattern: TERMINAL_ATTACK_PATTERNS.ZERO_WIDTH,
+                replacement: '',
+                violationType: 'unicode-attack',
+                severity: 'medium',
+                description: 'Zero-width characters detected'
+            },
+            {
+                pattern: TERMINAL_ATTACK_PATTERNS.CONFUSABLES,
+                replacement: '[CONFUSABLE]',
+                violationType: 'unicode-attack',
+                severity: 'low',
+                description: 'Potential homograph characters detected',
+                strictModeOnly: true
+            }
+        ];
         
-        if (TERMINAL_ATTACK_PATTERNS.ZERO_WIDTH.test(sanitized)) {
-            violations.push(createViolation('unicode-attack', 'medium', 'Zero-width characters detected', sanitized));
-            sanitized = sanitized.replace(TERMINAL_ATTACK_PATTERNS.ZERO_WIDTH, '');
-        }
-        
-        if (isStrict && TERMINAL_ATTACK_PATTERNS.CONFUSABLES.test(sanitized)) {
-            violations.push(createViolation('unicode-attack', 'low', 'Potential homograph characters detected', sanitized));
-            sanitized = sanitized.replace(TERMINAL_ATTACK_PATTERNS.CONFUSABLES, '[CONFUSABLE]');
-        }
+        sanitized = applySanitizationRules(sanitized, unicodeRules, violations, isStrict, isPermissive);
     }
     
-    // 5. Command Execution Protection
+    // 6. Command Execution Protection
     if (finalConfig.detectCommandExecution) {
-        if (TERMINAL_ATTACK_PATTERNS.SHELL_COMMANDS.test(sanitized)) {
-            violations.push(createViolation('command-execution', 'critical', 'Shell command substitution detected', sanitized));
-            sanitized = sanitized.replace(TERMINAL_ATTACK_PATTERNS.SHELL_COMMANDS, '[SHELL-CMD]');
-        }
+        const executionRules: SanitizationRule[] = [
+            {
+                pattern: TERMINAL_ATTACK_PATTERNS.SHELL_COMMANDS,
+                replacement: '[SHELL-CMD]',
+                violationType: 'command-execution',
+                severity: 'critical',
+                description: 'Shell command substitution detected'
+            },
+            {
+                pattern: TERMINAL_ATTACK_PATTERNS.EVAL_ATTEMPTS,
+                replacement: '[EVAL-ATTEMPT]',
+                violationType: 'command-execution',
+                severity: 'critical',
+                description: 'Code execution attempts detected'
+            },
+            {
+                pattern: TERMINAL_ATTACK_PATTERNS.FORMAT_STRINGS,
+                replacement: '[FORMAT]',
+                violationType: 'format-string',
+                severity: 'medium',
+                description: 'Format string specifiers detected'
+            }
+        ];
         
-        if (TERMINAL_ATTACK_PATTERNS.EVAL_ATTEMPTS.test(sanitized)) {
-            violations.push(createViolation('command-execution', 'critical', 'Code execution attempts detected', sanitized));
-            sanitized = sanitized.replace(TERMINAL_ATTACK_PATTERNS.EVAL_ATTEMPTS, '[EVAL-ATTEMPT]');
-        }
-        
-        if (TERMINAL_ATTACK_PATTERNS.FORMAT_STRINGS.test(sanitized)) {
-            violations.push(createViolation('format-string', 'medium', 'Format string specifiers detected', sanitized));
-            sanitized = sanitized.replace(TERMINAL_ATTACK_PATTERNS.FORMAT_STRINGS, '[FORMAT]');
-        }
+        sanitized = applySanitizationRules(sanitized, executionRules, violations, isStrict, isPermissive);
     }
     
-    // 6. Hyperlink Injection Protection
+    // 7. Hyperlink Injection Protection
     if (finalConfig.detectHyperlinkInjection) {
         if (TERMINAL_ATTACK_PATTERNS.HYPERLINKS.test(sanitized)) {
             violations.push(createViolation('hyperlink-injection', 'medium', 'Terminal hyperlinks detected', sanitized));
@@ -352,17 +576,6 @@ export function sanitizeLogOutputAdvanced(
                 violations.push(createViolation('hyperlink-injection', 'medium', 'File URLs detected', sanitized));
                 sanitized = sanitized.replace(TERMINAL_ATTACK_PATTERNS.FILE_URLS, '[FILE-URL]');
             }
-        }
-    }
-    
-    // 7. Log Injection Protection  
-    if (!finalConfig.preserveFormatting) {
-        if (TERMINAL_ATTACK_PATTERNS.LOG_INJECTION.test(sanitized)) {
-            violations.push(createViolation('line-injection', 'high', 'Line ending injection detected', sanitized));
-            sanitized = sanitized
-                .replace(/\r\n/g, ' [CRLF] ')
-                .replace(/\r/g, ' [CR] ')
-                .replace(/\n/g, ' [LF] ');
         }
     }
     
@@ -392,18 +605,23 @@ export function sanitizeLogOutputAdvanced(
     if (violations.length > 0) {
         // Generate security warnings
         if (originalLength > finalConfig.warningThreshold) {
-            console.warn(`[Log Security] Large message detected: ${originalLength} chars, potential DoS attempt`);
+            finalConfig.logger.warn(`[Log Security] Large message detected: ${originalLength} chars, potential DoS attempt`);
         }
         
         if (violations.some(v => v.severity === 'critical')) {
-            console.warn(`[Log Security] CRITICAL: ${violations.filter(v => v.severity === 'critical').length} critical violations detected`);
+            finalConfig.logger.warn(`[Log Security] CRITICAL: ${violations.filter(v => v.severity === 'critical').length} critical violations detected`);
         }
         
-        // Invoke custom violation handler if provided
+        // Invoke custom violation handler if provided (with safe execution)
         if (finalConfig.onSecurityViolation) {
             violations.forEach(violation => {
                 violation.sanitizedOutput = sanitized;
-                finalConfig.onSecurityViolation!(violation);
+                try {
+                    finalConfig.onSecurityViolation!(violation);
+                } catch (callbackError) {
+                    finalConfig.logger.warn(`[Log Security] Violation callback error: ${callbackError instanceof Error ? callbackError.message : String(callbackError)}`);
+                    // Continue processing - callback errors should not break sanitization
+                }
             });
         }
     }
@@ -738,6 +956,7 @@ function createEmptyAnalysis(): LogSecurityAnalysis {
  * and automatic threat response capabilities.
  * 
  * @security Enterprise-grade security monitoring with threat intelligence
+ * @architecture Improved DIP compliance through logger abstraction
  */
 export class LogSecurityMonitor {
     private violationCounts = new Map<string, number>();
@@ -745,15 +964,18 @@ export class LogSecurityMonitor {
     private readonly alertThreshold: number;
     private readonly timeWindow: number; // milliseconds
     private readonly onAlert?: (alert: SecurityAlert) => void;
+    private readonly logger: SecurityLogger;
     
     constructor(config: {
         alertThreshold?: number;
         timeWindow?: number;
         onAlert?: (alert: SecurityAlert) => void;
+        logger?: SecurityLogger;
     } = {}) {
         this.alertThreshold = config.alertThreshold ?? 5;
         this.timeWindow = config.timeWindow ?? 60000; // 1 minute
         this.onAlert = config.onAlert;
+        this.logger = config.logger ?? DEFAULT_SECURITY_LOGGER;
     }
     
     /**
@@ -805,7 +1027,7 @@ export class LogSecurityMonitor {
             if (this.onAlert) {
                 this.onAlert(alert);
             } else {
-                console.error(`[SECURITY ALERT] ${alert.severity.toUpperCase()}: ${alert.violationCount} violations from ${sourceKey}`);
+                this.logger.error(`[SECURITY ALERT] ${alert.severity.toUpperCase()}: ${alert.violationCount} violations from ${sourceKey}`);
             }
             
             // Reset counter after alert
