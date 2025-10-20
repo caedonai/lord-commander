@@ -29,3 +29,6 @@ export * from './input-validation.js';
 
 // Export error sanitization utilities
 export * from './error-sanitization.js';
+
+// Export structured logging utilities (Task 1.4.2)
+export * from './structured-logging.js';
