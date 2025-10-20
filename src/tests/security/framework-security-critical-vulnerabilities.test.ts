@@ -189,11 +189,14 @@ describe('Task 1.1.3 Critical Security Vulnerability Resolution', () => {
     it('should prevent runtime modification of trusted dependencies', () => {
       const originalSize = TRUSTED_FRAMEWORK_DEPENDENCIES.size;
       
-      // Attempt to add malicious dependencies
+      // Attempt to add malicious dependencies should throw errors
       expect(() => {
-        TRUSTED_FRAMEWORK_DEPENDENCIES.add('evil-malware');
-        TRUSTED_FRAMEWORK_DEPENDENCIES.add('../../../etc/passwd');
-      }).toThrow(); // Should throw error or be prevented
+        (TRUSTED_FRAMEWORK_DEPENDENCIES as any).add('evil-malware');
+      }).toThrow(/Cannot add dependency.*immutable for security/);
+      
+      expect(() => {
+        (TRUSTED_FRAMEWORK_DEPENDENCIES as any).add('../../../etc/passwd');
+      }).toThrow(/Cannot add dependency.*immutable for security/);
       
       // Size should remain unchanged
       expect(TRUSTED_FRAMEWORK_DEPENDENCIES.size).toBe(originalSize);
@@ -206,11 +209,14 @@ describe('Task 1.1.3 Critical Security Vulnerability Resolution', () => {
     it('should prevent deletion of trusted dependencies', () => {
       const originalSize = TRUSTED_FRAMEWORK_DEPENDENCIES.size;
       
-      // Attempt to remove legitimate dependencies
+      // Attempt to remove legitimate dependencies should throw errors
       expect(() => {
-        TRUSTED_FRAMEWORK_DEPENDENCIES.delete('react');
-        TRUSTED_FRAMEWORK_DEPENDENCIES.delete('next');
-      }).toThrow(); // Should throw error or be prevented
+        (TRUSTED_FRAMEWORK_DEPENDENCIES as any).delete('react');
+      }).toThrow(/Cannot delete dependency.*immutable for security/);
+      
+      expect(() => {
+        (TRUSTED_FRAMEWORK_DEPENDENCIES as any).delete('next');
+      }).toThrow(/Cannot delete dependency.*immutable for security/);
       
       // Dependencies should still be trusted
       expect(TRUSTED_FRAMEWORK_DEPENDENCIES.has('react')).toBe(true);
@@ -221,10 +227,10 @@ describe('Task 1.1.3 Critical Security Vulnerability Resolution', () => {
     it('should prevent clearing of trusted dependencies', () => {
       const originalSize = TRUSTED_FRAMEWORK_DEPENDENCIES.size;
       
-      // Attempt to clear all trusted dependencies
+      // Attempt to clear all trusted dependencies should throw error
       expect(() => {
-        TRUSTED_FRAMEWORK_DEPENDENCIES.clear();
-      }).toThrow(); // Should throw error or be prevented
+        (TRUSTED_FRAMEWORK_DEPENDENCIES as any).clear();
+      }).toThrow(/Cannot clear trusted dependencies.*immutable for security/);
       
       // Set should remain intact
       expect(TRUSTED_FRAMEWORK_DEPENDENCIES.size).toBe(originalSize);
