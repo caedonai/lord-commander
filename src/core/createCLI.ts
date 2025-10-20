@@ -4,7 +4,7 @@ import resolveCliDefaults, { loadConfig } from '../utils/config.js';
 import { logger } from './ui/logger.js';
 import * as prompts from './ui/prompts.js';
 import * as fs from './execution/fs.js';
-import * as exec from './execution/exec.js';
+import * as execa from './execution/execa.js';
 import * as git from '../plugins/git.js';
 import { detectShell, installCompletion, analyzeProgram } from './commands/autocomplete.js';
 import { formatError, CLIError } from './foundation/errors.js';
@@ -425,7 +425,7 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
         logger,
         prompts,
         fs,
-        exec,
+        exec: execa,
         git,
         config,
         cwd: process.cwd()

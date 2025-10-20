@@ -153,12 +153,12 @@ export {
 } from './execution/fs.js';
 
 export { 
-  exec,
-  execSync,
-  execStream,
+  execa,
+  execaSync,
+  execaStream,
   type ExecResult,
   type ExecOptions
-} from './execution/exec.js';
+} from './execution/execa.js';
 
 // CLI Creation and Command Registration  
 export { 

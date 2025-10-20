@@ -977,8 +977,8 @@ export async function runScript(
     return results;
   }
 
-  // Import exec here to avoid circular dependencies
-  const { exec } = await import('../core/execution/exec.js');
+  // Import execa here to avoid circular dependencies
+  const { execa } = await import('../core/execution/execa.js');
   
   let completed = 0;
   const total = packagesWithScript.length;
@@ -987,7 +987,7 @@ export async function runScript(
     try {
       // Get the script command (we know it exists from the filter)
       pkg.scripts.get(scriptName)!;
-      const result = await exec('npm', ['run', scriptName], { 
+      const result = await execa('npm', ['run', scriptName], { 
         cwd: pkg.path,
         silent: true 
       });
@@ -1042,7 +1042,7 @@ export async function installDependencies(
   packageManager: PackageManager = 'npm',
   options: BatchOperationOptions = {}
 ): Promise<Map<string, { success: boolean; output?: string; error?: Error }>> {
-  const { exec } = await import('../core/execution/exec.js');
+  const { execa } = await import('../core/execution/execa.js');
   const results = new Map<string, { success: boolean; output?: string; error?: Error }>();
   
   let filteredPackages = packages;
@@ -1065,7 +1065,7 @@ export async function installDependencies(
 
   for (const pkg of filteredPackages) {
     try {
-      const result = await exec(cmd, args, { 
+      const result = await execa(cmd, args, { 
         cwd: pkg.path,
         silent: true 
       });
@@ -1111,7 +1111,7 @@ export async function getAffectedPackages(
     maxDepth = Infinity
   } = options;
 
-  const { exec } = await import('../core/execution/exec.js');
+  const { execa } = await import('../core/execution/execa.js');
   const affectedPackages = new Set<string>();
   
   try {
@@ -1120,7 +1120,7 @@ export async function getAffectedPackages(
     
     // Get committed changes
     try {
-      const gitDiffResult = await exec('git', ['diff', '--name-only', since], { 
+      const gitDiffResult = await execa('git', ['diff', '--name-only', since], { 
         cwd: workspace.root,
         silent: true 
       });
@@ -1134,7 +1134,7 @@ export async function getAffectedPackages(
     // Get uncommitted changes if requested
     if (includeUncommitted) {
       try {
-        const statusResult = await exec('git', ['status', '--porcelain'], { 
+        const statusResult = await execa('git', ['status', '--porcelain'], { 
           cwd: workspace.root,
           silent: true 
         });

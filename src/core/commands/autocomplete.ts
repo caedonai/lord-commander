@@ -6,7 +6,7 @@
  */
 
 import { Command } from 'commander';
-import { exec } from '../execution/exec.js';
+import { execa } from '../execution/execa.js';
 import { createLogger } from '../ui/logger.js';
 
 export interface CompletionOptions {
@@ -516,7 +516,7 @@ export async function installCompletion(
   }
 
   try {
-    await exec('bash', ['-c', installCommand]);
+    await execa('bash', ['-c', installCommand]);
     return {
       success: true,
       restartRequired: true,
@@ -618,7 +618,7 @@ export async function uninstallCompletion(
   }
 
   try {
-    await exec('bash', ['-c', removeCommand]);
+    await execa('bash', ['-c', removeCommand]);
     return {
       success: true,
       restartRequired: false

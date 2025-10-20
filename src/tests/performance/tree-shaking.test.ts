@@ -31,7 +31,7 @@ const EXPECTED_EXPORTS = {
     autocomplete: ['analyzeProgram', 'checkCompletionStatus', 'detectShell', 'generateBashCompletion', 'generateCompletion', 'generateCompletionScript', 'generateFishCompletion', 'generatePowerShellCompletion', 'generateZshCompletion', 'installCompletion', 'uninstallCompletion'],
     
     // Execution utilities (from actual exports)
-    execution: ['exec', 'execStream', 'execSync'],
+    execution: ['execa', 'execaStream', 'execaSync'],
     
     // File system utilities (from actual exports)
     fileSystem: ['cleanDir', 'copy', 'copyDir', 'copyFile', 'ensureDir', 'exists', 'findFiles', 'getSize', 'move', 'readDir', 'readFile', 'readJSON', 'remove', 'stat', 'writeFile', 'writeJSON'],
@@ -54,7 +54,7 @@ const EXPECTED_EXPORTS = {
     workspace: ['detectPackageManager', 'detectWorkspaceType', 'discoverPackages', 'filterPackages', 'getAffectedPackages', 'getWorkspaceSummary', 'installDependencies', 'isWorkspace', 'loadWorkspace', 'runScript', 'validateWorkspace'],
     
     // Should NOT be present (core functionality)
-    excluded: ['exec', 'readFile', 'createLogger', 'intro', 'outro', 'registerCommands', 'Command', 'generateCompletion', 'CLIError', 'PACKAGE_MANAGER_COMMANDS']
+    excluded: ['execa', 'readFile', 'createLogger', 'intro', 'outro', 'registerCommands', 'Command', 'generateCompletion', 'CLIError', 'PACKAGE_MANAGER_COMMANDS']
   }
 };
 
@@ -141,7 +141,7 @@ describe('Tree-shaking Tests', () => {
     it('should allow selective core imports', async () => {
       // Test dynamic selective imports with various function types
       const testFunctions = [
-        { name: 'exec', expectedType: 'function' },
+        { name: 'execa', expectedType: 'function' },
         { name: 'readFile', expectedType: 'function' },
         { name: 'createLogger', expectedType: 'function' },
         { name: 'Command', expectedType: 'function' },

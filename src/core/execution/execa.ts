@@ -7,7 +7,7 @@
 
 // Note: execa package needs to be installed as a dependency
 // npm install execa@^8.0.1
-import { execa, execaSync } from 'execa';
+import { execa as execaLib, execaSync as execaSyncLib } from 'execa';
 import type { ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa';
 import { ProcessError } from '../foundation/errors.js';
 import { createLogger } from '../ui/logger.js';
@@ -73,7 +73,7 @@ export interface PackageManagerInfo {
 /**
  * Execute a command and return the result
  */
-export async function exec(
+export async function execa(
   command: string,
   args: string[] = [],
   options: ExecOptions = {}
@@ -94,7 +94,7 @@ export async function exec(
       execLogger.debug(`Executing: ${fullCommand}`, { cwd });
     }
 
-    const execaResult: ExecaReturnValue = await execa(command, args, {
+    const execaResult: ExecaReturnValue = await execaLib(command, args, {
       cwd,
       timeout: timeout || undefined,
       reject,
@@ -167,7 +167,7 @@ export async function exec(
 /**
  * Execute a command synchronously
  */
-export function execSync(
+export function execaSync(
   command: string,
   args: string[] = [],
   options: ExecOptions = {}
@@ -191,7 +191,7 @@ export function execSync(
     // Filter out options that don't apply to sync execution and handle type compatibility
     const { signal, encoding, ...syncOptions } = execaOptions;
     
-    const execaResult: ExecaSyncReturnValue = execaSync(command, args, {
+    const execaResult: ExecaSyncReturnValue = execaSyncLib(command, args, {
       cwd,
       timeout: timeout || undefined,
       reject,
@@ -259,7 +259,7 @@ export function execSync(
 /**
  * Execute a command with real-time output streaming
  */
-export async function execStream(
+export async function execaStream(
   command: string,
   args: string[] = [],
   options: ExecStreamOptions = {}
@@ -283,7 +283,7 @@ export async function execStream(
     }
 
     // Force pipe stdio for streaming
-    const subprocess = execa(command, args, {
+    const subprocess = execaLib(command, args, {
       cwd,
       timeout: timeout || undefined,
       stdio: 'pipe',
@@ -349,12 +349,12 @@ export async function execStream(
 /**
  * Execute a command and capture only the output (no error throwing)
  */
-export async function execWithOutput(
+export async function execaWithOutput(
   command: string,
   args: string[] = [],
   options: ExecOptions = {}
 ): Promise<ExecResult> {
-  return exec(command, args, { 
+  return execa(command, args, { 
     ...options, 
     reject: false, // Don't throw on non-zero exit codes
     silent: options.silent ?? true // Default to silent for output capture
@@ -369,7 +369,7 @@ export async function commandExists(command: string): Promise<boolean> {
     const isWindows = process.platform === 'win32';
     const checkCommand = isWindows ? 'where' : 'which';
     
-    const result = await execWithOutput(checkCommand, [command]);
+    const result = await execaWithOutput(checkCommand, [command]);
     return result.exitCode === 0 && result.stdout.trim().length > 0;
   } catch {
     return false;
@@ -417,7 +417,7 @@ export async function detectPackageManager(cwd: string = process.cwd()): Promise
 /**
  * Run a package manager command (install, run, etc.)
  */
-export async function runPackageManagerCommand(
+export async function runPackageManagerExeca(
   action: 'install' | 'installDev' | 'run' | 'create',
   packageOrScript?: string,
   options: ExecOptions = {}
@@ -479,7 +479,7 @@ export async function runPackageManagerCommand(
 
   execLogger.info(`Running ${pmInfo.manager} ${action}${packageOrScript ? ` ${packageOrScript}` : ''}`);
   
-  return exec(command, args, {
+  return execa(command, args, {
     ...options,
     stdio: options.stdio ?? 'inherit', // Show output by default for package manager commands
   });
@@ -488,7 +488,7 @@ export async function runPackageManagerCommand(
 /**
  * Execute git commands with proper error handling
  */
-export async function git(
+export async function gitExeca(
   subcommand: string,
   args: string[] = [],
   options: ExecOptions = {}
@@ -501,7 +501,7 @@ export async function git(
     );
   }
 
-  return exec('git', [subcommand, ...args], {
+  return execa('git', [subcommand, ...args], {
     ...options,
     silent: options.silent ?? false, // Show git output by default
   });
@@ -522,16 +522,16 @@ export function createCancellableExecution(): {
     signal: controller.signal,
     cancel: () => controller.abort(),
     exec: (command: string, args: string[] = [], options: ExecOptions = {}) =>
-      exec(command, args, { ...options, signal: controller.signal }),
+      execa(command, args, { ...options, signal: controller.signal }),
     execStream: (command: string, args: string[] = [], options: ExecStreamOptions = {}) =>
-      execStream(command, args, { ...options, signal: controller.signal }),
+      execaStream(command, args, { ...options, signal: controller.signal }),
   };
 }
 
 /**
  * Utility to run multiple commands in sequence
  */
-export async function execSequence(
+export async function execaSequence(
   commands: Array<{ command: string; args?: string[]; options?: ExecOptions }>,
   options: { stopOnError?: boolean; cwd?: string } = {}
 ): Promise<ExecResult[]> {
@@ -540,7 +540,7 @@ export async function execSequence(
 
   for (const { command, args = [], options: cmdOptions = {} } of commands) {
     try {
-      const result = await exec(command, args, {
+      const result = await execa(command, args, {
         cwd,
         ...cmdOptions,
       });
@@ -574,14 +574,14 @@ export async function execSequence(
 /**
  * Utility to run multiple commands in parallel
  */
-export async function execParallel(
+export async function execaParallel(
   commands: Array<{ command: string; args?: string[]; options?: ExecOptions }>,
   options: { cwd?: string; maxConcurrency?: number } = {}
 ): Promise<ExecResult[]> {
   const { cwd, maxConcurrency = 5 } = options;
   
   const executeCommand = async ({ command, args = [], options: cmdOptions = {} }: typeof commands[0]) => {
-    return exec(command, args, { cwd, ...cmdOptions });
+    return execa(command, args, { cwd, ...cmdOptions });
   };
 
   // Simple concurrency control

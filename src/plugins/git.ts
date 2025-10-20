@@ -8,7 +8,7 @@
  * - Utility functions for version control workflows
  */
 
-import { exec, execStream } from '../core/execution/exec.js';
+import { execa, execaStream } from '../core/execution/execa.js';
 import { CLIError } from '../core/foundation/errors.js';
 
 export interface GitStatus {
@@ -51,10 +51,10 @@ async function gitExec(
 ): Promise<{ stdout: string; stderr: string }> {
   try {
     if (options.stream) {
-      await execStream('git', args, { cwd: options.cwd });
+      await execaStream('git', args, { cwd: options.cwd });
       return { stdout: '', stderr: '' };
     } else {
-      return await exec('git', args, { cwd: options.cwd });
+      return await execa('git', args, { cwd: options.cwd });
     }
   } catch (error) {
     throw new CLIError(
@@ -73,7 +73,7 @@ async function gitExec(
  */
 export async function isGitRepository(cwd: string = process.cwd()): Promise<boolean> {
   try {
-    await exec('git', ['rev-parse', '--git-dir'], { cwd });
+    await execa('git', ['rev-parse', '--git-dir'], { cwd });
     return true;
   } catch {
     return false;
@@ -85,7 +85,7 @@ export async function isGitRepository(cwd: string = process.cwd()): Promise<bool
  */
 export async function isGitAvailable(): Promise<boolean> {
   try {
-    await exec('git', ['--version']);
+    await execa('git', ['--version']);
     return true;
   } catch {
     return false;
@@ -97,7 +97,7 @@ export async function isGitAvailable(): Promise<boolean> {
  */
 export async function getRepositoryRoot(cwd: string = process.cwd()): Promise<string> {
   try {
-    const result = await exec('git', ['rev-parse', '--show-toplevel'], { cwd });
+    const result = await execa('git', ['rev-parse', '--show-toplevel'], { cwd });
     return result.stdout.trim();
   } catch (error) {
     throw new CLIError('Not in a git repository', {
@@ -129,7 +129,7 @@ export async function init(
   args.push(directory);
   
   try {
-    await exec('git', args, { cwd: directory });
+    await execa('git', args, { cwd: directory });
   } catch (error) {
     throw new CLIError(`Failed to initialize git repository: ${error instanceof Error ? error.message : String(error)}`, {
       code: 'GIT_INIT_FAILED',
@@ -173,7 +173,7 @@ export async function clone(
     if (options.progress) {
       await execStream('git', args);
     } else {
-      await exec('git', args);
+      await execa('git', args);
     }
   } catch (error) {
     throw new CLIError(`Failed to clone repository: ${error instanceof Error ? error.message : String(error)}`, {
@@ -190,14 +190,14 @@ export async function clone(
 export async function getStatus(cwd: string = process.cwd()): Promise<GitStatus> {
   try {
     // Get current branch and tracking info
-    const branchResult = await exec('git', ['branch', '--show-current'], { cwd });
+    const branchResult = await execa('git', ['branch', '--show-current'], { cwd });
     const branch = branchResult.stdout.trim();
     
     // Get ahead/behind counts
     let ahead = 0;
     let behind = 0;
     try {
-      const trackingResult = await exec('git', ['rev-list', '--count', '--left-right', '@{upstream}...HEAD'], { cwd });
+      const trackingResult = await execa('git', ['rev-list', '--count', '--left-right', '@{upstream}...HEAD'], { cwd });
       const [behindStr, aheadStr] = trackingResult.stdout.trim().split('\t');
       behind = parseInt(behindStr) || 0;
       ahead = parseInt(aheadStr) || 0;
@@ -206,7 +206,7 @@ export async function getStatus(cwd: string = process.cwd()): Promise<GitStatus>
     }
     
     // Get file status
-    const statusResult = await exec('git', ['status', '--porcelain'], { cwd });
+    const statusResult = await execa('git', ['status', '--porcelain'], { cwd });
     const lines = statusResult.stdout.trim().split('\n').filter(line => line);
     
     const staged: string[] = [];

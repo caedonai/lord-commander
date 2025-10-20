@@ -6,7 +6,7 @@
  */
 
 // Export process execution utilities
-export * from './exec.js';
+export * from './execa.js';
 
 // Export file system utilities
 export * from './fs.js';

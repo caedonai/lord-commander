@@ -9,7 +9,7 @@
  */
 
 import * as git from './git.js';
-import { exec } from '../core/execution/exec.js';
+import { execa } from '../core/execution/execa.js';
 import { ensureDir, copyFile, exists } from '../core/execution/fs.js';
 import { CLIError } from '../core/foundation/errors.js';
 import { logger } from '../core/ui/logger.js';
@@ -253,7 +253,7 @@ async function getCommitsBetweenTags(
 ): Promise<git.GitCommit[]> {
   try {
     const format = '--pretty=format:%H|%h|%an|%ae|%ai|%s';
-    const result = await exec('git', ['log', `${fromTag}..${toTag}`, format], { cwd });
+    const result = await execa('git', ['log', `${fromTag}..${toTag}`, format], { cwd });
     
     return result.stdout
       .trim()
@@ -288,7 +288,7 @@ async function getFilesBetweenTags(
 ): Promise<FileDiff[]> {
   try {
     // Get file stats
-    const statsResult = await exec('git', ['diff', '--numstat', `${fromTag}..${toTag}`], { cwd });
+    const statsResult = await execa('git', ['diff', '--numstat', `${fromTag}..${toTag}`], { cwd });
     const stats = new Map<string, { insertions: number; deletions: number }>();
     
     for (const line of statsResult.stdout.trim().split('\n').filter(Boolean)) {
@@ -300,7 +300,7 @@ async function getFilesBetweenTags(
     }
     
     // Get file status (added, modified, deleted, renamed)
-    const nameStatusResult = await exec('git', ['diff', '--name-status', `${fromTag}..${toTag}`], { cwd });
+    const nameStatusResult = await execa('git', ['diff', '--name-status', `${fromTag}..${toTag}`], { cwd });
     const files: FileDiff[] = [];
     
     for (const line of nameStatusResult.stdout.trim().split('\n').filter(Boolean)) {
@@ -498,7 +498,7 @@ async function detectConflicts(
 async function checkLocalChanges(filePath: string, cwd: string): Promise<boolean> {
   try {
     const relativePath = path.relative(cwd, filePath);
-    const result = await exec('git', ['status', '--porcelain', relativePath], { cwd });
+    const result = await execa('git', ['status', '--porcelain', relativePath], { cwd });
     return result.stdout.trim().length > 0;
   } catch {
     return false;
@@ -558,7 +558,7 @@ async function createBackup(targetDir: string): Promise<string> {
   logger.info(`Creating backup at ${backupDir}`);
   
   try {
-    await exec('cp', ['-r', targetDir, backupDir]);
+    await execa('cp', ['-r', targetDir, backupDir]);
     return backupDir;
   } catch {
     // Fallback for systems without cp
@@ -733,7 +733,7 @@ async function logUpdatePlan(plan: UpdatePlan): Promise<void> {
  */
 export async function getLatestTag(cwd: string = process.cwd()): Promise<string | null> {
   try {
-    const result = await exec('git', ['describe', '--tags', '--abbrev=0'], { cwd, silent: true });
+    const result = await execa('git', ['describe', '--tags', '--abbrev=0'], { cwd, silent: true });
     return result.stdout.trim() || null;
   } catch {
     return null;
@@ -745,7 +745,7 @@ export async function getLatestTag(cwd: string = process.cwd()): Promise<string 
  */
 export async function getAllTags(cwd: string = process.cwd()): Promise<string[]> {
   try {
-    const result = await exec('git', ['tag', '-l'], { cwd });
+    const result = await execa('git', ['tag', '-l'], { cwd });
     const tags = result.stdout.trim().split('\n').filter(Boolean);
     
     // Sort tags by semantic version
@@ -769,7 +769,7 @@ export async function getAllTags(cwd: string = process.cwd()): Promise<string[]>
  */
 export async function tagExists(tag: string, cwd: string = process.cwd()): Promise<boolean> {
   try {
-    await exec('git', ['rev-parse', `refs/tags/${tag}`], { cwd, silent: true });
+    await execa('git', ['rev-parse', `refs/tags/${tag}`], { cwd, silent: true });
     return true;
   } catch {
     return false;
@@ -792,7 +792,7 @@ export async function createTag(
       args.push(tag);
     }
     
-    await exec('git', args, { cwd });
+    await execa('git', args, { cwd });
   } catch (error) {
     throw new CLIError(`Failed to create tag ${tag}`, {
       code: 'GIT_TAG_FAILED',
