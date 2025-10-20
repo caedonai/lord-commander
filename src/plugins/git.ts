@@ -171,7 +171,7 @@ export async function clone(
   
   try {
     if (options.progress) {
-      await execStream('git', args);
+      await execaStream('git', args);
     } else {
       await execa('git', args);
     }

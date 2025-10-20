@@ -9,6 +9,9 @@
 // npm install execa@^8.0.1
 import { execa as execaLib, execaSync as execaSyncLib } from 'execa';
 import type { ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { mkdir } from 'node:fs/promises';
 import { ProcessError } from '../foundation/errors.js';
 import { createLogger } from '../ui/logger.js';
 import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/constants.js';
@@ -31,6 +34,18 @@ export interface ExecResult {
 }
 
 /**
+ * Sandboxing configuration for command execution
+ */
+export interface SandboxConfig {
+  enabled?: boolean; // Enable/disable sandboxing (default: true)
+  isolateWorkingDirectory?: boolean; // Create isolated temp directory (default: true)
+  restrictEnvironment?: boolean; // Use minimal safe environment (default: true)
+  allowedEnvVars?: string[]; // Additional env vars to preserve (default: ['PATH', 'NODE_ENV'])
+  customSandboxDir?: string; // Use custom sandbox directory instead of temp
+  sandboxPrefix?: string; // Prefix for sandbox directory names (default: 'lord-commander-sandbox')
+}
+
+/**
  * Options for command execution
  */
 export interface ExecOptions {
@@ -40,7 +55,7 @@ export interface ExecOptions {
   input?: string; // Input to send to the command's stdin
   stdio?: 'inherit' | 'pipe' | 'ignore'; // How to handle stdio streams
   silent?: boolean; // Suppress output logging
-  shell?: boolean | string; // Run command in shell (true, false, or shell path)
+  shell?: boolean | string; // Run command in shell (true, false, or shell path) - security: defaults to false
   windowsHide?: boolean; // Hide console window on Windows
   reject?: boolean; // Whether to reject promise on non-zero exit code
   stripFinalNewline?: boolean; // Remove trailing newline from output
@@ -50,6 +65,7 @@ export interface ExecOptions {
   encoding?: BufferEncoding; // Output encoding
   maxBuffer?: number; // Max buffer size for stdout/stderr
   signal?: AbortSignal; // AbortController signal for cancellation
+  sandbox?: SandboxConfig; // Sandboxing configuration for security
 }
 
 /**
@@ -71,6 +87,107 @@ export interface PackageManagerInfo {
 }
 
 /**
+ * Default sandbox configuration
+ */
+const DEFAULT_SANDBOX_CONFIG: Required<SandboxConfig> = {
+  enabled: true,
+  isolateWorkingDirectory: true,
+  restrictEnvironment: true,
+  allowedEnvVars: ['PATH', 'NODE_ENV', 'HOME', 'USERPROFILE', 'TEMP', 'TMP'],
+  customSandboxDir: '',
+  sandboxPrefix: 'lord-commander-sandbox',
+};
+
+/**
+ * Create secure environment configuration (synchronous version)
+ */
+function createSandboxEnv(config: SandboxConfig = {}): Record<string, string> {
+  const sandboxConfig = { ...DEFAULT_SANDBOX_CONFIG, ...config };
+  let sandboxEnv: Record<string, string> = {};
+
+  execLogger.debug(`createSandboxEnv called with config:`, { 
+    enabled: sandboxConfig.enabled, 
+    restrictEnvironment: sandboxConfig.restrictEnvironment,
+    allowedEnvVars: sandboxConfig.allowedEnvVars 
+  });
+
+  // Create restricted environment if enabled
+  if (sandboxConfig.enabled && sandboxConfig.restrictEnvironment) {
+    // Start with minimal environment
+    sandboxEnv = {
+      NODE_ENV: 'production', // Safe default
+    };
+    
+    // Add allowed environment variables
+    for (const envVar of sandboxConfig.allowedEnvVars) {
+      if (process.env[envVar]) {
+        sandboxEnv[envVar] = process.env[envVar]!;
+      }
+    }
+    
+    execLogger.debug(`Created restricted environment with ${Object.keys(sandboxEnv).length} variables:`, Object.keys(sandboxEnv));
+  } else {
+    // Use current environment if not restricting
+    sandboxEnv = Object.fromEntries(
+      Object.entries(process.env).filter(([, value]) => value !== undefined)
+    ) as Record<string, string>;
+    execLogger.debug(`Using full environment with ${Object.keys(sandboxEnv).length} variables`);
+  }
+
+  return sandboxEnv;
+}
+
+/**
+ * Create a secure sandbox environment for command execution
+ */
+async function createSandbox(config: SandboxConfig = {}): Promise<{ cwd: string; env: Record<string, string> }> {
+  const sandboxConfig = { ...DEFAULT_SANDBOX_CONFIG, ...config };
+  
+  let sandboxCwd = process.cwd();
+
+  // Create isolated working directory if enabled
+  if (sandboxConfig.enabled && sandboxConfig.isolateWorkingDirectory) {
+    try {
+      const sandboxDir = sandboxConfig.customSandboxDir || 
+        join(tmpdir(), `${sandboxConfig.sandboxPrefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+      
+      await mkdir(sandboxDir, { recursive: true });
+      sandboxCwd = sandboxDir;
+      
+      execLogger.debug(`Created sandbox directory: ${sandboxDir}`);
+    } catch (error) {
+      execLogger.warn(`Failed to create sandbox directory, using current directory: ${error}`);
+    }
+  }
+
+  const sandboxEnv = createSandboxEnv(config);
+  return { cwd: sandboxCwd, env: sandboxEnv };
+}
+
+/**
+ * Validate and secure command execution options
+ */
+function secureExecOptions(options: ExecOptions): ExecOptions {
+  const securedOptions = { ...options };
+  
+  // Force shell to false for security unless explicitly overridden
+  if (securedOptions.shell === undefined) {
+    securedOptions.shell = false;
+  }
+  
+  // Add security warnings for shell usage
+  if (securedOptions.shell === true || typeof securedOptions.shell === 'string') {
+    execLogger.warn('⚠️  Shell execution enabled - this may introduce security risks');
+  }
+  
+  // Set secure defaults
+  securedOptions.cleanup = securedOptions.cleanup ?? true;
+  securedOptions.windowsHide = securedOptions.windowsHide ?? true;
+  
+  return securedOptions;
+}
+
+/**
  * Execute a command and return the result
  */
 export async function execa(
@@ -82,22 +199,39 @@ export async function execa(
   const fullCommand = `${command} ${args.join(' ')}`.trim();
   
   try {
+    // Apply security defaults and extract options
+    const securedOptions = secureExecOptions(options);
     const {
       silent = false,
       reject = true,
-      cwd = process.cwd(),
+      cwd: originalCwd,
       timeout = 0,
+      sandbox,
+      env: userEnv,
       ...execaOptions
-    } = options;
+    } = securedOptions;
+
+    // Create sandbox environment
+    const sandboxResult = await createSandbox(sandbox);
+    const finalCwd = originalCwd || sandboxResult.cwd;
+    // Always use sandboxed environment, with user env overrides if provided
+    const finalEnv = userEnv ? { ...sandboxResult.env, ...userEnv } : sandboxResult.env;
 
     if (!silent) {
-      execLogger.debug(`Executing: ${fullCommand}`, { cwd });
+      execLogger.debug(`Executing: ${fullCommand}`, { 
+        cwd: finalCwd,
+        sandbox: sandbox?.enabled !== false ? 'enabled' : 'disabled',
+        envVars: Object.keys(finalEnv).length
+      });
     }
 
     const execaResult: ExecaReturnValue = await execaLib(command, args, {
-      cwd,
+      cwd: finalCwd,
+      env: finalEnv, // Always pass explicit environment
+      extendEnv: false, // Don't inherit parent environment when using sandboxed env
       timeout: timeout || undefined,
       reject,
+      shell: false, // Force secure default
       ...execaOptions,
     } as Options);
 
@@ -176,25 +310,41 @@ export function execaSync(
   const fullCommand = `${command} ${args.join(' ')}`.trim();
   
   try {
+    // Apply security defaults and extract options
+    const securedOptions = secureExecOptions(options);
     const {
       silent = false,
       reject = true,
-      cwd = process.cwd(),
+      cwd: originalCwd = process.cwd(),
       timeout = 0,
+      sandbox,
+      env: userEnv,
       ...execaOptions
-    } = options;
+    } = securedOptions;
+
+    // Create secure environment (sync version - no directory isolation)
+    const sandboxEnv = createSandboxEnv(sandbox);
+    // Always use sandboxed environment, with user env overrides if provided
+    const finalEnv = userEnv ? { ...sandboxEnv, ...userEnv } : sandboxEnv;
 
     if (!silent) {
-      execLogger.debug(`Executing sync: ${fullCommand}`, { cwd });
+      execLogger.debug(`Executing sync: ${fullCommand}`, { 
+        cwd: originalCwd,
+        sandbox: sandbox?.enabled !== false ? 'enabled' : 'disabled',
+        envVars: Object.keys(finalEnv).length
+      });
     }
 
     // Filter out options that don't apply to sync execution and handle type compatibility
     const { signal, encoding, ...syncOptions } = execaOptions;
     
     const execaResult: ExecaSyncReturnValue = execaSyncLib(command, args, {
-      cwd,
+      cwd: originalCwd,
+      env: finalEnv, // Always pass explicit environment
+      extendEnv: false, // Don't inherit parent environment when using sandboxed env
       timeout: timeout || undefined,
       reject,
+      shell: false, // Force secure default
       encoding: encoding as any, // Type assertion for encoding compatibility
       ...syncOptions,
     });
@@ -268,25 +418,47 @@ export async function execaStream(
   const fullCommand = `${command} ${args.join(' ')}`.trim();
   
   try {
+    // Extract stream-specific options first
     const {
-      silent = false,
       onStdout,
       onStderr,
       onProgress,
-      cwd = process.cwd(),
-      timeout = 0,
-      ...execaOptions
+      ...baseOptions
     } = options;
 
+    // Apply security defaults and extract options
+    const securedOptions = secureExecOptions(baseOptions);
+    const {
+      silent = false,
+      cwd: originalCwd,
+      timeout = 0,
+      sandbox,
+      env: userEnv,
+      ...execaOptions
+    } = securedOptions;
+
+    // Create sandbox environment
+    const sandboxResult = await createSandbox(sandbox);
+    const finalCwd = originalCwd || sandboxResult.cwd;
+    // Always use sandboxed environment, with user env overrides if provided
+    const finalEnv = userEnv ? { ...sandboxResult.env, ...userEnv } : sandboxResult.env;
+
     if (!silent) {
-      execLogger.debug(`Streaming: ${fullCommand}`, { cwd });
+      execLogger.debug(`Streaming: ${fullCommand}`, { 
+        cwd: finalCwd,
+        sandbox: sandbox?.enabled !== false ? 'enabled' : 'disabled',
+        envVars: Object.keys(finalEnv).length
+      });
     }
 
     // Force pipe stdio for streaming
     const subprocess = execaLib(command, args, {
-      cwd,
+      cwd: finalCwd,
+      env: finalEnv, // Always pass explicit environment
+      extendEnv: false, // Don't inherit parent environment when using sandboxed env
       timeout: timeout || undefined,
       stdio: 'pipe',
+      shell: false, // Force secure default
       ...execaOptions,
     } as Options);
 
