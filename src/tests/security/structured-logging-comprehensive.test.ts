@@ -287,7 +287,7 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
 
       // The message should be exactly 50 characters plus '...[truncated]'
       expect(result.entry.message).toHaveLength(50 + '...[truncated]'.length);
-      expect(result.entry.message).toMatch(/^This is a very long message that exceeds the c\.\.\.$/);
+      expect(result.entry.message).toMatch(/^This is a very long message that exceeds the confi\.\.\.\[truncated\]$/);
       expect(result.entry.securityFlags).toContain('truncated');
       expect(result.truncated).toBe(true);
       expect(result.warnings).toContain('Message truncated to 50 characters');
@@ -685,21 +685,21 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
 
   describe('Error Handling and Edge Cases', () => {
     it('should handle critical errors in log entry creation', () => {
-      // Mock Date.prototype.toISOString to throw an error
-      const originalToISOString = Date.prototype.toISOString;
-      Date.prototype.toISOString = vi.fn(() => {
-        throw new Error('Date formatting failed');
-      });
-
+      // Test error handling with malformed error object that causes processing error
+      const malformedError = Object.create(Error.prototype);
+      malformedError.message = undefined;
+      malformedError.stack = undefined;
+      
       const result = logger.createLogEntry('Test message', {
         context: { some: 'data' },
+        error: malformedError
       });
 
+      // When error processing fails, should use fallback error entry
       expect(result.entry.message).toBe('Failed to create structured log entry');
       expect(result.entry.level).toBe(StructuredLogLevel.ERROR);
-      expect(result.warnings).toEqual(['Log entry creation failed: Error: Date formatting failed']);
-
-      Date.prototype.toISOString = originalToISOString;
+      expect(result.entry.securityFlags).toContain('creation_error');
+      expect(result.entry.context?.originalMessage).toBe('Test message');
     });
 
     it('should handle undefined and null values in options', () => {
