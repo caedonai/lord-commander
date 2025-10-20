@@ -344,7 +344,7 @@ describe('createCLI Built-in Commands Integration', () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
       
-      const throwingErrorHandler = vi.fn((error: Error) => {
+      const throwingErrorHandler = vi.fn((_error: Error) => {
         throw new Error('Handler error');
       });
       

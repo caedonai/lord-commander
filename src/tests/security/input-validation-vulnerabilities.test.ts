@@ -6,18 +6,14 @@
  * in the comprehensive edge case analysis.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  validateProjectName,
-  validatePackageManager,
-  sanitizeCommandArgs,
-  sanitizePath,
-  validateInput,
-  TRUSTED_PACKAGE_MANAGERS,
-  type ValidationConfig
-} from '../../core/foundation/input-validation.js';
-
-describe('Input Validation Security Vulnerabilities', () => {
+import { describe, it, expect } from 'vitest';
+import { 
+  validateProjectName, 
+  validatePackageManager, 
+  sanitizeCommandArgs, 
+  sanitizePath, 
+  validateInput
+} from '../../core/foundation/input-validation.js';describe('Input Validation Security Vulnerabilities', () => {
   
   describe('1. Race Condition in Path Validation', () => {
     it('should handle concurrent path modifications safely', async () => {
@@ -57,7 +53,8 @@ describe('Input Validation Security Vulnerabilities', () => {
       } as any;
       
       // Test with project name validation
-      const result = validateProjectName('test-project', maliciousConfig);
+      // Ensure it doesn't crash and handles malicious config gracefully
+      validateProjectName('test-project', maliciousConfig);
       
       // Should not have polluted the prototype
       expect(({}  as any).isAdmin).toBeUndefined();

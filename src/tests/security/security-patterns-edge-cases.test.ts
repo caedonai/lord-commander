@@ -4,8 +4,7 @@ import {
   sanitizeInput,
   isPathSafe,
   isCommandSafe,
-  isProjectNameSafe,
-  ADVANCED_ATTACK_PATTERNS
+  isProjectNameSafe
 } from '../../core/foundation/security-patterns.js';
 
 describe('Security Patterns - Edge Cases & Advanced Security Analysis', () => {

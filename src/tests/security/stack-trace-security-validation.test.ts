@@ -5,15 +5,11 @@
  * in the enhanced stack trace security system (Task 1.3.2).
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { 
-  sanitizeStackTrace, 
-  analyzeStackTraceSecurity,
-  createEnvironmentConfig,
-  DEFAULT_ERROR_SANITIZATION_CONFIG 
-} from '../../core/foundation/error-sanitization.js';
-
-describe('Stack Trace Security Validation', () => {
+import { describe, it, expect, vi } from 'vitest';
+import {
+  sanitizeStackTrace,
+  analyzeStackTraceSecurity
+} from '../../core/foundation/error-sanitization.js';describe('Stack Trace Security Validation', () => {
   
   describe('ReDoS Attack Prevention', () => {
     it('should handle pathological regex patterns without timeout', () => {

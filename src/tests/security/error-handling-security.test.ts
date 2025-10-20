@@ -40,7 +40,7 @@ describe('Error Handling Security', () => {
         process.argv.push('--debug');
       }
 
-      const mockErrorHandler = vi.fn((error: Error) => {
+      const mockErrorHandler = vi.fn((_error: Error) => {
         // Mock handler that accepts error parameter
       });
 

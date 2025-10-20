@@ -220,7 +220,7 @@ describe('Error Handler Security Validation', () => {
 
     describe('Error Isolation', () => {
       it('should catch and wrap handler exceptions', async () => {
-        const throwingHandler = (error: Error) => {
+        const throwingHandler = (_error: Error) => {
           throw new Error('Handler failed');
         };
 
@@ -231,7 +231,7 @@ describe('Error Handler Security Validation', () => {
       });
 
       it('should catch and wrap async handler rejections', async () => {
-        const rejectingHandler = async (error: Error) => {
+        const rejectingHandler = async (_error: Error) => {
           throw new Error('Async handler failed');
         };
 
