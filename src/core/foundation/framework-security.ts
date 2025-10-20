@@ -848,8 +848,12 @@ async function validateFrameworkSecurity(
 
   // For frameworks, only critical violations make them insecure
   // High violations are allowed for legitimate framework patterns
+  // Exception: Projects with ONLY suspicious dependencies (no trusted ones) are insecure
+  const hasOnlySuspiciousDeps = dependencies.security.hasSuspiciousDeps && dependencies.trusted.length === 0;
+  const isSecure = criticalViolations === 0 && !hasOnlySuspiciousDeps;
+
   return {
-    isSecure: criticalViolations === 0,
+    isSecure,
     violations,
     warnings,
     recommendations
