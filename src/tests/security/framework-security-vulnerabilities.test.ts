@@ -286,6 +286,9 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
       const result = await detectFrameworkSecurely(testDir);
       
       // Should detect multiple dangerous patterns
+      expect(result).toBeDefined();
+      expect(result?.buildConfig).toBeDefined();
+      expect(result?.buildConfig?.security).toBeDefined();
       expect(result?.buildConfig.security.hasSafeCommands).toBe(false);
       expect(result?.buildConfig.security.suspiciousScripts.length).toBeGreaterThan(0);
       expect(result?.buildConfig.security.privilegeEscalation.length).toBeGreaterThan(0);

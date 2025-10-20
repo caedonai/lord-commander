@@ -731,6 +731,8 @@ async function analyzeBuildConfig(projectPath: string): Promise<FrameworkBuildCo
     for (const [scriptName, scriptContent] of Object.entries(result.scripts)) {
       if (typeof scriptContent !== 'string') continue;
 
+      let isSuspicious = false;
+
       // Check for dangerous patterns
       const hasDangerousPattern = DANGEROUS_SCRIPT_PATTERNS.some(pattern =>
         pattern.test(scriptContent)
@@ -738,7 +740,7 @@ async function analyzeBuildConfig(projectPath: string): Promise<FrameworkBuildCo
 
       if (hasDangerousPattern) {
         result.security.hasSafeCommands = false;
-        result.security.suspiciousScripts.push(scriptName);
+        isSuspicious = true;
       }
 
       // Check for privilege escalation
@@ -748,8 +750,13 @@ async function analyzeBuildConfig(projectPath: string): Promise<FrameworkBuildCo
 
       // Validate command safety
       if (!isCommandSafe(scriptContent)) {
-        result.security.suspiciousScripts.push(scriptName);
         result.security.hasSafeCommands = false;
+        isSuspicious = true;
+      }
+
+      // Only add once to suspicious scripts if any issue detected
+      if (isSuspicious) {
+        result.security.suspiciousScripts.push(scriptName);
       }
     }
 
