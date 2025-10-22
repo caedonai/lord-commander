@@ -424,10 +424,21 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
 
       expect(result.warnings).toEqual(
         expect.arrayContaining([
-          expect.stringMatching(/Context processing failed/),
+          expect.stringMatching(/Maximum processing depth or toJSON calls exceeded|Context value depth limit exceeded/),
         ])
       );
-      expect(result.entry.context).toEqual({ contextError: 'Failed to process context' });
+      
+      // Verify circular reference was handled with depth limiting
+      expect(result.entry.context).toHaveProperty('circular');
+      expect(result.entry.context.circular).toMatchObject({
+        circular: expect.objectContaining({
+          circular: expect.any(Object)
+        })
+      });
+      
+      // Verify depth was limited properly
+      const contextStr = JSON.stringify(result.entry.context);
+      expect(contextStr).toContain('[DEPTH_LIMIT_EXCEEDED]');
     });
   });
 
