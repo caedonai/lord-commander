@@ -211,7 +211,8 @@ export interface CreateLogEntryResult {
  */
 export class StructuredLogger {
   private config: StructuredLoggingConfig;
-  private toJSONCallCount = new WeakMap<object, number>();
+  // Remove unused properties
+  // private toJSONCallCount = new WeakMap<object, number>();
 
   constructor(config: Partial<StructuredLoggingConfig> = {}) {
     this.config = { ...DEFAULT_STRUCTURED_LOGGING_CONFIG, ...config };
@@ -278,7 +279,7 @@ export class StructuredLogger {
     const processedObj = neutralizeToJSON(obj);
     
     // Simple replacer for final cleanup
-    const replacer = (key: string, value: unknown): unknown => {
+    const replacer = (_key: string, value: unknown): unknown => {
       if (typeof value === 'bigint') {
         return `[BigInt:${String(value)}]`;
       }

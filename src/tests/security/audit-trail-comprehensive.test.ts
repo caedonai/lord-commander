@@ -24,7 +24,6 @@ import {
   AuditEventBuilderImpl,
   MemoryAuditStorage,
   AuditHelpers,
-  auditTrail,
   AuditEventType,
   AuditSeverity,
   IntegrityStatus,
@@ -148,19 +147,34 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
       const authViolation: EnhancedSecurityViolation = {
         id: 'test',
         type: 'auth_failure',
+        pattern: 'failed-login',
         severity: 'high',
         description: 'Authentication failed',
-        originalInput: 'test',
-        sanitizedOutput: 'test',
+        recommendation: 'Block further attempts',
         timestamp: new Date(),
-        recommendedAction: 'block',
         context: { 
           inputType: 'command-arg',
           environment: 'test',
         },
-        riskScore: 80,
-        attackVector: 'credential_stuffing',
-        complianceImpact: [],
+        compliance: {
+          owasp: ['A07'],
+          cwe: [287],
+          nist: ['PR.AC-1'],
+          mitre: ['T1110'],
+          iso27001: ['A.9.1.1']
+        },
+        riskFactors: [{
+          type: 'behavioral',
+          name: 'failed-attempts',
+          impact: 80,
+          description: 'Multiple failed authentication attempts'
+        }],
+        remediation: [{
+          type: 'blocking',
+          priority: 'high',
+          autoFixAvailable: true,
+          description: 'Block further authentication attempts'
+        }],
         correlationId: 'test',
       };
 
@@ -272,20 +286,35 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
       const violation: EnhancedSecurityViolation = {
         id: 'violation123',
         type: 'xss_attempt',
+        pattern: 'script-injection',
         severity: 'high',
         description: 'Cross-site scripting attempt detected',
-        originalInput: '<script>alert("xss")</script>',
-        sanitizedOutput: '&lt;script&gt;alert("xss")&lt;/script&gt;',
+        recommendation: 'Sanitize HTML input',
         timestamp: new Date(),
-        recommendedAction: 'block',
         context: { 
           inputType: 'command-arg',
           environment: 'test',
         },
-        riskScore: 85,
-        attackVector: 'reflected_xss',
-        complianceImpact: ['OWASP_A03'],
-        correlationId: 'corr123',
+        compliance: {
+          owasp: ['A03'],
+          cwe: [79],
+          nist: ['PR.DS-5'],
+          mitre: ['T1059'],
+          iso27001: ['A.12.6.1']
+        },
+        riskFactors: [{
+          type: 'technical',
+          name: 'script-injection',
+          impact: 85,
+          description: 'Script injection attempt detected'
+        }],
+        remediation: [{
+          type: 'sanitization',
+          priority: 'high',
+          autoFixAvailable: true,
+          description: 'Sanitize HTML input and escape special characters'
+        }],
+        correlationId: 'xss-attack-123',
       };
 
       const entry = builder
@@ -716,19 +745,34 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
       const violation: EnhancedSecurityViolation = {
         id: 'violation123',
         type: 'sql_injection',
+        pattern: 'sql-command-injection',
         severity: 'critical',
         description: 'SQL injection attempt detected',
-        originalInput: "'; DROP TABLE users; --",
-        sanitizedOutput: "'; DROP TABLE users; --",
+        recommendation: 'Use parameterized queries',
         timestamp: new Date(),
-        recommendedAction: 'block',
         context: { 
           inputType: 'command-arg',
           environment: 'test',
         },
-        riskScore: 95,
-        attackVector: 'sql_injection',
-        complianceImpact: ['OWASP_A03'],
+        compliance: {
+          owasp: ['A03'],
+          cwe: [89],
+          nist: ['PR.DS-5'],
+          mitre: ['T1190'],
+          iso27001: ['A.12.6.1']
+        },
+        riskFactors: [{
+          type: 'environmental',
+          name: 'test-environment',
+          impact: 50,
+          description: 'Running in test environment'
+        }],
+        remediation: [{
+          type: 'validation',
+          priority: 'critical',
+          autoFixAvailable: false,
+          description: 'Implement SQL input validation'
+        }],
         correlationId: 'corr123',
       };
 
@@ -821,7 +865,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
         ...testConfig,
         asyncProcessing: true,
         batchSize: 3,
-        flushInterval: 50,
+        flushInterval: 100, // Minimum allowed by security validation
       };
 
       const batchManager = new AuditTrailManager(batchConfig);
@@ -1059,19 +1103,34 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
       const violation: EnhancedSecurityViolation = {
         id: 'test-violation',
         type: 'path_traversal',
+        pattern: 'directory-traversal',
         severity: 'high',
         description: 'Path traversal attempt',
-        originalInput: '../../../etc/passwd',
-        sanitizedOutput: 'etc/passwd',
+        recommendation: 'Block path traversal attempts',
         timestamp: new Date(),
-        recommendedAction: 'block',
         context: { 
           inputType: 'file-path',
           environment: 'test',
         },
-        riskScore: 85,
-        attackVector: 'path_traversal',
-        complianceImpact: [],
+        compliance: {
+          owasp: ['A01'],
+          cwe: [22],
+          nist: ['PR.DS-1'],
+          mitre: ['T1083'],
+          iso27001: ['A.12.6.1']
+        },
+        riskFactors: [{
+          type: 'environmental',
+          name: 'test-environment',
+          impact: 30,
+          description: 'Running in test environment'
+        }],
+        remediation: [{
+          type: 'validation',
+          priority: 'high',
+          autoFixAvailable: true,
+          description: 'Implement path validation'
+        }],
         correlationId: 'conv123',
       };
 

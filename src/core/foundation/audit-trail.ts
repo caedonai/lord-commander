@@ -314,7 +314,20 @@ export interface AuditTrailConfig {
 }
 
 /**
- * Default audit trail configuration
+ * Security constants for audit trail protection
+ */
+export const AUDIT_SECURITY_LIMITS = {
+  MAX_ENTRY_SIZE_BYTES: 1024 * 1024, // 1MB per entry
+  MAX_BATCH_BUFFER_SIZE: 100, // Maximum entries in batch buffer
+  MAX_CHECKSUM_COMPUTATION_TIME_MS: 5000, // 5 seconds timeout
+  MAX_ARRAY_SIZE: 100, // Maximum items in arrays (tags, related events, etc.)
+  MAX_STRING_LENGTH: 10000, // Maximum string field length
+  MAX_CONTEXT_SIZE_BYTES: 100 * 1024, // 100KB per context object
+  MAX_TOTAL_SIZE_BYTES: 10 * 1024 * 1024, // 10MB total storage (reduced from 50MB)
+} as const;
+
+/**
+ * Default audit trail configuration with security-first defaults
  */
 export const DEFAULT_AUDIT_TRAIL_CONFIG: AuditTrailConfig = {
   enabled: true,
@@ -322,23 +335,23 @@ export const DEFAULT_AUDIT_TRAIL_CONFIG: AuditTrailConfig = {
   description: 'Default audit trail for security events',
   
   storageBackend: 'memory',
-  maxEntries: 10000,
-  maxSizeBytes: 50 * 1024 * 1024, // 50MB
+  maxEntries: 5000, // Reduced from 10000
+  maxSizeBytes: AUDIT_SECURITY_LIMITS.MAX_TOTAL_SIZE_BYTES,
   
   enableIntegrityProtection: true,
-  enableEncryption: false,
+  enableEncryption: true, // SECURITY FIX: Enable by default
   enableTamperDetection: true,
   checksumAlgorithm: 'sha256',
   
-  batchSize: 100,
-  flushInterval: 5000, // 5 seconds
+  batchSize: 50, // Reduced from 100
+  flushInterval: 3000, // Reduced from 5 seconds
   compressionEnabled: false,
   asyncProcessing: true,
   
-  defaultRetentionDays: 365,
+  defaultRetentionDays: 90, // Reduced from 365
   autoRotate: true,
-  rotationSize: 10 * 1024 * 1024, // 10MB
-  maxRotationFiles: 10,
+  rotationSize: 5 * 1024 * 1024, // Reduced to 5MB
+  maxRotationFiles: 5, // Reduced from 10
   
   enabledEventTypes: Object.values(AuditEventType),
   minimumSeverity: AuditSeverity.INFORMATIONAL,
@@ -350,10 +363,10 @@ export const DEFAULT_AUDIT_TRAIL_CONFIG: AuditTrailConfig = {
   integrationWithViolationDetection: true,
   forwardToSecurityMonitoring: false,
   
-  complianceMode: false,
-  complianceFrameworks: [],
-  requireDigitalSignatures: false,
-  nonRepudiationEnabled: false,
+  complianceMode: true, // SECURITY FIX: Enable by default
+  complianceFrameworks: ['GDPR', 'SOX'], // Default compliance frameworks
+  requireDigitalSignatures: true, // SECURITY FIX: Enable by default
+  nonRepudiationEnabled: true, // SECURITY FIX: Enable by default
 };
 
 /**
@@ -489,6 +502,264 @@ export interface AuditEventBuilder {
 }
 
 /**
+ * Security validation utilities for audit trail
+ */
+export class AuditSecurityValidator {
+  /**
+   * Validate audit entry size and content for security
+   */
+  static validateAuditEntry(entry: AuditEntry): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    // Sanitize the entry first to prevent prototype pollution attacks
+    if (entry.userContext) {
+      entry.userContext = this.sanitizeContextObject(entry.userContext);
+    }
+    if (entry.systemContext) {
+      entry.systemContext = this.sanitizeContextObject(entry.systemContext);
+    }
+    if (entry.resourceContext) {
+      entry.resourceContext = this.sanitizeContextObject(entry.resourceContext);
+    }
+    
+    // Calculate entry size
+    const entrySize = this.calculateEntrySize(entry);
+    if (entrySize > AUDIT_SECURITY_LIMITS.MAX_ENTRY_SIZE_BYTES) {
+      errors.push(`Entry size ${entrySize} bytes exceeds maximum ${AUDIT_SECURITY_LIMITS.MAX_ENTRY_SIZE_BYTES} bytes`);
+    }
+    
+    // Validate string field lengths
+    if (entry.message?.length > AUDIT_SECURITY_LIMITS.MAX_STRING_LENGTH) {
+      errors.push(`Message length ${entry.message.length} exceeds maximum ${AUDIT_SECURITY_LIMITS.MAX_STRING_LENGTH}`);
+    }
+    
+    if (entry.description && entry.description.length > AUDIT_SECURITY_LIMITS.MAX_STRING_LENGTH) {
+      errors.push(`Description length ${entry.description.length} exceeds maximum ${AUDIT_SECURITY_LIMITS.MAX_STRING_LENGTH}`);
+    }
+    
+    // Validate array sizes
+    if (entry.tags && entry.tags.length > AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE) {
+      errors.push(`Tags array size ${entry.tags.length} exceeds maximum ${AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE}`);
+    }
+    
+    if (entry.relatedEventIds && entry.relatedEventIds.length > AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE) {
+      errors.push(`Related events array size ${entry.relatedEventIds.length} exceeds maximum ${AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE}`);
+    }
+    
+    if (entry.complianceFlags && entry.complianceFlags.length > AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE) {
+      errors.push(`Compliance flags array size ${entry.complianceFlags.length} exceeds maximum ${AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE}`);
+    }
+    
+    // Validate context objects
+    if (entry.userContext) {
+      const contextSize = this.calculateObjectSize(entry.userContext);
+      if (contextSize > AUDIT_SECURITY_LIMITS.MAX_CONTEXT_SIZE_BYTES) {
+        errors.push(`User context size ${contextSize} bytes exceeds maximum ${AUDIT_SECURITY_LIMITS.MAX_CONTEXT_SIZE_BYTES} bytes`);
+      }
+      
+      const contextErrors = this.validateContextObject(entry.userContext, 'userContext');
+      errors.push(...contextErrors);
+    }
+    
+    if (entry.systemContext) {
+      const contextSize = this.calculateObjectSize(entry.systemContext);
+      if (contextSize > AUDIT_SECURITY_LIMITS.MAX_CONTEXT_SIZE_BYTES) {
+        errors.push(`System context size ${contextSize} bytes exceeds maximum ${AUDIT_SECURITY_LIMITS.MAX_CONTEXT_SIZE_BYTES} bytes`);
+      }
+      
+      const contextErrors = this.validateContextObject(entry.systemContext, 'systemContext');
+      errors.push(...contextErrors);
+    }
+    
+    if (entry.resourceContext) {
+      const contextSize = this.calculateObjectSize(entry.resourceContext);
+      if (contextSize > AUDIT_SECURITY_LIMITS.MAX_CONTEXT_SIZE_BYTES) {
+        errors.push(`Resource context size ${contextSize} bytes exceeds maximum ${AUDIT_SECURITY_LIMITS.MAX_CONTEXT_SIZE_BYTES} bytes`);
+      }
+      
+      const contextErrors = this.validateContextObject(entry.resourceContext, 'resourceContext');
+      errors.push(...contextErrors);
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+  
+  /**
+   * Sanitize context object against prototype pollution and circular references
+   */
+  static sanitizeContextObject(obj: any): any {
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+    
+    // Detect circular references
+    const seen = new WeakSet();
+    
+    const sanitize = (current: any): any => {
+      if (current === null || typeof current !== 'object') {
+        return current;
+      }
+      
+      if (seen.has(current)) {
+        return '[Circular Reference Removed]';
+      }
+      
+      seen.add(current);
+      
+      if (Array.isArray(current)) {
+        return current.slice(0, AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE).map(sanitize);
+      }
+      
+      const sanitized: any = {};
+      const keys = Object.keys(current).slice(0, AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE);
+      
+      for (const key of keys) {
+        // Block dangerous prototype pollution keys
+        if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+          continue;
+        }
+        
+        try {
+          sanitized[key] = sanitize(current[key]);
+        } catch (error) {
+          sanitized[key] = '[Sanitization Error]';
+        }
+      }
+      
+      return sanitized;
+    };
+    
+    return sanitize(obj);
+  }
+  
+  /**
+   * Calculate approximate size of an audit entry
+   */
+  private static calculateEntrySize(entry: AuditEntry): number {
+    try {
+      return JSON.stringify(entry).length;
+    } catch (error) {
+      // If JSON.stringify fails (circular refs), estimate size
+      let size = 0;
+      
+      // Estimate based on string fields
+      size += (entry.message?.length || 0);
+      size += (entry.description?.length || 0);
+      size += (entry.id?.length || 0);
+      size += (entry.timestamp?.length || 0);
+      
+      // Add estimated overhead for objects and arrays
+      size += 1000; // Base overhead
+      
+      return size;
+    }
+  }
+  
+  /**
+   * Calculate approximate size of an object
+   */
+  private static calculateObjectSize(obj: any): number {
+    try {
+      return JSON.stringify(obj).length;
+    } catch (error) {
+      // Fallback estimation
+      return 1000;
+    }
+  }
+  
+  /**
+   * Validate context object for dangerous properties
+   */
+  private static validateContextObject(obj: any, contextName: string): string[] {
+    const errors: string[] = [];
+    
+    if (typeof obj !== 'object' || obj === null) {
+      return errors;
+    }
+    
+    // Check for dangerous properties (using hasOwnProperty to avoid inherited properties)
+    const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
+    for (const key of dangerousKeys) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        errors.push(`${contextName} contains dangerous property: ${key}`);
+      }
+    }
+    
+    // Check for excessively deep nesting
+    const maxDepth = 10;
+    const checkDepth = (current: any, depth: number): boolean => {
+      if (depth > maxDepth) {
+        return false;
+      }
+      
+      if (typeof current === 'object' && current !== null) {
+        for (const value of Object.values(current)) {
+          if (!checkDepth(value, depth + 1)) {
+            return false;
+          }
+        }
+      }
+      
+      return true;
+    };
+    
+    if (!checkDepth(obj, 0)) {
+      errors.push(`${contextName} exceeds maximum nesting depth of ${maxDepth}`);
+    }
+    
+    return errors;
+  }
+  
+  /**
+   * Validate configuration for security
+   */
+  static validateConfiguration(config: Partial<AuditTrailConfig>): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    // Validate numeric limits
+    if (config.maxEntries !== undefined) {
+      if (config.maxEntries < 0 || config.maxEntries > 50000) {
+        errors.push(`maxEntries must be between 0 and 50000, got ${config.maxEntries}`);
+      }
+    }
+    
+    if (config.maxSizeBytes !== undefined) {
+      if (config.maxSizeBytes < 0 || config.maxSizeBytes > 100 * 1024 * 1024) {
+        errors.push(`maxSizeBytes must be between 0 and 100MB, got ${config.maxSizeBytes}`);
+      }
+    }
+    
+    if (config.batchSize !== undefined) {
+      if (config.batchSize < 1 || config.batchSize > 1000) {
+        errors.push(`batchSize must be between 1 and 1000, got ${config.batchSize}`);
+      }
+    }
+    
+    if (config.flushInterval !== undefined) {
+      if (config.flushInterval < 100 || config.flushInterval > 60000) {
+        errors.push(`flushInterval must be between 100ms and 60s, got ${config.flushInterval}`);
+      }
+    }
+    
+    // Validate algorithm
+    if (config.checksumAlgorithm !== undefined) {
+      const validAlgorithms = ['sha256', 'sha512', 'blake2b'];
+      if (!validAlgorithms.includes(config.checksumAlgorithm)) {
+        errors.push(`checksumAlgorithm must be one of ${validAlgorithms.join(', ')}, got ${config.checksumAlgorithm}`);
+      }
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+}
+
+/**
  * Helper functions for generating audit-related values
  */
 export class AuditHelpers {
@@ -502,29 +773,47 @@ export class AuditHelpers {
   }
   
   /**
-   * Generate a checksum for an audit entry
+   * Generate a checksum for an audit entry with timeout protection
    */
   static generateChecksum(entry: AuditEntry, algorithm: 'sha256' | 'sha512' | 'blake2b' = 'sha256'): string {
-    // Create a deterministic string representation of the entry
-    // Exclude checksum and previousEntryHash to avoid circular dependencies
-    const entryData = {
-      id: entry.id,
-      timestamp: entry.timestamp,
-      eventType: entry.eventType,
-      severity: entry.severity,
-      message: entry.message,
-      outcome: entry.outcome,
-      userContext: entry.userContext,
-      systemContext: entry.systemContext,
-      resourceContext: entry.resourceContext,
-      securityClassification: entry.securityClassification,
-      traceId: entry.traceId,
-      correlationId: entry.correlationId,
-      // Don't include previousEntryHash or checksum in checksum calculation
-    };
+    const startTime = Date.now();
     
-    const dataString = JSON.stringify(entryData, Object.keys(entryData).sort());
-    return createHash(algorithm).update(dataString).digest('hex');
+    try {
+      // Create a deterministic string representation of the entry
+      // Exclude checksum and previousEntryHash to avoid circular dependencies
+      const entryData = {
+        id: entry.id,
+        timestamp: entry.timestamp,
+        eventType: entry.eventType,
+        severity: entry.severity,
+        message: entry.message,
+        outcome: entry.outcome,
+        userContext: entry.userContext,
+        systemContext: entry.systemContext,
+        resourceContext: entry.resourceContext,
+        securityClassification: entry.securityClassification,
+        traceId: entry.traceId,
+        correlationId: entry.correlationId,
+        // Don't include previousEntryHash or checksum in checksum calculation
+      };
+      
+      // Pre-truncate data if too large to prevent DoS
+      let dataString = JSON.stringify(entryData, Object.keys(entryData).sort());
+      if (dataString.length > AUDIT_SECURITY_LIMITS.MAX_ENTRY_SIZE_BYTES * 3) {
+        dataString = dataString.substring(0, AUDIT_SECURITY_LIMITS.MAX_ENTRY_SIZE_BYTES * 3);
+      }
+      
+      // Check if computation is taking too long
+      if (Date.now() - startTime > AUDIT_SECURITY_LIMITS.MAX_CHECKSUM_COMPUTATION_TIME_MS) {
+        throw new Error('Checksum computation timeout - potential DoS attack');
+      }
+      
+      return createHash(algorithm).update(dataString).digest('hex');
+    } catch (error) {
+      // Fallback to simple checksum if complex computation fails
+      const fallbackData = `${entry.id}-${entry.timestamp}-${entry.eventType}-${entry.severity}`;
+      return createHash('sha256').update(fallbackData).digest('hex');
+    }
   }
   
   /**
@@ -583,6 +872,54 @@ export class AuditHelpers {
       return AuditEventType.SECURITY_VIOLATION;
     }
   }
+  
+  /**
+   * Constant-time string comparison to prevent timing attacks
+   */
+  static constantTimeCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) {
+      return false;
+    }
+    
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+      result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    
+    return result === 0;
+  }
+  
+  /**
+   * Sanitize environment data to prevent information disclosure
+   */
+  static sanitizeEnvironmentData(): AuditSystemContext {
+    const hostname = process.env.HOSTNAME || 'unknown';
+    const workingDir = process.cwd();
+    
+    return {
+      hostname: hostname.length > 50 ? hostname.substring(0, 50) + '...' : hostname,
+      processId: process.pid,
+      parentProcessId: process.ppid,
+      workingDirectory: workingDir.length > 100 ? '...' + workingDir.substring(workingDir.length - 100) : workingDir,
+      environmentType: this.determineEnvironmentType(),
+      version: process.version,
+    };
+  }
+  
+  /**
+   * Determine environment type safely
+   */
+  private static determineEnvironmentType(): 'development' | 'staging' | 'production' {
+    const env = process.env.NODE_ENV?.toLowerCase();
+    
+    if (env === 'production' || env === 'prod') {
+      return 'production';
+    } else if (env === 'staging' || env === 'stage') {
+      return 'staging';
+    } else {
+      return 'development';
+    }
+  }
 }
 
 /**
@@ -611,12 +948,22 @@ export class AuditEventBuilderImpl implements AuditEventBuilder {
   }
   
   setMessage(message: string): AuditEventBuilder {
-    this.entry.message = message;
+    // Validate and sanitize message
+    if (message && message.length > AUDIT_SECURITY_LIMITS.MAX_STRING_LENGTH) {
+      this.entry.message = message.substring(0, AUDIT_SECURITY_LIMITS.MAX_STRING_LENGTH) + '...[truncated]';
+    } else {
+      this.entry.message = message;
+    }
     return this;
   }
   
   setDescription(description: string): AuditEventBuilder {
-    this.entry.description = description;
+    // Validate and sanitize description
+    if (description && description.length > AUDIT_SECURITY_LIMITS.MAX_STRING_LENGTH) {
+      this.entry.description = description.substring(0, AUDIT_SECURITY_LIMITS.MAX_STRING_LENGTH) + '...[truncated]';
+    } else {
+      this.entry.description = description;
+    }
     return this;
   }
   
@@ -626,17 +973,20 @@ export class AuditEventBuilderImpl implements AuditEventBuilder {
   }
   
   setUserContext(context: AuditUserContext): AuditEventBuilder {
-    this.entry.userContext = context;
+    // Sanitize context object against prototype pollution and circular references
+    this.entry.userContext = AuditSecurityValidator.sanitizeContextObject(context);
     return this;
   }
   
   setSystemContext(context: AuditSystemContext): AuditEventBuilder {
-    this.entry.systemContext = context;
+    // Sanitize context object against prototype pollution and circular references
+    this.entry.systemContext = AuditSecurityValidator.sanitizeContextObject(context);
     return this;
   }
   
   setResourceContext(context: AuditResourceContext): AuditEventBuilder {
-    this.entry.resourceContext = context;
+    // Sanitize context object against prototype pollution and circular references
+    this.entry.resourceContext = AuditSecurityValidator.sanitizeContextObject(context);
     return this;
   }
   
@@ -677,7 +1027,11 @@ export class AuditEventBuilderImpl implements AuditEventBuilder {
     if (!this.entry.relatedEventIds) {
       this.entry.relatedEventIds = [];
     }
-    this.entry.relatedEventIds.push(eventId);
+    
+    // Enforce array size limit
+    if (this.entry.relatedEventIds.length < AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE) {
+      this.entry.relatedEventIds.push(eventId);
+    }
     return this;
   }
   
@@ -685,7 +1039,13 @@ export class AuditEventBuilderImpl implements AuditEventBuilder {
     if (!this.entry.tags) {
       this.entry.tags = [];
     }
-    this.entry.tags.push(tag);
+    
+    // Enforce array size limit
+    if (this.entry.tags.length < AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE) {
+      // Sanitize tag string
+      const sanitizedTag = tag && tag.length > 100 ? tag.substring(0, 100) : tag;
+      this.entry.tags.push(sanitizedTag);
+    }
     return this;
   }
   
@@ -713,7 +1073,11 @@ export class AuditEventBuilderImpl implements AuditEventBuilder {
     if (!this.entry.complianceFlags) {
       this.entry.complianceFlags = [];
     }
-    this.entry.complianceFlags.push(flag);
+    
+    // Enforce array size limit
+    if (this.entry.complianceFlags.length < AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE) {
+      this.entry.complianceFlags.push(flag);
+    }
     return this;
   }
   
@@ -753,7 +1117,15 @@ export class AuditEventBuilderImpl implements AuditEventBuilder {
       this.entry.retentionUntil = AuditHelpers.calculateRetentionExpiration(days);
     }
     
-    return this.entry as AuditEntry;
+    const auditEntry = this.entry as AuditEntry;
+    
+    // Perform comprehensive security validation
+    const validation = AuditSecurityValidator.validateAuditEntry(auditEntry);
+    if (!validation.isValid) {
+      throw new Error(`Audit entry validation failed: ${validation.errors.join(', ')}`);
+    }
+    
+    return auditEntry;
   }
 }
 
@@ -786,13 +1158,21 @@ export interface AuditStorageBackend {
 }
 
 /**
- * In-memory storage backend for audit trails
+ * In-memory storage backend for audit trails with enhanced security
  */
 export class MemoryAuditStorage implements AuditStorageBackend {
   private entries: Map<string, AuditEntry> = new Map();
   private metadata: AuditTrailMetadata;
+  private isLocked: boolean = false;
+  private lockWaiters: Array<() => void> = [];
   
   constructor(private config: AuditTrailConfig) {
+    // Validate configuration first
+    const configValidation = AuditSecurityValidator.validateConfiguration(config);
+    if (!configValidation.isValid) {
+      throw new Error(`Invalid audit trail configuration: ${configValidation.errors.join(', ')}`);
+    }
+    
     this.metadata = {
       id: `audit-trail-${Date.now()}`,
       name: config.trailName,
@@ -815,28 +1195,96 @@ export class MemoryAuditStorage implements AuditStorageBackend {
   }
   
   async close(): Promise<void> {
-    // Clear memory to free resources
-    this.entries.clear();
+    // Wait for any pending operations to complete
+    await this.acquireLock();
+    
+    try {
+      // Clear memory to free resources
+      this.entries.clear();
+    } finally {
+      this.releaseLock();
+    }
+  }
+  
+  /**
+   * Acquire exclusive lock for atomic operations
+   */
+  private async acquireLock(): Promise<void> {
+    if (!this.isLocked) {
+      this.isLocked = true;
+      return;
+    }
+    
+    // Wait for lock to become available
+    return new Promise((resolve) => {
+      this.lockWaiters.push(resolve);
+    });
+  }
+  
+  /**
+   * Release exclusive lock
+   */
+  private releaseLock(): void {
+    this.isLocked = false;
+    
+    // Wake up next waiter
+    const nextWaiter = this.lockWaiters.shift();
+    if (nextWaiter) {
+      this.isLocked = true;
+      nextWaiter();
+    }
   }
   
   async addEntry(entry: AuditEntry): Promise<void> {
-    // Add integrity protection
-    if (this.config.enableIntegrityProtection) {
-      // Link to previous entry for hash chain
-      const lastEntry = Array.from(this.entries.values()).pop();
-      if (lastEntry) {
-        entry.previousEntryHash = lastEntry.checksum;
+    await this.acquireLock();
+    
+    try {
+      // Validate entry security before adding
+      const validation = AuditSecurityValidator.validateAuditEntry(entry);
+      if (!validation.isValid) {
+        throw new Error(`Security validation failed: ${validation.errors.join(', ')}`);
       }
       
-      // Generate checksum after setting previousEntryHash
-      entry.checksum = AuditHelpers.generateChecksum(entry, this.config.checksumAlgorithm);
+      // Check total size before adding
+      const entrySize = JSON.stringify(entry).length;
+      if (this.metadata.sizeBytes + entrySize > (this.config.maxSizeBytes || AUDIT_SECURITY_LIMITS.MAX_TOTAL_SIZE_BYTES)) {
+        throw new Error(`Adding entry would exceed maximum storage size limit`);
+      }
+      
+      // Add integrity protection
+      if (this.config.enableIntegrityProtection) {
+        // Get sorted entries for consistent hash chain
+        const sortedEntries = Array.from(this.entries.values())
+          .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+        
+        const lastEntry = sortedEntries[sortedEntries.length - 1];
+        if (lastEntry) {
+          entry.previousEntryHash = lastEntry.checksum;
+        }
+        
+        // Generate checksum after setting previousEntryHash
+        entry.checksum = AuditHelpers.generateChecksum(entry, this.config.checksumAlgorithm);
+      }
+      
+      this.entries.set(entry.id, entry);
+      
+      // Update metadata atomically
+      this.updateMetadataForNewEntry(entry, entrySize);
+      
+      // Check size limits after adding
+      await this.enforceSizeLimits();
+      
+    } finally {
+      this.releaseLock();
     }
-    
-    this.entries.set(entry.id, entry);
-    
-    // Update metadata
+  }
+  
+  /**
+   * Update metadata for new entry (called within lock)
+   */
+  private updateMetadataForNewEntry(entry: AuditEntry, entrySize: number): void {
     this.metadata.totalEntries = this.entries.size;
-    this.metadata.sizeBytes += JSON.stringify(entry).length;
+    this.metadata.sizeBytes += entrySize;
     this.metadata.modifiedAt = AuditHelpers.createTimestamp();
     
     if (!this.metadata.oldestEntry || entry.timestamp < this.metadata.oldestEntry) {
@@ -845,14 +1293,30 @@ export class MemoryAuditStorage implements AuditStorageBackend {
     if (!this.metadata.newestEntry || entry.timestamp > this.metadata.newestEntry) {
       this.metadata.newestEntry = entry.timestamp;
     }
+  }
+  
+  /**
+   * Enforce size limits (called within lock)
+   */
+  private async enforceSizeLimits(): Promise<void> {
+    let deletedEntries = 0;
     
-    // Check size limits
+    // Check entry count limit
     if (this.config.maxEntries && this.entries.size > this.config.maxEntries) {
-      await this.removeOldestEntries(this.entries.size - this.config.maxEntries);
+      const entriesToRemove = this.entries.size - this.config.maxEntries;
+      const removedCount = await this.removeOldestEntries(entriesToRemove);
+      deletedEntries += removedCount;
     }
     
+    // Check size limit
     if (this.config.maxSizeBytes && this.metadata.sizeBytes > this.config.maxSizeBytes) {
-      await this.removeLargestEntries();
+      const removedCount = await this.removeLargestEntries();
+      deletedEntries += removedCount;
+    }
+    
+    // Log deletion for audit trail
+    if (deletedEntries > 0) {
+      console.warn(`[AUDIT TRAIL] Deleted ${deletedEntries} entries to enforce size limits`);
     }
   }
   
@@ -892,10 +1356,18 @@ export class MemoryAuditStorage implements AuditStorageBackend {
       );
     }
     if (filter.messageContains) {
+      // Sanitize search term to prevent regex DoS attacks
       const searchTerm = filter.messageContains.toLowerCase();
+      if (searchTerm.length > 1000) {
+        throw new Error('Search term too long (max 1000 characters)');
+      }
+      
+      // Escape regex special characters to prevent regex DoS
+      const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
       filteredEntries = filteredEntries.filter(e => 
-        e.message.toLowerCase().includes(searchTerm) ||
-        e.description?.toLowerCase().includes(searchTerm)
+        e.message.toLowerCase().includes(escapedTerm) ||
+        e.description?.toLowerCase().includes(escapedTerm)
       );
     }
     
@@ -966,7 +1438,7 @@ export class MemoryAuditStorage implements AuditStorageBackend {
       // Verify entry checksum
       if (entry.checksum) {
         const expectedChecksum = AuditHelpers.generateChecksum(entry, this.config.checksumAlgorithm);
-        if (entry.checksum !== expectedChecksum) {
+        if (!AuditHelpers.constantTimeCompare(entry.checksum, expectedChecksum)) {
           corruptedEntries.push(entry);
           errors.push(`Entry ${entry.id} has invalid checksum`);
           continue;
@@ -976,7 +1448,7 @@ export class MemoryAuditStorage implements AuditStorageBackend {
       // Verify hash chain
       if (i > 0 && entry.previousEntryHash) {
         const previousEntry = allEntries[i - 1];
-        if (entry.previousEntryHash !== previousEntry.checksum) {
+        if (!AuditHelpers.constantTimeCompare(entry.previousEntryHash, previousEntry.checksum || '')) {
           corruptedEntries.push(entry);
           errors.push(`Entry ${entry.id} has broken hash chain`);
           continue;
@@ -1040,63 +1512,96 @@ export class MemoryAuditStorage implements AuditStorageBackend {
     
     let content: string;
     
-    switch (options.format) {
-      case 'json':
-        const exportData = {
-          metadata: options.includeMetadata ? this.metadata : undefined,
-          entries: result.entries,
-          integrityData: options.includeIntegrityData ? {
-            checksum: await this.calculateChecksum(),
-            verificationResult: await this.verifyIntegrity(),
-          } : undefined,
-        };
-        content = JSON.stringify(exportData, null, 2);
-        break;
-        
-      case 'csv':
-        const headers = ['id', 'timestamp', 'eventType', 'severity', 'message', 'outcome'];
-        const rows = result.entries.map(entry => [
-          entry.id,
-          entry.timestamp,
-          entry.eventType,
-          entry.severity,
-          entry.message,
-          entry.outcome
-        ]);
-        content = [headers, ...rows].map(row => row.join(',')).join('\n');
-        break;
-        
-      default:
-        throw new Error(`Unsupported export format: ${options.format}`);
+    try {
+      switch (options.format) {
+        case 'json':
+          const exportData = {
+            metadata: options.includeMetadata ? this.metadata : undefined,
+            entries: result.entries.map(entry => AuditSecurityValidator.sanitizeContextObject(entry)), // Sanitize for export
+            integrityData: options.includeIntegrityData ? {
+              checksum: await this.calculateChecksum(),
+              verificationResult: await this.verifyIntegrity(),
+            } : undefined,
+          };
+          
+          // Use custom JSON stringify to handle circular references
+          content = JSON.stringify(exportData, (_key, value) => {
+            if (typeof value === 'object' && value !== null) {
+              // Detect circular references
+              if (this.circularRefs?.has(value)) {
+                return '[Circular Reference]';
+              }
+              if (!this.circularRefs) {
+                this.circularRefs = new WeakSet();
+              }
+              this.circularRefs.add(value);
+            }
+            return value;
+          }, 2);
+          
+          // Clean up circular reference tracker
+          this.circularRefs = undefined;
+          break;
+          
+        case 'csv':
+          const headers = ['id', 'timestamp', 'eventType', 'severity', 'message', 'outcome'];
+          const rows = result.entries.map(entry => [
+            entry.id || '',
+            entry.timestamp || '',
+            entry.eventType || '',
+            entry.severity || '',
+            (entry.message || '').replace(/,/g, ';').replace(/\n/g, ' '), // Escape CSV
+            entry.outcome || ''
+          ]);
+          content = [headers, ...rows].map(row => row.join(',')).join('\n');
+          break;
+          
+        default:
+          throw new Error(`Unsupported export format: ${options.format}`);
+      }
+      
+      return Buffer.from(content, 'utf-8');
+    } catch (error) {
+      // Sanitize error message before throwing
+      const sanitizedError = error instanceof Error ? error.message.replace(/[<>\"']/g, '') : 'Export failed';
+      throw new Error(`Export failed: ${sanitizedError}`);
     }
-    
-    return Buffer.from(content, 'utf-8');
   }
   
-  private async removeOldestEntries(count: number): Promise<void> {
+  private circularRefs?: WeakSet<object>;
+  
+  private async removeOldestEntries(count: number): Promise<number> {
     const allEntries = Array.from(this.entries.values())
       .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
     
+    let removedCount = 0;
     for (let i = 0; i < count && i < allEntries.length; i++) {
       this.entries.delete(allEntries[i].id);
+      removedCount++;
     }
     
     // Recalculate metadata
     this.metadata.totalEntries = this.entries.size;
     this.metadata.sizeBytes = Array.from(this.entries.values())
       .reduce((size, entry) => size + JSON.stringify(entry).length, 0);
+    
+    return removedCount;
   }
   
-  private async removeLargestEntries(): Promise<void> {
+  private async removeLargestEntries(): Promise<number> {
     // Remove entries until under size limit
     const allEntries = Array.from(this.entries.values())
       .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
     
+    let removedCount = 0;
     while (this.metadata.sizeBytes > this.config.maxSizeBytes! && allEntries.length > 0) {
       const entryToRemove = allEntries.shift()!;
       this.entries.delete(entryToRemove.id);
       this.metadata.sizeBytes -= JSON.stringify(entryToRemove).length;
+      removedCount++;
     }
+    
+    return removedCount;
   }
 }
 
@@ -1107,10 +1612,17 @@ export class AuditTrailManager {
   private storage: AuditStorageBackend;
   private config: AuditTrailConfig;
   private batchBuffer: AuditEntry[] = [];
-  private flushTimer?: NodeJS.Timeout;
   private processingQueue: Promise<void> = Promise.resolve();
+  private isShuttingDown: boolean = false;
+  private activeTimers: Set<NodeJS.Timeout> = new Set();
   
   constructor(config: Partial<AuditTrailConfig> = {}) {
+    // Validate configuration before proceeding
+    const configValidation = AuditSecurityValidator.validateConfiguration(config);
+    if (!configValidation.isValid) {
+      throw new Error(`Invalid audit trail configuration: ${configValidation.errors.join(', ')}`);
+    }
+    
     this.config = { ...DEFAULT_AUDIT_TRAIL_CONFIG, ...config };
     
     // Initialize storage backend
@@ -1139,13 +1651,30 @@ export class AuditTrailManager {
    * Close the audit trail manager and flush pending entries
    */
   async close(): Promise<void> {
-    if (this.flushTimer) {
-      clearInterval(this.flushTimer);
-    }
+    this.isShuttingDown = true;
+    
+    // Clear all active timers
+    this.activeTimers.forEach(timer => clearInterval(timer));
+    this.activeTimers.clear();
     
     // Flush any pending entries
-    await this.flush();
+    try {
+      await this.flush();
+    } catch (error) {
+      console.error('[AUDIT TRAIL] Failed to flush pending entries during shutdown:', this.sanitizeError(error));
+    }
+    
     await this.storage.close();
+  }
+  
+  /**
+   * Sanitize error messages to prevent information disclosure
+   */
+  private sanitizeError(error: any): string {
+    if (error instanceof Error) {
+      return error.message.replace(/[<>\"']/g, '').substring(0, 200);
+    }
+    return 'Unknown error';
   }
   
   /**
@@ -1156,34 +1685,56 @@ export class AuditTrailManager {
   }
   
   /**
-   * Record an audit event
+   * Record an audit event with security validation
    */
   async recordEvent(entry: AuditEntry): Promise<void> {
-    if (!this.config.enabled) {
+    if (!this.config.enabled || this.isShuttingDown) {
       return;
     }
     
-    // Apply filters
-    if (!this.shouldRecordEvent(entry)) {
-      return;
-    }
-    
-    // Enrich entry with system context
-    await this.enrichEntry(entry);
-    
-    if (this.config.asyncProcessing) {
-      // Add to batch buffer
-      this.batchBuffer.push(entry);
-      
-      if (this.batchBuffer.length >= this.config.batchSize) {
-        await this.flush();
+    try {
+      // Apply filters
+      if (!this.shouldRecordEvent(entry)) {
+        return;
       }
-    } else {
-      // Process immediately
-      this.processingQueue = this.processingQueue.then(async () => {
-        await this.storage.addEntry(entry);
-      });
-      await this.processingQueue;
+      
+      // Validate entry security
+      const validation = AuditSecurityValidator.validateAuditEntry(entry);
+      if (!validation.isValid) {
+        console.warn('[AUDIT TRAIL] Entry validation failed:', validation.errors.join(', '));
+        return; // Skip invalid entries instead of throwing
+      }
+      
+      // Enrich entry with system context
+      await this.enrichEntry(entry);
+      
+      if (this.config.asyncProcessing) {
+        // Check batch buffer size limit
+        if (this.batchBuffer.length >= AUDIT_SECURITY_LIMITS.MAX_BATCH_BUFFER_SIZE) {
+          await this.flush(); // Force flush to prevent buffer overflow
+        }
+        
+        // Add to batch buffer
+        this.batchBuffer.push(entry);
+        
+        if (this.batchBuffer.length >= this.config.batchSize) {
+          await this.flush();
+        }
+      } else {
+        // Process immediately with error recovery
+        this.processingQueue = this.processingQueue
+          .then(async () => {
+            await this.storage.addEntry(entry);
+          })
+          .catch(error => {
+            console.error('[AUDIT TRAIL] Failed to record entry:', this.sanitizeError(error));
+            // Continue processing despite errors
+          });
+        await this.processingQueue;
+      }
+    } catch (error) {
+      console.error('[AUDIT TRAIL] Unexpected error in recordEvent:', this.sanitizeError(error));
+      // Don't throw - audit failures shouldn't crash the application
     }
   }
   
@@ -1265,7 +1816,7 @@ export class AuditTrailManager {
   }
   
   /**
-   * Flush pending entries to storage
+   * Flush pending entries to storage with error recovery
    */
   async flush(): Promise<void> {
     if (this.batchBuffer.length === 0) {
@@ -1275,9 +1826,25 @@ export class AuditTrailManager {
     const entries = [...this.batchBuffer];
     this.batchBuffer = [];
     
-    this.processingQueue = this.processingQueue.then(async () => {
-      await this.storage.addEntries(entries);
-    });
+    this.processingQueue = this.processingQueue
+      .then(async () => {
+        try {
+          await this.storage.addEntries(entries);
+        } catch (error) {
+          console.error('[AUDIT TRAIL] Failed to flush entries:', this.sanitizeError(error));
+          
+          // Try to re-add entries to buffer if not shutting down
+          if (!this.isShuttingDown && this.batchBuffer.length < AUDIT_SECURITY_LIMITS.MAX_BATCH_BUFFER_SIZE) {
+            this.batchBuffer.unshift(...entries.slice(0, AUDIT_SECURITY_LIMITS.MAX_BATCH_BUFFER_SIZE - this.batchBuffer.length));
+          }
+          
+          throw error; // Re-throw to maintain error state
+        }
+      })
+      .catch(error => {
+        // Log but don't re-throw to prevent queue corruption
+        console.error('[AUDIT TRAIL] Processing queue error:', this.sanitizeError(error));
+      });
     
     await this.processingQueue;
   }
@@ -1290,16 +1857,22 @@ export class AuditTrailManager {
   }
   
   /**
-   * Update configuration
+   * Update configuration with validation
    */
   updateConfig(updates: Partial<AuditTrailConfig>): void {
+    // Validate configuration updates
+    const configValidation = AuditSecurityValidator.validateConfiguration(updates);
+    if (!configValidation.isValid) {
+      throw new Error(`Invalid configuration updates: ${configValidation.errors.join(', ')}`);
+    }
+    
     this.config = { ...this.config, ...updates };
     
     // Restart auto-flush if needed
-    if (this.flushTimer) {
-      clearInterval(this.flushTimer);
-    }
-    if (this.config.asyncProcessing && this.config.flushInterval > 0) {
+    this.activeTimers.forEach(timer => clearInterval(timer));
+    this.activeTimers.clear();
+    
+    if (this.config.asyncProcessing && this.config.flushInterval > 0 && !this.isShuttingDown) {
       this.setupAutoFlush();
     }
   }
@@ -1468,14 +2041,7 @@ export class AuditTrailManager {
   private async enrichEntry(entry: AuditEntry): Promise<void> {
     // Add system context if enabled and not already present
     if (this.config.includeSystemContext && !entry.systemContext) {
-      entry.systemContext = {
-        hostname: process.env.HOSTNAME || 'unknown',
-        processId: process.pid,
-        parentProcessId: process.ppid,
-        workingDirectory: process.cwd(),
-        environmentType: this.determineEnvironmentType(),
-        version: process.version,
-      };
+      entry.systemContext = AuditHelpers.sanitizeEnvironmentData();
     }
     
     // Set retention policy if not specified
@@ -1487,19 +2053,36 @@ export class AuditTrailManager {
     // Add compliance flags based on configuration
     if (this.config.complianceMode && this.config.complianceFrameworks.length > 0) {
       entry.complianceFlags = entry.complianceFlags || [];
-      entry.complianceFlags.push(...this.config.complianceFrameworks.map(f => f.toLowerCase()));
+      // Limit compliance flags to prevent array overflow
+      const remainingSlots = AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE - entry.complianceFlags.length;
+      const flagsToAdd = this.config.complianceFrameworks
+        .slice(0, remainingSlots)
+        .map(f => f.toLowerCase());
+      entry.complianceFlags.push(...flagsToAdd);
     }
   }
   
   private setupAutoFlush(): void {
-    this.flushTimer = setInterval(async () => {
+    if (this.isShuttingDown) {
+      return;
+    }
+    
+    const timer = setInterval(async () => {
+      if (this.isShuttingDown) {
+        clearInterval(timer);
+        this.activeTimers.delete(timer);
+        return;
+      }
+      
       try {
         await this.flush();
       } catch (error) {
         // Log error but don't throw to avoid crashing the timer
-        console.error('Failed to auto-flush audit trail:', error);
+        console.error('[AUDIT TRAIL] Auto-flush failed:', this.sanitizeError(error));
       }
     }, this.config.flushInterval);
+    
+    this.activeTimers.add(timer);
   }
   
   private mapViolationSeverityToAuditSeverity(severity: string): AuditSeverity {
@@ -1551,18 +2134,6 @@ export class AuditTrailManager {
     }
     
     return AuditEventType.SYSTEM_START;
-  }
-  
-  private determineEnvironmentType(): 'development' | 'staging' | 'production' {
-    const env = process.env.NODE_ENV?.toLowerCase();
-    
-    if (env === 'production' || env === 'prod') {
-      return 'production';
-    } else if (env === 'staging' || env === 'stage') {
-      return 'staging';
-    } else {
-      return 'development';
-    }
   }
 }
 
