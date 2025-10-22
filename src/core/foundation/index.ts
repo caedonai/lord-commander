@@ -32,3 +32,6 @@ export * from './error-sanitization.js';
 
 // Export structured logging utilities (Task 1.4.2)
 export * from './structured-logging.js';
+
+// Export audit trail utilities (Task 1.4.3)
+export * from './audit-trail.js';
