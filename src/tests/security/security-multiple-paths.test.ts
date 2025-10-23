@@ -38,7 +38,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
           description: 'Test CLI',
           commandsPath: ['../../../..'],
           builtinCommands: { completion: false, hello: false, version: false },
-          skipArgvParsing: true
+          autoStart: false
         });
       }).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('../../../..'));
     });
@@ -60,7 +60,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             description: 'Test CLI',
             commandsPath: [maliciousPath],
             builtinCommands: { completion: false, hello: false, version: false },
-            skipArgvParsing: true
+            autoStart: false
           });
         }).rejects.toThrow(expectInvalidPathError());
       }
@@ -83,7 +83,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             description: 'Test CLI',
             commandsPath: [absolutePath],
             builtinCommands: { completion: false, hello: false, version: false },
-            skipArgvParsing: true
+            autoStart: false
           });
         }).rejects.toThrow(expectInvalidPathError());
       }
@@ -98,7 +98,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
           description: 'Test CLI',
           commandsPath: ['./safe-path', '../../../unsafe'],
           builtinCommands: { completion: false, hello: false, version: false },
-          skipArgvParsing: true
+          autoStart: false
         });
       }).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('../../../unsafe'));
     });
@@ -122,7 +122,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             description: 'Test CLI',
             commandsPath: [validPath],
             builtinCommands: { completion: false, hello: false, version: false },
-            skipArgvParsing: true
+            autoStart: false
           })
         ).resolves.not.toThrow();
       }
@@ -145,7 +145,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
         description: 'Test CLI',
         commandsPath: [cleanDir],
         builtinCommands: { completion: false, hello: false, version: false },
-        skipArgvParsing: true
+        autoStart: false
       });
 
       const commandNames = program.commands.map(cmd => cmd.name());
@@ -161,7 +161,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
         description: 'Test CLI',
         commandsPath: [],
         builtinCommands: { completion: false, hello: false, version: false },
-        skipArgvParsing: true
+        autoStart: false
       });
 
       expect(program.commands).toHaveLength(0);
@@ -175,7 +175,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
           description: 'Test CLI',
           commandsPath: [null, './safe', undefined, '../unsafe'] as string[],
           builtinCommands: { completion: false, hello: false, version: false },
-          skipArgvParsing: true
+          autoStart: false
         });
       }).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('../unsafe'));
     });
@@ -198,7 +198,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
         description: 'Test CLI',
         commandsPath: [specialDir],
         builtinCommands: { completion: false, hello: false, version: false },
-        skipArgvParsing: true
+        autoStart: false
       });
 
       const commandNames = program.commands.map(cmd => cmd.name());
@@ -217,7 +217,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
           description: 'Test CLI',
           commandsPath: [deepPath],
           builtinCommands: { completion: false, hello: false, version: false },
-          skipArgvParsing: true
+          autoStart: false
         })
       ).resolves.not.toThrow();
     });
@@ -239,7 +239,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             description: 'Test CLI',
             commandsPath: [uncPath],
             builtinCommands: { completion: false, hello: false, version: false },
-            skipArgvParsing: true
+            autoStart: false
           });
         }).rejects.toThrow(expectInvalidPathError());
       }
@@ -256,7 +256,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             description: 'Test CLI',
             commandsPath: [driveRoot],
             builtinCommands: { completion: false, hello: false, version: false },
-            skipArgvParsing: true
+            autoStart: false
           });
         }).rejects.toThrow(expectInvalidPathError());
       }

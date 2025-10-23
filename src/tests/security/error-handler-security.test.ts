@@ -392,7 +392,7 @@ describe('Error Handler Security Validation', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: dangerousHandler
       })).rejects.toThrow(ErrorHandlerValidationError);
     });
@@ -408,7 +408,7 @@ describe('Error Handler Security Validation', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: safeHandler
       })).resolves.toBeDefined();
     });

@@ -39,7 +39,7 @@ describe('Multiple Command Paths', () => {
       description: 'Test CLI',
       commandsPath: tempDir1,
       builtinCommands: { completion: false, hello: false, version: false },
-      skipArgvParsing: true
+      autoStart: false
     });
 
     const commandNames = program.commands.map(cmd => cmd.name());
@@ -84,7 +84,7 @@ describe('Multiple Command Paths', () => {
       description: 'Test CLI',
       commandsPath: [tempDir1, tempDir2],
       builtinCommands: { completion: false, hello: false, version: false },
-      skipArgvParsing: true
+      autoStart: false
     });
 
     const commandNames = program.commands.map(cmd => cmd.name());
@@ -112,7 +112,7 @@ describe('Multiple Command Paths', () => {
         description: 'Test CLI',
         commandsPath: [tempDir1, '/non/existent/path', tempDir2],
         builtinCommands: { completion: false, hello: false, version: false },
-        skipArgvParsing: true
+        autoStart: false
       });
     }).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('/non/existent/path'));
   });
@@ -140,7 +140,7 @@ describe('Multiple Command Paths', () => {
         description: 'Test CLI',
         commandsPath: [tempDir1, tempDir2],
         builtinCommands: { completion: false, hello: false, version: false },
-        skipArgvParsing: true
+        autoStart: false
       });
     }).rejects.toThrow(/Command name conflict.*deploy/);
   });
@@ -160,7 +160,7 @@ describe('Multiple Command Paths', () => {
       description: 'Test CLI',
       commandsPath: [tempDir1, tempDir2],
       builtinCommands: { completion: true, hello: true, version: false },
-      skipArgvParsing: true
+      autoStart: false
     });
 
     const commandNames = program.commands.map(cmd => cmd.name());

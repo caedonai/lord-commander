@@ -71,7 +71,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'Production stack trace test',
         commandsPath: './non-existent',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: mockErrorHandler
       });
 
@@ -96,7 +96,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'Development path sanitization test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       // In a real scenario, stack trace paths would be sanitized
@@ -118,7 +118,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'Stack depth limiting test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       // Test verifies that deep stack traces are handled without issues
@@ -140,7 +140,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'Home path sanitization test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       // Test verifies sanitization logic is in place
@@ -160,7 +160,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'Node modules path test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       // Test verifies node_modules paths are handled safely
@@ -187,7 +187,7 @@ describe('Stack Trace Leakage Security', () => {
           version: '1.0.0',
           description: 'Production debug override test',
           commandsPath: './non-existent',
-          skipArgvParsing: true
+          autoStart: false
         });
 
         // Should succeed despite debug flags being set
@@ -207,7 +207,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'Development debug test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       // Should allow debug mode in development
@@ -231,7 +231,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'Sensitive message sanitization test',
         commandsPath: './non-existent',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: mockErrorHandler
       });
 
@@ -251,7 +251,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'Development details preservation test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       // In development, should preserve error details (with path sanitization)
@@ -273,7 +273,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'Stack trace injection protection test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       // Should handle malicious content without execution or terminal manipulation
@@ -294,7 +294,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'Stack overflow protection test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       // Should handle massive stack traces without memory exhaustion
@@ -314,7 +314,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'No stack trace test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       // Should handle undefined stack traces without issues
@@ -331,7 +331,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'Empty stack trace test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       // Should handle empty stack traces gracefully
@@ -348,7 +348,7 @@ describe('Stack Trace Leakage Security', () => {
         version: '1.0.0',
         description: 'Malformed stack trace test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       // Should handle malformed stack traces without crashing

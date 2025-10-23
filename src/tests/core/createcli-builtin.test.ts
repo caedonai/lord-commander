@@ -314,7 +314,7 @@ describe('createCLI Built-in Commands Integration', () => {
         commandsPath: './non-existent-path',
         builtinCommands: { completion: false, hello: false, version: false },
         errorHandler: mockErrorHandler,
-        skipArgvParsing: true // Don't actually parse argv for this test
+        autoStart: false // Don't actually parse argv for this test
       });
 
       expect(cli).toBeInstanceOf(Command);
@@ -333,7 +333,7 @@ describe('createCLI Built-in Commands Integration', () => {
         commandsPath: './non-existent-path',
         builtinCommands: { completion: false, hello: false, version: false },
         errorHandler: mockAsyncErrorHandler,
-        skipArgvParsing: true
+        autoStart: false
       });
 
       expect(cli).toBeInstanceOf(Command);
@@ -355,7 +355,7 @@ describe('createCLI Built-in Commands Integration', () => {
         commandsPath: './non-existent-path',
         builtinCommands: { completion: false, hello: false, version: false },
         errorHandler: throwingErrorHandler,
-        skipArgvParsing: true
+        autoStart: false
       });
 
       expect(cli).toBeInstanceOf(Command);

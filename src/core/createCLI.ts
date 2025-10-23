@@ -5,9 +5,6 @@ import { logger } from './ui/logger.js';
 import * as prompts from './ui/prompts.js';
 import * as fs from './execution/fs.js';
 import * as execa from './execution/execa.js';
-import * as git from '../plugins/git.js';
-import * as workspace from '../plugins/workspace.js';
-import * as updater from '../plugins/updater.js';
 import { detectShell, installCompletion, analyzeProgram } from './commands/autocomplete.js';
 import { formatError, CLIError } from './foundation/errors.js';
 import { CreateCliOptions, CommandContext } from "../types/cli";
@@ -414,7 +411,12 @@ export { sanitizeLogOutput, sanitizeLogOutputAdvanced, analyzeLogSecurity, type 
  * @param {object} [options.builtinCommands] - Built-in command configuration
  * @param {boolean} [options.builtinCommands.completion=true] - Include shell completion management command.
  * @param {boolean} [options.builtinCommands.hello=false] - Include example hello command.
+ * @param {object} [options.plugins] - Plugin configuration
+ * @param {boolean} [options.plugins.git=false] - Enable git operations plugin
+ * @param {boolean} [options.plugins.workspace=false] - Enable workspace management plugin  
+ * @param {boolean} [options.plugins.updater=false] - Enable version update plugin
  * @param {function} [options.errorHandler] - Custom error handler for command execution errors. Receives Error object. Should sanitize sensitive information. If not provided, defaults to logging error with stack trace in debug mode and exit(1).
+ * @param {boolean} [options.autoStart=true] - Automatically start CLI with parseAsync(). Set to false for manual control.
  * @returns {Promise<Command>} The configured Commander program instance
  */
 export async function createCLI(options: CreateCliOptions): Promise<Command> {
@@ -437,18 +439,23 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
         cwd: process.cwd()
     };
 
-    // Add plugins if enabled - Programmatic plugin registry
-    const availablePlugins = {
-        git,
-        workspace,
-        updater
-    };
-    
+    // Add plugins if enabled - Dynamic plugin registry for optimal tree-shaking
     if (options.plugins) {
+        const pluginLoaders = {
+            git: () => import('../plugins/git.js'),
+            workspace: () => import('../plugins/workspace.js'),
+            updater: () => import('../plugins/updater.js')
+        };
+        
         for (const [pluginName, isEnabled] of Object.entries(options.plugins)) {
-            if (isEnabled && availablePlugins[pluginName as keyof typeof availablePlugins]) {
-                (context as any)[pluginName] = availablePlugins[pluginName as keyof typeof availablePlugins];
-                logger.debug(`Enabled plugin: ${pluginName}`);
+            if (isEnabled && pluginLoaders[pluginName as keyof typeof pluginLoaders]) {
+                try {
+                    const pluginModule = await pluginLoaders[pluginName as keyof typeof pluginLoaders]();
+                    (context as any)[pluginName] = pluginModule;
+                    logger.debug(`Dynamically loaded plugin: ${pluginName}`);
+                } catch (error) {
+                    logger.warn(`Failed to load plugin '${pluginName}': ${error instanceof Error ? error.message : String(error)}`);
+                }
             }
         }
     }
@@ -505,8 +512,8 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
         }
     }
 
-    // Start CLI processing (unless skipped for testing)
-    if (!options.skipArgvParsing) {
+    // Start CLI processing (unless autoStart is disabled)
+    if (options.autoStart !== false) {
         program.parseAsync(process.argv).catch(async (error) => {
             if (options.errorHandler) {
                 // Use custom error handler with security wrapper

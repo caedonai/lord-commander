@@ -21,8 +21,8 @@ export interface CreateCliOptions {
     };
     // Custom error handler for command execution errors
     errorHandler?: (error: Error) => void | Promise<void>;
-    // Internal option for testing - don't parse argv automatically
-    skipArgvParsing?: boolean;
+    // Control CLI auto-start behavior - set to false for manual control
+    autoStart?: boolean; // Default: true - automatically start CLI with parseAsync()
 }
 
 /**

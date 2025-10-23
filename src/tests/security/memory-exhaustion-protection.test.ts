@@ -215,7 +215,7 @@ describe('Memory Exhaustion Protection', () => {
         version: '1.0.0',
         description: 'CLI with memory protection',
         commandsPath: './non-existent',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: memoryProtectedHandler
       });
       
@@ -236,7 +236,7 @@ describe('Memory Exhaustion Protection', () => {
         version: '1.0.0',
         description: 'CLI with DoS protection',
         commandsPath: './non-existent',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: dosProtectionHandler
       });
       

@@ -50,7 +50,7 @@ describe('Error Handling Security', () => {
           version: '1.0.0',
           description: 'Production CLI test',
           commandsPath: './non-existent',
-          skipArgvParsing: true,
+          autoStart: false,
           errorHandler: mockErrorHandler
         })).resolves.toBeDefined();
 
@@ -76,7 +76,7 @@ describe('Error Handling Security', () => {
         version: '1.0.0',
         description: 'Production context test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       })).resolves.toBeDefined();
 
       // Context hiding is tested indirectly through formatErrorForDisplay
@@ -91,7 +91,7 @@ describe('Error Handling Security', () => {
         version: '1.0.0',
         description: 'Development CLI test',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       })).resolves.toBeDefined();
 
       // Debug features should be available in development
@@ -107,7 +107,7 @@ describe('Error Handling Security', () => {
         version: '1.0.0',
         description: 'Sanitization test CLI',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       })).resolves.toBeDefined();
     });
 
@@ -120,7 +120,7 @@ describe('Error Handling Security', () => {
         version: '1.0.0',
         description: 'Test CLI with potential injection',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       })).resolves.toBeDefined();
     });
   });
@@ -143,7 +143,7 @@ describe('Error Handling Security', () => {
         version: '1.0.0',
         description: 'Secure error handler test',
         commandsPath: './non-existent',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: secureErrorHandler
       })).resolves.toBeDefined();
 
@@ -162,7 +162,7 @@ describe('Error Handling Security', () => {
         version: '1.0.0',
         description: 'Untrusted handler test',
         commandsPath: './non-existent',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: untrustedErrorHandler
       })).resolves.toBeDefined();
 
@@ -181,7 +181,7 @@ describe('Error Handling Security', () => {
         version: '1.0.0',
         description: 'Large error test',
         commandsPath: './non-existent',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: largeErrorHandler
       })).resolves.toBeDefined();
 
@@ -197,7 +197,7 @@ describe('Error Handling Security', () => {
           version: '1.0.0',
           description: `Resource test CLI ${i}`,
           commandsPath: './non-existent',
-          skipArgvParsing: true
+          autoStart: false
         })
       );
 
@@ -219,7 +219,7 @@ describe('Error Handling Security', () => {
           version: '1.0.0',
           description: 'Malicious env test',
           commandsPath: './non-existent',
-          skipArgvParsing: true
+          autoStart: false
         })).resolves.toBeDefined();
 
         // CLI should handle malicious environment variables safely
@@ -254,7 +254,7 @@ describe('Error Handling Security', () => {
           version: '1.0.0',
           description: 'Env config test',
           commandsPath: './non-existent',
-          skipArgvParsing: true
+          autoStart: false
         })).resolves.toBeDefined();
 
         // Clean up environment
@@ -277,7 +277,7 @@ describe('Error Handling Security', () => {
         version: '1.0.0',
         description: 'Process control test',
         commandsPath: './non-existent',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: processControlHandler
       })).resolves.toBeDefined();
 

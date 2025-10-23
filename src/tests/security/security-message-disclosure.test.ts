@@ -310,7 +310,7 @@ describe('Error Message Content Disclosure Security', () => {
         version: '1.0.0',
         description: 'Test CLI for security validation',
         commandsPath: './non-existent',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       const helpText = program.helpInformation();

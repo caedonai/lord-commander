@@ -12,7 +12,7 @@ describe('Error Handler Security Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI with dangerous handler',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: dangerousHandler
       })).rejects.toThrow(ErrorHandlerValidationError);
     });
@@ -26,7 +26,7 @@ describe('Error Handler Security Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI with safe handler',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: safeHandler
       });
 
@@ -39,7 +39,7 @@ describe('Error Handler Security Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI without handler',
-        skipArgvParsing: true
+        autoStart: false
       });
 
       expect(program).toBeDefined();
@@ -58,7 +58,7 @@ describe('Error Handler Security Integration', () => {
           name: 'test-cli',
           version: '1.0.0',
           description: 'Test CLI',
-          skipArgvParsing: true,
+          autoStart: false,
           errorHandler: complexDangerousHandler
         });
       } catch (error: any) {

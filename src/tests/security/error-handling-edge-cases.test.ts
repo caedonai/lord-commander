@@ -38,7 +38,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI with circular reference error',
         commandsPath: './non-existent',
-        skipArgvParsing: false,
+        autoStart: true,
         errorHandler: mockErrorHandler
       })).resolves.toBeDefined();
 
@@ -65,7 +65,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0', 
         description: 'Test CLI with circular CLIError',
         commandsPath: './non-existent',
-        skipArgvParsing: false,
+        autoStart: true,
         errorHandler: mockErrorHandler
       })).resolves.toBeDefined();
 
@@ -87,7 +87,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI with large error',
         commandsPath: './non-existent',
-        skipArgvParsing: false,
+        autoStart: true,
         errorHandler: mockErrorHandler
       })).resolves.toBeDefined();
 
@@ -111,7 +111,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI with large stack trace',
         commandsPath: './non-existent',
-        skipArgvParsing: false,
+        autoStart: true,
         errorHandler: mockErrorHandler
       })).resolves.toBeDefined();
 
@@ -139,7 +139,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI with nested async errors',
         commandsPath: './non-existent',
-        skipArgvParsing: false,
+        autoStart: true,
         errorHandler: deeplyNestedErrorHandler
       })).resolves.toBeDefined();
 
@@ -158,7 +158,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI with hanging error handler',
         commandsPath: './non-existent',
-        skipArgvParsing: false,
+        autoStart: true,
         errorHandler: hangingErrorHandler
       })).resolves.toBeDefined();
 
@@ -177,7 +177,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI with exiting error handler',
         commandsPath: './non-existent',
-        skipArgvParsing: true, // Skip to avoid parseAsync complications
+        autoStart: false, // Skip to avoid parseAsync complications
         errorHandler: exitingErrorHandler
       })).resolves.toBeDefined();
 
@@ -197,7 +197,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI with delayed exit error handler',
         commandsPath: './non-existent',
-        skipArgvParsing: true, // Skip to avoid parseAsync complications
+        autoStart: false, // Skip to avoid parseAsync complications
         errorHandler: delayedExitErrorHandler
       })).resolves.toBeDefined();
 
@@ -219,7 +219,7 @@ describe('Error Handling Edge Cases', () => {
           version: '1.0.0',
           description: `Test CLI ${i}`,
           commandsPath: './non-existent',
-          skipArgvParsing: true, // Skip parsing to avoid test complications
+          autoStart: false, // Skip parsing to avoid test complications
           errorHandler: failingErrorHandler
         })).resolves.toBeDefined();
       }
@@ -249,7 +249,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI with memory intensive error handler',
         commandsPath: './non-existent',
-        skipArgvParsing: true, // Skip to avoid complications
+        autoStart: false, // Skip to avoid complications
         errorHandler: memoryIntensiveErrorHandler
       })).resolves.toBeDefined();
 
@@ -269,7 +269,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI with null error',
         commandsPath: './non-existent',
-        skipArgvParsing: false,
+        autoStart: true,
         errorHandler: nullErrorHandler
       })).resolves.toBeDefined();
 
@@ -286,7 +286,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI with string error',
         commandsPath: './non-existent',
-        skipArgvParsing: false,
+        autoStart: true,
         errorHandler: stringErrorHandler
       })).resolves.toBeDefined();
 
@@ -307,7 +307,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI with custom error object',
         commandsPath: './non-existent',
-        skipArgvParsing: false,
+        autoStart: true,
         errorHandler: customErrorHandler
       })).resolves.toBeDefined();
 
@@ -331,7 +331,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI with tricky error object',
         commandsPath: './non-existent',
-        skipArgvParsing: false,
+        autoStart: true,
         errorHandler: trickyErrorHandler
       })).resolves.toBeDefined();
 
@@ -358,7 +358,7 @@ describe('Error Handling Edge Cases', () => {
           version: '1.0.0',
           description: 'Test CLI with malformed stack in debug mode',
           commandsPath: './non-existent',
-          skipArgvParsing: false,
+          autoStart: true,
           errorHandler: mockErrorHandler
         })).resolves.toBeDefined();
 
@@ -396,7 +396,7 @@ describe('Error Handling Edge Cases', () => {
           version: '1.0.0',
           description: 'Test CLI with deep stack in debug mode',
           commandsPath: './non-existent',
-          skipArgvParsing: false,
+          autoStart: true,
           errorHandler: mockErrorHandler
         })).resolves.toBeDefined();
 
@@ -426,7 +426,7 @@ describe('Error Handling Edge Cases', () => {
           version: '1.0.0',
           description: 'Test CLI 1',
           commandsPath: './non-existent',
-          skipArgvParsing: true, // Skip to test CLI creation without parsing
+          autoStart: false, // Skip to test CLI creation without parsing
           errorHandler: error1Handler
         }),
         createCLI({
@@ -434,7 +434,7 @@ describe('Error Handling Edge Cases', () => {
           version: '1.0.0',
           description: 'Test CLI 2',
           commandsPath: './non-existent',
-          skipArgvParsing: true, // Skip to test CLI creation without parsing
+          autoStart: false, // Skip to test CLI creation without parsing
           errorHandler: error2Handler
         }),
         createCLI({
@@ -442,7 +442,7 @@ describe('Error Handling Edge Cases', () => {
           version: '1.0.0',
           description: 'Test CLI 3',
           commandsPath: './non-existent',
-          skipArgvParsing: true, // Skip to test CLI creation without parsing
+          autoStart: false, // Skip to test CLI creation without parsing
           errorHandler: error3Handler
         })
       ];
@@ -469,7 +469,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI for error handler testing',
         commandsPath: './non-existent',
-        skipArgvParsing: true, // We'll manually test the error path
+        autoStart: false, // We'll manually test the error path
         errorHandler: mockErrorHandler
       });
 
@@ -492,7 +492,7 @@ describe('Error Handling Edge Cases', () => {
         version: '1.0.0',
         description: 'Test CLI for error handler failure',
         commandsPath: './non-existent',
-        skipArgvParsing: true,
+        autoStart: false,
         errorHandler: throwingErrorHandler
       });
 
