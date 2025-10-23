@@ -8,7 +8,7 @@
  * 
  * Tree-shakeable exports - import only what you need:
  * import { logger } from '@caedonai/lord-commander/core/logger';
- * import { exec } from '@caedonai/lord-commander/core/exec'; 
+ * import { execa } from '@caedonai/lord-commander/core/execa'; 
  */
 
 // Foundation utilities - Core infrastructure

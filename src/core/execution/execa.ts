@@ -16,8 +16,8 @@ import { ProcessError } from '../foundation/errors.js';
 import { createLogger } from '../ui/logger.js';
 import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/constants.js';
 
-// Create a logger instance for internal exec operations
-const execLogger = createLogger({ prefix: 'exec' });
+// Create a logger instance for internal execa operations
+const execaLogger = createLogger({ prefix: 'execa' });
 
 /**
  * Result of a command execution
@@ -105,7 +105,7 @@ function createSandboxEnv(config: SandboxConfig = {}): Record<string, string> {
   const sandboxConfig = { ...DEFAULT_SANDBOX_CONFIG, ...config };
   let sandboxEnv: Record<string, string> = {};
 
-  execLogger.debug(`createSandboxEnv called with config:`, { 
+  execaLogger.debug(`createSandboxEnv called with config:`, { 
     enabled: sandboxConfig.enabled, 
     restrictEnvironment: sandboxConfig.restrictEnvironment,
     allowedEnvVars: sandboxConfig.allowedEnvVars 
@@ -125,13 +125,13 @@ function createSandboxEnv(config: SandboxConfig = {}): Record<string, string> {
       }
     }
     
-    execLogger.debug(`Created restricted environment with ${Object.keys(sandboxEnv).length} variables:`, Object.keys(sandboxEnv));
+    execaLogger.debug(`Created restricted environment with ${Object.keys(sandboxEnv).length} variables:`, Object.keys(sandboxEnv));
   } else {
     // Use current environment if not restricting
     sandboxEnv = Object.fromEntries(
       Object.entries(process.env).filter(([, value]) => value !== undefined)
     ) as Record<string, string>;
-    execLogger.debug(`Using full environment with ${Object.keys(sandboxEnv).length} variables`);
+    execaLogger.debug(`Using full environment with ${Object.keys(sandboxEnv).length} variables`);
   }
 
   return sandboxEnv;
@@ -154,9 +154,9 @@ async function createSandbox(config: SandboxConfig = {}): Promise<{ cwd: string;
       await mkdir(sandboxDir, { recursive: true });
       sandboxCwd = sandboxDir;
       
-      execLogger.debug(`Created sandbox directory: ${sandboxDir}`);
+      execaLogger.debug(`Created sandbox directory: ${sandboxDir}`);
     } catch (error) {
-      execLogger.warn(`Failed to create sandbox directory, using current directory: ${error}`);
+      execaLogger.warn(`Failed to create sandbox directory, using current directory: ${error}`);
     }
   }
 
@@ -177,7 +177,7 @@ function secureExecOptions(options: ExecOptions): ExecOptions {
   
   // Add security warnings for shell usage
   if (securedOptions.shell === true || typeof securedOptions.shell === 'string') {
-    execLogger.warn('⚠️  Shell execution enabled - this may introduce security risks');
+    execaLogger.warn('⚠️  Shell execution enabled - this may introduce security risks');
   }
   
   // Set secure defaults
@@ -218,7 +218,7 @@ export async function execa(
     const finalEnv = userEnv ? { ...sandboxResult.env, ...userEnv } : sandboxResult.env;
 
     if (!silent) {
-      execLogger.debug(`Executing: ${fullCommand}`, { 
+      execaLogger.debug(`Executing: ${fullCommand}`, { 
         cwd: finalCwd,
         sandbox: sandbox?.enabled !== false ? 'enabled' : 'disabled',
         envVars: Object.keys(finalEnv).length
@@ -249,9 +249,9 @@ export async function execa(
 
     if (!silent) {
       if (result.failed) {
-        execLogger.warn(`Command failed: ${fullCommand} (exit code: ${result.exitCode})`);
+        execaLogger.warn(`Command failed: ${fullCommand} (exit code: ${result.exitCode})`);
       } else {
-        execLogger.debug(`Command completed: ${fullCommand} (${duration}ms)`);
+        execaLogger.debug(`Command completed: ${fullCommand} (${duration}ms)`);
       }
     }
 
@@ -273,7 +273,7 @@ export async function execa(
       };
 
       if (!options.silent) {
-        execLogger.error(`Command failed: ${fullCommand} (exit code: ${error.exitCode})`);
+        execaLogger.error(`Command failed: ${fullCommand} (exit code: ${error.exitCode})`);
       }
 
       if (options.reject !== false) {
@@ -328,7 +328,7 @@ export function execaSync(
     const finalEnv = userEnv ? { ...sandboxEnv, ...userEnv } : sandboxEnv;
 
     if (!silent) {
-      execLogger.debug(`Executing sync: ${fullCommand}`, { 
+      execaLogger.debug(`Executing sync: ${fullCommand}`, { 
         cwd: originalCwd,
         sandbox: sandbox?.enabled !== false ? 'enabled' : 'disabled',
         envVars: Object.keys(finalEnv).length
@@ -363,9 +363,9 @@ export function execaSync(
 
     if (!silent) {
       if (result.failed) {
-        execLogger.warn(`Sync command failed: ${fullCommand} (exit code: ${result.exitCode})`);
+        execaLogger.warn(`Sync command failed: ${fullCommand} (exit code: ${result.exitCode})`);
       } else {
-        execLogger.debug(`Sync command completed: ${fullCommand} (${duration}ms)`);
+        execaLogger.debug(`Sync command completed: ${fullCommand} (${duration}ms)`);
       }
     }
 
@@ -444,7 +444,7 @@ export async function execaStream(
     const finalEnv = userEnv ? { ...sandboxResult.env, ...userEnv } : sandboxResult.env;
 
     if (!silent) {
-      execLogger.debug(`Streaming: ${fullCommand}`, { 
+      execaLogger.debug(`Streaming: ${fullCommand}`, { 
         cwd: finalCwd,
         sandbox: sandbox?.enabled !== false ? 'enabled' : 'disabled',
         envVars: Object.keys(finalEnv).length
@@ -495,7 +495,7 @@ export async function execaStream(
     };
 
     if (!silent) {
-      execLogger.debug(`Streaming completed: ${fullCommand} (${duration}ms)`);
+      execaLogger.debug(`Streaming completed: ${fullCommand} (${duration}ms)`);
     }
 
     return result;
@@ -581,7 +581,7 @@ export async function detectPackageManager(cwd: string = process.cwd()): Promise
 
     return null;
   } catch (error) {
-    execLogger.debug('Failed to detect package manager', error);
+    execaLogger.debug('Failed to detect package manager', error);
     return null;
   }
 }
@@ -649,7 +649,7 @@ export async function runPackageManagerExeca(
       throw new ProcessError(`Unknown package manager action: ${action}`, 'unknown-action');
   }
 
-  execLogger.info(`Running ${pmInfo.manager} ${action}${packageOrScript ? ` ${packageOrScript}` : ''}`);
+  execaLogger.info(`Running ${pmInfo.manager} ${action}${packageOrScript ? ` ${packageOrScript}` : ''}`);
   
   return execa(command, args, {
     ...options,
@@ -685,7 +685,7 @@ export async function gitExeca(
 export function createCancellableExecution(): {
   signal: AbortSignal;
   cancel: () => void;
-  exec: (command: string, args?: string[], options?: ExecOptions) => Promise<ExecResult>;
+  execa: (command: string, args?: string[], options?: ExecOptions) => Promise<ExecResult>;
   execStream: (command: string, args?: string[], options?: ExecStreamOptions) => Promise<ExecResult>;
 } {
   const controller = new AbortController();
@@ -693,7 +693,7 @@ export function createCancellableExecution(): {
   return {
     signal: controller.signal,
     cancel: () => controller.abort(),
-    exec: (command: string, args: string[] = [], options: ExecOptions = {}) =>
+    execa: (command: string, args: string[] = [], options: ExecOptions = {}) =>
       execa(command, args, { ...options, signal: controller.signal }),
     execStream: (command: string, args: string[] = [], options: ExecStreamOptions = {}) =>
       execaStream(command, args, { ...options, signal: controller.signal }),

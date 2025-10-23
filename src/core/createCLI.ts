@@ -430,7 +430,7 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
         logger,
         prompts,
         fs,
-        exec: execa,
+        execa,
         git,
         config,
         cwd: process.cwd()

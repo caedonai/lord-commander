@@ -45,7 +45,7 @@ export interface CommitOptions {
 }
 
 // Helper function to execute git commands with proper error handling
-async function gitExec(
+async function gitExeca(
   args: string[], 
   options: { cwd?: string; stream?: boolean } = {}
 ): Promise<{ stdout: string; stderr: string }> {
@@ -259,7 +259,7 @@ export async function add(
   const args = ['add', ...fileList];
   
   try {
-    await gitExec(args, { cwd });
+    await gitExeca(args, { cwd });
   } catch (error) {
     throw new CLIError(`Failed to add files`, {
       code: 'GIT_ADD_FAILED',
@@ -291,7 +291,7 @@ export async function commit(
   }
   
   try {
-    const result = await gitExec(args, { cwd });
+    const result = await gitExeca(args, { cwd });
     // Extract commit hash from output
     const match = result.stdout.match(/\[.+ ([a-f0-9]+)\]/);
     return match ? match[1] : '';
@@ -313,7 +313,7 @@ export async function getCommits(
 ): Promise<GitCommit[]> {
   try {
     const format = '--pretty=format:%H|%h|%an|%ae|%ai|%s';
-    const result = await gitExec(['log', `-${count}`, format], { cwd });
+    const result = await gitExeca(['log', `-${count}`, format], { cwd });
     
     return result.stdout
       .trim()
@@ -357,7 +357,7 @@ export async function getDiff(
   }
   
   try {
-    const result = await gitExec(args, { cwd });
+    const result = await gitExeca(args, { cwd });
     return result.stdout;
   } catch (error) {
     throw new CLIError(`Failed to get diff`, {
@@ -382,7 +382,7 @@ export async function getBranches(
   }
   
   try {
-    const result = await gitExec(args, { cwd });
+    const result = await gitExeca(args, { cwd });
     return result.stdout
       .trim()
       .split('\n')
@@ -408,7 +408,7 @@ export async function createBranch(
   const args = checkout ? ['checkout', '-b', name] : ['branch', name];
   
   try {
-    await gitExec(args, { cwd });
+    await gitExeca(args, { cwd });
   } catch (error) {
     throw new CLIError(`Failed to create branch`, {
       code: 'GIT_BRANCH_CREATE_FAILED',
@@ -426,7 +426,7 @@ export async function checkout(
   cwd: string = process.cwd()
 ): Promise<void> {
   try {
-    await gitExec(['checkout', ref], { cwd });
+    await gitExeca(['checkout', ref], { cwd });
   } catch (error) {
     throw new CLIError(`Failed to checkout`, {
       code: 'GIT_CHECKOUT_FAILED',
@@ -441,7 +441,7 @@ export async function checkout(
  */
 export async function getCurrentCommit(cwd: string = process.cwd()): Promise<string> {
   try {
-    const result = await gitExec(['rev-parse', 'HEAD'], { cwd });
+    const result = await gitExeca(['rev-parse', 'HEAD'], { cwd });
     return result.stdout.trim();
   } catch (error) {
     throw new CLIError(`Failed to get current commit`, {

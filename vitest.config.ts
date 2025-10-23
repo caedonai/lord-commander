@@ -6,9 +6,9 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.{test,spec}.{js,ts}'],
     exclude: ['node_modules', 'dist'],
-    testTimeout: 1200000, // 120 seconds for git operations
-    hookTimeout: 1200000, // 120 seconds for setup/teardown
-    teardownTimeout: 1200000, // 120 seconds for cleanup
+    testTimeout: 30000, // 30 seconds for most tests (reduced from 20 minutes)
+    hookTimeout: 10000, // 10 seconds for setup/teardown
+    teardownTimeout: 10000, // 10 seconds for cleanup
     reporters: ['verbose'],
     coverage: {
       provider: 'v8',

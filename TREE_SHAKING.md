@@ -14,13 +14,13 @@ The Lord Commander SDK is now fully optimized for tree-shaking, allowing users t
 
 ```typescript
 // Import only what you need from core
-import { exec, logger, fs } from '@caedonai/sdk/core';
+import { execa, logger, fs } from '@caedonai/sdk/core';
 
 async function simpleTask() {
   const logger = createLogger();
   logger.intro('Simple CLI Task');
   
-  await exec('npm install');
+  await execa('npm', ['install']);
   await fs.writeFile('output.txt', 'Done!');
   
   logger.success('Task completed');
@@ -64,7 +64,7 @@ const cli = createCLI({
 });
 
 // Access all functionality
-const { logger, fs, exec, prompts } = core;
+const { logger, fs, execa, prompts } = core;
 const { git, updater, workspace } = plugins;
 ```
 
@@ -75,7 +75,7 @@ const { git, updater, workspace } = plugins;
 ```typescript
 // Import individual functions for maximum tree-shaking
 import { 
-  exec, 
+  execa, 
   writeFile, 
   intro, 
   outro 
@@ -84,7 +84,7 @@ import {
 async function deployScript() {
   intro('🚀 Deploy Script');
   
-  await exec('npm run build');
+  await execa('npm', ['run', 'build']);
   await writeFile('deploy.log', 'Build completed');
   
   outro('✅ Deploy completed');
@@ -122,7 +122,7 @@ The SDK includes proper ESM exports and tree-shaking configuration:
 
 ### Core Module (`@caedonai/sdk/core`)
 
-**File System**: `exec`, `execSync`, `execStream`, `readFile`, `writeFile`, `readJSON`, `writeJSON`, `copy`, `copyFile`, `copyDir`, `move`, `remove`, `exists`, `stat`, `readDir`, `ensureDir`, `cleanDir`, `findFiles`, `getSize`
+**File System**: `execa`, `execaSync`, `execaStream`, `readFile`, `writeFile`, `readJSON`, `writeJSON`, `copy`, `copyFile`, `copyDir`, `move`, `remove`, `exists`, `stat`, `readDir`, `ensureDir`, `cleanDir`, `findFiles`, `getSize`
 
 **Logging**: `createLogger`, `intro`, `outro`, `note`, `spinner`
 
@@ -176,13 +176,13 @@ Use the `--tree-shaking` flag for optimal results.
 ```typescript
 // OLD: Imports everything
 import * as sdk from '@caedonai/sdk';
-const { exec, logger } = sdk.core;
+const { execa, logger } = sdk.core;
 ```
 
 ### To Tree-Shaken Imports (New)
 ```typescript
 // NEW: Import only what you need
-import { exec, createLogger } from '@caedonai/sdk/core';
+import { execa, createLogger } from '@caedonai/sdk/core';
 const logger = createLogger();
 ```
 

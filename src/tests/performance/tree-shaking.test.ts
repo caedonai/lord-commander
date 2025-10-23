@@ -79,7 +79,7 @@ describe('Tree-shaking Tests', () => {
           } else if (category === 'constants') {
             // Constants can be strings, arrays, objects - just check they're defined
             expect(coreModule[funcName], `${funcName} should be a defined constant`).toBeDefined();
-          } else if (funcName.startsWith('ERROR_') || funcName.endsWith('_PATTERNS') || funcName.endsWith('_COMMANDS') || funcName.endsWith('_CONFIG') || funcName === 'BRANDING' || funcName.includes('_DEPENDENCIES') || funcName.startsWith('TRUSTED_') || funcName.startsWith('SUSPICIOUS_') || funcName.startsWith('DANGEROUS_') || funcName.endsWith('_METACHARACTERS')) {
+          } else if (funcName.startsWith('ERROR_') || funcName.endsWith('_PATTERNS') || funcName.endsWith('_COMMANDS') || funcName.endsWith('_CONFIG') || funcName === 'BRANDING' || funcName.includes('_DEPENDENCIES') || funcName.startsWith('TRUSTED_') || funcName.startsWith('SUSPICIOUS_') || funcName.startsWith('DANGEROUS_') || funcName.endsWith('_METACHARACTERS') || funcName === 'MemoryConfigPresets') {
             // Constants handling for backwards compatibility and new framework security constants
             expect(coreModule[funcName], `${funcName} should be a defined constant`).toBeDefined();
           } else {
