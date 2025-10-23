@@ -386,10 +386,74 @@ import {
 export { sanitizeLogOutput, sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig } from './foundation/log-security.js';
 
 /**
- * Create and run a Commander-based CLI.
+ * Enhanced Command interface with manual execution control
+ */
+export interface EnhancedCommand extends Command {
+    /**
+     * Manually run the CLI with proper error handling
+     * 
+     * @param argv - Command line arguments (defaults to process.argv)
+     * @returns Promise that resolves when CLI execution completes
+     * @throws {Error} If CLI has already been started (when autoStart: true)
+     */
+    run(argv?: string[]): Promise<void>;
+    
+    /**
+     * Internal state tracking for execution control
+     */
+    _cliState?: {
+        hasBeenExecuted: boolean;
+        autoStartEnabled: boolean;
+        options: CreateCliOptions;
+    };
+}
+
+/**
+ * Centralized error handling logic for CLI execution
+ * 
+ * Handles both custom and default error scenarios with comprehensive security
+ * 
+ * @param error - The error that occurred during CLI execution
+ * @param options - CLI options containing error handler configuration
+ */
+async function handleCLIError(error: Error, options: CreateCliOptions): Promise<void> {
+    if (options.errorHandler) {
+        // Use custom error handler with security wrapper
+        try {
+            await executeErrorHandlerSafely(options.errorHandler, error);
+        } catch (handlerError) {
+            // If custom error handler throws, fall back to default behavior with enhanced logging
+            logger.error('Custom error handler failed:');
+            const handlerErr = handlerError instanceof Error ? handlerError : new Error(String(handlerError));
+            logger.error(formatErrorForDisplay(handlerErr, { showStack: enhancedIsDebugMode() }));
+            logger.error('\nOriginal command error:');
+            logger.error(formatErrorForDisplay(error, { showStack: enhancedIsDebugMode() }));
+            process.exit(1);
+        }
+    } else {
+        // Enhanced default error handling with security-conscious approach
+        const showDetails = enhancedShouldShowDetailedErrors();
+        
+        if (showDetails) {
+            // Development: Show detailed information
+            logger.error('Command execution failed:');
+            logger.error(formatErrorForDisplay(error, { showStack: true }));
+        } else {
+            // Production: Show minimal, sanitized information
+            const sanitizedMessage = enhancedSanitizeErrorMessage(error.message);
+            logger.error(`Application error: ${sanitizedMessage}`);
+            logger.error('Please contact support for assistance.');
+        }
+        
+        process.exit(1);
+    }
+}
+
+/**
+ * Create and optionally run a Commander-based CLI.
  *
  * Initializes a Command with the provided options, loads CLI configuration,
- * registers commands from the given path, and parses argv asynchronously.
+ * registers commands from the given path, and optionally parses argv asynchronously.
  * Any error thrown by command handlers is logged and causes the process to exit(1).
  * 
  * Error Handling:
@@ -398,6 +462,12 @@ export { sanitizeLogOutput, sanitizeLogOutputAdvanced, analyzeLogSecurity, type 
  * - Default behavior: Log error with appropriate detail level and exit(1)
  * - Debug mode: Shows full stack traces and detailed information  
  * - Production mode: Shows minimal sanitized information
+ * 
+ * Manual Execution:
+ * - Set autoStart: false for manual control
+ * - Use returned program.run() method to execute when ready
+ * - run() method includes same error handling as autoStart
+ * - Prevents double execution when autoStart: true
  * 
  * @param {CreateCliOptions} options - Configuration for the CLI
  * @param {string} options.name - CLI name (used for help and config)
@@ -416,10 +486,10 @@ export { sanitizeLogOutput, sanitizeLogOutputAdvanced, analyzeLogSecurity, type 
  * @param {boolean} [options.plugins.workspace=false] - Enable workspace management plugin  
  * @param {boolean} [options.plugins.updater=false] - Enable version update plugin
  * @param {function} [options.errorHandler] - Custom error handler for command execution errors. Receives Error object. Should sanitize sensitive information. If not provided, defaults to logging error with stack trace in debug mode and exit(1).
- * @param {boolean} [options.autoStart=true] - Automatically start CLI with parseAsync(). Set to false for manual control.
- * @returns {Promise<Command>} The configured Commander program instance
+ * @param {boolean} [options.autoStart=true] - Automatically start CLI with parseAsync(). Set to false for manual control via program.run().
+ * @returns {Promise<EnhancedCommand>} The configured Commander program instance with run() method
  */
-export async function createCLI(options: CreateCliOptions): Promise<Command> {
+export async function createCLI(options: CreateCliOptions): Promise<EnhancedCommand> {
     const {name, version, description} = resolveCliDefaults(options);
     const program = new Command();
 
@@ -513,42 +583,47 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
     }
 
     // Start CLI processing (unless autoStart is disabled)
+    const enhancedProgram = program as EnhancedCommand;
+    
+    // Add CLI state tracking
+    enhancedProgram._cliState = {
+        hasBeenExecuted: false,
+        autoStartEnabled: options.autoStart !== false,
+        options
+    };
+    
+    // Add run method for manual execution control
+    enhancedProgram.run = async function(argv: string[] = process.argv): Promise<void> {
+        const state = this._cliState!;
+        
+        // Prevent double execution with optimized logic
+        if (state.hasBeenExecuted) {
+            const message = state.autoStartEnabled 
+                ? 'CLI has already been executed automatically (autoStart: true). Set autoStart: false if you want manual control via run().'
+                : 'CLI has already been executed. Multiple calls to run() are not supported.';
+            logger.warn(message);
+            return;
+        }
+        
+        // Mark as executed
+        state.hasBeenExecuted = true;
+        
+        try {
+            await this.parseAsync(argv);
+        } catch (error) {
+            await handleCLIError(error as Error, state.options);
+        }
+    };
+    
+    // Auto-start if enabled (default behavior)
     if (options.autoStart !== false) {
+        enhancedProgram._cliState.hasBeenExecuted = true;
         program.parseAsync(process.argv).catch(async (error) => {
-            if (options.errorHandler) {
-                // Use custom error handler with security wrapper
-                try {
-                    await executeErrorHandlerSafely(options.errorHandler, error);
-                } catch (handlerError) {
-                    // If custom error handler throws, fall back to default behavior with enhanced logging
-                    logger.error('Custom error handler failed:');
-                    const handlerErr = handlerError instanceof Error ? handlerError : new Error(String(handlerError));
-                    logger.error(formatErrorForDisplay(handlerErr, { showStack: enhancedIsDebugMode() }));
-                    logger.error('\nOriginal command error:');
-                    logger.error(formatErrorForDisplay(error, { showStack: enhancedIsDebugMode() }));
-                    process.exit(1);
-                }
-            } else {
-                // Enhanced default error handling with security-conscious approach
-                const showDetails = enhancedShouldShowDetailedErrors();
-                
-                if (showDetails) {
-                    // Development: Show detailed information
-                    logger.error('Command execution failed:');
-                    logger.error(formatErrorForDisplay(error, { showStack: true }));
-                } else {
-                    // Production: Show minimal, sanitized information
-                    const sanitizedMessage = enhancedSanitizeErrorMessage(error.message);
-                    logger.error(`Application error: ${sanitizedMessage}`);
-                    logger.error('Please contact support for assistance.');
-                }
-                
-                process.exit(1);
-            }
+            await handleCLIError(error, options);
         });
     }
 
-    return program;
+    return enhancedProgram;
 }
 
 /**

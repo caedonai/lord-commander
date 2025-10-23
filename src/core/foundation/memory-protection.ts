@@ -1073,11 +1073,11 @@ export function sanitizeErrorObjectWithMemoryProtection(
       if (error.stack) {
         // Use proper stack trace sanitization with depth limiting
         const sanitizedStack = sanitizeStackTrace(error.stack, {
-          maxDepth: config.maxStackDepth,
-          sanitizeFilePaths: true,
-          sanitizeLineNumbers: false,
-          sanitizeNodeModules: true,
-          productionMode: false
+          maxStackDepth: config.maxStackDepth,
+          redactFilePaths: true,
+          removeSourceMaps: false,
+          removeStackInProduction: false,
+          stackTraceLevel: 'sanitized'
         });
         sanitizedError.stack = sanitizedStack;
       }

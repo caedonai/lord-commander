@@ -178,6 +178,7 @@ export {
   sanitizeLogOutput,
   sanitizeLogOutputAdvanced,
   analyzeLogSecurity,
+  type EnhancedCommand,
   type LogInjectionConfig
 } from './createCLI.js';
 

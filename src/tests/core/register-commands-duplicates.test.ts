@@ -21,7 +21,7 @@ describe('registerCommands Duplicate Detection', () => {
       logger: createLogger(),
       prompts: {} as any,
       fs: {} as any,
-      exec: {} as any,
+      execa: {} as any,
       git: {} as any,
       config: {},
       cwd: process.cwd()
