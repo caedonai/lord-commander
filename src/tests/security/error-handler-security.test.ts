@@ -148,6 +148,15 @@ describe('Error Handler Security Validation', () => {
 
   describe('Safe Error Handler Execution', () => {
     describe('Timeout Protection', () => {
+      // Use real timers for timeout tests since we're testing actual timeout behavior
+      beforeEach(() => {
+        vi.useRealTimers();
+      });
+      
+      afterEach(() => {
+        vi.useFakeTimers();
+      });
+
       it('should timeout long-running synchronous handlers', async () => {
         // For synchronous handlers, we can't actually test infinite loops 
         // because they would block the event loop. Instead, test timeout
@@ -155,66 +164,57 @@ describe('Error Handler Security Validation', () => {
         // but doesn't block the event loop.
         const hangingHandler = async (_error: Error) => {
           // Use a promise that takes longer than timeout
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 200));
         };
 
         const testError = new Error('Test error');
-        const promise = executeErrorHandlerSafely(hangingHandler, testError, { timeout: 1000 });
         
-        // Fast-forward time to trigger timeout
-        vi.advanceTimersByTime(1500);
-        
-        await expect(promise).rejects.toThrow(/Error handler execution timed out/);
+        await expect(
+          executeErrorHandlerSafely(hangingHandler, testError, { timeout: 100 })
+        ).rejects.toThrow(/Error handler execution timed out/);
       });
 
       it('should timeout long-running asynchronous handlers', async () => {
         const hangingHandler = async (_error: Error) => {
-          await new Promise(() => {}); // Never resolves
+          await new Promise(resolve => setTimeout(resolve, 200)); // Takes longer than timeout
         };
 
         const testError = new Error('Test error');
-        const promise = executeErrorHandlerSafely(hangingHandler, testError, { timeout: 1000 });
         
-        // Fast-forward time to trigger timeout
-        vi.advanceTimersByTime(1500);
-        
-        await expect(promise).rejects.toThrow(/Error handler execution timed out/);
+        await expect(
+          executeErrorHandlerSafely(hangingHandler, testError, { timeout: 100 })
+        ).rejects.toThrow(/Error handler execution timed out/);
       });
 
       it('should allow handlers that complete within timeout', async () => {
         const validHandler = async (error: Error) => {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 50)); // Completes quickly
           console.error('Handler completed:', error.message);
         };
 
         const testError = new Error('Test error');
-        const promise = executeErrorHandlerSafely(validHandler, testError, { timeout: 1000 });
         
-        // Fast-forward time but not past timeout
-        vi.advanceTimersByTime(600);
-        
-        await expect(promise).resolves.not.toThrow();
+        await expect(
+          executeErrorHandlerSafely(validHandler, testError, { timeout: 100 })
+        ).resolves.not.toThrow();
       });
 
       it('should use configurable timeout values', async () => {
         const slowHandler = async (_error: Error) => {
-          await new Promise(resolve => setTimeout(resolve, 2500));
+          await new Promise(resolve => setTimeout(resolve, 150));
         };
 
         const testError = new Error('Test error');
         
         // Should timeout with short timeout
-        const shortPromise = executeErrorHandlerSafely(slowHandler, testError, { timeout: 1000 });
-        vi.advanceTimersByTime(1500);
-        await expect(shortPromise).rejects.toThrow(/timed out/);
-        
-        vi.clearAllTimers();
-        vi.useFakeTimers();
+        await expect(
+          executeErrorHandlerSafely(slowHandler, testError, { timeout: 100 })
+        ).rejects.toThrow(/timed out/);
         
         // Should succeed with longer timeout
-        const longPromise = executeErrorHandlerSafely(slowHandler, testError, { timeout: 5000 });
-        vi.advanceTimersByTime(3000);
-        await expect(longPromise).resolves.not.toThrow();
+        await expect(
+          executeErrorHandlerSafely(slowHandler, testError, { timeout: 200 })
+        ).resolves.not.toThrow();
       });
     });
 
@@ -258,21 +258,28 @@ describe('Error Handler Security Validation', () => {
     });
 
     describe('Resource Protection', () => {
+      // Use real timers for timeout tests  
+      beforeEach(() => {
+        vi.useRealTimers();
+      });
+      
+      afterEach(() => {
+        vi.useFakeTimers();
+      });
+
       it('should prevent excessive memory allocation', async () => {
         const memoryHog = async (_error: Error) => {
           // This will timeout due to the long delay
           return new Promise(resolve => {
-            setTimeout(() => resolve('completed'), 5000);
+            setTimeout(() => resolve('completed'), 200);
           });
         };
 
         const testError = new Error('Test error');
-        const promise = executeErrorHandlerSafely(memoryHog, testError, { timeout: 1000 });
         
-        // Fast-forward time to trigger timeout
-        vi.advanceTimersByTime(1500);
-        
-        await expect(promise).rejects.toThrow(/timed out/);
+        await expect(
+          executeErrorHandlerSafely(memoryHog, testError, { timeout: 100 })
+        ).rejects.toThrow(/timed out/);
       });
 
       it('should clean up resources after handler execution', async () => {

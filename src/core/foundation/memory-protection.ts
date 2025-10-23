@@ -28,7 +28,7 @@
 import { 
   sanitizeLogOutputAdvanced
 } from './log-security.js';
-import { sanitizeErrorMessage } from './error-sanitization.js';
+import { sanitizeErrorMessage, sanitizeStackTrace } from './error-sanitization.js';
 
 /**
  * Memory protection severity levels for graduated response
@@ -1071,9 +1071,15 @@ export function sanitizeErrorObjectWithMemoryProtection(
       sanitizedError.name = error.name;
       
       if (error.stack) {
-        const stackLines = error.stack.split('\n');
-        const limitedStack = stackLines.slice(0, config.maxStackDepth);
-        sanitizedError.stack = limitedStack.join('\n');
+        // Use proper stack trace sanitization with depth limiting
+        const sanitizedStack = sanitizeStackTrace(error.stack, {
+          maxDepth: config.maxStackDepth,
+          sanitizeFilePaths: true,
+          sanitizeLineNumbers: false,
+          sanitizeNodeModules: true,
+          productionMode: false
+        });
+        sanitizedError.stack = sanitizedStack;
       }
       
       return sanitizedError;
