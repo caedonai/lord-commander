@@ -160,8 +160,13 @@ export async function executeErrorHandlerSafely(
 ): Promise<void> {
     const config = { ...DEFAULT_SECURITY_OPTIONS, ...options };
     
-    // 1. Apply comprehensive error sanitization with memory protection
-    const sanitizedError = sanitizeErrorObject(error);
+    // 1. Apply comprehensive error sanitization with integrated memory protection
+    const { 
+      sanitizeErrorObjectWithMemoryProtection, 
+      DEFAULT_MEMORY_CONFIG 
+    } = await import('./foundation/memory-protection.js');
+    
+    const sanitizedError = sanitizeErrorObjectWithMemoryProtection(error, DEFAULT_MEMORY_CONFIG);
     
     // 2. Create timeout promise with proper cleanup
     let timeoutId: NodeJS.Timeout | undefined;

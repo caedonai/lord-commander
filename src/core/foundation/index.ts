@@ -14,6 +14,9 @@ export * from './errors.js';
 // Export log security utilities
 export * from './log-security.js';
 
+// Export memory protection framework
+export * from './memory-protection.js';
+
 // Export security patterns for input validation
 export * from './security-patterns.js';
 export { ADVANCED_ATTACK_PATTERNS } from './security-patterns.js';

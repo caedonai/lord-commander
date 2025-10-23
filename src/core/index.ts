@@ -180,6 +180,30 @@ export {
   analyzeLogSecurity,
   type LogInjectionConfig
 } from './createCLI.js';
+
+// Memory Protection Framework
+export {
+  MemoryProtectionManager,
+  MemorySizeCalculator,
+  MemoryViolationAnalyzer,
+  MemoryProtectionError,
+  createMemoryGuard,
+  isMemorySafe,
+  truncateForMemory,
+  sanitizeErrorObjectWithMemoryProtection,
+  truncateMessageWithMemoryProtection,
+  processContextWithMemoryProtection,
+  DEFAULT_MEMORY_CONFIG,
+  MemoryConfigPresets,
+  type MemoryProtectionConfig,
+  type MemoryProtectionLevel,
+  type MemoryUsageLevel,
+  type MemoryViolationType,
+  type MemoryViolation,
+  type MemoryAnalysisResult,
+  type ProtectedOperationResult
+} from './foundation/memory-protection.js';
+
 export { registerCommands, resetCommandTracking } from './commands/registerCommands.js';
 
 // Shell Autocomplete Support
