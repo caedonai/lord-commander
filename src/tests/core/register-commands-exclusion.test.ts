@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import { Command } from 'commander';
 import { registerCommands, resetCommandTracking } from '../../core/commands/registerCommands.js';
-import { writeFile, mkdir, rm } from 'fs/promises';
+import { writeFile, mkdir, rm, readdir } from 'fs/promises';
 import { join } from 'path';
 
 describe('registerCommands Built-in Exclusion', () => {
@@ -31,11 +31,45 @@ describe('registerCommands Built-in Exclusion', () => {
   });
 
   afterEach(async () => {
-    // Clean up temporary directory
+    // Small delay to allow any file handles to be released (especially on Windows)
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    // Clean up temporary directory with retry logic for Windows file locking
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        await rm(tempDir, { recursive: true, force: true });
+        break; // Success, exit loop
+      } catch (error) {
+        retries--;
+        if (retries === 0) {
+          // Final attempt - log the error but don't fail the test
+          console.warn(`Failed to cleanup temp directory ${tempDir}:`, error instanceof Error ? error.message : String(error));
+        } else {
+          // Wait a bit before retrying (helps with Windows file locking)
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+    }
+  });
+
+  afterAll(async () => {
+    // Final cleanup: remove any orphaned temp directories that might have been left behind
     try {
-      await rm(tempDir, { recursive: true });
+      const rootDir = process.cwd();
+      const items = await readdir(rootDir);
+      const tempDirs = items.filter(item => item.startsWith('temp-register-commands-test-'));
+      
+      for (const dir of tempDirs) {
+        try {
+          await rm(join(rootDir, dir), { recursive: true, force: true });
+          console.log(`Cleaned up orphaned temp directory: ${dir}`);
+        } catch (error) {
+          console.warn(`Failed to cleanup orphaned temp directory ${dir}:`, error instanceof Error ? error.message : String(error));
+        }
+      }
     } catch (error) {
-      // Ignore cleanup errors
+      // Ignore errors in final cleanup
     }
   });
 
