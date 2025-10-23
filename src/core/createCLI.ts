@@ -6,6 +6,8 @@ import * as prompts from './ui/prompts.js';
 import * as fs from './execution/fs.js';
 import * as execa from './execution/execa.js';
 import * as git from '../plugins/git.js';
+import * as workspace from '../plugins/workspace.js';
+import * as updater from '../plugins/updater.js';
 import { detectShell, installCompletion, analyzeProgram } from './commands/autocomplete.js';
 import { formatError, CLIError } from './foundation/errors.js';
 import { CreateCliOptions, CommandContext } from "../types/cli";
@@ -431,10 +433,25 @@ export async function createCLI(options: CreateCliOptions): Promise<Command> {
         prompts,
         fs,
         execa,
-        git,
         config,
         cwd: process.cwd()
     };
+
+    // Add plugins if enabled - Programmatic plugin registry
+    const availablePlugins = {
+        git,
+        workspace,
+        updater
+    };
+    
+    if (options.plugins) {
+        for (const [pluginName, isEnabled] of Object.entries(options.plugins)) {
+            if (isEnabled && availablePlugins[pluginName as keyof typeof availablePlugins]) {
+                (context as any)[pluginName] = availablePlugins[pluginName as keyof typeof availablePlugins];
+                logger.debug(`Enabled plugin: ${pluginName}`);
+            }
+        }
+    }
 
     // Configure built-in commands (defaults: completion=true, hello=false, version=false)
     const builtinConfig = {

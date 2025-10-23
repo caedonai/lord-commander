@@ -147,7 +147,7 @@ describe('Built-in Commands Configuration', () => {
       
       const helloCmd = program.commands.find(cmd => cmd.name() === 'hello');
       expect(helloCmd).toBeDefined();
-      expect(helloCmd?.description()).toBe('Say hello and show git repository info');
+      expect(helloCmd?.description()).toBe('Say hello and show system information');
     });
 
     it('should register version command with proper structure', async () => {

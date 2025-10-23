@@ -14,6 +14,11 @@ export interface CreateCliOptions {
         hello?: boolean;         // Default: false - Example command for learning
         version?: boolean;       // Default: false - Advanced version management (conflicts with -V)
     };
+    plugins?: {
+        git?: boolean;          // Default: false - Git operations plugin
+        workspace?: boolean;    // Default: false - Workspace management plugin
+        updater?: boolean;      // Default: false - Version update plugin
+    };
     // Custom error handler for command execution errors
     errorHandler?: (error: Error) => void | Promise<void>;
     // Internal option for testing - don't parse argv automatically
@@ -35,8 +40,8 @@ export interface CommandContext {
     prompts: any;  // Interactive user input (implemented)
     temp?: any;    // Temporary workspace management (to be implemented)
     
-    // Plugin utilities
-    git: any;      // Git operations (implemented)
+    // Plugin utilities (all optional - only available when explicitly enabled)
+    git?: any;     // Git operations (implemented, plugin)
     config?: any;  // Configuration management (to be implemented)
     telemetry?: any; // Analytics and tracking (to be implemented)
     

@@ -2,15 +2,15 @@ import { Command } from 'commander';
 import type { CommandContext } from '../types/cli';
 
 export default function(program: Command, context: CommandContext) {
-  const { logger, git } = context;
+  const { logger, execa, fs } = context;
   
   program
     .command('hello')
-    .description('Say hello and show git repository info')
+    .description('Say hello and show system information')
     .argument('[name]', 'Name of the person to greet')
     .option('-u, --uppercase', 'Convert the output to uppercase')
     .option('--verbose', 'Enable verbose logging')
-    .option('-g, --git', 'Show git repository information')
+    .option('-i, --info', 'Show system and project information')
     .action(async (name = 'World', options) => {
       // Enable verbose logging if requested
       if (options.verbose) {
@@ -29,45 +29,49 @@ export default function(program: Command, context: CommandContext) {
       
       logger.success(message);
       
-      // Test git functionality if requested
-      if (options.git) {
+      // Show basic system and project info if requested
+      if (options.info) {
         try {
-          logger.info('Checking git status...');
+          logger.info('Gathering system information...');
           
-          const isGitAvailable = await git.isGitAvailable();
-          logger.info(`Git available: ${isGitAvailable ? '✅' : '❌'}`);
+          // Show Node.js version using execa
+          const nodeResult = await execa('node', ['--version']);
+          logger.info(`Node.js version: ${nodeResult.stdout}`);
           
-          if (isGitAvailable) {
-            const isRepo = await git.isGitRepository();
-            logger.info(`Is git repository: ${isRepo ? '✅' : '❌'}`);
+          // Show npm version
+          const npmResult = await execa('npm', ['--version']);
+          logger.info(`npm version: ${npmResult.stdout}`);
+          
+          // Show current working directory using fs
+          const cwd = process.cwd();
+          logger.info(`Current directory: ${cwd}`);
+          
+          // Check if package.json exists
+          const packageJsonExists = await fs.exists('package.json');
+          logger.info(`Has package.json: ${packageJsonExists ? '✅' : '❌'}`);
+          
+          if (packageJsonExists) {
+            const packageJson = JSON.parse(await fs.readFile('package.json', 'utf8'));
+            logger.info(`Project: ${packageJson.name || 'unnamed'}`);
+            logger.info(`Version: ${packageJson.version || 'unknown'}`);
             
-            if (isRepo) {
-              const status = await git.getStatus();
-              logger.info(`Current branch: ${status.branch}`);
-              logger.info(`Repository is clean: ${status.clean ? '✅' : '❌'}`);
-              
-              if (!status.clean) {
-                if (status.staged.length > 0) {
-                  logger.info(`Staged files: ${status.staged.join(', ')}`);
-                }
-                if (status.unstaged.length > 0) {
-                  logger.info(`Unstaged files: ${status.unstaged.join(', ')}`);
-                }
-                if (status.untracked.length > 0) {
-                  logger.info(`Untracked files: ${status.untracked.join(', ')}`);
-                }
-              }
-              
-              // Show recent commits
-              const commits = await git.getCommits(3);
-              logger.info(`Recent commits:`);
-              commits.forEach((commit: any) => {
-                logger.info(`  ${commit.shortHash} - ${commit.message} (${commit.author})`);
-              });
+            if (packageJson.dependencies) {
+              const depCount = Object.keys(packageJson.dependencies).length;
+              logger.info(`Dependencies: ${depCount}`);
+            }
+            
+            if (packageJson.scripts) {
+              const scriptNames = Object.keys(packageJson.scripts);
+              logger.info(`Available scripts: ${scriptNames.join(', ')}`);
             }
           }
+          
+          // Show environment info
+          logger.info(`Platform: ${process.platform}`);
+          logger.info(`Architecture: ${process.arch}`);
+          
         } catch (error) {
-          logger.error(`Git error: ${error instanceof Error ? error.message : String(error)}`);
+          logger.error(`System info error: ${error instanceof Error ? error.message : String(error)}`);
         }
       }
       
