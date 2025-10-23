@@ -6,7 +6,6 @@ import os from 'os';
 
 describe('createCLI run() Method', () => {
   let tempDir: string;
-  let mockLoggerWarn: any;
 
   beforeEach(async () => {
     // Create temporary directory for testing
@@ -23,16 +22,13 @@ describe('createCLI run() Method', () => {
     
     // Mock console.error to capture error output
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    
-    // Mock logger.warn to capture warning output
-    mockLoggerWarn = vi.fn();
   });
 
   afterEach(async () => {
     // Clean up
     vi.restoreAllMocks();
     try {
-      await fs.rmdir(tempDir, { recursive: true });
+      await fs.rm(tempDir, { recursive: true });
     } catch (error) {
       // Ignore cleanup errors
     }
@@ -132,7 +128,14 @@ describe('createCLI run() Method', () => {
         // Manually set the flags to simulate autoStart behavior
         program._cliState = {
           hasBeenExecuted: true,
-          autoStartEnabled: true
+          autoStartEnabled: true,
+          options: {
+            name: 'test-cli',
+            version: '1.0.0',
+            description: 'Test CLI',
+            commandsPath: './non-existent-path',
+            autoStart: false
+          }
         };
       } catch (error) {
         // Expected: autoStart triggers parseAsync which may exit for help/version
