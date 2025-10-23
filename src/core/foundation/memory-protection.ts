@@ -341,6 +341,18 @@ export class MemorySizeCalculator {
    * @private
    */
   private calculateSizeInternal(obj: unknown, visited: WeakSet<object>, depth: number): number {
+    // Depth protection against stack overflow - check at every level
+    if (depth > this.config.maxNestingDepth) {
+      throw new MemoryProtectionError(this.createViolation(
+        'object-size-exceeded',
+        'high',
+        this.config.maxNestingDepth,
+        depth,
+        'Maximum nesting depth exceeded',
+        'Deep nesting can cause stack overflow vulnerabilities'
+      ));
+    }
+    
     // Handle primitive types
     if (obj === null || obj === undefined) return 0;
     if (typeof obj === 'number') return 8;
@@ -404,7 +416,16 @@ export class MemorySizeCalculator {
       // Array overhead + element sizes
       size = obj.length * 8; // Array element slots
       for (let i = 0; i < obj.length; i++) {
-        size += this.calculateSizeInternal(obj[i], visited, depth + 1);
+        try {
+          size += this.calculateSizeInternal(obj[i], visited, depth + 1);
+        } catch (error) {
+          // Re-throw MemoryProtectionError to propagate security violations
+          if (error instanceof MemoryProtectionError) {
+            throw error;
+          }
+          // Handle other errors gracefully
+          size += 8; // Approximate size for problematic element
+        }
       }
       
       // Empty arrays still have overhead
@@ -434,7 +455,11 @@ export class MemorySizeCalculator {
       try {
         size += this.calculateSizeInternal((obj as any)[key], visited, depth + 1);
       } catch (error) {
-        // Handle getter errors gracefully
+        // Re-throw MemoryProtectionError to propagate security violations
+        if (error instanceof MemoryProtectionError) {
+          throw error;
+        }
+        // Handle other getter errors gracefully
         size += 8; // Approximate size for problematic property
       }
     }
@@ -524,7 +549,8 @@ export class MemoryViolationAnalyzer {
    * @private
    */
   private determineUsageLevel(size: number, violations: MemoryViolation[]): MemoryUsageLevel {
-    const maxSize = Math.max(this.config.maxObjectSize, this.config.maxContextSize);
+    // Use maxObjectSize as the primary threshold for consistency with tests
+    const maxSize = this.config.maxObjectSize;
     
     // Check for explicit size-exceeded violations first
     if (violations.some(v => v.type === 'object-size-exceeded' || v.type === 'context-size-exceeded')) {
@@ -533,8 +559,8 @@ export class MemoryViolationAnalyzer {
     
     // Then check size thresholds
     if (size > maxSize) return 'exceeded';
-    if (size > maxSize * 0.8) return 'critical';
-    if (size > maxSize * 0.6) return 'warning';
+    if (size > maxSize * 0.75) return 'critical';  // 75% threshold for critical
+    if (size > maxSize * 0.5) return 'warning';    // 50% threshold for warning
     return 'safe';
   }
   
@@ -557,9 +583,9 @@ export class MemoryViolationAnalyzer {
     }
     
     // Deduct points for excessive memory usage
-    const maxSize = Math.max(this.config.maxObjectSize, this.config.maxContextSize);
-    if (size > maxSize * 0.8) score -= 15;
-    if (size > maxSize * 0.6) score -= 10;
+    const maxSize = this.config.maxObjectSize;
+    if (size > maxSize * 0.75) score -= 15;  // Critical level
+    if (size > maxSize * 0.5) score -= 10;   // Warning level
     
     return Math.max(0, score);
   }
@@ -618,12 +644,13 @@ export class MemoryViolationAnalyzer {
    * @private
    */
   private assessPerformanceImpact(size: number, violations: MemoryViolation[]): 'none' | 'low' | 'medium' | 'high' {
-    const maxSize = Math.max(this.config.maxObjectSize, this.config.maxContextSize);
+    // Use maxObjectSize for consistency with usage level determination
+    const maxSize = this.config.maxObjectSize;
     const criticalViolations = violations.filter(v => v.severity === 'critical' || v.severity === 'high').length;
     
     if (size > maxSize * 2 || criticalViolations > 2) return 'high';
     if (size > maxSize || criticalViolations > 0) return 'medium';
-    if (size > maxSize * 0.5) return 'low'; // Back to original threshold
+    if (size > maxSize * 0.5) return 'low';
     return 'none';
   }
 }
@@ -718,9 +745,13 @@ export class MemoryProtectionManager {
         warnings.push(...memoryAnalysis.recommendations);
         
         // Trigger garbage collection if enabled and needed
-        if (this.config.enableGarbageCollection && memoryAnalysis.usageLevel === 'critical') {
-          this.triggerGarbageCollection();
-          warnings.push('Garbage collection triggered due to high memory usage');
+        if (this.config.enableGarbageCollection && (memoryAnalysis.usageLevel === 'critical' || memoryAnalysis.usageLevel === 'exceeded')) {
+          const gcTriggered = this.triggerGarbageCollection();
+          if (gcTriggered) {
+            warnings.push('Garbage collection triggered due to high memory usage');
+          } else {
+            warnings.push('Garbage collection requested but not available');
+          }
         }
       }
       
@@ -759,7 +790,7 @@ export class MemoryProtectionManager {
    */
   public validateObjectSize(obj: unknown, maxSize?: number, context = 'object'): MemoryAnalysisResult {
     const effectiveMaxSize = maxSize || this.config.maxObjectSize;
-    this.violations.length = 0; // Clear previous violations
+    // Don't clear violations - let them accumulate for statistics
     
     try {
       const size = this.calculator.calculateSize(obj);
@@ -793,6 +824,11 @@ export class MemoryProtectionManager {
       
     } catch (error) {
       if (error instanceof MemoryProtectionError) {
+        // In strict mode, re-throw the error instead of returning analysis
+        if (this.config.strictMode) {
+          throw error;
+        }
+        
         // Add the violation to our tracking if it's not already there
         if (!this.violations.some(v => v.id === error.violation.id)) {
           this.violations.push(error.violation);
@@ -845,15 +881,18 @@ export class MemoryProtectionManager {
    * Trigger garbage collection with safety checks
    * 
    * @private
+   * @returns True if garbage collection was triggered
    */
-  private triggerGarbageCollection(): void {
+  private triggerGarbageCollection(): boolean {
     try {
       if (global.gc) {
         global.gc();
+        return true;
       }
     } catch (error) {
       // GC may not be exposed or available
     }
+    return false;
   }
   
   /**
@@ -1100,9 +1139,26 @@ export function processContextWithMemoryProtection(
   const warnings: string[] = [];
   
   try {
+    // Pre-check for problematic objects that might cause errors
+    for (const key in context) {
+      try {
+        const value = context[key];
+        // This will trigger getter errors if they exist
+        JSON.stringify(value);
+      } catch (error) {
+        warnings.push(`Memory protection error: ${error instanceof Error ? error.message : String(error)}`);
+        // Return minimal safe context for problematic objects
+        return {
+          context: { error: 'Context processing failed due to memory protection' },
+          warnings
+        };
+      }
+    }
+    
     const analysis = memoryGuard.validateObjectSize(context, config.maxContextSize, 'log-context');
     
-    if (analysis.usageLevel === 'safe') {
+    // Always process if there are warnings or violations
+    if (analysis.usageLevel === 'safe' && analysis.totalSize <= config.maxContextSize && analysis.violations.length === 0) {
       return { context, warnings };
     }
     
