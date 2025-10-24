@@ -509,18 +509,13 @@ export async function createCLI(options: CreateCliOptions): Promise<EnhancedComm
         cwd: process.cwd()
     };
 
-    // Add plugins if enabled - Dynamic plugin registry for optimal tree-shaking
+    // Add plugins if enabled - Auto-discovery with dynamic imports for optimal tree-shaking
     if (options.plugins) {
-        const pluginLoaders = {
-            git: () => import('../plugins/git.js'),
-            workspace: () => import('../plugins/workspace.js'),
-            updater: () => import('../plugins/updater.js')
-        };
-        
         for (const [pluginName, isEnabled] of Object.entries(options.plugins)) {
-            if (isEnabled && pluginLoaders[pluginName as keyof typeof pluginLoaders]) {
+            if (isEnabled) {
                 try {
-                    const pluginModule = await pluginLoaders[pluginName as keyof typeof pluginLoaders]();
+                    // Dynamic import based on plugin name - only imports requested plugins
+                    const pluginModule = await import(`../plugins/${pluginName}.js`);
                     (context as any)[pluginName] = pluginModule;
                     logger.debug(`Dynamically loaded plugin: ${pluginName}`);
                 } catch (error) {
