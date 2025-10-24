@@ -20,7 +20,7 @@ import {
   SUSPICIOUS_DEPENDENCY_PATTERNS,
   DANGEROUS_SCRIPT_PATTERNS,
   type SecureFrameworkInfo
-} from '../../core/foundation/framework-security.js';
+} from '../../core/foundation/security/framework.js';
 
 describe('Framework Security Detection', () => {
   let testDir: string;

@@ -19,7 +19,7 @@ import {
     LogSecurityMonitor,
     type LogSecurityViolation,
     type SecurityAlert
-} from '../../core/foundation/log-security.js';
+} from '../../core/foundation/logging/security.js';
 
 describe('Task 1.4.1: Enhanced Log Injection Protection (Fixed)', () => {
 

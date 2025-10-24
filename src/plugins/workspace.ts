@@ -10,7 +10,7 @@
  */
 
 import { readFile, exists, readDir } from '../core/execution/fs.js';
-import { CLIError } from '../core/foundation/errors.js';
+import { CLIError } from '../core/foundation/errors/errors.js';
 import { createLogger } from '../core/ui/logger.js';
 import path from 'node:path';
 

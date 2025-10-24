@@ -12,7 +12,7 @@ import {
   sanitizeErrorContext,
   createSafeErrorForForwarding,
   analyzeErrorContextSecurity
-} from '../../core/foundation/error-sanitization.js';
+} from '../../core/foundation/errors/sanitization.js';
 
 describe('Error Context Sanitization (Task 1.3.3)', () => {
   let testError: Error;

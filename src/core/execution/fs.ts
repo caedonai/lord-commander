@@ -8,8 +8,8 @@
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
-import { DEFAULT_IGNORE_PATTERNS } from '../foundation/constants.js';
-import { FileSystemError } from '../foundation/errors.js';
+import { DEFAULT_IGNORE_PATTERNS } from '../foundation/core/constants.js';
+import { FileSystemError } from '../foundation/errors/errors.js';
 import { createLogger } from '../ui/logger.js';
 
 // Create a logger instance for internal file operations

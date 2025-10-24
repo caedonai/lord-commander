@@ -31,15 +31,15 @@ import {
   type AuditEntry,
   type AuditTrailConfig,
   type AuditUserContext,
-} from '../../core/foundation/audit-trail.js';
+} from '../../core/foundation/logging/audit.js';
 import {
   StructuredLogLevel,
   SecurityClassification,
   type StructuredLogEntry,
-} from '../../core/foundation/structured-logging.js';
+} from '../../core/foundation/logging/structured.js';
 import {
   type EnhancedSecurityViolation,
-} from '../../core/foundation/violation-detector-exports.js';
+} from '../../core/foundation/security/violation-detector.js';
 
 describe('Task 1.4.3: Audit Trail Integration', () => {
   let auditManager: AuditTrailManager;

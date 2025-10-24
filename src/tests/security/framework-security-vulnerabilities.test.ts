@@ -11,7 +11,7 @@ import {
   DANGEROUS_SCRIPT_PATTERNS,
   SUSPICIOUS_DEPENDENCY_PATTERNS,
   detectFrameworkSecurely
-} from '../../core/foundation/framework-security.js';
+} from '../../core/foundation/security/framework.js';
 
 describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
   let testDir: string;

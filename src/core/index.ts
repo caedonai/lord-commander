@@ -26,7 +26,7 @@ export {
   ERROR_MESSAGES,
   type PackageManager,
   type Framework 
-} from './foundation/constants.js';
+} from './foundation/core/constants.js';
 
 export { 
   CLIError, 
@@ -44,7 +44,7 @@ export {
   getRecoverySuggestion,
   withErrorHandling,
   setupGlobalErrorHandlers
-} from './foundation/errors.js';
+} from './foundation/errors/errors.js';
 
 // Security patterns and validation (Task 1.1.2)
 export {
@@ -61,7 +61,7 @@ export {
   isProjectNameSafe,
   type SecurityAnalysisResult,
   type SecurityViolation
-} from './foundation/security-patterns.js';
+} from './foundation/security/patterns.js';
 
 // Framework security detection (Task 1.1.3)
 export {
@@ -76,7 +76,7 @@ export {
   type FrameworkSecurityViolation,
   type FrameworkDependencyInfo,
   type FrameworkBuildConfig
-} from './foundation/framework-security.js';
+} from './foundation/security/framework.js';
 
 // Input validation utilities (Task 1.2.1)
 export {
@@ -92,7 +92,7 @@ export {
   type ValidationConfig,
   type ValidationResult,
   type InputValidationViolation
-} from './foundation/input-validation.js';
+} from './foundation/security/validation.js';
 
 // Error sanitization utilities (Task 1.3.3 - New Context Sanitization)
 export {
@@ -103,7 +103,7 @@ export {
   type SanitizedErrorContext,
   type SensitiveContextDetection,
   DEFAULT_ERROR_CONTEXT_CONFIG
-} from './foundation/error-sanitization.js';
+} from './foundation/errors/sanitization.js';
 
 // User interface utilities
 export { 
@@ -203,7 +203,7 @@ export {
   type MemoryViolation,
   type MemoryAnalysisResult,
   type ProtectedOperationResult
-} from './foundation/memory-protection.js';
+} from './foundation/memory/protection.js';
 
 export { registerCommands, resetCommandTracking } from './commands/registerCommands.js';
 

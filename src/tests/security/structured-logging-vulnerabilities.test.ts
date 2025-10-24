@@ -26,7 +26,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { 
   StructuredLogger, 
   type StructuredLoggingConfig 
-} from '../../core/foundation/structured-logging.js';
+} from '../../core/foundation/logging/structured.js';
 
 describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
   let logger: StructuredLogger;

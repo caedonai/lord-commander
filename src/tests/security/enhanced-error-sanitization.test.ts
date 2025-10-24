@@ -17,7 +17,7 @@ import {
   createEnvironmentConfig,
   DEFAULT_ERROR_SANITIZATION_CONFIG,
   type ErrorSanitizationConfig
-} from '../../core/foundation/error-sanitization.js';
+} from '../../core/foundation/errors/sanitization.js';
 
 describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
   let originalEnv: string | undefined;

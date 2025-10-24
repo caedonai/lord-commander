@@ -29,11 +29,11 @@ import {
   type LogEntryOptions,
   type StructuredLogEntry,
   DEFAULT_STRUCTURED_LOGGING_CONFIG,
-} from '../../core/foundation/structured-logging.js';
-import { sanitizeLogOutputAdvanced, analyzeLogSecurity } from '../../core/foundation/log-security.js';
+} from '../../core/foundation/logging/structured.js';
+import { sanitizeLogOutputAdvanced, analyzeLogSecurity } from '../../core/foundation/logging/security.js';
 
 // Mock the log security functions to control test behavior
-vi.mock('../../core/foundation/log-security.js', () => ({
+vi.mock('../../core/foundation/logging/security.js', () => ({
   sanitizeLogOutputAdvanced: vi.fn((input: string) => {
     // Simulate sanitization for various test patterns
     return input
@@ -67,7 +67,7 @@ vi.mock('../../core/foundation/log-security.js', () => ({
 }));
 
 // Mock the error sanitization functions
-vi.mock('../../core/foundation/error-sanitization.js', () => ({
+vi.mock('../../core/foundation/errors/sanitization.js', () => ({
   sanitizeErrorMessage: vi.fn((message: string) => message.replace(/secret/gi, '[REDACTED]')),
   sanitizeStackTrace: vi.fn((stack: string) => stack.split('\n').slice(0, 5).join('\n')),
 }));

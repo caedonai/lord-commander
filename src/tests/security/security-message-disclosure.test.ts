@@ -13,7 +13,7 @@ import {
   sanitizeStackTrace,
   isDebugMode,
   shouldShowDetailedErrors
-} from '../../core/foundation/error-sanitization.js';
+} from '../../core/foundation/errors/sanitization.js';
 
 describe('Error Message Content Disclosure Security', () => {
   let originalNodeEnv: string | undefined;

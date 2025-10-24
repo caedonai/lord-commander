@@ -13,7 +13,7 @@ import {
   sanitizeCommandArgs, 
   sanitizePath, 
   validateInput
-} from '../../core/foundation/input-validation.js';describe('Input Validation Security Vulnerabilities', () => {
+} from '../../core/foundation/security/validation.js';describe('Input Validation Security Vulnerabilities', () => {
   
   describe('1. Race Condition in Path Validation', () => {
     it('should handle concurrent path modifications safely', async () => {

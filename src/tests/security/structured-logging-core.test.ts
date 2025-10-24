@@ -22,7 +22,7 @@ import {
   createStructuredLogger,
   structuredLog,
   DEFAULT_STRUCTURED_LOGGING_CONFIG,
-} from '../../core/foundation/structured-logging.js';
+} from '../../core/foundation/logging/structured.js';
 
 describe('Task 1.4.2: Structured Logging Core Features', () => {
   let logger: StructuredLogger;

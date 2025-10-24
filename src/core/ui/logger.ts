@@ -14,9 +14,9 @@ import {
   note as clackNote,
   spinner as clackSpinner
 } from '@clack/prompts';
-import { BRANDING } from '../foundation/constants.js';
-import { formatError } from '../foundation/errors.js';
-import { sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig } from '../foundation/log-security.js';
+import { BRANDING } from '../foundation/core/constants.js';
+import { formatError } from '../foundation/errors/errors.js';
+import { sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig } from '../foundation/logging/security.js';
 
 // Define Spinner type based on @clack/prompts return type
 type Spinner = ReturnType<typeof clackSpinner>;

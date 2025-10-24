@@ -9,7 +9,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   sanitizeErrorContext,
   createSafeErrorForForwarding
-} from '../../core/foundation/error-sanitization.js';
+} from '../../core/foundation/errors/sanitization.js';
 
 describe('Error Context Sanitization - Advanced Edge Cases', () => {
   let testError: Error;

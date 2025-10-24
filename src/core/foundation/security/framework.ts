@@ -11,9 +11,9 @@
 import { readFile, stat } from 'fs/promises';
 import { join, resolve } from 'path';
 import { tmpdir } from 'os';
-import { FRAMEWORK_PATTERNS } from './constants.js';
-import { analyzeInputSecurity, isPathSafe, isCommandSafe } from './security-patterns.js';
-import { ERROR_MESSAGES } from './constants.js';
+import { FRAMEWORK_PATTERNS } from '../core/constants.js';
+import { analyzeInputSecurity, isPathSafe, isCommandSafe } from './patterns.js';
+import { ERROR_MESSAGES } from '../core/constants.js';
 
 /**
  * Security validation result for framework detection
@@ -304,7 +304,7 @@ export const DANGEROUS_SCRIPT_PATTERNS = [
   /sudo|su\s+/,
   /rm\s+-rf|rmdir/,
   /chmod\s+777|chmod\s+\+x/,
-  /(wget|curl).*\|.*sh/,
+  /wget|curl.*\|.*sh/,
   /eval|exec/,
   />\s*\/dev\/null.*&/,
   /nohup.*&/,

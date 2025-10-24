@@ -24,7 +24,7 @@ import {
   DEFAULT_MEMORY_CONFIG,
   MemoryConfigPresets,
   type MemoryViolation
-} from '../../core/foundation/memory-protection.js';
+} from '../../core/foundation/memory/protection.js';
 
 describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
   let mockConsole: {

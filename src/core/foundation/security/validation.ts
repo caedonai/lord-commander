@@ -15,8 +15,8 @@ import {
   isPathSafe, 
   isCommandSafe, 
   isProjectNameSafe
-} from './security-patterns.js';
-import { ERROR_MESSAGES } from './constants.js';
+} from './patterns.js';
+import { ERROR_MESSAGES } from '../core/constants.js';
 
 /**
  * Security limits for input validation to prevent attacks

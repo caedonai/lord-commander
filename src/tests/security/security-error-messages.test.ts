@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ERROR_MESSAGES } from '../../core/foundation/constants.js';
+import { ERROR_MESSAGES } from '../../core/foundation/core/constants.js';
 
 describe('ERROR_MESSAGES Security Constants', () => {
   describe('Existing error messages', () => {

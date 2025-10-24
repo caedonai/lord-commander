@@ -12,7 +12,7 @@ import {
   analyzeInputSecurity, 
   SecurityViolation as BaseSecurityViolation,
   SecurityAnalysisResult 
-} from './security-patterns.js';
+} from './patterns.js';
 
 /**
  * Enhanced security violation with compliance and correlation metadata

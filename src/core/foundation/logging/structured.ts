@@ -19,8 +19,8 @@
  * @architecture Builds on existing security foundation while maintaining API compatibility
  */
 
-import { sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig, type LogSecurityAnalysis } from './log-security.js';
-import { sanitizeErrorMessage, sanitizeStackTrace } from './error-sanitization.js';
+import { sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig, type LogSecurityAnalysis } from './security.js';
+import { sanitizeErrorMessage, sanitizeStackTrace } from '../errors/sanitization.js';
 
 /**
  * Log severity levels for structured logging

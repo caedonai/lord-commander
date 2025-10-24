@@ -18,7 +18,7 @@ import {
   ViolationContext,
   DEFAULT_RISK_SCORING_CONFIG,
   defaultSecurityViolationDetector
-} from '../../../src/core/foundation/security-violation-detector.js';
+} from '../../../src/core/foundation/security/violation-detector.js';
 
 describe('SecurityViolationDetector - Centralized Violation Detection API', () => {
   let detector: SecurityViolationDetector;

@@ -14,7 +14,7 @@ import { tmpdir } from 'os';
 import {
   detectFrameworkSecurely,
   isFrameworkSafe
-} from '../../core/foundation/framework-security.js';
+} from '../../core/foundation/security/framework.js';
 
 describe('Framework Security Edge Cases', () => {
   let edgeTestDir: string;

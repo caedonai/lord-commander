@@ -9,7 +9,7 @@
  */
 
 import { execa, execaStream } from '../core/execution/execa.js';
-import { CLIError } from '../core/foundation/errors.js';
+import { CLIError } from '../core/foundation/errors/errors.js';
 
 export interface GitStatus {
   branch: string;

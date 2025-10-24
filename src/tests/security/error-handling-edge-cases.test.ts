@@ -5,7 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createCLI } from '../../core/createCLI.js';
-import { CLIError } from '../../core/foundation/errors.js';
+import { CLIError } from '../../core/foundation/errors/index.js';
 
 describe('Error Handling Edge Cases', () => {
   beforeEach(() => {

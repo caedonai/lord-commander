@@ -12,9 +12,9 @@ import type { ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { mkdir } from 'node:fs/promises';
-import { ProcessError } from '../foundation/errors.js';
+import { ProcessError } from '../foundation/errors/errors.js';
 import { createLogger } from '../ui/logger.js';
-import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/constants.js';
+import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/core/constants.js';
 
 // Create a logger instance for internal execa operations
 const execaLogger = createLogger({ prefix: 'execa' });

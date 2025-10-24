@@ -6,7 +6,7 @@ import * as prompts from './ui/prompts.js';
 import * as fs from './execution/fs.js';
 import * as execa from './execution/execa.js';
 import { detectShell, installCompletion, analyzeProgram } from './commands/autocomplete.js';
-import { formatError, CLIError } from './foundation/errors.js';
+import { formatError, CLIError } from './foundation/errors/errors.js';
 import { CreateCliOptions, CommandContext } from "../types/cli";
 
 /**
@@ -163,7 +163,7 @@ export async function executeErrorHandlerSafely(
     const { 
       sanitizeErrorObjectWithMemoryProtection, 
       DEFAULT_MEMORY_CONFIG 
-    } = await import('./foundation/memory-protection.js');
+    } = await import('./foundation/memory/protection.js');
     
     const sanitizedError = sanitizeErrorObjectWithMemoryProtection(error, DEFAULT_MEMORY_CONFIG);
     
@@ -378,12 +378,12 @@ import {
     sanitizeStackTrace as enhancedSanitizeStackTrace,
     shouldShowDetailedErrors as enhancedShouldShowDetailedErrors,
     isDebugMode as enhancedIsDebugMode
-} from './foundation/error-sanitization.js';
+} from './foundation/errors/sanitization.js';
 
 
 
 // Re-export log injection protection functions from foundation module
-export { sanitizeLogOutput, sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig } from './foundation/log-security.js';
+export { sanitizeLogOutput, sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig } from './foundation/logging/security.js';
 
 /**
  * Enhanced Command interface with manual execution control
@@ -723,4 +723,4 @@ export {
     createEnvironmentConfig,
     type ErrorSanitizationConfig,
     DEFAULT_ERROR_SANITIZATION_CONFIG
-} from './foundation/error-sanitization.js';
+} from './foundation/errors/sanitization.js';

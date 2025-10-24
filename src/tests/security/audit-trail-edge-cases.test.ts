@@ -17,7 +17,7 @@ import {
   AuditSecurityValidator,
   DEFAULT_AUDIT_TRAIL_CONFIG,
   type AuditTrailConfig
-} from '../../../src/core/foundation/audit-trail.js';
+} from '../../../src/core/foundation/logging/audit.js';
 
 describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
   let auditManager: AuditTrailManager;

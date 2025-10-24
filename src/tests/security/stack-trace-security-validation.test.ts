@@ -9,7 +9,7 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   sanitizeStackTrace,
   analyzeStackTraceSecurity
-} from '../../core/foundation/error-sanitization.js';describe('Stack Trace Security Validation', () => {
+} from '../../core/foundation/errors/sanitization.js';describe('Stack Trace Security Validation', () => {
   
   describe('ReDoS Attack Prevention', () => {
     it('should handle pathological regex patterns without timeout', () => {

@@ -17,7 +17,7 @@ import {
   TRUSTED_PACKAGE_MANAGERS,
   PROJECT_NAME_PATTERNS,
   type ValidationConfig
-} from '../../core/foundation/input-validation.js';
+} from '../../core/foundation/security/validation.js';
 
 describe('Input Validation Framework', () => {
   

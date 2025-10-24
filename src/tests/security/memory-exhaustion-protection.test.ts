@@ -12,7 +12,7 @@ import {
   getObjectMemorySize,
   createCLI 
 } from '../../core/createCLI.js';
-import { CLIError } from '../../core/foundation/errors.js';
+import { CLIError } from '../../core/foundation/errors/errors.js';
 
 describe('Memory Exhaustion Protection', () => {
   beforeEach(() => {

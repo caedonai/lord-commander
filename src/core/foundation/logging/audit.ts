@@ -23,14 +23,14 @@ import {
   StructuredLogEntry, 
   StructuredLogLevel, 
   SecurityClassification
-} from './structured-logging.js';
+} from './structured.js';
 import { 
   type LogSecurityAnalysis 
-} from './log-security.js';
+} from './security.js';
 import { 
   type EnhancedSecurityViolation, 
   type ViolationAnalysisResult 
-} from './violation-detector-exports.js';
+} from '../security/violation-detector.js';
 import { createHash, randomBytes } from 'crypto';
 
 /**

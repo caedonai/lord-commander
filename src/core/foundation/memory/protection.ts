@@ -27,8 +27,8 @@
 
 import { 
   sanitizeLogOutputAdvanced
-} from './log-security.js';
-import { sanitizeErrorMessage, sanitizeStackTrace } from './error-sanitization.js';
+} from '../logging/security.js';
+import { sanitizeErrorMessage, sanitizeStackTrace } from '../errors/sanitization.js';
 
 /**
  * Memory protection severity levels for graduated response

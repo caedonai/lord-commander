@@ -12,7 +12,7 @@ import { mkdir, writeFile, rm } from 'fs/promises';
 import {
   detectFrameworkSecurely,
   TRUSTED_FRAMEWORK_DEPENDENCIES
-} from '../../core/foundation/framework-security.js';
+} from '../../core/foundation/security/framework.js';
 
 describe('Task 1.1.3 Critical Security Vulnerability Resolution', () => {
   let testDir: string;

@@ -5,7 +5,7 @@ import {
   isPathSafe,
   isCommandSafe,
   isProjectNameSafe
-} from '../../core/foundation/security-patterns.js';
+} from '../../core/foundation/security/patterns.js';
 
 describe('Security Patterns - Edge Cases & Advanced Security Analysis', () => {
   describe('Unicode and Character Encoding Edge Cases', () => {

@@ -10,7 +10,7 @@ import {
     analyzeLogSecurity,
     LogSecurityMonitor,
     type LogInjectionConfig
-} from '../../core/foundation/log-security.js';
+} from '../../core/foundation/logging/security.js';
 
 describe('Task 1.4.1: Comprehensive Edge Case & Security Analysis', () => {
 

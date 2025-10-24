@@ -9,7 +9,7 @@ import {
   sanitizeStackTrace, 
   analyzeStackTraceSecurity,
   createEnvironmentConfig
-} from '../../core/foundation/error-sanitization.js';
+} from '../../core/foundation/errors/sanitization.js';
 
 describe('Stack Trace Leakage Security', () => {
   let originalNodeEnv: string | undefined;
