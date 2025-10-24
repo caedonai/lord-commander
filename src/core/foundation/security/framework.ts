@@ -304,7 +304,7 @@ export const DANGEROUS_SCRIPT_PATTERNS = [
   /sudo|su\s+/,
   /rm\s+-rf|rmdir/,
   /chmod\s+777|chmod\s+\+x/,
-  /wget|curl.*\|.*sh/,
+  /(wget|curl).*\|.*sh/,
   /eval|exec/,
   />\s*\/dev\/null.*&/,
   /nohup.*&/,
