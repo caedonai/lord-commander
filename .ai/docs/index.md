@@ -1,6 +1,6 @@
 # Documentation Index
 
-**Phase 1 Security Foundation: 🔄 IN PROGRESS** - Core security infrastructure complete (Tasks 1.1-1.3, 1.4.1) with 871 tests passing.
+**Phase 1 Security Foundation: 🔄 IN PROGRESS** - Core security infrastructure complete (Tasks 1.1-1.3, 1.4.1) with 1105 tests passing.
 
 ## Quick Navigation
 
@@ -28,6 +28,7 @@
 
 #### 🏗️ Architecture
 - ✅ [Core Module Design](./architecture/core-module-design.md)
+- ✅ [Enhanced CLI Control](./architecture/enhanced-cli-control.md) **[Manual Execution Control]**
 - 🔜 Plugin System Design
 - 🔜 Command Registration Flow
 - 🔜 Tree-shaking Strategy
