@@ -6,7 +6,7 @@
  */
 
 import { isCancel as clackIsCancel } from '@clack/prompts';
-import chalk from 'chalk';
+import * as colors from 'picocolors';
 
 /**
  * Custom CLI error class with enhanced error information
@@ -170,13 +170,13 @@ export function gracefulExit(
         await cleanup();
       }
     } catch (error) {
-      console.error(chalk.red('Error during cleanup:'), error);
+      console.error(colors.red('Error during cleanup:'), error);
     } finally {
       if (message) {
         if (code === 0) {
-          console.log(chalk.green(message));
+          console.log(colors.green(message));
         } else {
-          console.error(chalk.red(message));
+          console.error(colors.red(message));
         }
       }
       process.exit(code);
@@ -210,23 +210,23 @@ export function formatError(error: Error, options: {
   
   // Error name and message
   const errorHeader = `${error.name}: ${error.message}`;
-  parts.push(colorize ? chalk.red(errorHeader) : errorHeader);
+  parts.push(colorize ? colors.red(errorHeader) : errorHeader);
 
   // CLI-specific error details
   if (error instanceof CLIError) {
     if (error.code) {
       const codeText = `Code: ${error.code}`;
-      parts.push(colorize ? chalk.gray(codeText) : codeText);
+      parts.push(colorize ? colors.gray(codeText) : codeText);
     }
 
     if (showSuggestion && error.suggestion) {
       const suggestionText = `💡 ${error.suggestion}`;
-      parts.push(colorize ? chalk.yellow(suggestionText) : suggestionText);
+      parts.push(colorize ? colors.yellow(suggestionText) : suggestionText);
     }
 
     if (showContext && error.context && Object.keys(error.context).length > 0) {
       const contextText = `Context: ${JSON.stringify(error.context, null, 2)}`;
-      parts.push(colorize ? chalk.gray(contextText) : contextText);
+      parts.push(colorize ? colors.gray(contextText) : contextText);
     }
   }
 
@@ -234,7 +234,7 @@ export function formatError(error: Error, options: {
   if (showStack && error.stack) {
     const stackLines = error.stack.split('\n').slice(1); // Remove first line (already shown)
     const stackText = stackLines.join('\n');
-    parts.push(colorize ? chalk.gray(stackText) : stackText);
+    parts.push(colorize ? colors.gray(stackText) : stackText);
   }
 
   // Cause chain (if available) - check for CLIError which has cause property
@@ -334,7 +334,7 @@ export function setupGlobalErrorHandlers(options: {
     if (onUnhandledRejection) {
       onUnhandledRejection(error);
     } else {
-      console.error(chalk.red('Unhandled Promise Rejection:'));
+      console.error(colors.red('Unhandled Promise Rejection:'));
       console.error(formatError(error, { showStack: true }));
       gracefulExit(1, 'Exiting due to unhandled promise rejection');
     }
@@ -345,7 +345,7 @@ export function setupGlobalErrorHandlers(options: {
     if (onUncaughtException) {
       onUncaughtException(error);
     } else {
-      console.error(chalk.red('Uncaught Exception:'));
+      console.error(colors.red('Uncaught Exception:'));
       console.error(formatError(error, { showStack: true }));
       gracefulExit(1, 'Exiting due to uncaught exception');
     }

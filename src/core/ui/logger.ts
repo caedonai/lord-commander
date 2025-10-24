@@ -2,10 +2,10 @@
  * Unified logging system with colors, spinners, and progress indicators
  * 
  * Provides centralized logging with @clack/prompts integration,
- * Chalk theming, and comprehensive CLI output formatting.
+ * Picocolors theming, and comprehensive CLI output formatting.
  */
 
-import chalk, { type ChalkInstance } from 'chalk';
+import * as colors from 'picocolors';
 import figures from 'figures';
 import { 
   intro as clackIntro,
@@ -37,14 +37,14 @@ export enum LogLevel {
  * Theme configuration for logger colors
  */
 export interface LoggerTheme {
-  primary: ChalkInstance;
-  success: ChalkInstance;
-  warning: ChalkInstance;
-  error: ChalkInstance;
-  info: ChalkInstance;
-  muted: ChalkInstance;
-  highlight: ChalkInstance;
-  dim: ChalkInstance;
+  primary: (text: string) => string;
+  success: (text: string) => string;
+  warning: (text: string) => string;
+  error: (text: string) => string;
+  info: (text: string) => string;
+  muted: (text: string) => string;
+  highlight: (text: string) => string;
+  dim: (text: string) => string;
 }
 
 /**
@@ -60,17 +60,17 @@ export interface LoggerOptions {
 }
 
 /**
- * Default theme using Chalk and BRANDING colors
+ * Default theme using picocolors and BRANDING colors
  */
 const DEFAULT_THEME: LoggerTheme = {
-  primary: chalk.hex(BRANDING.colors.primary),
-  success: chalk.hex(BRANDING.colors.success),
-  warning: chalk.hex(BRANDING.colors.warning),
-  error: chalk.hex(BRANDING.colors.error),
-  info: chalk.hex(BRANDING.colors.info),
-  muted: chalk.hex(BRANDING.colors.muted),
-  highlight: chalk.bold.hex(BRANDING.colors.primary),
-  dim: chalk.dim,
+  primary: colors.cyan,  // Use built-in colors for now
+  success: colors.green,
+  warning: colors.yellow,
+  error: colors.red,
+  info: colors.blue,
+  muted: colors.gray,
+  highlight: (text: string) => colors.bold(colors.cyan(text)),
+  dim: colors.dim,
 };
 
 /**

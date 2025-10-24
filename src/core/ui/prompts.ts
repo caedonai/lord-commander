@@ -1,5 +1,5 @@
 import * as clack from '@clack/prompts';
-import chalk from 'chalk';
+import * as colors from 'picocolors';
 import figures from 'figures';
 import { CLIError } from '../foundation/errors/index.js';
 
@@ -45,15 +45,15 @@ export const DEFAULT_THEME: PromptTheme = {
     lineBreak: figures.lineBold,
   },
   style: {
-    info: chalk.blue,
-    success: chalk.green,
-    warning: chalk.yellow,
-    error: chalk.red,
-    question: chalk.cyan,
-    answer: chalk.white.bold,
-    highlight: chalk.magenta,
-    muted: chalk.gray,
-    dim: chalk.dim,
+    info: colors.blue,
+    success: colors.green,
+    warning: colors.yellow,
+    error: colors.red,
+    question: colors.cyan,
+    answer: (text: string) => colors.bold(colors.white(text)),
+    highlight: colors.magenta,
+    muted: colors.gray,
+    dim: colors.dim,
   },
 };
 
