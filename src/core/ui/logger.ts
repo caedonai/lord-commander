@@ -17,6 +17,7 @@ import {
 import { BRANDING } from '../foundation/core/constants.js';
 import { formatError } from '../foundation/errors/errors.js';
 import { sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig } from '../foundation/logging/security.js';
+import { IconProvider, IconSecurity, PlatformCapabilities, type ExtendedIcons } from './icons.js';
 
 // Define Spinner type based on @clack/prompts return type
 type Spinner = ReturnType<typeof clackSpinner>;
@@ -461,6 +462,235 @@ export class Logger {
    */
   analyzeMessage(message: string) {
     return analyzeLogSecurity(message);
+  }
+
+  // ========================================
+  // Enhanced Icon Methods
+  // ========================================
+
+  /**
+   * Get all available icons with platform-appropriate fallbacks
+   */
+  getIcons(): ExtendedIcons {
+    return IconProvider.getIcons();
+  }
+
+  /**
+   * Get platform capabilities info
+   */
+  getPlatformInfo() {
+    return PlatformCapabilities.getInfo();
+  }
+
+  /**
+   * Log a message with a specific icon
+   */
+  withIcon(iconName: keyof ExtendedIcons, message: string, level: LogLevel = LogLevel.INFO): void {
+    if (!this.shouldLog(level)) return;
+
+    try {
+      const icon = IconProvider.get(iconName);
+      const safeIcon = IconSecurity.sanitizeIcon(icon);
+      
+      if (!IconSecurity.isValidIcon(safeIcon)) {
+        this.warn(`Invalid icon "${iconName}" - falling back to text`);
+        this.log(message);
+        return;
+      }
+
+      const coloredMessage = level === LogLevel.ERROR ? this.theme.error(message) :
+                            level === LogLevel.WARN ? this.theme.warning(message) :
+                            level === LogLevel.INFO ? this.theme.info(message) :
+                            level === LogLevel.DEBUG ? this.theme.muted(message) :
+                            message;
+
+      clackLog.message(this.formatMessage(`${safeIcon} ${coloredMessage}`));
+    } catch (error) {
+      // Gracefully handle icon provider errors
+      this.warn(`Error getting icon "${iconName}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.log(message);
+    }
+  }
+
+  /**
+   * Deployment and infrastructure icons
+   */
+  rocket(message: string): void {
+    this.withIcon('rocket', message, LogLevel.INFO);
+  }
+
+  cloud(message: string): void {
+    this.withIcon('cloud', message, LogLevel.INFO);
+  }
+
+  package(message: string): void {
+    this.withIcon('box', message, LogLevel.INFO);
+  }
+
+  deploy(message: string): void {
+    this.withIcon('deploy', message, LogLevel.INFO);
+  }
+
+  server(message: string): void {
+    this.withIcon('server', message, LogLevel.INFO);
+  }
+
+  database(message: string): void {
+    this.withIcon('database', message, LogLevel.INFO);
+  }
+
+  api(message: string): void {
+    this.withIcon('api', message, LogLevel.INFO);
+  }
+
+  network(message: string): void {
+    this.withIcon('network', message, LogLevel.INFO);
+  }
+
+  globe(message: string): void {
+    this.withIcon('globe', message, LogLevel.INFO);
+  }
+
+  /**
+   * File and folder operations
+   */
+  folder(message: string): void {
+    this.withIcon('folder', message, LogLevel.INFO);
+  }
+
+  file(message: string): void {
+    this.withIcon('file', message, LogLevel.INFO);
+  }
+
+  upload(message: string): void {
+    this.withIcon('upload', message, LogLevel.INFO);
+  }
+
+  download(message: string): void {
+    this.withIcon('download', message, LogLevel.INFO);
+  }
+
+  sync(message: string): void {
+    this.withIcon('sync', message, LogLevel.INFO);
+  }
+
+  /**
+   * Security and configuration
+   */
+  shield(message: string): void {
+    this.withIcon('shield', message, LogLevel.INFO);
+  }
+
+  key(message: string): void {
+    this.withIcon('key', message, LogLevel.INFO);
+  }
+
+  lock(message: string): void {
+    this.withIcon('lock', message, LogLevel.INFO);
+  }
+
+  gear(message: string): void {
+    this.withIcon('gear', message, LogLevel.INFO);
+  }
+
+  /**
+   * Process and status icons
+   */
+  build(message: string): void {
+    this.withIcon('build', message, LogLevel.INFO);
+  }
+
+  lightning(message: string): void {
+    this.withIcon('lightning', message, LogLevel.INFO);
+  }
+
+  pending(message: string): void {
+    this.withIcon('pending', message, LogLevel.INFO);
+  }
+
+  skip(message: string): void {
+    this.withIcon('skip', message, LogLevel.INFO);
+  }
+
+  /**
+   * Enhanced status methods with better icons
+   */
+  successWithIcon(message: string): void {
+    this.withIcon('success', message, LogLevel.INFO);
+  }
+
+  failureWithIcon(message: string): void {
+    this.withIcon('failure', message, LogLevel.ERROR);
+  }
+
+  /**
+   * Decorative icons
+   */
+  sparkle(message: string): void {
+    this.withIcon('sparkle', message, LogLevel.INFO);
+  }
+
+  diamond(message: string): void {
+    this.withIcon('diamond', message, LogLevel.INFO);
+  }
+
+  crown(message: string): void {
+    this.withIcon('crown', message, LogLevel.INFO);
+  }
+
+  trophy(message: string): void {
+    this.withIcon('trophy', message, LogLevel.INFO);
+  }
+
+  /**
+   * Test icon display for debugging platform compatibility
+   */
+  testIcons(): void {
+    const icons = this.getIcons();
+    const platformInfo = this.getPlatformInfo();
+    
+    clackLog.message(this.formatMessage('Platform Icon Test'));
+    clackLog.message(this.formatMessage(`Platform: ${platformInfo.platform}`));
+    clackLog.message(this.formatMessage(`Terminal: ${platformInfo.termProgram || 'unknown'}`));
+    clackLog.message(this.formatMessage(`Unicode Support: ${platformInfo.supportsUnicode}`));
+    clackLog.message(this.formatMessage(`Emoji Support: ${platformInfo.supportsEmoji}`));
+    
+    clackLog.message(this.formatMessage('\nAvailable Icons:'));
+    
+    // Group icons by category for better display
+    const categories = {
+      'Status': ['tick', 'cross', 'warning', 'info', 'success', 'failure', 'pending', 'skip'],
+      'Infrastructure': ['rocket', 'cloud', 'server', 'database', 'api', 'network', 'globe'],
+      'Files': ['box', 'folder', 'file', 'upload', 'download', 'sync'],
+      'Security': ['shield', 'key', 'lock', 'gear'],
+      'Process': ['build', 'deploy', 'lightning'],
+      'Decorative': ['sparkle', 'diamond', 'crown', 'trophy']
+    };
+    
+    Object.entries(categories).forEach(([category, iconNames]) => {
+      clackLog.message(this.formatMessage(`\n${category}:`));
+      iconNames.forEach(iconName => {
+        const icon = icons[iconName as keyof ExtendedIcons];
+        const security = IconSecurity.analyzeIconSecurity(icon);
+        const status = security.isSecure ? '✓' : '⚠';
+        clackLog.message(this.formatMessage(`  ${iconName.padEnd(12)} │ ${icon} │ ${status}`));
+      });
+    });
+  }
+
+  /**
+   * Analyze icon security for a given text
+   */
+  analyzeIconSecurity(text: string) {
+    return IconSecurity.analyzeIconSecurity(text);
+  }
+
+  /**
+   * Get a safe version of an icon
+   */
+  getSafeIcon(iconName: keyof ExtendedIcons): string {
+    const icon = IconProvider.get(iconName);
+    return IconSecurity.sanitizeIcon(icon);
   }
 }
 

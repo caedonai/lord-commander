@@ -6,7 +6,11 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.{test,spec}.{js,ts}'],
     exclude: ['node_modules', 'dist'],
-    testTimeout: 30000, // 30 seconds for most tests (reduced from 20 minutes)
+    env: {
+      FORCE_UNICODE_DETECTION: 'true',
+      FORCE_EMOJI_DETECTION: 'false',
+    },
+    testTimeout: 30000, // 30 seconds for most tests
     hookTimeout: 10000, // 10 seconds for setup/teardown
     teardownTimeout: 10000, // 10 seconds for cleanup
     reporters: ['verbose'],

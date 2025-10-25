@@ -112,6 +112,15 @@ export {
   type LoggerOptions 
 } from './ui/logger.js';
 
+export {
+  IconProvider,
+  IconSecurity,
+  PlatformCapabilities,
+  icons,
+  platformInfo,
+  type ExtendedIcons
+} from './ui/icons.js';
+
 export { 
   confirm,
   select,

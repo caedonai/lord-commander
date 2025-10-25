@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { join } from 'path';
 import { tmpdir } from 'os';
-import { mkdir, writeFile, rm, readFile } from 'fs/promises';
+import { mkdir, writeFile, rm } from 'fs/promises';
 import {
   DANGEROUS_SCRIPT_PATTERNS,
   SUSPICIOUS_DEPENDENCY_PATTERNS,

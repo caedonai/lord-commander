@@ -11,5 +11,8 @@ export * from './logger.js';
 // Export interactive prompt utilities
 export * from './prompts.js';
 
+// Export icon system
+export * from './icons.js';
+
 // Note: helpFormatter.ts is currently empty and will be implemented later
 // export * from './helpFormatter.js';
