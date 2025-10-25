@@ -98,6 +98,213 @@ export function setTheme(theme: Partial<PromptTheme>): void {
   currentTheme = { ...DEFAULT_THEME, ...theme };
 }
 
+// Enhanced visual separator functions for better CLI readability
+export function printSeparator(title?: string, style: 'light' | 'heavy' | 'double' = 'light'): void {
+  const width = process.stdout.columns || 80;
+  const maxTitleWidth = Math.max(width - 10, 20); // Leave space for decorations
+  
+  let line: string;
+  let titleColor: (text: string) => string;
+  
+  switch (style) {
+    case 'heavy':
+      line = '━';
+      titleColor = colors.bold;
+      break;
+    case 'double':
+      line = '═';
+      titleColor = (text: string) => colors.bold(colors.cyan(text));
+      break;
+    default:
+      line = '─';
+      titleColor = colors.dim;
+  }
+  
+  if (title && title.length > 0) {
+    const truncatedTitle = title.length > maxTitleWidth ? title.slice(0, maxTitleWidth - 3) + '...' : title;
+    const leftPadding = Math.floor((width - truncatedTitle.length - 4) / 2);
+    const rightPadding = width - truncatedTitle.length - 4 - leftPadding;
+    
+    const separator = line.repeat(Math.max(leftPadding, 2)) + 
+                     ' ' + titleColor(truncatedTitle) + ' ' + 
+                     line.repeat(Math.max(rightPadding, 2));
+    console.log(colors.dim(separator));
+  } else {
+    console.log(colors.dim(line.repeat(width)));
+  }
+}
+
+export function printPromptHeader(title: string): void {
+  console.log(); // Add spacing before
+  printSeparator(title, 'double');
+  console.log();
+}
+
+export function printPromptFooter(): void {
+  console.log();
+  printSeparator('', 'light');
+  console.log();
+}
+
+export function printSection(title: string, content?: string): void {
+  console.log();
+  console.log(colors.bold(colors.cyan(`${figures.pointer} ${title}`)));
+  if (content) {
+    console.log(colors.dim(`  ${content}`));
+  }
+  console.log();
+}
+
+export function printTaskStart(task: string): void {
+  console.log(colors.dim(`${figures.pointerSmall} ${task}...`));
+}
+
+export function printTaskComplete(task: string, success = true): void {
+  const symbol = success ? colors.green(figures.tick) : colors.red(figures.cross);
+  const color = success ? colors.green : colors.red;
+  console.log(`${symbol} ${color(task)}`);
+}
+
+export function printSpacing(lines = 1): void {
+  for (let i = 0; i < lines; i++) {
+    console.log();
+  }
+}
+
+// Enhanced prompt functions with better visual separation
+export interface EnhancedPromptOptions {
+  section?: string; // Optional section title
+  spacing?: boolean; // Add extra spacing (default: true)
+  showProgress?: { current: number; total: number }; // Show progress indicator
+}
+
+export async function enhancedText(
+  message: string,
+  options: EnhancedPromptOptions & PromptOptions = {}
+): Promise<string> {
+  const { section, spacing = true, showProgress, ...promptOptions } = options;
+  
+  // Add visual separation
+  if (spacing) printSpacing();
+  
+  // Show section header if provided
+  if (section) {
+    printSection(section);
+  }
+  
+  // Show progress if provided
+  if (showProgress) {
+    const progress = colors.dim(`[${showProgress.current}/${showProgress.total}]`);
+    console.log(progress);
+  }
+  
+  // Call the original text function
+  const result = await text(message, promptOptions);
+  
+  // Add spacing after prompt
+  if (spacing) printSpacing();
+  
+  return result;
+}
+
+export async function enhancedConfirm(
+  message: string,
+  options: EnhancedPromptOptions & Omit<ConfirmPromptOptions, keyof EnhancedPromptOptions> = {}
+): Promise<boolean> {
+  const { section, spacing = true, showProgress, ...promptOptions } = options;
+  
+  if (spacing) printSpacing();
+  
+  if (section) {
+    printSection(section);
+  }
+  
+  if (showProgress) {
+    const progress = colors.dim(`[${showProgress.current}/${showProgress.total}]`);
+    console.log(progress);
+  }
+  
+  const result = await confirm(message, promptOptions);
+  
+  if (spacing) printSpacing();
+  
+  return result;
+}
+
+export async function enhancedSelect<T = string>(
+  message: string,
+  options: SelectOption<T>[],
+  promptOptions: EnhancedPromptOptions & Omit<SelectPromptOptions<T>, keyof EnhancedPromptOptions> = {}
+): Promise<T> {
+  const { section, spacing = true, showProgress, ...selectOptions } = promptOptions;
+  
+  if (spacing) printSpacing();
+  
+  if (section) {
+    printSection(section);
+  }
+  
+  if (showProgress) {
+    const progress = colors.dim(`[${showProgress.current}/${showProgress.total}]`);
+    console.log(progress);
+  }
+  
+  const result = await select(message, options, selectOptions);
+  
+  if (spacing) printSpacing();
+  
+  return result;
+}
+
+// Workflow helpers for multi-step processes
+export class PromptFlow {
+  private currentStep = 0;
+  private totalSteps: number;
+  private title: string;
+  
+  constructor(title: string, totalSteps: number) {
+    this.title = title;
+    this.totalSteps = totalSteps;
+  }
+  
+  start(): void {
+    printPromptHeader(this.title);
+  }
+  
+  end(): void {
+    printPromptFooter();
+  }
+  
+  nextStep(): void {
+    this.currentStep++;
+  }
+  
+  async text(message: string, options: PromptOptions = {}): Promise<string> {
+    return enhancedText(message, {
+      ...options,
+      showProgress: { current: this.currentStep + 1, total: this.totalSteps }
+    });
+  }
+  
+  async confirm(message: string, options: ConfirmPromptOptions = {}): Promise<boolean> {
+    return enhancedConfirm(message, {
+      ...options,
+      showProgress: { current: this.currentStep + 1, total: this.totalSteps }
+    } as any);
+  }
+  
+  async select<T = string>(
+    message: string, 
+    options: SelectOption<T>[], 
+    promptOptions: SelectPromptOptions<T> = {}
+  ): Promise<T> {
+    return enhancedSelect(message, options, {
+      ...promptOptions,
+      showProgress: { current: this.currentStep + 1, total: this.totalSteps }
+    } as any);
+  }
+}
+
 export function getTheme(): PromptTheme {
   return currentTheme;
 }

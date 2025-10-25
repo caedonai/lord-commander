@@ -124,6 +124,17 @@ export {
   note,
   cancel,
   log,
+  printSeparator,
+  printSection,
+  printTaskStart,
+  printTaskComplete,
+  printSpacing,
+  printPromptHeader,
+  printPromptFooter,
+  PromptFlow,
+  enhancedText,
+  enhancedConfirm,
+  enhancedSelect,
   type SelectOption,
   type MultiSelectOption
 } from './ui/prompts.js';

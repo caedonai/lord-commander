@@ -39,8 +39,8 @@ const EXPECTED_EXPORTS = {
     // File system utilities (from actual exports)
     fileSystem: ['cleanDir', 'copy', 'copyDir', 'copyFile', 'ensureDir', 'exists', 'findFiles', 'getSize', 'move', 'readDir', 'readFile', 'readJSON', 'remove', 'stat', 'writeFile', 'writeJSON'],
     
-    // UI utilities (from actual exports)
-    ui: ['cancel', 'confirm', 'createLogger', 'intro', 'log', 'multiselect', 'note', 'outro', 'password', 'select', 'spinner', 'text'],
+    // UI utilities (from actual exports + CLI readability enhancements)
+    ui: ['cancel', 'confirm', 'createLogger', 'intro', 'log', 'multiselect', 'note', 'outro', 'password', 'select', 'spinner', 'text', 'printSeparator', 'printSection', 'printTaskStart', 'printTaskComplete', 'printSpacing', 'printPromptHeader', 'printPromptFooter', 'PromptFlow', 'enhancedText', 'enhancedConfirm', 'enhancedSelect'],
     
     // Should NOT be present (plugin functionality)
     excluded: ['isGitRepository', 'parseVersion', 'isWorkspace', 'detectWorkspaceType', 'gitInit', 'clone', 'commit', 'getCommits', 'createTag', 'compareVersions', 'getVersionDiff', 'createUpdatePlan', 'applyUpdate', 'discoverPackages', 'loadWorkspace', 'discoverWorkspace']
