@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import * as colors from 'picocolors';
+import colors from 'picocolors';
 import { createLogger, LogLevel, type LoggerTheme } from '../../core/ui/logger.js';
 import { formatError } from '../../core/foundation/errors/errors.js';
 

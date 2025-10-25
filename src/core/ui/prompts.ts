@@ -1,5 +1,5 @@
 import * as clack from '@clack/prompts';
-import * as colors from 'picocolors';
+import colors from 'picocolors';
 import figures from 'figures';
 import { CLIError } from '../foundation/errors/index.js';
 

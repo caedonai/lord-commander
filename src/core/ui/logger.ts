@@ -5,7 +5,7 @@
  * Picocolors theming, and comprehensive CLI output formatting.
  */
 
-import * as colors from 'picocolors';
+import colors from 'picocolors';
 import figures from 'figures';
 import { 
   intro as clackIntro,
@@ -87,7 +87,15 @@ export class Logger {
 
   constructor(options: LoggerOptions = {}) {
     this.level = options.level ?? LogLevel.INFO;
-    this.theme = { ...DEFAULT_THEME, ...options.theme };
+    // Properly merge theme, ensuring no undefined values override defaults
+    this.theme = { ...DEFAULT_THEME };
+    if (options.theme) {
+      Object.entries(options.theme).forEach(([key, value]) => {
+        if (value !== undefined) {
+          (this.theme as any)[key] = value;
+        }
+      });
+    }
     this.prefix = options.prefix;
     this.showTimestamp = options.timestamp ?? false;
     this.showBrand = options.showBrand ?? false;

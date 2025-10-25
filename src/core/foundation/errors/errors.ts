@@ -6,7 +6,7 @@
  */
 
 import { isCancel as clackIsCancel } from '@clack/prompts';
-import * as colors from 'picocolors';
+import colors from 'picocolors';
 
 /**
  * Custom CLI error class with enhanced error information
