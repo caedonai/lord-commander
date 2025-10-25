@@ -99,7 +99,13 @@ export class Logger {
     this.prefix = options.prefix;
     this.showTimestamp = options.timestamp ?? false;
     this.showBrand = options.showBrand ?? false;
-    this.logInjectionConfig = options.logInjectionProtection ?? { enableProtection: true };
+    this.logInjectionConfig = options.logInjectionProtection ?? { 
+      enableProtection: true,
+      protectionLevel: 'permissive',  // Allow legitimate ANSI colors
+      detectTerminalManipulation: false, // Disable for legitimate color usage
+      preserveFormatting: true,     
+      allowControlChars: true      
+    };
   }
 
   /**
