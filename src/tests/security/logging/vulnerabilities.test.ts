@@ -614,7 +614,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
         new Promise<void>(resolve => {
           setTimeout(() => {
             logger.updateConfig({ 
-              maxMessageLength: 1000 + i * 100,
+              maxMessageLength: 1001 + i * 100, // Changed from 1000 to 1001 to ensure always > 1000
               format: i % 2 === 0 ? 'json' : 'text'
             });
             resolve();
