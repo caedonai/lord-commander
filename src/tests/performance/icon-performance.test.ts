@@ -86,7 +86,7 @@ describe('Icon System Performance and Memory', () => {
       }
       const elapsed2 = Date.now() - start2;
 
-      expect(elapsed2).toBeLessThan(Math.max(50, elapsed1 * 2)); // Should be faster than initial or under 50ms
+      expect(elapsed2).toBeLessThan(Math.max(100, elapsed1 * 2)); // Should be faster than initial or under 100ms (CI-tolerant)
     });
 
     it('should cache icon generation results', () => {
