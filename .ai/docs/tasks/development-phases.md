@@ -52,6 +52,7 @@ Build robust, security-hardened execution and file system utilities that provide
 ### **Key Deliverables**
 - Security-hardened process execution (execa-based, no shell interpolation)
 - Safe file system operations with path validation
+- **Project scaffolding and init system** (`npx lord-commander init`)
 - Template management with integrity verification
 - Package manager abstraction with script safety
 - Git operations with repository verification
@@ -60,6 +61,8 @@ Build robust, security-hardened execution and file system utilities that provide
 ### **Success Criteria**
 - All file operations constrained to project directory
 - Process execution uses argument arrays (no shell concatenation)
+- **`npx lord-commander init` creates fully functional CLI projects**
+- **Template system supports built-in and custom templates with security validation**
 - Template sources are whitelisted and integrity-verified
 - Package installs run with --ignore-scripts by default
 - Git operations verify commit/tag SHA before execution

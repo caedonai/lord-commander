@@ -16,10 +16,11 @@
 
 ### **Subtasks**
 
-#### **9.1.1: Comprehensive CLI Development Studio**
-- **Purpose**: Integrated development environment for CLI creation
-- **Features**: Project templates, code generation, real-time testing, debugging
-- **Location**: `src/developer-tools/cli-studio.ts`
+#### **9.1.1: Advanced Project Scaffolding Studio**
+- **Purpose**: Enhanced scaffolding capabilities building on Phase 2 foundation
+- **Features**: Interactive template designer, advanced project wizard, smart defaults
+- **Location**: `src/developer-tools/advanced-scaffolding.ts`
+- **Dependencies**: Phase 2 Task 2.4 (Core Scaffolding Engine)
 
 ```typescript
 export interface CLIDevelopmentStudio {
@@ -30,25 +31,38 @@ export interface CLIDevelopmentStudio {
   debugCLI(project: CLIProject, config: DebugConfiguration): DebugSession;
 }
 
-export interface ProjectTemplate {
-  name: string;
-  description: string;
-  category: TemplateCategory;
-  features: TemplateFeature[];
-  configuration: TemplateConfiguration;
-  scaffolding: ScaffoldingPlan;
-  examples: ExampleProject[];
+export interface AdvancedProjectTemplate extends ProjectTemplate {
+  // Extends Phase 2 ProjectTemplate
+  visualDesigner: VisualDesignerConfig;
+  smartDefaults: SmartDefaultsConfig;
+  advancedFeatures: AdvancedFeature[];
+  integrations: IntegrationConfig[];
+  customization: CustomizationOptions;
 }
 
-export type TemplateCategory = 
-  | 'basic-cli'
-  | 'enterprise-cli'
-  | 'plugin-cli'
-  | 'monorepo-cli'
-  | 'microservice-cli'
-  | 'developer-tools'
-  | 'automation-tools'
-  | 'data-processing';
+export interface VisualDesignerConfig {
+  commandFlowDiagram: boolean;
+  argumentMapping: boolean;
+  dependencyVisualization: boolean;
+  templatePreview: boolean;
+}
+
+export interface SmartDefaultsConfig {
+  detectPackageManager: boolean;
+  inferTypeScript: boolean;
+  suggestFeatures: boolean;
+  optimizeForContext: boolean;
+}
+
+export type AdvancedTemplateCategory = 
+  | 'ai-powered-cli'        // AI/LLM integration CLIs
+  | 'database-cli'          // Database management tools
+  | 'cloud-native-cli'      // Kubernetes, Docker, cloud platforms
+  | 'security-cli'          // Security and compliance tools
+  | 'analytics-cli'         // Data processing and analytics
+  | 'gaming-cli'            // Game development tools
+  | 'mobile-cli'            // Mobile development tools
+  | 'blockchain-cli';       // Blockchain and crypto tools
 
 export interface CodeGenerationResult {
   files: GeneratedFile[];

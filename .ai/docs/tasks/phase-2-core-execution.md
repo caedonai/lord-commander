@@ -198,7 +198,375 @@ export async function processTemplateSecurely(
 
 ---
 
-## **Task 2.4: Dependency Management Security**
+## **Task 2.4: Project Scaffolding & Init System**
+*Status: Not Started - **NEW FEATURE***
+
+### **Objective**
+Build a comprehensive, secure project scaffolding system that provides excellent developer experience for initializing new CLI projects with Lord Commander SDK. Focus on intelligent templates, dependency management, and seamless setup workflows.
+
+### **Subtasks**
+
+#### **2.4.1: Core Scaffolding Engine**
+- **Purpose**: Secure project initialization system with template management
+- **Features**: Template-based scaffolding, dependency installation, configuration setup
+- **Location**: `src/core/execution/scaffolding.ts`
+
+```typescript
+export interface ScaffoldingConfig {
+  projectName: string;
+  targetDirectory?: string;
+  template: ProjectTemplate;
+  packageManager: 'npm' | 'pnpm' | 'yarn' | 'auto-detect';
+  typescript: boolean;
+  dependencies: ScaffoldingDependencies;
+  features: ScaffoldingFeature[];
+  security: ScaffoldingSecurityConfig;
+}
+
+export interface ProjectTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: TemplateCategory;
+  files: TemplateFile[];
+  structure: ProjectStructure;
+  dependencies: TemplateDependencies;
+  scripts: TemplateScript[];
+  configuration: TemplateConfiguration;
+}
+
+export interface ScaffoldingDependencies {
+  core: CoreDependency[];
+  dev: DevDependency[];
+  optional: OptionalDependency[];
+  peer: PeerDependency[];
+}
+
+export interface CoreDependency {
+  name: '@caedonai/lord-commander';
+  version: 'latest';
+  required: true;
+}
+
+export interface DevDependency {
+  name: 'typescript' | 'ts-node' | '@types/node' | 'vitest';
+  version: string;
+  condition?: DependencyCondition;
+}
+
+export type TemplateCategory = 
+  | 'basic-cli'           // Simple CLI with core functionality
+  | 'enterprise-cli'      // Full-featured enterprise CLI
+  | 'plugin-cli'          // CLI with plugin architecture
+  | 'interactive-cli'     // Focus on prompts and UX
+  | 'utility-cli'         // Development utility tools
+  | 'monorepo-cli'        // Monorepo management tools
+  | 'build-cli'           // Build and deployment tools
+  | 'testing-cli'         // Testing and QA tools
+  | 'custom';             // User-defined template
+
+export interface ScaffoldingResult {
+  success: boolean;
+  projectPath: string;
+  template: ProjectTemplate;
+  installedDependencies: InstalledDependency[];
+  createdFiles: CreatedFile[];
+  executionTime: number;
+  warnings: ScaffoldingWarning[];
+  nextSteps: NextStep[];
+}
+
+export async function scaffoldProject(
+  config: ScaffoldingConfig
+): Promise<ScaffoldingResult>;
+```
+
+#### **2.4.2: Enhanced Init Command with Directory Support**
+- **Purpose**: Flexible `npx lord-commander init` command with advanced options
+- **Features**: Directory creation, intelligent naming, conflict resolution
+- **Developer Experience**: Seamless project initialization
+
+```typescript
+export interface InitCommandOptions {
+  projectName?: string;
+  directory?: string;
+  template?: string;
+  typescript?: boolean;
+  packageManager?: 'npm' | 'pnpm' | 'yarn';
+  features?: string[];
+  force?: boolean;
+  interactive?: boolean;
+  dryRun?: boolean;
+}
+
+export interface InitCommandBehavior {
+  // Basic usage: npx lord-commander init
+  defaultBehavior: 'prompt-for-name' | 'use-current-directory';
+  
+  // With project name: npx lord-commander init my-awesome-cli
+  withProjectName: 'create-directory' | 'use-current-directory';
+  
+  // With directory: npx lord-commander init my-awesome-cli ./custom-path
+  withDirectory: 'create-nested-structure' | 'error-if-exists';
+  
+  // Conflict resolution
+  conflictResolution: 'prompt' | 'error' | 'merge' | 'overwrite';
+}
+
+// Enhanced CLI patterns for excellent DX:
+
+// Pattern 1: Interactive (recommended for beginners)
+// > npx lord-commander init
+// ? What's your CLI project name? › my-awesome-cli
+// ? Choose a template › Basic CLI
+// ? Enable TypeScript? › Yes
+// ? Package manager? › pnpm (auto-detected)
+// ✓ Created my-awesome-cli/ with 8 files
+// ✓ Installed 12 dependencies
+// → cd my-awesome-cli && pnpm dev
+
+// Pattern 2: Quick setup (experienced developers)
+// > npx lord-commander init my-awesome-cli --template=enterprise --typescript
+// ✓ Created my-awesome-cli/ with enterprise template
+// ✓ TypeScript configured
+// → cd my-awesome-cli && pnpm dev
+
+// Pattern 3: Custom directory
+// > npx lord-commander init my-cli ./projects/cli-tools/
+// ✓ Created ./projects/cli-tools/my-cli/
+// → cd projects/cli-tools/my-cli && pnpm dev
+
+// Pattern 4: Current directory (existing project)
+// > npx lord-commander init . --force
+// ✓ Initialized lord-commander in current directory
+// → pnpm dev
+```
+
+#### **2.4.3: Template Management System**
+- **Purpose**: Comprehensive template system with validation and security
+- **Features**: Template validation, remote templates, custom templates
+- **Security**: Template integrity, source validation, safe file operations
+
+```typescript
+export interface TemplateManager {
+  listTemplates(): Promise<AvailableTemplate[]>;
+  getTemplate(id: string): Promise<ProjectTemplate>;
+  validateTemplate(template: ProjectTemplate): TemplateValidationResult;
+  installTemplate(source: TemplateSource): Promise<InstallationResult>;
+  updateTemplates(): Promise<UpdateResult>;
+  createCustomTemplate(config: CustomTemplateConfig): Promise<ProjectTemplate>;
+}
+
+export interface AvailableTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: TemplateCategory;
+  version: string;
+  author: string;
+  downloads: number;
+  rating: number;
+  tags: string[];
+  preview: TemplatePreview;
+}
+
+export interface TemplateSource {
+  type: 'local' | 'git' | 'npm' | 'registry';
+  location: string;
+  version?: string;
+  integrity?: string;
+  signature?: string;
+}
+
+export interface TemplateValidationResult {
+  isValid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+  securityFlags: SecurityFlag[];
+  recommendations: Recommendation[];
+}
+
+// Built-in templates
+export const BUILTIN_TEMPLATES: Record<TemplateCategory, ProjectTemplate> = {
+  'basic-cli': {
+    id: 'basic-cli',
+    name: 'Basic CLI',
+    description: 'Simple CLI with essential features',
+    files: [
+      'src/index.ts',
+      'src/commands/hello.ts',
+      'package.json',
+      'tsconfig.json',
+      '.gitignore',
+      'README.md'
+    ],
+    dependencies: {
+      core: [{ name: '@caedonai/lord-commander', version: 'latest' }],
+      dev: [
+        { name: 'typescript', version: 'latest', condition: 'typescript' },
+        { name: 'ts-node', version: 'latest', condition: 'typescript' },
+        { name: '@types/node', version: 'latest', condition: 'typescript' }
+      ]
+    }
+  },
+  'enterprise-cli': {
+    id: 'enterprise-cli',
+    name: 'Enterprise CLI',
+    description: 'Full-featured CLI with security, logging, and plugins',
+    files: [
+      'src/index.ts',
+      'src/commands/',
+      'src/plugins/',
+      'src/config/',
+      'src/types/',
+      'tests/',
+      'docs/',
+      'lord.config.ts',
+      'vitest.config.ts'
+    ],
+    dependencies: {
+      core: [{ name: '@caedonai/lord-commander', version: 'latest' }],
+      dev: [
+        { name: 'typescript', version: 'latest' },
+        { name: 'vitest', version: 'latest' },
+        { name: '@types/node', version: 'latest' }
+      ]
+    }
+  }
+};
+```
+
+#### **2.4.4: Dependency Installation & Management**
+- **Purpose**: Secure, intelligent dependency installation during scaffolding
+- **Features**: Package manager detection, version resolution, security scanning
+- **Integration**: Leverages Task 2.5 dependency management security
+
+```typescript
+export interface DependencyInstaller {
+  detectPackageManager(projectPath: string): Promise<PackageManagerInfo>;
+  installDependencies(
+    dependencies: ScaffoldingDependencies,
+    options: InstallationOptions
+  ): Promise<InstallationResult>;
+  validateInstallation(projectPath: string): Promise<ValidationResult>;
+  generateLockFile(projectPath: string): Promise<LockFileResult>;
+}
+
+export interface PackageManagerInfo {
+  manager: 'npm' | 'pnpm' | 'yarn';
+  version: string;
+  lockFile: string;
+  configFiles: string[];
+  workspace: WorkspaceInfo | null;
+}
+
+export interface InstallationOptions {
+  packageManager: 'npm' | 'pnpm' | 'yarn' | 'auto';
+  production: boolean;
+  frozen: boolean;
+  ignoreScripts: boolean;
+  audit: boolean;
+  progress: boolean;
+}
+
+export interface InstallationResult {
+  success: boolean;
+  packageManager: string;
+  installed: InstalledPackage[];
+  duration: number;
+  warnings: InstallationWarning[];
+  auditResults: AuditResult[];
+}
+
+// Example generated package.json
+export const GENERATED_PACKAGE_JSON = {
+  "name": "my-awesome-cli",
+  "version": "0.1.0",
+  "description": "A CLI built with Lord Commander SDK",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "my-awesome-cli": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "test": "vitest",
+    "lint": "eslint src/",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@caedonai/lord-commander": "latest"
+  },
+  "devDependencies": {
+    "typescript": "latest",
+    "ts-node": "latest",
+    "@types/node": "latest",
+    "tsx": "latest"
+  },
+  "keywords": ["cli", "lord-commander", "typescript"],
+  "author": "",
+  "license": "MIT"
+};
+```
+
+### **Developer Experience Enhancements**
+
+#### **Enhanced Command Patterns**
+```bash
+# Pattern 1: Interactive setup (recommended for new users)
+npx lord-commander init
+# → Prompts for project name, template, options
+# → Creates directory: ./[project-name]/
+
+# Pattern 2: Quick setup with name
+npx lord-commander init my-awesome-cli
+# → Creates directory: ./my-awesome-cli/
+# → Uses basic template by default
+
+# Pattern 3: Full customization
+npx lord-commander init my-cli --template=enterprise --typescript --pnpm
+# → Creates ./my-cli/ with enterprise template
+# → TypeScript enabled, uses pnpm
+
+# Pattern 4: Custom directory
+npx lord-commander init my-cli ./projects/tools/
+# → Creates ./projects/tools/my-cli/
+
+# Pattern 5: Initialize in current directory
+npx lord-commander init . --force
+# → Initializes in current directory
+# → Warns about existing files
+
+# Pattern 6: Preview mode
+npx lord-commander init my-cli --dry-run
+# → Shows what would be created without actually creating
+
+# Pattern 7: Template exploration
+npx lord-commander templates list
+npx lord-commander templates preview enterprise-cli
+npx lord-commander init my-cli --template=enterprise-cli
+```
+
+#### **Intelligent Defaults & Behavior**
+- **Package Manager Detection**: Auto-detects pnpm, yarn, or npm
+- **TypeScript Detection**: Enables TypeScript if detected in environment
+- **Git Integration**: Initializes git repo and creates initial commit
+- **Template Selection**: Interactive template chooser with previews
+- **Conflict Resolution**: Smart handling of existing files/directories
+- **Performance**: Fast scaffolding with parallel operations
+
+### **Success Criteria**
+- `npx lord-commander init` creates fully functional CLI projects
+- Support for all major package managers (npm, pnpm, yarn)
+- Template system supports both built-in and custom templates
+- Directory creation and conflict resolution work reliably
+- Generated projects pass all tests and build successfully
+- Excellent developer experience with clear feedback and guidance
+
+---
+
+## **Task 2.5: Dependency Management Security**
 *Status: Not Started*
 
 ### **Subtasks**
