@@ -33,7 +33,7 @@
 - **Task 1.6**: Foundational Type System (3 subtasks to implement)
 - **Task 1.7**: Security Testing Framework Foundation (3 subtasks to implement)
 - **Task 1.8**: Configuration Security Framework (3 subtasks to implement)
-- **Task 1.9**: Environment Detection & Runtime Adaptation (3 subtasks to implement)
+- **Task 1.9**: Environment Detection & Runtime Adaptation (4 subtasks to implement - **ENHANCED**)
 
 ### **Quality Metrics - Production Ready**
 - **Test Coverage**: 1047 total tests passing (100% success rate) including 500+ security-specific tests
@@ -758,10 +758,11 @@ export const SECURITY_TEST_SUITE: SecurityTestCase[];
 2. **Task 1.2** → **Task 1.3**: Validation results inform error handling
 3. **Task 1.3** → **Task 1.4**: Error sanitization integrates with logging
 4. **Task 1.4** → **Task 1.7**: Secure logging supports security testing
-5. **Task 1.5** → **All Tasks**: Memory protection applies throughout
-6. **Task 1.6** → **All Tasks**: Type system supports all functionality
-7. **Task 1.8** → **All Tasks**: Configuration affects all security settings
-8. **Task 1.9** → **All Tasks**: Environment detection provides context for all systems
+5. **Task 1.4.2** → **Task 1.9.2**: Structured logging enables JSON output mode for CI/CD
+6. **Task 1.5** → **All Tasks**: Memory protection applies throughout
+7. **Task 1.6** → **All Tasks**: Type system supports all functionality
+8. **Task 1.8** → **All Tasks**: Configuration affects all security settings
+9. **Task 1.9** → **All Tasks**: Environment detection provides adaptive context for all systems (CI/CD vs local vs production)
 
 ### **External Dependencies**
 - **Commander.js**: Foundation for command parsing
@@ -772,45 +773,271 @@ export const SECURITY_TEST_SUITE: SecurityTestCase[];
 ---
 
 ## **Task 1.9: Environment Detection & Runtime Adaptation**
-*Status: 🔄 **TO BE IMPLEMENTED** - New foundational task*
+*Status: 🔄 **TO BE IMPLEMENTED** - Critical foundational infrastructure*
 
 ### **Objective**
-Implement comprehensive environment detection system that enables the SDK to automatically adapt its behavior based on runtime context, execution environment, and security requirements.
+Implement comprehensive environment detection and behavior adaptation system that enables the SDK to automatically optimize its output format, logging behavior, and interaction patterns based on runtime context (local development vs CI/CD vs production environments).
 
 ### **Subtasks**
 
-#### **1.9.1: Runtime Environment Detection**
-- **Deliverable**: Runtime type detection system (`src/core/foundation/runtime-detection.ts`)
-- **Implementation**: Detect Node.js, Deno, Edge Runtime, Bun environments
+#### **1.9.1: Environment Detection System**
+- **Deliverable**: Comprehensive environment detection (`src/core/foundation/environment-detection.ts`)
+- **Implementation**: Multi-layered environment detection with secure validation
 - **Features**:
-  - Version detection and capability assessment
-  - Runtime-specific optimization flags  
-  - Feature availability validation (import maps, web APIs, etc.)
-  - Performance characteristic adjustment
-- **Testing**: Cross-runtime compatibility tests with mocked environments
-- **Security**: Prevent runtime spoofing attacks through multiple detection methods
+  - **CI/CD Detection**: Detect GitHub Actions, CircleCI, Jenkins, GitLab CI, etc. via environment variables
+  - **Runtime Environment Detection**: Comprehensive runtime identification with advanced capabilities
+    - **Runtime Type Detection**: Node.js, Deno, Edge Runtime, Bun, browser environments
+    - **Version Detection & Capability Assessment**: Parse version strings, feature matrix validation
+    - **Runtime-Specific Optimization Flags**: Performance tuning based on runtime capabilities
+    - **Feature Availability Validation**: Import maps, web APIs, module systems, worker threads
+    - **Performance Characteristic Adjustment**: Memory limits, async patterns, execution models
+    - **API Surface Detection**: Available globals, standard library features, experimental APIs
+  - **Platform Detection**: OS/Platform (Windows, macOS, Linux) with architecture validation
+  - **Terminal Capabilities**: TTY detection, color support, Unicode capability, terminal size
+  - **Container Detection**: Docker, Kubernetes, serverless environments with resource constraints
+  - **Security Context**: Permissions assessment, sandboxing status, privilege level detection
+- **Environment Variables Detected**:
+  ```typescript
+  // CI/CD Environment Detection
+  CI, GITHUB_ACTIONS, CIRCLECI, JENKINS_URL, GITLAB_CI, TEAMCITY_VERSION,
+  BUILDKITE, TRAVIS, APPVEYOR, BITBUCKET_BUILD_NUMBER, BUILD_ID, NODE_ENV
+  
+  // Runtime & Platform Detection  
+  NODE_VERSION, DENO_VERSION, BUN_VERSION, SHELL, TERM, COLORTERM, 
+  FORCE_COLOR, NO_COLOR, CI_NO_COLOR, TERM_PROGRAM
+  
+  // Container & Resource Detection
+  DOCKER, KUBERNETES_SERVICE_HOST, AWS_LAMBDA_FUNCTION_NAME, 
+  VERCEL, NETLIFY, HEROKU, RAILWAY
+  ```
+- **Runtime Detection API Interface**:
+  ```typescript
+  export interface RuntimeEnvironment {
+    type: 'nodejs' | 'deno' | 'bun' | 'edge' | 'browser' | 'unknown';
+    version: string;
+    capabilities: RuntimeCapabilities;
+    optimizationFlags: OptimizationFlags;
+    performance: PerformanceCharacteristics;
+    security: RuntimeSecurityInfo;
+  }
+  
+  export interface RuntimeCapabilities {
+    importMaps: boolean;
+    topLevelAwait: boolean;
+    workerThreads: boolean;
+    webStreams: boolean;
+    webCrypto: boolean;
+    fetch: boolean;
+    webAssembly: boolean;
+    fileSystemAccess: boolean;
+    processAPI: boolean;
+    nodeModules: boolean;
+  }
+  
+  export interface OptimizationFlags {
+    asyncPreferred: boolean;
+    memoryConstraints: number | null;
+    concurrencyLimit: number;
+    esmPreferred: boolean;
+    bundlingRequired: boolean;
+    polyfillsNeeded: string[];
+  }
+  
+  export interface PerformanceCharacteristics {
+    startupTime: 'fast' | 'medium' | 'slow';
+    memoryEfficiency: 'high' | 'medium' | 'low';
+    ioPerformance: 'excellent' | 'good' | 'limited';
+    executionModel: 'single-threaded' | 'multi-threaded' | 'event-loop';
+  }
+  
+  export interface RuntimeSecurityInfo {
+    sandboxed: boolean;
+    permissions: RuntimePermissions;
+    trustedContext: boolean;
+    capabilitiesValidated: boolean;
+  }
+  
+  // Core detection functions
+  export function detectRuntimeEnvironment(): RuntimeEnvironment;
+  export function validateRuntimeCapabilities(runtime: RuntimeEnvironment): boolean;
+  export function getOptimizationFlags(runtime: RuntimeEnvironment): OptimizationFlags;
+  export function assessPerformanceCharacteristics(runtime: RuntimeEnvironment): PerformanceCharacteristics;
+  export function validateRuntimeSecurity(runtime: RuntimeEnvironment): RuntimeSecurityInfo;
+  ```
+- **Runtime-Specific Optimizations**:
+  ```typescript
+  // Node.js Optimizations
+  if (runtime.type === 'nodejs') {
+    optimizations.workerThreads = runtime.capabilities.workerThreads;
+    optimizations.fsAccess = 'native';
+    optimizations.processSpawning = 'child_process';
+    optimizations.memoryManagement = 'v8-heap';
+  }
+  
+  // Deno Optimizations  
+  if (runtime.type === 'deno') {
+    optimizations.permissions = runtime.security.permissions;
+    optimizations.webStandards = true;
+    optimizations.importMaps = runtime.capabilities.importMaps;
+    optimizations.bundling = false; // Native TypeScript support
+  }
+  
+  // Bun Optimizations
+  if (runtime.type === 'bun') {
+    optimizations.fastRequire = true;
+    optimizations.bundling = 'built-in';
+    optimizations.transpilation = 'native';
+    optimizations.packageManager = 'integrated';
+  }
+  
+  // Edge Runtime Optimizations
+  if (runtime.type === 'edge') {
+    optimizations.webAPIs = true;
+    optimizations.streamingPreferred = true;
+    optimizations.memoryLimits = 'strict';
+    optimizations.coldStart = 'optimized';
+  }
+  ```
+- **Testing**: Comprehensive environment mocking and cross-platform validation (25+ test scenarios)
+  - **Cross-Runtime Compatibility Tests**: Validate behavior across Node.js, Deno, Bun with mocked environments
+  - **Version Matrix Testing**: Test detection across major runtime versions (Node 16+, Deno 1.0+, Bun 1.0+)
+  - **Feature Availability Mocking**: Mock API availability for comprehensive capability testing
+  - **Performance Characteristic Validation**: Test optimization flag application across runtimes
+- **Security**: Environment variable sanitization, spoofing prevention, secure defaults
+  - **Runtime Spoofing Prevention**: Multiple detection methods to prevent environment manipulation
+  - **Capability Validation Security**: Secure feature detection preventing false capability claims
+  - **Version String Sanitization**: Validate and sanitize runtime version information
+  - **API Surface Security**: Secure detection of available APIs without exposing system internals
 
-#### **1.9.2: Platform & Context Detection**  
-- **Deliverable**: Platform and execution context detection (`src/core/foundation/platform-detection.ts`)
-- **Implementation**: OS, platform, and execution environment detection
+#### **1.9.2: Output Mode & Logging Adaptation**
+- **Deliverable**: Adaptive logging and output system (`src/core/foundation/output-adaptation.ts`)
+- **Implementation**: Environment-aware output formatting with mode switching
 - **Features**:
-  - OS/Platform detection (Windows, macOS, Linux) with security validation
-  - Execution context (Local dev, CI/CD, Docker, Production) detection
-  - Terminal capability detection (TTY, colors, Unicode support)
-  - Security context assessment (permissions, sandboxing status)
-- **Testing**: Cross-platform behavior validation with environment mocking
-- **Security**: Prevent platform injection attacks and environment variable manipulation
+  - **Regular Logs (UI Mode)**: Human-readable feedback for local development
+    - Colorized output using existing picocolors integration
+    - Emoji/symbols, progress spinners, indentation, animations
+    - Interactive tables, formatted summaries, visual hierarchy
+    - Example: `✔ Project built successfully in 2.3s`
+  - **JSON Logs (CI/CD Mode)**: Machine-readable structured logs for automation
+    - No color codes, single-line entries, consistent schema
+    - Structured format: `{ "level": "info", "message": "...", "timestamp": "...", "duration": 2.3 }`
+    - Easily parsed by CI tools, log aggregation systems
+    - Integration with existing structured logging framework (Task 1.4.2)
+  - **Hybrid Mode**: Structured data with human formatting for debugging
+  - **Silent Mode**: Minimal output for batch operations and scripting
+- **Mode Detection Logic**:
+  ```typescript
+  export type OutputMode = 'ui' | 'json' | 'hybrid' | 'silent';
+  
+  export function detectOutputMode(): OutputMode {
+    if (process.env.LORD_OUTPUT_MODE) return process.env.LORD_OUTPUT_MODE;
+    if (isCIEnvironment() || process.env.JSON_LOGS) return 'json';
+    if (process.env.NODE_ENV === 'test') return 'silent';
+    if (!process.stdout.isTTY) return 'json';
+    return 'ui';
+  }
+  ```
+- **Integration**: Seamless integration with existing logger system and CLI readability enhancements
+- **Testing**: Output format validation across all modes with snapshot testing
 
-#### **1.9.3: Adaptive Behavior Framework**
-- **Deliverable**: Environment-aware behavior adaptation system (`src/core/foundation/adaptive-behavior.ts`)
-- **Implementation**: Automatic behavior adjustment based on detected environment
+#### **1.9.3: Behavior Adaptation Framework**
+- **Deliverable**: Environment-aware behavior system (`src/core/foundation/behavior-adaptation.ts`)
+- **Implementation**: Comprehensive behavior adjustment based on detected environment
 - **Features**:
-  - CI/CD optimizations (disable animations, no color output, no prompts, JSON output, faster timeouts, batch operations)
-  - Production safety modes (enhanced security, minimal logging, error sanitization)
-  - Development enhancements (verbose output, debugging features, performance metrics)
-  - Container-aware operations (resource limits, networking constraints)
-- **Testing**: Behavior validation across all environment combinations
-- **Security**: Ensure secure defaults in all environments with fallback mechanisms
+  - **Prompt Behavior Adaptation**:
+    - Local: Full interactive prompts with enhanced CLI readability
+    - CI/CD: Skip prompts, use defaults, fail gracefully with clear messages
+    - Example: `❌ Prompt skipped — no interactive input in CI environment.`
+    - Integration with existing enhanced prompts system
+  - **Animation & Progress Control**:
+    - Local: Animated spinners, progress bars, visual feedback
+    - CI/CD: Static "starting / done" logs, no animations
+    - Container: Resource-aware progress indicators
+  - **Error Handling Adaptation**:
+    - Local: Detailed errors with suggestions and stack traces
+    - CI/CD: Structured JSON errors with error codes and minimal stack traces
+    - Production: Sanitized errors with security-first approach
+    ```typescript
+    // CI/CD Error Format
+    {
+      "level": "error",
+      "code": "E_DEPLOY_FAILED", 
+      "message": "Deployment failed",
+      "timestamp": "2025-10-26T10:00:00Z",
+      "context": { "command": "deploy", "target": "production" }
+    }
+    ```
+  - **Performance & Caching Optimization**:
+    - CI/CD: Enable aggressive caching, batch operations, parallel execution
+    - Local: Interactive feedback, real-time updates
+    - Container: Resource-aware operations, memory constraints
+  - **Telemetry Adaptation**:
+    - Local: Real-time telemetry with user consent
+    - CI/CD: Batch telemetry at end of run, environment tagging
+    - Opt-out: `LORD_TELEMETRY_DISABLED=true` support
+  - **Configuration Loading Strategy**:
+    - CI/CD: Prefer environment variables, `.env` files, non-blocking validation
+    - Local: Interactive configuration, prompts for missing values
+    - Fallback: Secure defaults with clear documentation
+
+#### **1.9.4: CLI Integration & API Design**
+- **Deliverable**: Environment-aware CLI creation API (`src/core/foundation/environment-cli.ts`)
+- **Implementation**: Enhanced createCLI with automatic environment adaptation
+- **Features**:
+  - **Automatic Mode Detection**: Seamless environment detection and adaptation
+  - **Manual Override**: `--ci`, `--json`, `--silent` flags for testing and debugging
+  - **Configuration API**:
+    ```typescript
+    import { createCLI, detectEnvironment } from '@caedonai/sdk/core';
+    
+    // Automatic adaptation
+    await createCLI({
+      name: 'my-cli',
+      version: '1.0.0',
+      description: 'Environment-aware CLI',
+      // Automatic environment detection and adaptation
+      environmentAdaptation: true, // Default: true
+    });
+    
+    // Manual configuration
+    await createCLI({
+      name: 'my-cli',
+      version: '1.0.0',
+      description: 'Custom environment CLI',
+      environment: {
+        mode: detectEnvironment(), // 'local' | 'ci' | 'test' | 'production'
+        outputFormat: 'json', // Override detection
+        interactivePrompts: false, // Force non-interactive
+        enableAnimations: false, // Disable animations
+        logLevel: 'info', // Structured log level
+        cachingStrategy: 'aggressive' // Performance optimization
+      }
+    });
+    ```
+  - **Environment Context Injection**: All commands receive environment context
+  - **Backward Compatibility**: Existing CLIs work unchanged with automatic adaptation
+- **Integration Requirements**: 
+  - Environment context available in all command contexts
+  - Integration with existing security framework and input validation
+  - Seamless integration with enhanced CLI readability system
+- **Testing**: End-to-end CLI behavior validation across all environment types
+
+### **Dependencies & Integration**
+- **Input**: Structured logging framework (Task 1.4.2) for JSON output format
+- **Input**: Enhanced CLI readability system for UI mode optimization
+- **Input**: Security patterns (Task 1.1) for environment variable validation
+- **Input**: Input validation framework (Task 1.2) for environment data sanitization
+- **Output**: Environment context for all CLI operations and command execution
+- **Integration**: Configuration security framework (Task 1.8) for environment-specific settings
+- **Integration**: Audit trail system (Task 1.4.3) for environment-tagged audit events
+
+### **Expected Deliverables**
+1. **Environment Detection Module**: 25+ environment variables detected with security validation
+2. **Output Adaptation System**: 4 output modes (UI, JSON, Hybrid, Silent) with seamless switching
+3. **Behavior Framework**: Comprehensive adaptation for prompts, animations, errors, caching, telemetry
+4. **CLI Integration API**: Enhanced createCLI with environment-aware defaults and manual overrides
+5. **Comprehensive Testing**: 50+ test scenarios covering all environment combinations
+6. **Documentation**: Complete usage guide with examples for local, CI/CD, and production environments
 
 ### **Dependencies**
 - **Input**: Foundational security patterns (Task 1.1) for validation
@@ -905,8 +1132,8 @@ Implement comprehensive environment detection system that enables the SDK to aut
 2. **Build Task 1.6** - Type system foundation (3 subtasks)  
 3. **Build Task 1.7** - Security testing framework (3 subtasks)
 4. **Build Task 1.8** - Configuration security framework (3 subtasks)
-5. **Build Task 1.9** - Environment detection & runtime adaptation (3 subtasks)
-6. **Maintain Quality** - Continue comprehensive testing approach
+5. **Build Task 1.9** - Environment detection & runtime adaptation (4 subtasks - **ENHANCED for CI/CD**)
+6. **Maintain Quality** - Continue comprehensive testing approach with environment-specific validation
 
 ---
 
