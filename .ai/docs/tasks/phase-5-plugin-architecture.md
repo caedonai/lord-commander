@@ -254,13 +254,62 @@ export interface PluginValidationResult {
 
 ---
 
-## **Task 5.5: Plugin Communication System**
+## **Task 5.5: Plugin Communication & Global State Store**
 *Status: Not Started*
 
 ### **Subtasks**
 
-#### **5.5.1: Inter-Plugin Communication**
-- **Purpose**: Secure communication between plugins
+#### **5.5.1: Global State Store System**
+- **Purpose**: Centralized in-memory context for CLI session lifecycle
+- **Features**: Session metadata, telemetry context, plugin communication bridge
+- **Location**: `src/core/state/global-store.ts`
+
+```typescript
+export interface GlobalStateStore {
+  // Session Metadata Management
+  setSessionMetadata(metadata: SessionMetadata): void;
+  getSessionMetadata(): SessionMetadata;
+  updateSessionMetadata(updates: Partial<SessionMetadata>): void;
+  
+  // Telemetry Context
+  getTelemetryContext(): TelemetryContext;
+  updateTelemetryContext(updates: Partial<TelemetryContext>): void;
+  
+  // Plugin Communication Bridge
+  setPluginData(pluginId: string, key: string, data: unknown): void;
+  getPluginData<T>(pluginId: string, key: string): T | undefined;
+  removePluginData(pluginId: string, key?: string): void;
+  
+  // Command Output Management
+  setLoggerLevel(level: LogLevel): void;
+  getLoggerLevel(): LogLevel;
+  setTheme(theme: ThemeConfig): void;
+  getTheme(): ThemeConfig;
+  
+  // State Subscription
+  subscribe(key: string, callback: StateChangeCallback): Unsubscribe;
+  unsubscribe(key: string, callback: StateChangeCallback): void;
+}
+
+export interface SessionMetadata {
+  user: string;
+  projectPath: string;
+  commandPath: string[];
+  version: string;
+  startTime: Date;
+  environment: EnvironmentInfo;
+}
+
+export interface TelemetryContext {
+  commandRunTime: number;
+  errorCount: number;
+  commandHistory: string[];
+  performanceMetrics: PerformanceMetrics;
+}
+```
+
+#### **5.5.2: Inter-Plugin Communication**
+- **Purpose**: Secure communication between plugins using global state store
 - **Features**: Message passing, event system, shared state management
 - **Location**: `src/plugins/communication.ts`
 
@@ -298,15 +347,15 @@ export interface SharedState {
 }
 ```
 
-#### **5.5.2: Plugin Event System**
-- **Purpose**: Event-driven plugin architecture
-- **Features**: Event bus, event filtering, event persistence
-- **Performance**: Efficient event routing and handling
+#### **5.5.3: Plugin Event System**
+- **Purpose**: Event-driven plugin architecture integrated with global state
+- **Features**: Event bus, event filtering, event persistence through global state store
+- **Performance**: Efficient event routing and handling with state optimization
 
-#### **5.5.3: Plugin Configuration Management**
-- **Purpose**: Centralized configuration for plugin ecosystem
+#### **5.5.4: State-Aware Configuration Management**
+- **Purpose**: Centralized configuration leveraging global state store
 - **Features**: Configuration validation, environment-specific configs, hot reloading
-- **Security**: Secure configuration with secret management
+- **Security**: Secure configuration with secret management and state isolation
 
 ---
 

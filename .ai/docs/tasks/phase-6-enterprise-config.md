@@ -80,6 +80,64 @@ export interface EnterpriseConfig {
 - **Features**: Configuration templates, inheritance resolution, variable substitution
 - **Flexibility**: Support complex organizational configuration patterns
 
+#### **6.1.4: lord.config.ts Configuration File System**
+- **Purpose**: Developer-friendly configuration file with shared interface
+- **Features**: TypeScript configuration file, automatic discovery, manual override support
+- **Location**: `src/core/configuration/lord-config.ts`
+
+```typescript
+export interface LordConfigOptions {
+  // CLI Configuration
+  name?: string;
+  version?: string;
+  description?: string;
+  defaultCommand?: string;
+  
+  // Command Discovery
+  commandsPath?: string | string[];
+  
+  // Built-in Commands
+  builtinCommands?: {
+    completion?: boolean;
+    hello?: boolean;
+    version?: boolean;
+  };
+  
+  // UI and Experience
+  theme?: ThemeConfig;
+  icons?: IconConfig;
+  autocomplete?: AutocompleteConfig;
+  
+  // Security and Validation
+  security?: SecurityConfig;
+  validation?: ValidationConfig;
+  
+  // Plugin Configuration  
+  plugins?: PluginConfig[];
+  
+  // Environment-specific overrides
+  environments?: Record<string, Partial<LordConfigOptions>>;
+}
+
+export interface LordConfigManager {
+  loadConfig(projectPath?: string): Promise<LordConfigOptions>;
+  mergeWithManualOptions(
+    configFile: LordConfigOptions, 
+    manualOptions: LordConfigOptions
+  ): LordConfigOptions;
+  validateConfig(config: LordConfigOptions): ConfigValidationResult;
+  resolveDefaultCommand(config: LordConfigOptions): string | undefined;
+}
+```
+
+**Key Features:**
+- **Shared Interface**: Same interface for config file and manual createCLI options
+- **Manual Override**: Manual options override config file properties completely
+- **Config Fallback**: Non-overridden config file properties are preserved
+- **Default Command**: Support for auto-executing command when no subcommand provided
+- **Environment Awareness**: Environment-specific configuration overrides
+- **Type Safety**: Full TypeScript support with IntelliSense
+
 ---
 
 ## **Task 6.2: Enterprise Workspace Management**

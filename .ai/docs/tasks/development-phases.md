@@ -23,6 +23,7 @@ Establish the core security framework, foundational utilities, and essential inf
 - Error handling with information disclosure protection
 - Foundational constants and type definitions
 - Security-compliant logging system
+- Environment detection and runtime adaptation system
 
 ### **Success Criteria**
 - 100% security test coverage for core attack vectors
@@ -117,6 +118,7 @@ Build a secure, performant plugin system that enables extensibility without comp
 - Updater plugin with version validation
 - Workspace plugin for monorepo management
 - Plugin security framework and validation
+- Global state store for cross-module communication
 - Plugin marketplace preparation (future)
 
 ### **Success Criteria**
@@ -137,6 +139,7 @@ Implement enterprise-grade features including advanced configuration management,
 
 ### **Key Deliverables**
 - Smart configuration management with environment inheritance
+- Advanced configuration file system (lord.config.ts)
 - Secure telemetry system (opt-in, privacy-focused)
 - Compliance and audit features
 - Enterprise authentication integration
