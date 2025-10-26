@@ -269,6 +269,9 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
 
   describe('6. Configuration Tampering Detection', () => {
     it('should detect suspicious script modifications', async () => {
+      // Small delay to ensure previous test's setTimeout operations have completed
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
       const tamperedPackage = {
         name: 'tampered-project',
         dependencies: { next: '^14.0.0' },

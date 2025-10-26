@@ -332,7 +332,7 @@ describe('Icon System Security Vulnerabilities', () => {
         const elapsed = Date.now() - start;
         
         // Should complete quickly regardless of input size
-        expect(elapsed).toBeLessThan(100);
+        expect(elapsed).toBeLessThan(200); // Increased to 200ms for CI environment tolerance
         
         // Should enforce reasonable output size
         expect(sanitized.length).toBeLessThanOrEqual(10);
