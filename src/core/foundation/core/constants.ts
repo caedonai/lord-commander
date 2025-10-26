@@ -64,12 +64,9 @@ export const TEMP_DIR_PREFIX = 'lord-commander-';
  * Paths where CLI configuration files can be found
  */
 export const CLI_CONFIG_PATHS = [
-  '.lordcommander.json',
-  '.lordcommander.yaml',
-  '.lordcommander.yml',
-  'lordcommander.config.js',
-  'lordcommander.config.ts',
-  join(homedir(), '.lordcommander', 'config.json'),
+  'lord.config.js',
+  'lord.config.ts',
+  join(homedir(), '.lord', 'config.json'),
 ] as const;
 
 /**
