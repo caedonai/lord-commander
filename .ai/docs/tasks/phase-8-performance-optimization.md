@@ -334,18 +334,104 @@ export type DistributionStrategy =
 
 ### **Subtasks**
 
-#### **8.6.1: Real-Time Performance Monitoring**
-- **Purpose**: Comprehensive real-time performance monitoring
-- **Features**: Metrics collection, alerting, dashboard, analysis
-- **Location**: `src/optimization/monitoring.ts`
+#### **8.6.1: Real-Time Performance Monitoring & System Metrics**
+- **Purpose**: Comprehensive real-time performance monitoring with core system metrics collection
+- **Features**: CLI performance metrics, system resource monitoring, alerting, analysis
+- **Location**: `src/optimization/monitoring.ts` + `src/core/monitoring/system-metrics.ts`
+- **Universal CLI Support**: Provides foundation for observability CLI capabilities
 
 ```typescript
 export interface PerformanceMonitor {
   startMonitoring(config: MonitoringConfiguration): MonitoringSession;
   collectMetrics(sources: MetricSource[]): MetricCollection;
+  collectSystemMetrics(): SystemMetrics;
   analyzePerformance(metrics: PerformanceMetric[]): PerformanceAnalysis;
   generateAlerts(thresholds: PerformanceThreshold[]): PerformanceAlert[];
   optimizeBasedOnMetrics(analysis: PerformanceAnalysis): OptimizationSuggestion[];
+}
+
+// Core System Metrics (Foundation for Plugin 5.12)
+export interface SystemMetrics {
+  cpu: CPUMetrics;
+  memory: MemoryMetrics;
+  disk: DiskMetrics;
+  network: NetworkMetrics;
+  processes: ProcessMetrics[];
+  timestamp: Date;
+}
+
+export interface CPUMetrics {
+  usage: number;          // Overall CPU usage percentage
+  cores: CoreMetrics[];   // Per-core metrics
+  loadAverage: number[];  // Load average (1m, 5m, 15m)
+  temperature?: number;   // CPU temperature if available
+}
+
+export interface MemoryMetrics {
+  total: number;          // Total memory in bytes
+  used: number;           // Used memory in bytes
+  free: number;           // Free memory in bytes
+  cached: number;         // Cached memory in bytes
+  available: number;      // Available memory in bytes
+  swapTotal?: number;     // Total swap in bytes
+  swapUsed?: number;      // Used swap in bytes
+}
+
+export interface DiskMetrics {
+  filesystems: FileSystemMetrics[];
+  totalReads: number;     // Total disk reads
+  totalWrites: number;    // Total disk writes
+  readBytes: number;      // Bytes read from disk
+  writeBytes: number;     // Bytes written to disk
+  ioTime: number;         // Time spent on I/O operations
+}
+
+export interface NetworkMetrics {
+  interfaces: NetworkInterfaceMetrics[];
+  totalBytesIn: number;   // Total bytes received
+  totalBytesOut: number;  // Total bytes transmitted
+  packetsIn: number;      // Packets received
+  packetsOut: number;     // Packets transmitted
+  errors: number;         // Network errors
+  drops: number;          // Dropped packets
+}
+
+export interface ProcessMetrics {
+  pid: number;            // Process ID
+  name: string;           // Process name
+  cpuUsage: number;       // CPU usage percentage
+  memoryUsage: number;    // Memory usage in bytes
+  diskIO: number;         // Disk I/O operations
+  networkIO: number;      // Network I/O operations
+  openFiles: number;      // Number of open file descriptors
+  threads: number;        // Number of threads
+}
+
+// Supporting interfaces
+export interface CoreMetrics {
+  id: number;
+  usage: number;
+  frequency: number;
+}
+
+export interface FileSystemMetrics {
+  path: string;
+  type: string;
+  total: number;
+  used: number;
+  available: number;
+  usage: number;
+}
+
+export interface NetworkInterfaceMetrics {
+  name: string;
+  bytesIn: number;
+  bytesOut: number;
+  packetsIn: number;
+  packetsOut: number;
+  errors: number;
+  drops: number;
+  speed: number;
 }
 
 export interface PerformanceMetric {
