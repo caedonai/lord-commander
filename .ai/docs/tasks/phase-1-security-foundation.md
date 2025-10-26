@@ -805,7 +805,7 @@ Implement comprehensive environment detection system that enables the SDK to aut
 - **Deliverable**: Environment-aware behavior adaptation system (`src/core/foundation/adaptive-behavior.ts`)
 - **Implementation**: Automatic behavior adjustment based on detected environment
 - **Features**:
-  - CI/CD optimizations (disable animations, faster timeouts, batch operations)
+  - CI/CD optimizations (disable animations, no color output, no prompts, JSON output, faster timeouts, batch operations)
   - Production safety modes (enhanced security, minimal logging, error sanitization)
   - Development enhancements (verbose output, debugging features, performance metrics)
   - Container-aware operations (resource limits, networking constraints)
