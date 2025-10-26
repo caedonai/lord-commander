@@ -28,42 +28,42 @@ describe('Icon System Security Vulnerabilities', () => {
     const ansiAttacks = [
       {
         name: 'Basic color injection',
-        payload: '\\x1b[31mRED\\x1b[0m',
+        payload: '\x1b[31mRED\x1b[0m',
         description: 'Should remove ANSI color codes'
       },
       {
         name: 'Cursor manipulation',
-        payload: '\\x1b[H\\x1b[2J🚀',
+        payload: '\x1b[H\x1b[2J🚀',
         description: 'Should remove cursor positioning commands'
       },
       {
         name: 'Screen clearing attempt',
-        payload: '\\x1b[2J\\x1b[3J\\x1b[H',
+        payload: '\x1b[2J\x1b[3J\x1b[H',
         description: 'Should remove screen clearing sequences'
       },
       {
         name: 'Terminal title injection',
-        payload: '\\x1b]0;Malicious Title\\x07',
+        payload: '\x1b]0;Malicious Title\x07',
         description: 'Should remove terminal title setting'
       },
       {
         name: 'Alternative screen buffer',
-        payload: '\\x1b[?1049h',
+        payload: '\x1b[?1049h',
         description: 'Should remove alternative screen buffer commands'
       },
       {
         name: 'Complex ANSI sequence',
-        payload: '\\x1b[38;2;255;0;0m\\x1b[48;2;0;255;0mCOMPLEX\\x1b[0m',
+        payload: '\x1b[38;2;255;0;0m\x1b[48;2;0;255;0mCOMPLEX\x1b[0m',
         description: 'Should remove complex 24-bit color sequences'
       },
       {
         name: 'Hyperlink injection',
-        payload: '\\x1b]8;;http://evil.com\\x1b\\\\LINK\\x1b]8;;\\x1b\\\\',
+        payload: '\x1b]8;;http://evil.com\x1b\\LINK\x1b]8;;\x1b\\',
         description: 'Should remove hyperlink sequences'
       },
       {
         name: 'Bracketed paste mode',
-        payload: '\\x1b[?2004h',
+        payload: '\x1b[?2004h',
         description: 'Should remove bracketed paste mode sequences'
       }
     ];
@@ -73,10 +73,10 @@ describe('Icon System Security Vulnerabilities', () => {
         const sanitized = IconSecurity.sanitizeIcon(payload);
         
         // Should not contain any ANSI escape sequences
-        expect(sanitized).not.toMatch(/\\x1b\[/);
-        expect(sanitized).not.toMatch(/\\x1b\]/);
-        expect(sanitized).not.toMatch(/\\x1b\(/);
-        expect(sanitized).not.toMatch(/\\x1b\)/);
+        expect(sanitized).not.toMatch(/\x1b\[/);
+        expect(sanitized).not.toMatch(/\x1b\]/);
+        expect(sanitized).not.toMatch(/\x1b\(/);
+        expect(sanitized).not.toMatch(/\x1b\)/);
         
         // Security validation should fail for original payload
         expect(IconSecurity.isValidIcon(payload)).toBe(false);
@@ -89,24 +89,24 @@ describe('Icon System Security Vulnerabilities', () => {
     });
 
     it('should handle nested ANSI sequences', () => {
-      const nestedAnsi = '\\x1b[31m\\x1b[1m\\x1b[4mNested\\x1b[0m\\x1b[0m\\x1b[0m';
+      const nestedAnsi = '\x1b[31m\x1b[1m\x1b[4mNested\x1b[0m\x1b[0m\x1b[0m';
       const sanitized = IconSecurity.sanitizeIcon(nestedAnsi);
       
-      expect(sanitized).not.toContain('\\x1b');
+      expect(sanitized).not.toContain('\x1b');
       expect(sanitized).toBe('Nested');
     });
 
     it('should handle malformed ANSI sequences', () => {
       const malformed = [
-        '\\x1b[',        // Incomplete sequence
-        '\\x1b[999999m', // Invalid parameter
-        '\\x1b[;;;;;m',  // Multiple separators
-        '\\x1b[]m',      // Empty parameters
+        '\x1b[',        // Incomplete sequence
+        '\x1b[999999m', // Invalid parameter
+        '\x1b[;;;;;m',  // Multiple separators
+        '\x1b[]m',      // Empty parameters
       ];
 
       malformed.forEach(sequence => {
         const sanitized = IconSecurity.sanitizeIcon(sequence);
-        expect(sanitized).not.toContain('\\x1b');
+        expect(sanitized).not.toContain('\x1b');
       });
     });
   });
@@ -115,74 +115,74 @@ describe('Icon System Security Vulnerabilities', () => {
     const controlCharAttacks = [
       {
         name: 'NULL byte injection',
-        char: '\\x00',
+        char: '\x00',
         code: 0x00,
         description: 'Should remove NULL bytes'
       },
       {
         name: 'Bell character (BEL)',
-        char: '\\x07',
+        char: '\x07',
         code: 0x07,
         description: 'Should remove bell characters that could cause audio alerts'
       },
       {
         name: 'Backspace (BS)',
-        char: '\\x08',
+        char: '\x08',
         code: 0x08,
         description: 'Should remove backspace characters'
       },
       {
         name: 'Form feed (FF)',
-        char: '\\x0C',
+        char: '\x0C',
         code: 0x0C,
         description: 'Should remove form feed characters'
       },
       {
         name: 'Carriage return (CR)',
-        char: '\\x0D',
+        char: '\x0D',
         code: 0x0D,
         description: 'Should remove carriage return outside normal use'
       },
       {
         name: 'Shift Out (SO)',
-        char: '\\x0E',
+        char: '\x0E',
         code: 0x0E,
         description: 'Should remove character set switching'
       },
       {
         name: 'Shift In (SI)',
-        char: '\\x0F',
+        char: '\x0F',
         code: 0x0F,
         description: 'Should remove character set switching'
       },
       {
         name: 'Device Control 1 (DC1/XON)',
-        char: '\\x11',
+        char: '\x11',
         code: 0x11,
         description: 'Should remove flow control characters'
       },
       {
         name: 'Device Control 3 (DC3/XOFF)',
-        char: '\\x13',
+        char: '\x13',
         code: 0x13,
         description: 'Should remove flow control characters'
       },
       {
         name: 'Substitute (SUB)',
-        char: '\\x1A',
+        char: '\x1A',
         code: 0x1A,
         description: 'Should remove substitute character'
       },
       {
         name: 'Delete (DEL)',
-        char: '\\x7F',
+        char: '\x7F',
         code: 0x7F,
         description: 'Should remove delete character'
       },
       // C1 Control Characters (0x80-0x9F)
       {
         name: 'String Terminator (ST)',
-        char: '\\x9C',
+        char: '\x9C',
         code: 0x9C,
         description: 'Should remove C1 control characters'
       }
@@ -208,7 +208,7 @@ describe('Icon System Security Vulnerabilities', () => {
     });
 
     it('should handle multiple control characters', () => {
-      const payload = '🚀\\x07\\x08\\x0C\\x7Ftest';
+      const payload = '🚀\x07\x08\x0C\x7Ftest';
       const sanitized = IconSecurity.sanitizeIcon(payload);
       
       expect(sanitized).toBe('🚀test');
@@ -216,7 +216,7 @@ describe('Icon System Security Vulnerabilities', () => {
     });
 
     it('should preserve legitimate whitespace', () => {
-      const legitimateWhitespace = '🚀 test\\ttab\\nline';
+      const legitimateWhitespace = '🚀 test\ttab\nline';
       const sanitized = IconSecurity.sanitizeIcon(legitimateWhitespace);
       
       // Should preserve space, but may remove tab and newline depending on implementation
@@ -229,32 +229,32 @@ describe('Icon System Security Vulnerabilities', () => {
     const unicodeAttacks = [
       {
         name: 'Zero-width characters',
-        payload: '🚀\\u200B\\u200C\\u200D\\uFEFFtest',
+        payload: '🚀\u200B\u200C\u200D\uFEFFtest',
         description: 'Should remove zero-width characters that could hide content'
       },
       {
         name: 'Bidirectional text override (LTR)',
-        payload: '🚀\\u202Dtest\\u202C',
+        payload: '🚀\u202Dtest\u202C',
         description: 'Should remove bidirectional text controls'
       },
       {
         name: 'Bidirectional text override (RTL)',
-        payload: '🚀\\u202Etest\\u202C',
+        payload: '🚀\u202Etest\u202C',
         description: 'Should remove right-to-left override'
       },
       {
         name: 'Line separator injection',
-        payload: '🚀\\u2028test',
+        payload: '🚀\u2028test',
         description: 'Should remove Unicode line separators'
       },
       {
         name: 'Paragraph separator injection',
-        payload: '🚀\\u2029test',
+        payload: '🚀\u2029test',
         description: 'Should remove Unicode paragraph separators'
       },
       {
         name: 'Combining character abuse',
-        payload: 'A\\u0300\\u0301\\u0302\\u0303\\u0304',
+        payload: 'A\u0300\u0301\u0302\u0303\u0304',
         description: 'Should limit excessive combining characters'
       },
       {
@@ -264,17 +264,17 @@ describe('Icon System Security Vulnerabilities', () => {
       },
       {
         name: 'Surrogate pair manipulation',
-        payload: '\\uD83D\\uDE80', // Valid emoji surrogate pair
+        payload: '\uD83D\uDE80', // Valid emoji surrogate pair
         description: 'Should handle surrogate pairs correctly'
       },
       {
         name: 'Invalid surrogate pairs',
-        payload: '\\uD83D\\uD83D', // Two high surrogates
+        payload: '\uD83D\uD83D', // Two high surrogates
         description: 'Should handle invalid surrogate pairs'
       },
       {
         name: 'Isolated surrogates',
-        payload: '\\uD83D', // High surrogate without low
+        payload: '\uD83D', // High surrogate without low
         description: 'Should handle isolated surrogates'
       }
     ];
@@ -298,8 +298,8 @@ describe('Icon System Security Vulnerabilities', () => {
       // Different Unicode representations of the same character
       const attacks = [
         'é',              // Precomposed (U+00E9)
-        'e\\u0301',       // Base + combining acute accent
-        '\\u0065\\u0301'  // Explicit base + combining
+        'e\u0301',       // Base + combining acute accent
+        '\u0065\u0301'  // Explicit base + combining
       ];
 
       attacks.forEach(attack => {
@@ -308,7 +308,7 @@ describe('Icon System Security Vulnerabilities', () => {
     });
 
     it('should handle extremely long Unicode sequences', () => {
-      const longUnicode = '\\u1F680'.repeat(1000); // 1000 rocket emojis
+      const longUnicode = '\u1F680'.repeat(1000); // 1000 rocket emojis
       
       const start = Date.now();
       const sanitized = IconSecurity.sanitizeIcon(longUnicode);
@@ -387,42 +387,42 @@ describe('Icon System Security Vulnerabilities', () => {
     const terminalAttacks = [
       {
         name: 'Terminal reset',
-        payload: '\\x1bc',
+        payload: '\x1bc',
         description: 'Should prevent full terminal reset'
       },
       {
         name: 'Cursor save/restore',
-        payload: '\\x1b7\\x1b8',
+        payload: '\x1b7\x1b8',
         description: 'Should prevent cursor manipulation'
       },
       {
         name: 'Scroll region manipulation',
-        payload: '\\x1b[1;10r',
+        payload: '\x1b[1;10r',
         description: 'Should prevent scroll region changes'
       },
       {
         name: 'Tab stop manipulation',
-        payload: '\\x1bH\\x1b[3g',
+        payload: '\x1bH\x1b[3g',
         description: 'Should prevent tab stop changes'
       },
       {
         name: 'Character set manipulation',
-        payload: '\\x1b(B\\x1b)0',
+        payload: '\x1b(B\x1b)0',
         description: 'Should prevent character set changes'
       },
       {
         name: 'Application keypad mode',
-        payload: '\\x1b=\\x1b>',
+        payload: '\x1b=\x1b>',
         description: 'Should prevent keypad mode changes'
       },
       {
         name: 'Cursor visibility',
-        payload: '\\x1b[?25l\\x1b[?25h',
+        payload: '\x1b[?25l\x1b[?25h',
         description: 'Should prevent cursor visibility changes'
       },
       {
         name: 'Mouse tracking',
-        payload: '\\x1b[?1000h\\x1b[?1000l',
+        payload: '\x1b[?1000h\x1b[?1000l',
         description: 'Should prevent mouse tracking changes'
       }
     ];
@@ -431,7 +431,7 @@ describe('Icon System Security Vulnerabilities', () => {
       it(`should prevent ${name}`, () => {
         const sanitized = IconSecurity.sanitizeIcon(payload);
         
-        expect(sanitized).not.toContain('\\x1b');
+        expect(sanitized).not.toContain('\x1b');
         expect(IconSecurity.isValidIcon(payload)).toBe(false);
         
         const analysis = IconSecurity.analyzeIconSecurity(payload);
@@ -508,9 +508,9 @@ describe('Icon System Security Vulnerabilities', () => {
     it('should maintain security when integrated with logger', () => {
       const logger = createLogger();
       const maliciousInputs = [
-        '\\x1b[31mRED\\x1b[0m',
-        '🚀\\x07',
-        '\\u202E\\u200Btest\\u202C'
+        '\x1b[31mRED\x1b[0m',
+        '🚀\x07',
+        '\u202E\u200Btest\u202C'
       ];
 
       maliciousInputs.forEach(input => {
@@ -578,15 +578,15 @@ describe('Icon System Security Vulnerabilities', () => {
       // Add specific vulnerability patterns discovered during security reviews
       const knownVulnerabilities = [
         // Example patterns that might have been discovered
-        '\\x1b]52;c;\\x07', // Clipboard manipulation
-        '\\x1b[6n',         // Device status report
-        '\\x1b[0c',         // Device attributes
-        '\\x1b[>c',         // Secondary device attributes
+        '\x1b]52;c;\x07', // Clipboard manipulation
+        '\x1b[6n',         // Device status report
+        '\x1b[0c',         // Device attributes
+        '\x1b[>c',         // Secondary device attributes
       ];
 
       knownVulnerabilities.forEach(vuln => {
         const sanitized = IconSecurity.sanitizeIcon(vuln);
-        expect(sanitized).not.toContain('\\x1b');
+        expect(sanitized).not.toContain('\x1b');
         expect(IconSecurity.isValidIcon(vuln)).toBe(false);
       });
     });

@@ -341,7 +341,7 @@ export class IconSecurity {
     sanitized = sanitized.replace(/\x1b/g, '');
     
     // Remove all control characters (0x00-0x1F and 0x7F-0x9F)
-    sanitized = sanitized.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+    sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, '');
     
     // Remove dangerous Unicode characters
     // Byte Order Mark and other format characters
