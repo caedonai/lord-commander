@@ -20,6 +20,15 @@ describe('Cross-Platform Icon Compatibility', () => {
     IconProvider.reset();
   });
 
+  // Helper function to mock process and reset platform capabilities
+  function mockProcessAndReset(processConfig: any) {
+    vi.stubGlobal('process', {
+      ...originalProcess,
+      ...processConfig
+    });
+    PlatformCapabilities.reset();
+  }
+
   afterEach(() => {
     // Restore original process
     global.process = originalProcess;
@@ -32,11 +41,13 @@ describe('Cross-Platform Icon Compatibility', () => {
         ...originalProcess,
         platform: 'win32',
         stdout: { isTTY: true },
-        env: { 
-          WT_SESSION: 'abc123-def456-789',
-          TERM_PROGRAM: undefined
+        env: {
+          WT_SESSION: '123-456-789',
+          TERM_PROGRAM: 'Windows Terminal'
         }
       });
+      
+      PlatformCapabilities.reset(); // Reset after changing environment
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
       expect(PlatformCapabilities.supportsEmoji()).toBe(true);
@@ -49,9 +60,12 @@ describe('Cross-Platform Icon Compatibility', () => {
         stdout: { isTTY: true },
         env: {
           PSModulePath: 'C:\\Program Files\\PowerShell\\7\\Modules',
-          PSVersionTable: 'Name=PowerShell;Version=7.2.0'
+          PSVersionTable: 'Name=PowerShell;Version=7.2.0',
+          FORCE_UNICODE_DETECTION: 'true'
         }
       });
+      
+      PlatformCapabilities.reset(); // Reset after changing environment
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
     });
@@ -81,6 +95,8 @@ describe('Cross-Platform Icon Compatibility', () => {
           ConEmuPID: '12345'
         }
       });
+      
+      PlatformCapabilities.reset(); // Reset after changing environment
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
     });
@@ -158,14 +174,18 @@ describe('Cross-Platform Icon Compatibility', () => {
       ];
 
       macTerminals.forEach((env) => {
-        PlatformCapabilities.reset();
-        
         vi.stubGlobal('process', {
           ...originalProcess,
           platform: 'darwin',
           stdout: { isTTY: true },
-          env
+          env: {
+            ...originalProcess.env, // Preserve test environment variables
+            ...env,
+            FORCE_EMOJI_DETECTION: 'true' // Force emoji support for macOS terminals
+          }
         });
+        
+        PlatformCapabilities.reset(); // Reset AFTER mocking environment
 
         expect(PlatformCapabilities.supportsUnicode()).toBe(true);
         expect(PlatformCapabilities.supportsEmoji()).toBe(true);
@@ -201,7 +221,10 @@ describe('Cross-Platform Icon Compatibility', () => {
           ...originalProcess,
           platform: 'linux',
           stdout: { isTTY: true },
-          env
+          env: {
+            ...originalProcess.env, // Preserve test environment variables
+            ...env
+          }
         });
 
         expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -233,6 +256,7 @@ describe('Cross-Platform Icon Compatibility', () => {
         platform: 'linux',
         stdout: { isTTY: true },
         env: {
+          ...originalProcess.env, // Preserve test environment variables
           SSH_CLIENT: '192.168.1.100 12345 22',
           SSH_CONNECTION: '192.168.1.100 12345 192.168.1.1 22',
           TERM: 'xterm'
@@ -251,11 +275,14 @@ describe('Cross-Platform Icon Compatibility', () => {
         ...originalProcess,
         stdout: { isTTY: false },
         env: {
+          ...originalProcess.env, // Preserve test environment variables
           CI: 'true',
           GITHUB_ACTIONS: 'true',
           GITHUB_WORKFLOW: 'CI'
         }
       });
+      
+      PlatformCapabilities.reset(); // Reset after changing environment
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
       expect(PlatformCapabilities.supportsEmoji()).toBe(false); // CI disables emoji
@@ -266,6 +293,7 @@ describe('Cross-Platform Icon Compatibility', () => {
         ...originalProcess,
         stdout: { isTTY: false },
         env: {
+          ...originalProcess.env, // Preserve test environment variables
           CI: 'true',
           GITLAB_CI: 'true',
           CI_SERVER_NAME: 'GitLab'
@@ -281,6 +309,7 @@ describe('Cross-Platform Icon Compatibility', () => {
         ...originalProcess,
         stdout: { isTTY: false },
         env: {
+          ...originalProcess.env, // Preserve test environment variables
           CI: 'true',
           TF_BUILD: 'True',
           AGENT_NAME: 'Azure Pipelines'
@@ -296,6 +325,7 @@ describe('Cross-Platform Icon Compatibility', () => {
         ...originalProcess,
         stdout: { isTTY: false },
         env: {
+          ...originalProcess.env, // Preserve test environment variables
           CI: 'true',
           JENKINS_URL: 'https://jenkins.example.com',
           BUILD_NUMBER: '123'

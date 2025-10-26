@@ -559,7 +559,7 @@ describe('Icon System Security Vulnerabilities', () => {
       const concurrentTests = Array.from({ length: 100 }, (_, i) => {
         return new Promise<void>((resolve) => {
           setTimeout(() => {
-            const input = `test${i}\\x1b[31m`;
+            const input = `test${i}\x1b[31m`;
             IconSecurity.sanitizeIcon(input);
             IconSecurity.isValidIcon(input);
             IconSecurity.analyzeIconSecurity(input);

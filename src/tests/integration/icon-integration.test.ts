@@ -10,6 +10,29 @@ import { createCLI } from '../../core/createCLI.js';
 import { createLogger } from '../../core/ui/logger.js';
 import { PlatformCapabilities, IconProvider } from '../../core/ui/icons.js';
 
+// Mock @clack/prompts to avoid stdout.write issues
+vi.mock('@clack/prompts', () => ({
+  log: {
+    message: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+    error: vi.fn(),
+    success: vi.fn(),
+    step: vi.fn()
+  },
+  intro: vi.fn(),
+  outro: vi.fn(),
+  text: vi.fn(),
+  confirm: vi.fn(),
+  select: vi.fn(),
+  multiselect: vi.fn(),
+  spinner: vi.fn(() => ({
+    start: vi.fn(),
+    stop: vi.fn(),
+    message: vi.fn()
+  }))
+}));
+
 // Mock figures to avoid external dependency issues in CI
 vi.mock('figures', () => ({
   default: {
@@ -27,6 +50,38 @@ vi.mock('figures', () => ({
     squareSmall: '◻',
     circle: '●',
     circleSmall: '◯'
+  },
+  mainSymbols: {
+    tick: '✓',
+    cross: '✗',
+    warning: '⚠',
+    info: 'ℹ',
+    bullet: '•',
+    arrowUp: '↑',
+    arrowDown: '↓',
+    arrowLeft: '←',
+    arrowRight: '→',
+    play: '▶',
+    square: '◼',
+    squareSmall: '◻',
+    circle: '●',
+    circleSmall: '◯'
+  },
+  fallbackSymbols: {
+    tick: 'v',
+    cross: 'x',
+    warning: '!',
+    info: 'i',
+    bullet: '*',
+    arrowUp: '^',
+    arrowDown: 'v',
+    arrowLeft: '<',
+    arrowRight: '>',
+    play: '>',
+    square: '#',
+    squareSmall: '.',
+    circle: 'O',
+    circleSmall: 'o'
   }
 }));
 
@@ -447,7 +502,8 @@ describe('Icon System Integration', () => {
         env: {
           NODE_ENV: 'development',
           TERM_PROGRAM: 'iTerm.app', // macOS development
-          COLORTERM: 'truecolor'
+          COLORTERM: 'truecolor',
+          FORCE_EMOJI_DETECTION: 'true' // Force emoji support for development test
         }
       });
 

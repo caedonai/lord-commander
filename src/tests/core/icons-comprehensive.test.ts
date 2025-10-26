@@ -587,7 +587,7 @@ describe('IconSecurity', () => {
       const longText = 'A'.repeat(150);
       const analysis = IconSecurity.analyzeIconSecurity(longText);
       
-      expect(analysis.warnings).toContain('Text is very long');
+      expect(analysis.warnings).toContain('Icon is longer than recommended length');
     });
 
     it('should detect complex Unicode', () => {
