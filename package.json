@@ -1,9 +1,14 @@
 {
   "name": "lord-commander-poc",
   "version": "1.0.0",
-  "description": "",
+  "description": "Professional CLI SDK Framework for building advanced command-line tools",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "lord-commander": "dist/cli.js",
+    "lc": "dist/cli.js",
+    "lord": "dist/cli.js"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -20,11 +25,12 @@
   },
   "sideEffects": false,
   "scripts": {
-    "build": "tsup src/index.ts src/core/index.ts src/plugins/index.ts --format esm --dts --clean --target node18",
-    "dev": "node --loader ts-node/esm src/index.ts",
+    "build": "tsup --config tsup.config.ts",
+    "dev": "node --loader ts-node/esm src/cli.ts",
     "test": "vitest --run",
     "test:run": "vitest run",
     "test:watch": "vitest watch",
+    "test:cli": "node scripts/test-cli.mjs",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "test:updater": "vitest run src/tests/updater.test.ts",
@@ -34,9 +40,28 @@
     "test-updater": "tsx src/tests/test-updater.ts",
     "test-updater-comprehensive": "tsx src/tests/test-updater-comprehensive.ts"
   },
-  "keywords": [],
+  "keywords": [
+    "cli",
+    "sdk",
+    "framework",
+    "command-line",
+    "tool",
+    "typescript",
+    "commander",
+    "scaffolding",
+    "automation"
+  ],
   "author": "fabiomarcellusdev",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/caedonai/lord-commander-poc.git"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "packageManager": "pnpm@10.18.1",
   "dependencies": {
     "@clack/prompts": "^0.11.0",
