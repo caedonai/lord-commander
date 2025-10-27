@@ -89,7 +89,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
   describe('2. Recursive Depth Explosion (DoS Vulnerability)', () => {
     it('should handle deeply nested objects without stack overflow', () => {
       // Create deeply nested object (100 levels to test recursion limits)
-      let deepObject: any = {};
+      const deepObject: any = {};
       let current = deepObject;
       for (let i = 0; i < 100; i++) {
         current.nested = { level: i };
@@ -107,7 +107,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
     it('should handle extremely deep nesting gracefully', () => {
       // Create very deep structure that could cause stack overflow
-      let veryDeep: any = { value: 'start' };
+      const veryDeep: any = { value: 'start' };
       let current = veryDeep;
       for (let i = 0; i < 1000; i++) {
         current.child = { level: i };
@@ -128,7 +128,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
     it('should limit recursion depth to prevent DoS', () => {
       // Create structure with alternating array/object nesting
-      let mixed: any = { start: true };
+      const mixed: any = { start: true };
       let current = mixed;
       for (let i = 0; i < 50; i++) {
         if (i % 2 === 0) {

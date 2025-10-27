@@ -156,7 +156,7 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
     });
 
     it('should prevent deep nesting attacks', () => {
-      let deepObject: any = {};
+      const deepObject: any = {};
       let current = deepObject;
       
       // Create deeply nested object (depth > 3)

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import { Command } from 'commander';
 import { registerCommands, resetCommandTracking } from '../../core/commands/registerCommands.js';
-import { writeFile, mkdir, rm, readdir } from 'fs/promises';
+import { writeFile, rm, readdir, mkdtemp } from 'fs/promises';
 import { join } from 'path';
 
 describe('registerCommands Built-in Exclusion', () => {
@@ -25,9 +25,9 @@ describe('registerCommands Built-in Exclusion', () => {
       }
     };
 
-    // Create a temporary directory for test commands within the current working directory for security
-    tempDir = join(process.cwd(), `temp-register-commands-test-${Date.now()}`);
-    await mkdir(tempDir, { recursive: true });
+    // Create a temporary directory for test commands within src/tests to pass security validation
+    const testBaseDir = join(process.cwd(), 'src', 'tests');
+    tempDir = await mkdtemp(join(testBaseDir, 'temp-register-commands-test-'));
   });
 
   afterEach(async () => {
@@ -54,15 +54,15 @@ describe('registerCommands Built-in Exclusion', () => {
   });
 
   afterAll(async () => {
-    // Final cleanup: remove any orphaned temp directories that might have been left behind
+    // Final cleanup: remove any orphaned temp directories from src/tests directory
     try {
-      const rootDir = process.cwd();
-      const items = await readdir(rootDir);
+      const testBaseDir = join(process.cwd(), 'src', 'tests');
+      const items = await readdir(testBaseDir);
       const tempDirs = items.filter(item => item.startsWith('temp-register-commands-test-'));
       
       for (const dir of tempDirs) {
         try {
-          await rm(join(rootDir, dir), { recursive: true, force: true });
+          await rm(join(testBaseDir, dir), { recursive: true, force: true });
           console.log(`Cleaned up orphaned temp directory: ${dir}`);
         } catch (error) {
           console.warn(`Failed to cleanup orphaned temp directory ${dir}:`, error instanceof Error ? error.message : String(error));

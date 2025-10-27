@@ -379,7 +379,7 @@ export class MemorySizeCalculator {
         return this.cache.get(obj)!;
       }
       
-      let size = this.calculateObjectSize(obj, visited, depth);
+      const size = this.calculateObjectSize(obj, visited, depth);
       
       // Cache result for performance
       if (this.config.enableMemoryCache) {

@@ -32,11 +32,11 @@ export interface PackageJson {
 }
 
 export function getPackageJSON(startDir: string): PackageJson {
-    let dir = path.resolve(startDir);
+    const dir = path.resolve(startDir);
 
     const pathCandidate = path.join(dir, 'package.json');
     if (fs.existsSync(pathCandidate)) {
-        let pkgJSON: PackageJson = JSON.parse(fs.readFileSync(pathCandidate, 'utf8'));
+        const pkgJSON: PackageJson = JSON.parse(fs.readFileSync(pathCandidate, 'utf8'));
         return pkgJSON;
     }
 

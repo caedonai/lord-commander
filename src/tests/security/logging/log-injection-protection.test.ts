@@ -467,7 +467,7 @@ describe('Task 1.4.1: Enhanced Log Injection Protection (Fixed)', () => {
         });
 
         it('should handle security violation callbacks', () => {
-            let violations: LogSecurityViolation[] = [];
+            const violations: LogSecurityViolation[] = [];
             
             sanitizeLogOutputAdvanced('Attack \x1B[2J$(rm -rf /)', {
                 onSecurityViolation: (violation) => violations.push(violation)

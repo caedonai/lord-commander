@@ -54,8 +54,8 @@ examples/**/node_modules/
 examples/**/dist/
 examples/**/build/
 
-# Temporary test files
-test-*.mjs
+# Temporary test files (but allow scripts/test-*.mjs)
+/test-*.mjs
 test-temp-*
 
 # Misc

@@ -399,7 +399,7 @@ async function validateFrameworkPattern(
   frameworkName: string,
   pattern: FrameworkPattern
 ): Promise<SecureFrameworkInfo | null> {
-  let matchedConfigFiles: string[] = [];
+  const matchedConfigFiles: string[] = [];
   let hasValidDependencies = false;
 
   // Check for config files (safely handle optional files property)

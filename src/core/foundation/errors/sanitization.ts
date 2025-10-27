@@ -1882,7 +1882,7 @@ export function createSafeErrorForForwarding(
   let finalSecurityWarnings = [...sanitized.securityWarnings];
   
   // Calculate the size of the result so far
-  let currentSize = JSON.stringify({
+  const currentSize = JSON.stringify({
     errorId: sanitized.errorId,
     message: sanitizedMessage,
     type: error.name || 'Error',
