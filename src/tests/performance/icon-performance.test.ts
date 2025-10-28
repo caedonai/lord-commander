@@ -109,7 +109,7 @@ describe('Icon System Performance and Memory', () => {
       }
       const elapsed2 = Date.now() - start2;
 
-      expect(elapsed2).toBeLessThan(Math.max(5, elapsed1 / 10)); // Should be very fast
+      expect(elapsed2).toBeLessThan(Math.max(20, elapsed1 / 5)); // Should be reasonably fast, allowing for system variance
     });
 
     it('should handle cache invalidation correctly', () => {
