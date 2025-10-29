@@ -23,7 +23,7 @@ await createCLI({
 
 ## 📦 Modules
 
-### [Core API](./core-api/README.md)
+### [Core API](./core/README.md)
 
 No description available
 
@@ -32,7 +32,7 @@ No description available
 - **Types**: 56 constants, 26 classs, 112 functions, 87 interfaces, 11 types
 
 
-### [Plugins API](./plugins-api/README.md)
+### [Plugins API](./plugins/README.md)
 
 No description available
 
@@ -41,7 +41,7 @@ No description available
 - **Types**: 37 functions, 26 interfaces, 2 types, 5 constants
 
 
-### [Type Definitions](./type-definitions/README.md)
+### [Type Definitions](./types/README.md)
 
 No description available
 

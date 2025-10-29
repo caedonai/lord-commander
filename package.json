@@ -44,7 +44,6 @@
     "test-cli": "tsx src/tests/test-cli.ts",
     "test-updater": "tsx src/tests/test-updater.ts",
     "test-updater-comprehensive": "tsx src/tests/test-updater-comprehensive.ts",
-    "example:workflows": "tsx src/examples/test-workflows.ts",
     "example:basic-cli": "tsx src/examples/workflows/basic-cli-creation.ts",
     "example:advanced": "tsx src/examples/workflows/advanced-patterns.ts",
     "example:practical": "tsx src/examples/workflows/practical-workflows.ts",
@@ -55,6 +54,7 @@
     "release": "tsx scripts/release.ts",
     "analyze": "tsx scripts/analyze-bundle.ts",
     "docs:generate": "tsx scripts/generate-api-docs.ts",
+    "docs:fix-links": "tsx scripts/fix-api-links.ts",
     "dev:setup": "node scripts/setup-dev.mjs",
     "bundle:analyze": "node scripts/analyze-bundle.mjs"
   },
