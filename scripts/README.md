@@ -13,13 +13,15 @@ This directory contains build automation, deployment, and development tooling sc
 - Prepares for npm publishing
 - Usage: `node scripts/release.mjs [patch|minor|major] [--dry-run]`
 
-### `generate-docs.mjs`
-**Documentation Generator**
-- Generates API reference documentation
-- Creates usage examples and guides
-- Updates README with current features
-- Generates contributing guidelines
-- Usage: `node scripts/generate-docs.mjs`
+### `generate-api-docs.ts`
+**API Documentation Generator** 
+- Automatically generates API reference from TypeScript source code
+- Extracts all exports from core, plugins, and types modules  
+- Creates searchable documentation with JSDoc examples
+- Parses function signatures and generates comprehensive docs
+- **TypeScript with tsx** - provides type safety during script execution
+- **CI/CD Ready** - runs after `pnpm install` in any CI environment
+- Usage: `pnpm run docs:generate` or `tsx scripts/generate-api-docs.ts`
 
 ### `analyze-bundle.mjs`
 **Bundle Analysis and Optimization**
