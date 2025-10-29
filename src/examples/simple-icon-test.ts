@@ -7,7 +7,7 @@
  * Demonstrates basic logger usage with TypeScript integration
  */
 
-import { createLogger, type Logger } from '../../dist/core/index.js';
+import { createLogger, type Logger } from '../core/index.js';
 
 // Use type assertion for enhanced logger methods
 type EnhancedLogger = Logger & {

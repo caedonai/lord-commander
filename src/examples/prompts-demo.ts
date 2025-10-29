@@ -17,7 +17,7 @@ import {
   printSpacing,
   printPromptHeader,
   printPromptFooter
-} from '../../dist/core/index.js';
+} from '../core/index.js';
 
 // TypeScript interfaces for better type safety
 interface ConfigSection {

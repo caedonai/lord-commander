@@ -12,7 +12,7 @@
  * - TypeScript type safety and error handling
  */
 
-import { createLogger } from '../../dist/core/index.js';
+import { createLogger } from '../core/index.js';
 import type { ExtendedIcons } from '../core/ui/icons.js';
 
 // TypeScript interfaces for better type safety
