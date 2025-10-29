@@ -55,6 +55,7 @@
     "analyze": "tsx scripts/analyze-bundle.ts",
     "docs:generate": "tsx scripts/generate-api-docs.ts",
     "docs:fix-links": "tsx scripts/fix-api-links.ts",
+    "docs:update-metrics": "tsx scripts/update-readme-metrics.ts",
     "dev:setup": "node scripts/setup-dev.mjs",
     "bundle:analyze": "node scripts/analyze-bundle.mjs"
   },

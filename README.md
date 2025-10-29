@@ -11,11 +11,11 @@
 ## ✨ Why Lord Commander?
 
 - 🚀 **156ms average startup** - Faster than industry average (280ms)
-- 📦 **1.78KB core bundle** - 97% smaller with tree-shaking vs 71KB full SDK  
-- 🔒 **974 security tests** - Production-ready security framework
+- 📦 **6.03KB core bundle** - 99% smaller with tree-shaking vs 604.95KB full SDK  
+- 🔒 **1493 security tests** - Production-ready security framework
 - 🎯 **366 API exports** - Comprehensive toolkit across 3 core modules
 - 🛡️ **Zero vulnerabilities** - Enterprise-grade security validation
-- ⚡ **12MB memory usage** - Efficient resource consumption
+- ⚡ **8.5MB memory usage** - Efficient resource consumption
 
 ## 🚀 Quick Start
 
