@@ -2,6 +2,87 @@ import { Command } from 'commander';
 import { CommandContext } from '../types/cli.js';
 import { generateCompletion, installCompletion, uninstallCompletion, detectShell, checkCompletionStatus } from '../core/commands/autocomplete.js';
 
+/**
+ * Shell completion management command
+ * 
+ * Provides comprehensive shell completion functionality for professional CLI tools.
+ * Supports bash, zsh, fish, and PowerShell with automatic installation and management.
+ * 
+ * @example
+ * ```bash
+ * # Install completion for current shell
+ * my-cli completion install
+ * 
+ * # Install completion for specific shell
+ * my-cli completion install --shell zsh
+ * 
+ * # Install globally for all users (requires admin privileges)
+ * my-cli completion install --global
+ * 
+ * # Force reinstall even if already installed
+ * my-cli completion install --force
+ * ```
+ * 
+ * @example
+ * ```bash
+ * # Generate completion script for manual installation
+ * my-cli completion generate --shell bash --output ~/.bashrc
+ * 
+ * # Generate for zsh and append to config
+ * my-cli completion generate --shell zsh >> ~/.zshrc
+ * 
+ * # Generate PowerShell completion
+ * my-cli completion generate --shell powershell --output $PROFILE
+ * ```
+ * 
+ * @example
+ * ```bash
+ * # Check completion installation status
+ * my-cli completion status
+ * 
+ * # Check status for specific shell
+ * my-cli completion status --shell bash
+ * 
+ * # Get detailed installation information
+ * my-cli completion status --verbose
+ * ```
+ * 
+ * @example
+ * ```bash
+ * # Uninstall completion from current shell
+ * my-cli completion uninstall
+ * 
+ * # Uninstall from specific shell
+ * my-cli completion uninstall --shell zsh
+ * 
+ * # Uninstall globally (requires admin privileges)
+ * my-cli completion uninstall --global
+ * ```
+ * 
+ * @example
+ * ```typescript
+ * // Programmatic usage in CLI creation
+ * import { createCLI } from '@caedonai/lord-commander';
+ * 
+ * await createCLI({
+ *   name: 'my-cli',
+ *   version: '1.0.0',
+ *   description: 'My CLI with autocomplete',
+ *   autocomplete: {
+ *     enabled: true,
+ *     autoInstall: true,          // Auto-install on first run
+ *     shells: ['bash', 'zsh'],    // Target specific shells
+ *     enableFileCompletion: true  // Enable file/directory completion
+ *   },
+ *   builtinCommands: {
+ *     completion: true            // Enable completion command
+ *   }
+ * });
+ * ```
+ * 
+ * @param program - Commander.js program instance
+ * @param context - CLI context with logger and other utilities
+ */
 export default function(program: Command, context: CommandContext) {
   const { logger } = context;
 
