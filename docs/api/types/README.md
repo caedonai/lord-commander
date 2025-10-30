@@ -34,7 +34,7 @@ CommandContext provides unified access to all SDK utilities This interface will 
 ## CommandContext
 
 **Type**: `interface`  
-**Source**: [`src/types/cli.ts`](../../src/types/cli.ts)
+**Source**: [`src/types/cli.ts`](../../../src/types/cli.ts)
 
 CommandContext provides unified access to all SDK utilities This interface will be passed to all commands, giving them access to: - Core utilities (fs, exec, logger, prompts) - Plugin functionality (git, config, telemetry) - Configuration and state management
 
@@ -43,11 +43,11 @@ CommandContext provides unified access to all SDK utilities This interface will 
 ## CreateCliOptions
 
 **Type**: `interface`  
-**Source**: [`src/types/cli.ts`](../../src/types/cli.ts)
+**Source**: [`src/types/cli.ts`](../../../src/types/cli.ts)
 
 ## 📁 Source Files
 
-- [`src/types/cli.ts`](../../src/types/cli.ts)
+- [`src/types/cli.ts`](../../../src/types/cli.ts)
 
 ---
 

@@ -15,7 +15,7 @@
 - 🔒 **1493 security tests** - Production-ready security framework
 - 🎯 **366 API exports** - Comprehensive toolkit across 3 core modules
 - 🛡️ **Zero vulnerabilities** - Enterprise-grade security validation
-- ⚡ **8.5MB memory usage** - Efficient resource consumption
+- ⚡ **8.71MB memory usage** - Efficient resource consumption
 
 ## 🚀 Quick Start
 
