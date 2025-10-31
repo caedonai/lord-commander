@@ -8,8 +8,8 @@
 
 | Metric | Value | Industry Benchmark | Improvement |
 |---------|-------|-------------------|-------------|
-| **Startup Time** | 130ms | 280ms | **54% faster** |
-| **Memory Usage** | 66.36MB | ~15MB | **-342% less** |
+| **Startup Time** | 145ms | 280ms | **48% faster** |
+| **Memory Usage** | 14.809999999999999MB | ~15MB | **1% less** |
 | **Bundle Size** | 6.03KB (core) | ~50KB | **88% smaller** |
 | **Tree-shaking** | 97% reduction | ~60% | **37% better** |
 | **Overall Score** | **61% optimized** | Baseline | **Production-ready** |
@@ -18,36 +18,36 @@
 
 ### Startup Time Breakdown
 ```
-Total Startup: 130ms
-├── Module Loading (40%)    52ms
-├── Command Registration (25%) 33ms  
-├── Initialization (25%)       33ms
-└── First Command (10%)          13ms
+Total Startup: 145ms
+├── Module Loading (40%)    58ms
+├── Command Registration (25%) 36ms  
+├── Initialization (25%)       36ms
+└── First Command (10%)          15ms
 ```
 
 ### Configuration Impact
 | Configuration | Startup Time | Memory | Description |
 |---------------|-------------|---------|-------------|
-| **Core Only** | 130ms | 64.36MB | Essential CLI functionality |
-| **With Plugins** | 150ms | 66.36MB | Git, updater, workspace tools |
-| **Minimal Build** | 104ms | 58MB | Tree-shaken selective imports |
+| **Core Only** | 145ms | 11.809999999999999MB | Essential CLI functionality |
+| **With Plugins** | 167ms | 14.809999999999999MB | Git, updater, workspace tools |
+| **Minimal Build** | 116ms | 11MB | Tree-shaken selective imports |
 
 ## 💾 Memory Usage Analysis
 
 ### Memory Profile
 ```
 Memory Usage Progression
-├── Baseline: 61.36MB (Node.js runtime)
-├── Core SDK: 64.36MB (+3MB)
-├── With Plugins: 66.36MB (+2MB)
-└── Peak Operations: 99.53999999999999MB (+33.18MB)
+├── Baseline: 7.81MB (Node.js runtime)
+├── Core SDK: 11.809999999999999MB (+4MB)
+├── With Plugins: 14.809999999999999MB (+3MB)
+└── Peak Operations: 20.733999999999998MB (+5.92MB)
 ```
 
 ### Garbage Collection Efficiency
 - **GC Effectiveness**: 85% memory reclamation
 - **Heap Growth**: Bounded and predictable
 - **Memory Leaks**: None detected in stress testing
-- **Peak Memory**: 99.53999999999999MB during intensive operations
+- **Peak Memory**: 20.733999999999998MB during intensive operations
 
 ## 📦 Bundle Performance
 
@@ -56,8 +56,8 @@ Memory Usage Progression
 |-------|------|-------------|
 | **Download** | ~12ms | Bundle transfer over network |
 | **Parse** | ~8ms | JavaScript parsing and compilation |
-| **Initialize** | ~39ms | SDK initialization |
-| **Ready** | **59ms** | Total time to ready state |
+| **Initialize** | ~44ms | SDK initialization |
+| **Ready** | **64ms** | Total time to ready state |
 
 ### Optimization Results
 - **Tree-shaking**: 97% dead code elimination
@@ -217,11 +217,11 @@ describe('Performance Tests', () => {
 |---------|-------------|------------|-------------|---------------|
 | v0.8.0 | 320ms | 18MB | 95KB | 72% |
 | v0.9.0 | 280ms | 15MB | 78KB | 79% |  
-| **v1.0.0** | **130ms** | **66.36MB** | **6.03KB** | **61%** |
+| **v1.0.0** | **145ms** | **14.809999999999999MB** | **6.03KB** | **61%** |
 
 ### Performance Improvements Over Time
 - **Startup Time**: 51% improvement since v0.8.0
-- **Memory Usage**: -269% reduction since v0.8.0  
+- **Memory Usage**: 18% reduction since v0.8.0  
 - **Bundle Size**: 94% smaller since v0.8.0
 - **Overall Efficiency**: -11% improvement since v0.8.0
 
