@@ -104,11 +104,13 @@ async function getAllDistFiles(dir: string): Promise<string[]> {
 }
 
 function categorizeBundleFile(filePath: string): 'core' | 'plugin' | 'chunk' | 'utility' {
-  if (filePath.includes('core/') || filePath === 'core/index.js') {
+  const normalizedPath = filePath.replace(/\\/g, '/'); // Normalize Windows paths
+  
+  if (normalizedPath.includes('core/') || normalizedPath === 'core/index.js') {
     return 'core';
-  } else if (filePath.includes('plugins/') || filePath === 'plugins/index.js') {
+  } else if (normalizedPath.includes('plugins/') || normalizedPath === 'plugins/index.js') {
     return 'plugin';
-  } else if (filePath.startsWith('chunk-') || filePath.includes('chunk-')) {
+  } else if (normalizedPath.startsWith('chunk-') || normalizedPath.includes('chunk-')) {
     return 'chunk';
   } else {
     return 'utility';
@@ -116,6 +118,8 @@ function categorizeBundleFile(filePath: string): 'core' | 'plugin' | 'chunk' | '
 }
 
 function describeBundleFile(filePath: string): string {
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  
   const descriptions: Record<string, string> = {
     'core/index.js': 'Core SDK entry point with essential CLI functionality',
     'plugins/index.js': 'Plugin system with Git, updater, and workspace tools',
@@ -124,25 +128,29 @@ function describeBundleFile(filePath: string): string {
   };
   
   // Check for exact matches first
+  if (descriptions[normalizedPath]) {
+    return descriptions[normalizedPath];
+  }
+  
   const fileName = path.basename(filePath);
   if (descriptions[fileName]) {
     return descriptions[fileName];
   }
   
   // Pattern-based descriptions
-  if (filePath.includes('chunk-')) {
+  if (normalizedPath.includes('chunk-')) {
     return 'Shared code chunk for optimal bundling';
-  } else if (filePath.includes('completion')) {
+  } else if (normalizedPath.includes('completion')) {
     return 'Shell completion system';
-  } else if (filePath.includes('hello')) {
+  } else if (normalizedPath.includes('hello')) {
     return 'Example hello command';
-  } else if (filePath.includes('version')) {
+  } else if (normalizedPath.includes('version')) {
     return 'Version management utilities';
-  } else if (filePath.includes('execa')) {
+  } else if (normalizedPath.includes('execa')) {
     return 'Process execution utilities';
-  } else if (filePath.includes('fs')) {
+  } else if (normalizedPath.includes('fs')) {
     return 'File system operations';
-  } else if (filePath.includes('protection')) {
+  } else if (normalizedPath.includes('protection')) {
     return 'Security protection framework';
   } else {
     return 'Supporting utilities and shared code';
@@ -283,7 +291,8 @@ async function generateBundleAnalysis(): Promise<BundleAnalysis> {
   const coreSize = coreFiles.reduce((sum, f) => sum + f.size, 0);
   const pluginSize = pluginFiles.reduce((sum, f) => sum + f.size, 0);
   
-  const reductionPercent = Math.round((1 - coreSize / totalSize) * 100);
+  // Tree-shaking reduction: how much smaller core is vs full bundle
+  const reductionPercent = totalSize > 0 ? Math.round((1 - coreSize / totalSize) * 100) : 0;
   
   console.log(`   📊 Total bundle: ${Math.round(totalSize / 1024)}KB`);
   console.log(`   🎯 Core: ${Math.round(coreSize / 1024)}KB`);
