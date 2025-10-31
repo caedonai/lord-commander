@@ -52,7 +52,7 @@
     "example:prompts": "tsx src/examples/enhanced-prompts-demo.ts",
     "setup": "node scripts/setup-dev.mjs",
     "release": "tsx scripts/release.ts",
-    "analyze": "tsx scripts/analyze-bundle.ts",
+    "analyze": "tsx scripts/generate-bundle-docs.ts",
     "docs:generate": "tsx scripts/generate-api-docs.ts",
     "docs:fix-links": "tsx scripts/fix-api-links.ts",
     "docs:update-metrics": "tsx scripts/update-readme-metrics.ts",
@@ -60,7 +60,7 @@
     "docs:performance": "tsx scripts/generate-performance-docs.ts",
     "docs:update-all": "tsx scripts/update-all-docs.ts",
     "dev:setup": "node scripts/setup-dev.mjs",
-    "bundle:analyze": "node scripts/analyze-bundle.mjs"
+    "bundle:analyze": "tsx scripts/generate-bundle-docs.ts"
   },
   "keywords": [
     "cli",

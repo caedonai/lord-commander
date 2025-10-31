@@ -509,6 +509,70 @@ Supporting Code (${Math.round((analysis.totalSize - analysis.coreSize - analysis
   console.log(`✅ Updated bundle analysis documentation`);
 }
 
+async function analyzeTreeShakingConfig(): Promise<{ enabled: boolean; esmOptimized: boolean; hasExports: boolean; score: number }> {
+  try {
+    const packageJsonPath = path.join(process.cwd(), 'package.json');
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf8'));
+    
+    const enabled = packageJson.sideEffects === false;
+    const esmOptimized = packageJson.type === 'module';
+    const hasExports = !!packageJson.exports;
+    
+    // Calculate optimization score
+    let score = 0;
+    if (enabled) score += 40;
+    if (esmOptimized) score += 30;
+    if (hasExports) score += 30;
+    
+    console.log('🌳 Tree-shaking Configuration:');
+    console.log(`   sideEffects: ${packageJson.sideEffects} ${enabled ? '✅' : '⚠️'}`);
+    console.log(`   type: ${packageJson.type || 'commonjs'} ${esmOptimized ? '✅' : '⚠️'}`);
+    console.log(`   exports: ${hasExports ? 'defined' : 'missing'} ${hasExports ? '✅' : '⚠️'}`);
+    console.log(`   Score: ${score}/100`);
+    
+    return { enabled, esmOptimized, hasExports, score };
+  } catch (error) {
+    console.warn('⚠️ Could not analyze tree-shaking config:', error);
+    return { enabled: false, esmOptimized: false, hasExports: false, score: 0 };
+  }
+}
+
+function generateOptimizationRecommendations(analysis: BundleAnalysis, treeShaking: any): string[] {
+  const recommendations: string[] = [];
+  
+  // Size-based recommendations
+  if (analysis.totalSize > 500 * 1024) {
+    recommendations.push('Bundle is large (>500KB) - consider code splitting and lazy loading');
+  }
+  
+  if (analysis.coreSize > analysis.totalSize * 0.1) {
+    recommendations.push('Core bundle is significant - review essential vs optional features');
+  }
+  
+  // Tree-shaking recommendations
+  if (!treeShaking.enabled) {
+    recommendations.push('Enable tree-shaking: set "sideEffects": false in package.json');
+  }
+  
+  if (!treeShaking.esmOptimized) {
+    recommendations.push('Use ESM for better tree-shaking: set "type": "module" in package.json');
+  }
+  
+  if (!treeShaking.hasExports) {
+    recommendations.push('Add exports field for selective imports in package.json');
+  }
+  
+  // General recommendations
+  recommendations.push('Use selective imports: import { createCLI } from "@caedonai/sdk/core"');
+  recommendations.push('Monitor bundle size in CI/CD with: pnpm docs:bundle-analysis');
+  
+  if (analysis.reductionPercent > 90) {
+    recommendations.push('Excellent tree-shaking! Consider promoting selective imports in docs');
+  }
+  
+  return recommendations;
+}
+
 async function main(): Promise<void> {
   console.log('📦 Bundle Analysis Documentation Generator\\n');
   
@@ -523,6 +587,18 @@ async function main(): Promise<void> {
     }
     
     const analysis = await generateBundleAnalysis();
+    const treeShaking = await analyzeTreeShakingConfig();
+    const recommendations = generateOptimizationRecommendations(analysis, treeShaking);
+    
+    // Terminal output for development
+    console.log('\n🎯 Optimization Recommendations:');
+    recommendations.forEach(rec => console.log(`   • ${rec}`));
+    
+    console.log(`\n📊 Bundle Summary:`);
+    console.log(`   Total: ${Math.round(analysis.totalSize / 1024)}KB`);
+    console.log(`   Core: ${Math.round(analysis.coreSize / 1024)}KB (${analysis.reductionPercent}% tree-shaking reduction)`);
+    console.log(`   Tree-shaking Score: ${treeShaking.score}/100`);
+    
     await updateBundleAnalysisDoc(analysis);
     
     console.log('\\n🎉 Bundle analysis documentation updated!');
