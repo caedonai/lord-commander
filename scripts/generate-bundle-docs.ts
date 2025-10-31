@@ -366,10 +366,20 @@ ${analysis.fileBreakdown
   .map(f => `| \`${f.name}\` | ${f.sizeKB}KB | ${f.description} |`)
   .join('\\n')}
 
-### Supporting Files
+### Supporting Files Summary
+| Category | Files | Total Size | Description |
+|----------|-------|------------|-------------|
+| **Shared Chunks** | ${analysis.fileBreakdown.filter(f => f.category === 'chunk').length} files | ${Math.round(analysis.fileBreakdown.filter(f => f.category === 'chunk').reduce((sum, f) => sum + f.sizeKB, 0) * 100) / 100}KB | Optimized code chunks for efficient loading |
+| **CLI Utilities** | ${analysis.fileBreakdown.filter(f => f.category === 'utility' && (f.name.includes('cli') || f.name.includes('completion') || f.name.includes('hello') || f.name.includes('version'))).length} files | ${Math.round(analysis.fileBreakdown.filter(f => f.category === 'utility' && (f.name.includes('cli') || f.name.includes('completion') || f.name.includes('hello') || f.name.includes('version'))).reduce((sum, f) => sum + f.sizeKB, 0) * 100) / 100}KB | CLI commands and completion system |
+| **System Utilities** | ${analysis.fileBreakdown.filter(f => f.category === 'utility' && (f.name.includes('execa') || f.name.includes('fs') || f.name.includes('protection'))).length} files | ${Math.round(analysis.fileBreakdown.filter(f => f.category === 'utility' && (f.name.includes('execa') || f.name.includes('fs') || f.name.includes('protection'))).reduce((sum, f) => sum + f.sizeKB, 0) * 100) / 100}KB | Process execution, file system, and security |
+| **Other Utilities** | ${analysis.fileBreakdown.filter(f => f.category === 'utility' && !f.name.includes('cli') && !f.name.includes('completion') && !f.name.includes('hello') && !f.name.includes('version') && !f.name.includes('execa') && !f.name.includes('fs') && !f.name.includes('protection')).length} files | ${Math.round(analysis.fileBreakdown.filter(f => f.category === 'utility' && !f.name.includes('cli') && !f.name.includes('completion') && !f.name.includes('hello') && !f.name.includes('version') && !f.name.includes('execa') && !f.name.includes('fs') && !f.name.includes('protection')).reduce((sum, f) => sum + f.sizeKB, 0) * 100) / 100}KB | Supporting libraries and entry points |
+
+### Key Individual Files
+| File | Size | Description |
+|------|------|-------------|
 ${analysis.fileBreakdown
-  .filter(f => f.category === 'chunk' || f.category === 'utility')
-  .slice(0, 8) // Top 8 supporting files  
+  .filter(f => f.category === 'utility' && f.sizeKB > 5) // Show utility files > 5KB
+  .slice(0, 6) // Top 6 most significant files
   .map(f => `| \`${f.name}\` | ${f.sizeKB}KB | ${f.description} |`)
   .join('\\n')}
 

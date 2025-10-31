@@ -2,16 +2,16 @@
 
 > 📦 Comprehensive analysis of the lord-commander SDK bundle composition and optimization
 
-*Last updated: 2025-10-29*
+*Last updated: 2025-10-31*
 
 ## 📊 Bundle Overview
 
 | Metric | Value | Description |
 |---------|-------|-------------|
 | **Total Bundle Size** | 605KB | Complete SDK with all features |
-| **Core Bundle Size** | 0KB | Essential CLI functionality only |
-| **Plugin Bundle Size** | 0KB | Extended features (Git, updater, workspace) |
-| **Tree-shaking Reduction** | 100% | Bundle size reduction with selective imports |
+| **Core Bundle Size** | 6KB | Essential CLI functionality only |
+| **Plugin Bundle Size** | 1KB | Extended features (Git, updater, workspace) |
+| **Tree-shaking Reduction** | 99% | Bundle size reduction with selective imports |
 | **Total Exports** | 366 | Available functions and utilities |
 
 ## 🎯 Import Strategy Comparison
@@ -25,23 +25,35 @@ import * as SDK from '@caedonai/sdk';
 ### Selective Core Import (Recommended)
 ```typescript
 import { createCLI, createLogger, execa } from '@caedonai/sdk/core';
-// Bundle size: ~0KB (100% smaller)
+// Bundle size: ~6KB (99% smaller)
 ```
 
 ### Plugin-Specific Import
 ```typescript
 import { parseVersion, initRepo } from '@caedonai/sdk/plugins';
-// Bundle size: ~0KB
+// Bundle size: ~1KB
 ```
 
 ## 📁 File Breakdown
 
 ### Core Files
-
+| `core\index.js` | 6.03KB | Core SDK entry point with essential CLI functionality |
 
 ### Plugin Files  
+| `plugins\index.js` | 1.43KB | Plugin system with Git, updater, and workspace tools |
 
+### Supporting Files Summary
+| Category | Files | Total Size | Description |
+|----------|-------|------------|-------------|
+| **Shared Chunks** | 17 files | 489.26KB | Optimized code chunks for efficient loading |
+| **CLI Utilities** | 7 files | 80.67KB | CLI commands and completion system |
+| **System Utilities** | 5 files | 27.11KB | Process execution, file system, and security |
+| **Other Utilities** | 1 files | 0.43KB | Supporting libraries and entry points |
 
+### Key Individual Files
+| File | Size | Description |
+|------|------|-------------|
+| `cli.js` | 35.43KB | Standalone CLI executable |\n| `protection-JY4A2MDN.js` | 24.86KB | Security protection framework |\n| `version-TUK3KA5J.js` | 19.44KB | Version management utilities |\n| `version-QPPYTDRE.js` | 10.36KB | Version management utilities |\n| `completion-XQKIE7XI.js` | 5.42KB | Shell completion system |\n| `completion-MA44PKCC.js` | 5.4KB | Shell completion system |
 
 ## 📦 Production Dependencies
 
@@ -82,10 +94,10 @@ import * as SDK from '@caedonai/sdk';
 
 ### 2. Import by Category
 ```typescript
-// Core functionality (~0KB)
+// Core functionality (~6KB)
 import { createCLI, execa, fs, logger } from '@caedonai/sdk/core';
 
-// Plugin features (~0KB)  
+// Plugin features (~1KB)  
 import { git, updater, workspace } from '@caedonai/sdk/plugins';
 ```
 
@@ -115,7 +127,7 @@ pnpm test:tree-shaking
 - **Industry Average**: ~280ms (44% faster)
 
 ### Memory Usage
-- **Core SDK**: ~0MB heap usage
+- **Core SDK**: ~1MB heap usage
 - **With Plugins**: ~76MB heap usage
 - **Peak Usage**: ~12MB during intensive operations
 
@@ -123,14 +135,14 @@ pnpm test:tree-shaking
 | Import Strategy | Bundle Size | Load Time | Memory |
 |-----------------|-------------|-----------|---------|
 | Full SDK | 605KB | ~60ms | ~76MB |
-| Core Only | 0KB | ~0ms | ~0MB |
-| Selective | ~0KB | ~0ms | ~0MB |
+| Core Only | 6KB | ~1ms | ~1MB |
+| Selective | ~2KB | ~0ms | ~0MB |
 
 ## 🔍 Bundle Composition Analysis
 
 ### Code Categories
 ```
-Core SDK (0%)
+Core SDK (1%)
 ├── CLI Framework (35%)
 ├── Command System (25%) 
 ├── UI Components (20%)
@@ -141,7 +153,7 @@ Plugin System (0%)
 ├── Version Management (35%)
 └── Workspace Tools (20%)
 
-Supporting Code (100%)
+Supporting Code (99%)
 ├── Shared Chunks (60%)
 ├── External Dependencies (25%)
 └── Runtime Utilities (15%)
