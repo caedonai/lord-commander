@@ -18,11 +18,11 @@
 
 #### **2.1.1: Enhanced Execa Integration & Security**
 - **Current**: Basic `execa.ts` exists with basic execa wrapper
-- **Enhancement**: Replace all exec usage with execa for security and add comprehensive security layers
+- **Enhancement**: Replace all legacy exec usage with execa for security and add comprehensive security layers
 - **Location**: `src/core/execution/execa.ts`
 
 ```typescript
-export interface SecureExecOptions extends ExecaOptions {
+export interface SecureExecaOptions extends ExecaOptions {
   allowShellAccess?: boolean;
   commandWhitelist?: string[];
   environmentSanitization?: boolean;
@@ -32,7 +32,7 @@ export interface SecureExecOptions extends ExecaOptions {
   privilegeLevel?: 'user' | 'elevated';
 }
 
-export interface ExecResult {
+export interface ExecaResult {
   success: boolean;
   stdout: string;
   stderr: string;
@@ -46,12 +46,12 @@ export interface ExecResult {
 export async function safeExeca(
   command: string,
   args: string[],
-  options: SecureExecOptions
-): Promise<ExecResult>;
+  options: SecureExecaOptions
+): Promise<ExecaResult>;
 ```
 
-#### **2.1.2: Complete Exec-to-Execa Migration**
-- **Purpose**: Replace all legacy exec usage with secure execa throughout the codebase
+#### **2.1.2: Complete Legacy-to-Execa Migration**
+- **Purpose**: Replace all legacy execution patterns with secure execa throughout the codebase
 - **Features**: Comprehensive migration, security validation, performance optimization
 - **Integration**: Ensure all subprocess execution uses execa for security
 
