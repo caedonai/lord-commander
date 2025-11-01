@@ -246,7 +246,7 @@ export default function(program: Command, context: CommandContext) {
 **Vercel CLI Build Process**:
 ```typescript
 // Real-time build output streaming
-const buildProcess = exec('npm run build', {
+const buildProcess = execa('npm run build', {
   cwd: projectPath,
   stdio: 'pipe'
 });
@@ -278,10 +278,10 @@ Summary: 3 succeeded, 1 failed
 ```typescript
 // Secure process execution wrapper
 export class ProcessExecutor {
-  async exec(
+  async execa(
     command: string, 
-    options: ExecOptions = {}
-  ): Promise<ExecResult> {
+    options: ExecaOptions = {}
+  ): Promise<ExecaResult> {
     const { logger } = useContext();
     
     // Security validation
@@ -320,13 +320,13 @@ export class ProcessExecutor {
     }
   }
   
-  async parallel(commands: string[], options?: ParallelExecOptions): Promise<ExecResult[]> {
+  async parallel(commands: string[], options?: ParallelExecaOptions): Promise<ExecaResult[]> {
     const { logger } = useContext();
     
     logger.info(`Running ${commands.length} commands in parallel`);
     
     const results = await Promise.allSettled(
-      commands.map(command => this.exec(command, options))
+      commands.map(command => this.execa(command, options))
     );
     
     const succeeded = results.filter(r => r.status === 'fulfilled').length;
@@ -357,20 +357,20 @@ export class ProcessExecutor {
 
 // Usage patterns
 export default function(program: Command, context: CommandContext) {
-  const { exec } = context;
+  const { execa } = context;
   
   program
     .command('build')
     .option('--parallel', 'Build packages in parallel')
     .action(async (options) => {
       if (options.parallel) {
-        await exec.parallel([
+        await execa.parallel([
           'npm run build:frontend',
           'npm run build:backend', 
           'npm run build:shared'
         ]);
       } else {
-        await exec.exec('npm run build', { streaming: true });
+        await execa.execa('npm run build', { streaming: true });
       }
     });
 }
@@ -651,7 +651,7 @@ export default function(program: Command, context: CommandContext) {
 |-------------|------------|-------------|-------------------|
 | **Interactive Setup** | `core/ui/prompts.ts` | Universal | Vercel, create-next-app, create-t3-app |
 | **File Operations** | `core/execution/fs.ts` | Universal | All scaffolding CLIs |
-| **Process Execution** | `core/execution/exec.ts` | Universal | Nx, Vercel, build tools |
+| **Process Execution** | `core/execution/execa.ts` | Universal | Nx, Vercel, build tools |
 | **Project Detection** | `plugins/config-loader.ts` | Universal | Framework CLIs |
 | **Workspace Management** | `plugins/workspace.ts` | Monorepo-specific | Nx, Lerna, Rush |
 | **Git Operations** | `plugins/git.ts` | Git-enabled | Vercel, deployment tools |
@@ -662,7 +662,7 @@ export default function(program: Command, context: CommandContext) {
 **Full Project Scaffolding**:
 ```typescript
 export default function(program: Command, context: CommandContext) {
-  const { prompts, fs, exec, logger } = context;
+  const { prompts, fs, execa, logger } = context;
   
   program
     .command('create')
@@ -682,12 +682,12 @@ export default function(program: Command, context: CommandContext) {
       
       // 3. Process execution (Nx pattern)
       logger.info('Installing dependencies...');
-      await exec.exec(`cd ${name} && npm install`);
+      await execa.execa(`cd ${name} && npm install`);
       
       // 4. Git initialization (industry standard)
-      await exec.exec(`cd ${name} && git init`);
-      await exec.exec(`cd ${name} && git add .`);
-      await exec.exec(`cd ${name} && git commit -m "Initial commit"`);
+      await execa.execa(`cd ${name} && git init`);
+      await execa.execa(`cd ${name} && git add .`);
+      await execa.execa(`cd ${name} && git commit -m "Initial commit"`);
       
       logger.outro(`Project ${name} created successfully!`);
     });
@@ -697,7 +697,7 @@ export default function(program: Command, context: CommandContext) {
 **Workspace Management** (Nx + Lerna patterns):
 ```typescript
 export default function(program: Command, context: CommandContext) {
-  const { workspace, exec, logger } = context;
+  const { workspace, execa, logger } = context;
   
   program
     .command('test')
@@ -719,11 +719,11 @@ export default function(program: Command, context: CommandContext) {
       
       if (options.parallel) {
         // Parallel execution (Nx pattern)
-        await exec.parallel(commands);
+        await execa.parallel(commands);
       } else {
         // Sequential execution
         for (const command of commands) {
-          await exec.exec(command);
+          await execa.execa(command);
         }
       }
     });
@@ -803,7 +803,7 @@ const projectConfig = await detectFramework(process.cwd());
 await fs.copyTemplate(template, target, variables);
 
 // 4. Execute processes securely
-await exec.exec(buildCommand, { streaming: true });
+await execa.execa(buildCommand, { streaming: true });
 
 // 5. Handle errors gracefully  
 try {
@@ -817,21 +817,21 @@ try {
 
 **Scaffolding CLI** (create-next-app style):
 ```typescript
-import { interactiveSetup, copyTemplate, exec } from "@caedonai/sdk/core";
+import { interactiveSetup, copyTemplate, execa } from "@caedonai/sdk/core";
 
 // Combine: setup + templating + process execution
 ```
 
 **Deployment CLI** (Vercel style):
 ```typescript  
-import { detectFramework, exec, confirmAction } from "@caedonai/sdk/core";
+import { detectFramework, execa, confirmAction } from "@caedonai/sdk/core";
 
 // Combine: detection + confirmation + deployment
 ```
 
 **Monorepo CLI** (Nx style):
 ```typescript
-import { detectWorkspace, exec } from "@caedonai/sdk/core";
+import { detectWorkspace, execa } from "@caedonai/sdk/core";
 import { getWorkspacePackages } from "@caedonai/sdk/plugins";
 
 // Combine: workspace detection + parallel execution
