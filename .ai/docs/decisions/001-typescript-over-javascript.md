@@ -30,17 +30,17 @@ CLI frameworks involve complex interactions between modules, configurations, and
 // Type-safe command definition
 interface CommandContext {
   logger: Logger;
-  exec: ProcessExecutor;
+  execa: ProcessExecutor;
   fs: SafeFileSystem;
 }
 
 export default function(program: Command, context: CommandContext) {
-  const { logger, exec } = context; // All utilities typed
+  const { logger, execa } = context; // All utilities typed
   
   program
     .command('deploy')
     .action(async (options: { env?: string }) => {
-      const result: ExecResult = await exec('npm run build');
+      const result: ExecaResult = await execa('npm run build');
       logger.success(`Deployed to ${options.env || 'production'}`);
     });
 }

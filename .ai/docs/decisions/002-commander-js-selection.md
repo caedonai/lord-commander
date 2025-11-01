@@ -54,7 +54,7 @@ export async function createCLI(options: CLIOptions): Promise<void> {
   // Enhanced context with security utilities
   const context: CommandContext = {
     logger: createSecureLogger(),     // Sanitized logging
-    exec: createSecureExecutor(),     // Process validation
+    execa: createSecureExecutor(),     // Process validation
     fs: createSecureFileSystem(),     // Path validation
     prompts: createSecurePrompts()    // Input validation
   };
@@ -105,7 +105,7 @@ Battle-tested by major tools:
 // Security-enhanced utilities on Commander.js foundation
 export interface CommandContext {
   logger: SecureLogger;      // Injection protection
-  exec: SecureExecutor;      // Process validation
+  execa: SecureExecutor;      // Process validation
   fs: SecureFileSystem;      // Path validation  
   prompts: SecurePrompts;    // Input validation
 }
@@ -159,7 +159,7 @@ import { Command } from 'commander';  // Core functionality only
 
 // Our utilities are separately importable
 import { createLogger } from '@caedonai/sdk/core/ui';
-import { exec } from '@caedonai/sdk/core/execution';
+import { execa } from '@caedonai/sdk/core/execution';
 
 // Result: Minimal bundle when using selective imports
 // Commander.js: ~8KB + Our utilities: selective basis = optimized bundles

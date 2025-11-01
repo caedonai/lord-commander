@@ -166,7 +166,7 @@ Use the `--tree-shaking` flag for optimal results.
 | Import Pattern | Bundle Size | Use Case |
 |---|---|---|
 | Granular functions | ~8-12KB | Simple scripts, single-purpose CLIs |
-| Core module | ~15-25KB | Basic CLIs with file/exec operations |
+| Core module | ~15-25KB | Basic CLIs with file/execa operations |
 | Specific plugins | ~35-45KB | Feature-rich CLIs |
 | Full SDK | ~71KB | Complex enterprise tools |
 

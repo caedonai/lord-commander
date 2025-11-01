@@ -34,12 +34,12 @@ Every export is explicitly declared to maximize bundler optimization.
 ```typescript
 // ❌ Barrel exports (poor tree-shaking)
 export * from './logger';
-export * from './exec';
+export * from './execa';
 export * from './prompts';
 
 // ✅ Explicit named exports (optimal tree-shaking)
 export { createLogger, Logger, LogLevel } from './logger.js';
-export { exec, ExecOptions, ExecResult } from './exec.js';
+export { execa, ExecaOptions, ExecaResult } from './execa.js';
 export { confirmAction, selectOption, textInput } from './prompts.js';
 ```
 
@@ -86,10 +86,10 @@ export {
 
 // Execution exports
 export { 
-  exec, 
-  ExecOptions, 
-  ExecResult 
-} from './execution/exec.js';
+  execa, 
+  ExecaOptions, 
+  ExecaResult 
+} from './execution/execa.js';
 
 export { 
   copy, 
@@ -139,7 +139,7 @@ All modules use native ES modules for optimal tree-shaking:
 // Every module uses .js extensions for imports (not .ts)
 import { sanitizeErrorMessage } from './foundation/errors.js';
 import { createLogger } from './ui/logger.js';
-import { exec } from './execution/exec.js';
+import { execa } from './execution/execa.js';
 
 // This enables:
 // 1. Native ES module resolution
@@ -316,7 +316,7 @@ const EXPECTED_EXPORTS = {
     constants: ['ERROR_MESSAGES', 'FRAMEWORK_PATTERNS', 'CONFIG_PATHS'],
     ui: ['createLogger', 'intro', 'outro', 'confirmAction'],
     cli: ['createCLI', 'registerCommands', 'Command'],
-    execution: ['exec', 'copy', 'ensureDir', 'pathExists'],
+    execution: ['execa', 'copy', 'ensureDir', 'pathExists'],
     foundation: ['CLIError', 'SecurityError', 'sanitizeErrorMessage'],
     // Total: 71 core exports validated
   },
@@ -472,7 +472,7 @@ await createCLI({
 
 ```typescript
 // CLI with Git functionality
-import { createCLI, createLogger, exec } from "@caedonai/sdk/core";
+import { createCLI, createLogger, execa } from "@caedonai/sdk/core";
 import { cloneRepo, getGitTags } from "@caedonai/sdk/plugins";
 
 const setupProject = async () => {
@@ -495,7 +495,7 @@ const setupProject = async () => {
 import { 
   createCLI, 
   createLogger, 
-  exec, 
+  execa, 
   confirmAction,
   copy,
   ensureDir

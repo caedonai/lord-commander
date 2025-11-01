@@ -151,10 +151,10 @@ export async function installCompletion(program: Command, options: CompletionOpt
 
 **Purpose**: Safe process execution and file system operations
 
-#### `exec.ts`
+#### `execa.ts`
 ```typescript
 // Secure process execution wrapper
-export async function exec(
+export async function execa(
   command: string, 
   options?: ExecOptions
 ): Promise<ExecResult> {
@@ -246,11 +246,11 @@ export { specificFunction, SpecificClass } from './module';
 #### 2. **Modular Import Patterns**
 ```typescript
 // ✅ Tree-shakeable imports (recommended)
-import { exec, createLogger } from "@caedonai/sdk/core";
+import { execa, createLogger } from "@caedonai/sdk/core";
 import { parseVersion } from "@caedonai/sdk/plugins";
 
 // ❌ Full SDK import (includes everything)
-import { exec, createLogger, parseVersion } from "@caedonai/sdk";
+import { execa, createLogger, parseVersion } from "@caedonai/sdk";
 ```
 
 #### 3. **Conditional Module Loading**

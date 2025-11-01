@@ -546,7 +546,7 @@ function createTestContext(): CommandContext {
       error: jest.fn(),
       debug: jest.fn()
     },
-    exec: createMockExecutor(),
+    execa: createMockExecutor(),
     fs: createMockFileSystem(),
     prompts: createMockPrompts(),
     config: createMockConfig()

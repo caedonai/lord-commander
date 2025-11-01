@@ -165,7 +165,7 @@ export async function confirmAction(message: string): Promise<boolean> {
 // Why Execa over Node.js child_process
 import { execa } from 'execa';
 
-export async function exec(
+export async function execa(
   command: string, 
   options?: ExecOptions
 ): Promise<ExecResult> {
@@ -497,7 +497,7 @@ export const IMPORT_PATTERN_ANALYSIS = {
   
   // Mixed selective usage
   mixed: {
-    imports: ['createCLI', 'parseVersion', 'exec', 'confirmAction'],
+    imports: ['createCLI', 'parseVersion', 'execa', 'confirmAction'],
     bundleSize: '3.2KB', 
     dependencies: ['execa (full)', 'semver (full)', 'fast-glob (subset)'],
     excludes: ['Unused utilities', 'Optional features']

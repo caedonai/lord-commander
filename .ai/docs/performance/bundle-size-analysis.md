@@ -25,12 +25,12 @@ The lord-commander-poc CLI SDK achieves **97% bundle size reduction** through ag
 // ❌ Barrel exports (harder to tree-shake)
 export * from './logger';
 export * from './prompts';
-export * from './exec';
+export * from './execa';
 
 // ✅ Explicit named exports (optimal tree-shaking)
 export { createLogger, Logger } from './logger.js';
 export { confirmAction, selectOption } from './prompts.js';
-export { exec, ExecResult, ExecOptions } from './exec.js';
+export { execa, ExecaResult, ExecaOptions } from './execa.js';
 ```
 
 ### 2. **Modular Import Patterns**
@@ -103,7 +103,7 @@ const EXPECTED_EXPORTS = {
     ui: ['createLogger', 'confirmAction', 'selectOption', 'intro', 'outro'],
     cli: ['createCLI', 'Command', 'registerCommands', 'resetCommandTracking'],
     autocomplete: ['generateCompletion', 'installCompletion', 'detectShell'],
-    execution: ['exec', 'copy', 'ensureDir', 'pathExists'],
+    execution: ['execa', 'copy', 'ensureDir', 'pathExists'],
     foundation: ['CLIError', 'SecurityError', 'sanitizeErrorMessage'],
     security: ['sanitizeLogOutput', 'analyzeLogSecurity', 'isDebugMode']
   },
@@ -135,7 +135,7 @@ Object.entries(EXPECTED_EXPORTS.core).forEach(([category, exports]) => {
 | **ui/logger** | 0.4KB | 22% | Logging, spinners |
 | **cli/createCLI** | 0.5KB | 28% | Main CLI creation |
 | **commands/registerCommands** | 0.3KB | 17% | Command discovery |
-| **execution/exec** | 0.28KB | 16% | Process execution |
+| **execution/execa** | 0.28KB | 16% | Process execution |
 
 **Analysis**: Even distribution with no single module dominating the bundle.
 
@@ -246,7 +246,7 @@ import { cloneRepo, getGitTags } from "@caedonai/sdk/plugins";
 #### **Scenario 3: Full-featured CLI**
 ```typescript
 // CLI with all features
-import { createCLI, createLogger, exec, confirmAction } from "@caedonai/sdk/core";
+import { createCLI, createLogger, execa, confirmAction } from "@caedonai/sdk/core";
 import { parseVersion, detectWorkspace, cloneRepo } from "@caedonai/sdk/plugins";
 
 // Bundle: 4.5KB (selective imports from both layers)
@@ -380,7 +380,7 @@ export async function createAdvancedCLI(options: AdvancedCLIOptions) {
 2. **Import by Layer**
    ```typescript
    // ✅ Layer-based imports
-   import { exec, copy } from "@caedonai/sdk/core";
+   import { execa, copy } from "@caedonai/sdk/core";
    import { parseVersion } from "@caedonai/sdk/plugins";
    ```
 

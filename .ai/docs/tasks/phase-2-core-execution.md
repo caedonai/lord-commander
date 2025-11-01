@@ -17,9 +17,9 @@
 ### **Subtasks**
 
 #### **2.1.1: Enhanced Execa Integration & Security**
-- **Current**: Basic `exec.ts` exists with basic execa wrapper
+- **Current**: Basic `execa.ts` exists with basic execa wrapper
 - **Enhancement**: Replace all exec usage with execa for security and add comprehensive security layers
-- **Location**: `src/core/execution/exec.ts`
+- **Location**: `src/core/execution/execa.ts`
 
 ```typescript
 export interface SecureExecOptions extends ExecaOptions {
