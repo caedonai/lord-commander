@@ -992,7 +992,7 @@ export function isCommandSafe(command: string): boolean {
  * Helper function to validate input type and perform security analysis
  * @private
  */
-function validateInputType(input: any): {
+function validateInputType(input: unknown): {
   isValidType: boolean;
   analysis?: SecurityAnalysisResult;
 } {

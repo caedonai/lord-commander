@@ -9,7 +9,7 @@
         "noNonNullAssertion": "warn"
       },
       "suspicious": {
-        "noExplicitAny": "off",
+        "noExplicitAny": "error",
         "noControlCharactersInRegex": "off",
         "useIterableCallbackReturn": "warn",
         "noImplicitAnyLet": "warn",

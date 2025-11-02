@@ -151,7 +151,7 @@ export function exampleCommand(program: Command, context: CommandContext) {
     .argument('[name]', 'Optional name parameter')
     .option('-v, --verbose', 'Enable verbose output')
     .option('-f, --format <type>', 'Output format', 'text')
-    .action(async (name: string, options: any) => {
+    .action(async (name: string, options: { verbose?: boolean }) => {
       // Enhanced logging
       logger.intro('🚀 Example Command');
 

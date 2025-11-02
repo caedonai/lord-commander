@@ -13,7 +13,7 @@ import { createLogger, type Logger } from '../core/index.js';
 type EnhancedLogger = Logger & {
   rocket?: (message: string) => void;
   cloud?: (message: string) => void;
-  [key: string]: any; // Allow dynamic icon methods
+  [key: string]: unknown; // Allow dynamic icon methods
 };
 
 async function runIconTest(): Promise<void> {

@@ -91,6 +91,7 @@ import type { CommandContext } from '../types/cli.js';
  */
 export default function (program: Command, context: CommandContext) {
   const { logger } = context;
+  const log = logger as any; // Type assertion for CLI methods
 
   const completionCmd = program
     .command('completion')
@@ -104,11 +105,11 @@ export default function (program: Command, context: CommandContext) {
     .option('-g, --global', 'Install globally for all users')
     .option('--force', 'Force reinstall even if already installed')
     .action(async (options) => {
-      logger.intro('Installing shell completion...');
+      log.intro('Installing shell completion...');
 
       try {
         const shell = options.shell || (await detectShell());
-        const spinner = logger.spinner(`Installing completion for ${shell}...`);
+        const spinner = log.spinner(`Installing completion for ${shell}...`);
 
         const result = await installCompletion(program, {
           shell,
@@ -120,16 +121,16 @@ export default function (program: Command, context: CommandContext) {
           spinner.success(`Completion installed successfully!`);
 
           if (result.restartRequired) {
-            logger.note('Restart your shell or run the following to activate:');
-            logger.info(`  ${result.activationCommand}`);
+            log.note('Restart your shell or run the following to activate:');
+            log.info(`  ${result.activationCommand}`);
           }
 
-          logger.outro('Shell completion is now active! 🎉');
+          log.outro('Shell completion is now active! 🎉');
         } else {
           spinner.fail(`Installation failed: ${result.error}`);
         }
       } catch (error) {
-        logger.error(
+        log.error(
           `Failed to install completion: ${error instanceof Error ? error.message : String(error)}`
         );
       }
@@ -142,11 +143,11 @@ export default function (program: Command, context: CommandContext) {
     .option('-s, --shell <shell>', 'Target shell (bash, zsh, fish, powershell)')
     .option('-g, --global', 'Remove from global installation')
     .action(async (options) => {
-      logger.intro('Removing shell completion...');
+      log.intro('Removing shell completion...');
 
       try {
         const shell = options.shell || (await detectShell());
-        const spinner = logger.spinner(`Removing completion for ${shell}...`);
+        const spinner = log.spinner(`Removing completion for ${shell}...`);
 
         const result = await uninstallCompletion(program, {
           shell,
@@ -155,12 +156,12 @@ export default function (program: Command, context: CommandContext) {
 
         if (result.success) {
           spinner.success('Completion removed successfully!');
-          logger.outro('Shell completion has been disabled.');
+          log.outro('Shell completion has been disabled.');
         } else {
           spinner.fail(`Removal failed: ${result.error}`);
         }
       } catch (error) {
-        logger.error(
+        log.error(
           `Failed to remove completion: ${error instanceof Error ? error.message : String(error)}`
         );
       }
@@ -180,12 +181,12 @@ export default function (program: Command, context: CommandContext) {
         if (options.output) {
           const fs = await import('node:fs/promises');
           await fs.writeFile(options.output, script, 'utf-8');
-          logger.success(`Completion script written to ${options.output}`);
+          log.success(`Completion script written to ${options.output}`);
         } else {
           console.log(script);
         }
       } catch (error) {
-        logger.error(
+        log.error(
           `Failed to generate completion: ${error instanceof Error ? error.message : String(error)}`
         );
       }
@@ -197,7 +198,7 @@ export default function (program: Command, context: CommandContext) {
     .description('Show completion installation status')
     .option('-s, --shell <shell>', 'Check status for specific shell (bash, zsh, fish, powershell)')
     .action(async (options) => {
-      logger.intro('Checking completion status...');
+      log.intro('Checking completion status...');
 
       try {
         const detectedShell = await detectShell();
@@ -206,47 +207,47 @@ export default function (program: Command, context: CommandContext) {
         const status = await checkCompletionStatus(program, targetShell as any);
 
         // Display basic information
-        logger.info(`CLI Name: ${status.cliName}`);
-        logger.info(`Detected Shell: ${detectedShell}`);
+        log.info(`CLI Name: ${status.cliName}`);
+        log.info(`Detected Shell: ${detectedShell}`);
         if (options.shell && options.shell !== detectedShell) {
-          logger.info(`Checking Shell: ${status.shell} (specified)`);
+          log.info(`Checking Shell: ${status.shell} (specified)`);
         } else {
-          logger.info(`Checking Shell: ${status.shell}`);
+          log.info(`Checking Shell: ${status.shell}`);
         }
 
         // Display installation status
         if (status.installed) {
-          logger.success('✓ Completion is installed');
-          logger.info(`  Installation Path: ${status.installationPath}`);
-          logger.info(`  Installation Type: ${status.installationType}`);
+          log.success('✓ Completion is installed');
+          log.info(`  Installation Path: ${status.installationPath}`);
+          log.info(`  Installation Type: ${status.installationType}`);
 
           if (status.isActive === true) {
-            logger.success('  Status: Active and working');
+            log.success('  Status: Active and working');
           } else if (status.isActive === false) {
-            logger.warn('  Status: Installed but may not be active');
+            log.warn('  Status: Installed but may not be active');
           } else {
-            logger.note('  Status: Cannot determine if active (manual verification needed)');
+            log.note('  Status: Cannot determine if active (manual verification needed)');
           }
         } else {
-          logger.warn('✗ Completion is not installed');
-          logger.note('Run `completion install` to set up shell completion');
+          log.warn('✗ Completion is not installed');
+          log.note('Run `completion install` to set up shell completion');
         }
 
         // Show error message if any
         if (status.errorMessage) {
-          logger.warn(`Note: ${status.errorMessage}`);
+          log.warn(`Note: ${status.errorMessage}`);
         }
 
         // Provide helpful next steps
         if (!status.installed) {
-          logger.outro('To install completion, run: completion install');
+          log.outro('To install completion, run: completion install');
         } else if (status.isActive === false) {
-          logger.outro('Completion installed but may need shell restart. Try: exec $SHELL');
+          log.outro('Completion installed but may need shell restart. Try: exec $SHELL');
         } else {
-          logger.outro('Completion status check complete');
+          log.outro('Completion status check complete');
         }
       } catch (error) {
-        logger.error(
+        log.error(
           `Failed to check status: ${error instanceof Error ? error.message : String(error)}`
         );
       }

@@ -266,32 +266,33 @@ export async function execa(
     }
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
+    const execError = error as any; // Type assertion for error properties
 
     // Handle execa-specific errors
-    if (error.exitCode !== undefined) {
+    if (execError.exitCode !== undefined) {
       const result: ExecResult = {
-        stdout: error.stdout || '',
-        stderr: error.stderr || '',
-        exitCode: error.exitCode,
+        stdout: execError.stdout || '',
+        stderr: execError.stderr || '',
+        exitCode: execError.exitCode,
         command: fullCommand,
         failed: true,
-        timedOut: error.timedOut || false,
-        killed: error.killed || false,
+        timedOut: execError.timedOut || false,
+        killed: execError.killed || false,
         duration,
       };
 
       if (!options.silent) {
-        execaLogger.error(`Command failed: ${fullCommand} (exit code: ${error.exitCode})`);
+        execaLogger.error(`Command failed: ${fullCommand} (exit code: ${execError.exitCode})`);
       }
 
       if (options.reject !== false) {
         throw new ProcessError(
-          error.message || `Command failed: ${fullCommand}`,
+          execError.message || `Command failed: ${fullCommand}`,
           fullCommand,
-          error.exitCode,
-          error
+          execError.exitCode,
+          execError
         );
       }
 
@@ -303,7 +304,7 @@ export async function execa(
       `Failed to execute command: ${fullCommand}`,
       fullCommand,
       undefined,
-      error
+      error as Error
     );
   }
 }
@@ -380,27 +381,28 @@ export function execaSync(
     }
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
+    const execError = error as any; // Type assertion for error properties
 
-    if (error.exitCode !== undefined) {
+    if (execError.exitCode !== undefined) {
       const result: ExecResult = {
-        stdout: error.stdout || '',
-        stderr: error.stderr || '',
-        exitCode: error.exitCode,
+        stdout: execError.stdout || '',
+        stderr: execError.stderr || '',
+        exitCode: execError.exitCode,
         command: fullCommand,
         failed: true,
-        timedOut: error.timedOut || false,
-        killed: error.killed || false,
+        timedOut: execError.timedOut || false,
+        killed: execError.killed || false,
         duration,
       };
 
       if (options.reject !== false) {
         throw new ProcessError(
-          error.message || `Sync command failed: ${fullCommand}`,
+          execError.message || `Sync command failed: ${fullCommand}`,
           fullCommand,
-          error.exitCode,
-          error
+          execError.exitCode,
+          execError
         );
       }
 
@@ -411,7 +413,7 @@ export function execaSync(
       `Failed to execute sync command: ${fullCommand}`,
       fullCommand,
       undefined,
-      error
+      error as Error
     );
   }
 }
@@ -504,13 +506,14 @@ export async function execaStream(
     }
 
     return result;
-  } catch (error: any) {
-    if (error.exitCode !== undefined) {
+  } catch (error: unknown) {
+    const execError = error as any; // Type assertion for error properties
+    if (execError.exitCode !== undefined) {
       throw new ProcessError(
-        error.message || `Streaming command failed: ${fullCommand}`,
+        execError.message || `Streaming command failed: ${fullCommand}`,
         fullCommand,
-        error.exitCode,
-        error
+        execError.exitCode,
+        execError
       );
     }
 
@@ -518,7 +521,7 @@ export async function execaStream(
       `Failed to stream command: ${fullCommand}`,
       fullCommand,
       undefined,
-      error
+      error as Error
     );
   }
 }

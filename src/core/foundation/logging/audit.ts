@@ -20,6 +20,7 @@
  */
 
 import { createHash, randomBytes } from 'node:crypto';
+import type { SanitizableValue, SanitizableObject } from '../../../types/common.js';
 import type {
   EnhancedSecurityViolation,
   ViolationAnalysisResult,
@@ -622,7 +623,7 @@ export class AuditSecurityValidator {
   /**
    * Sanitize context object against prototype pollution and circular references
    */
-  static sanitizeContextObject(obj: any): any {
+  static sanitizeContextObject(obj: SanitizableValue): SanitizableValue {
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
@@ -630,7 +631,7 @@ export class AuditSecurityValidator {
     // Detect circular references
     const seen = new WeakSet();
 
-    const sanitize = (current: any): any => {
+    const sanitize = (current: SanitizableValue): SanitizableValue => {
       if (current === null || typeof current !== 'object') {
         return current;
       }
@@ -645,7 +646,7 @@ export class AuditSecurityValidator {
         return current.slice(0, AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE).map(sanitize);
       }
 
-      const sanitized: any = {};
+      const sanitized: SanitizableObject = {};
       const keys = Object.keys(current).slice(0, AUDIT_SECURITY_LIMITS.MAX_ARRAY_SIZE);
 
       for (const key of keys) {
@@ -693,7 +694,7 @@ export class AuditSecurityValidator {
   /**
    * Calculate approximate size of an object
    */
-  private static calculateObjectSize(obj: any): number {
+  private static calculateObjectSize(obj: unknown): number {
     try {
       return JSON.stringify(obj).length;
     } catch (_error) {
@@ -705,7 +706,7 @@ export class AuditSecurityValidator {
   /**
    * Validate context object for dangerous properties
    */
-  private static validateContextObject(obj: any, contextName: string): string[] {
+  private static validateContextObject(obj: unknown, contextName: string): string[] {
     const errors: string[] = [];
 
     if (typeof obj !== 'object' || obj === null) {
@@ -722,7 +723,7 @@ export class AuditSecurityValidator {
 
     // Check for excessively deep nesting
     const maxDepth = 10;
-    const checkDepth = (current: any, depth: number): boolean => {
+    const checkDepth = (current: unknown, depth: number): boolean => {
       if (depth > maxDepth) {
         return false;
       }
@@ -1758,7 +1759,7 @@ export class AuditTrailManager {
   /**
    * Sanitize error messages to prevent information disclosure
    */
-  private sanitizeError(error: any): string {
+  private sanitizeError(error: unknown): string {
     if (error instanceof Error) {
       return error.message.replace(/[<>"']/g, '').substring(0, 200);
     }
@@ -2262,13 +2263,13 @@ export const auditTrail = {
   /**
    * Record a security violation
    */
-  recordSecurityViolation: (violation: EnhancedSecurityViolation, context?: any) =>
+  recordSecurityViolation: (violation: EnhancedSecurityViolation, context?: SanitizableValue) =>
     defaultAuditTrailManager.recordSecurityViolation(violation, context),
 
   /**
    * Record a command execution
    */
-  recordCommand: (command: string, args: string[], outcome: 'success' | 'failure', context?: any) =>
+  recordCommand: (command: string, args: string[], outcome: 'success' | 'failure', context?: SanitizableValue) =>
     defaultAuditTrailManager.recordCommandExecution(command, args, outcome, context),
 
   /**

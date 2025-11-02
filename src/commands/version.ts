@@ -15,6 +15,8 @@ import type { CommandContext } from '../types/cli.js';
  */
 export default function (program: Command, context: CommandContext) {
   const { logger, prompts } = context;
+  const log = logger as any;
+  const prompt = prompts as any;
 
   program
     .command('version')
@@ -26,20 +28,20 @@ export default function (program: Command, context: CommandContext) {
     .option('--validate <version>', 'validate semantic version format')
     .action(async (options) => {
       try {
-        logger.intro('Version Management');
+        log.intro('Version Management');
 
         // Validate semantic version
         if (options.validate) {
           try {
             const version = parseVersion(options.validate);
-            logger.success(`✓ Valid semantic version: ${version.raw}`);
-            logger.info(
+            log.success(`✓ Valid semantic version: ${version.raw}`);
+            log.info(
               `  Major: ${version.major}, Minor: ${version.minor}, Patch: ${version.patch}`
             );
-            if (version.prerelease) logger.info(`  Prerelease: ${version.prerelease}`);
-            if (version.build) logger.info(`  Build: ${version.build}`);
+            if (version.prerelease) log.info(`  Prerelease: ${version.prerelease}`);
+            if (version.build) log.info(`  Build: ${version.build}`);
           } catch (error) {
-            logger.error(
+            log.error(
               `✗ Invalid semantic version: ${error instanceof Error ? error.message : String(error)}`
             );
           }
@@ -50,7 +52,7 @@ export default function (program: Command, context: CommandContext) {
         if (options.compare) {
           const [v1, v2] = options.compare.split(',');
           if (!v1 || !v2) {
-            logger.error('Please provide two versions: --compare v1.0.0,v2.0.0');
+            log.error('Please provide two versions: --compare v1.0.0,v2.0.0');
             return;
           }
 
@@ -68,17 +70,17 @@ export default function (program: Command, context: CommandContext) {
               result = `${v1} === ${v2}`;
             }
 
-            logger.success(`Comparison: ${result}`);
+            log.success(`Comparison: ${result}`);
 
             if (comparison !== 0) {
               const changeType =
                 compareVersions(version1, version2) < 0
                   ? getChangeType(version1, version2)
                   : getChangeType(version2, version1);
-              logger.info(`Change type: ${changeType}`);
+              log.info(`Change type: ${changeType}`);
             }
           } catch (error) {
-            logger.error(
+            log.error(
               `Comparison failed: ${error instanceof Error ? error.message : String(error)}`
             );
           }
@@ -88,7 +90,7 @@ export default function (program: Command, context: CommandContext) {
         // Check if we're in a git repository for git-based commands
         const isGitRepo = await isGitRepository();
         if (!isGitRepo && (options.listTags || options.diff || options.plan)) {
-          logger.error('Git-based commands require a git repository');
+          log.error('Git-based commands require a git repository');
           return;
         }
 
@@ -97,22 +99,22 @@ export default function (program: Command, context: CommandContext) {
           try {
             const tags = await getAllTags();
             if (tags.length === 0) {
-              logger.info('No tags found in repository');
+              log.info('No tags found in repository');
             } else {
-              logger.success(`Found ${tags.length} tags:`);
+              log.success(`Found ${tags.length} tags:`);
               tags.forEach((tag, index) => {
                 try {
                   const version = parseVersion(tag);
-                  logger.info(
+                  log.info(
                     `  ${index + 1}. ${tag} (v${version.major}.${version.minor}.${version.patch})`
                   );
                 } catch {
-                  logger.info(`  ${index + 1}. ${tag} (non-semver)`);
+                  log.info(`  ${index + 1}. ${tag} (non-semver)`);
                 }
               });
             }
           } catch (error) {
-            logger.error(
+            log.error(
               `Failed to list tags: ${error instanceof Error ? error.message : String(error)}`
             );
           }
@@ -123,42 +125,42 @@ export default function (program: Command, context: CommandContext) {
         if (options.diff) {
           const [from, to] = options.diff.split(',');
           if (!from || !to) {
-            logger.error('Please provide two versions: --diff v1.0.0,v2.0.0');
+            log.error('Please provide two versions: --diff v1.0.0,v2.0.0');
             return;
           }
 
           try {
-            logger.step(`Getting diff from ${from} to ${to}...`);
+            log.step(`Getting diff from ${from} to ${to}...`);
             const diff = await getVersionDiff(from.trim(), to.trim());
 
-            logger.success(`Version Diff: ${diff.from.raw} → ${diff.to.raw}`);
-            logger.info(`Change Type: ${diff.changeType}`);
-            logger.info(`Breaking Changes: ${diff.breaking ? 'Yes' : 'No'}`);
-            logger.info(`Files Changed: ${diff.files.length}`);
-            logger.info(`Commits: ${diff.commits.length}`);
+            log.success(`Version Diff: ${diff.from.raw} → ${diff.to.raw}`);
+            log.info(`Change Type: ${diff.changeType}`);
+            log.info(`Breaking Changes: ${diff.breaking ? 'Yes' : 'No'}`);
+            log.info(`Files Changed: ${diff.files.length}`);
+            log.info(`Commits: ${diff.commits.length}`);
 
             if (diff.files.length > 0) {
-              logger.info('\nFile Changes:');
+              log.info('\nFile Changes:');
               diff.files.slice(0, 10).forEach((file) => {
                 const status = file.status.charAt(0).toUpperCase() + file.status.slice(1);
-                logger.info(`  ${status}: ${file.path} (+${file.insertions}/-${file.deletions})`);
+                log.info(`  ${status}: ${file.path} (+${file.insertions}/-${file.deletions})`);
               });
               if (diff.files.length > 10) {
-                logger.info(`  ... and ${diff.files.length - 10} more files`);
+                log.info(`  ... and ${diff.files.length - 10} more files`);
               }
             }
 
             if (diff.commits.length > 0) {
-              logger.info('\nRecent Commits:');
+              log.info('\nRecent Commits:');
               diff.commits.slice(0, 5).forEach((commit) => {
-                logger.info(`  ${commit.shortHash}: ${commit.message}`);
+                log.info(`  ${commit.shortHash}: ${commit.message}`);
               });
               if (diff.commits.length > 5) {
-                logger.info(`  ... and ${diff.commits.length - 5} more commits`);
+                log.info(`  ... and ${diff.commits.length - 5} more commits`);
               }
             }
           } catch (error) {
-            logger.error(`Diff failed: ${error instanceof Error ? error.message : String(error)}`);
+            log.error(`Diff failed: ${error instanceof Error ? error.message : String(error)}`);
           }
           return;
         }
@@ -167,38 +169,38 @@ export default function (program: Command, context: CommandContext) {
         if (options.plan) {
           const [from, to] = options.plan.split(',');
           if (!from || !to) {
-            logger.error('Please provide two versions: --plan v1.0.0,v2.0.0');
+            log.error('Please provide two versions: --plan v1.0.0,v2.0.0');
             return;
           }
 
           try {
-            logger.step(`Creating update plan from ${from} to ${to}...`);
+            log.step(`Creating update plan from ${from} to ${to}...`);
             const plan = await createUpdatePlan(from.trim(), to.trim(), process.cwd());
 
-            logger.success(`Update Plan: ${plan.fromVersion} → ${plan.toVersion}`);
-            logger.info(`Strategy: ${plan.strategy.type}`);
-            logger.info(`Backup Required: ${plan.backupRequired ? 'Yes' : 'No'}`);
-            logger.info(`Files to Update: ${plan.diff.files.length}`);
-            logger.info(`Conflicts: ${plan.conflicts.length}`);
+            log.success(`Update Plan: ${plan.fromVersion} → ${plan.toVersion}`);
+            log.info(`Strategy: ${plan.strategy.type}`);
+            log.info(`Backup Required: ${plan.backupRequired ? 'Yes' : 'No'}`);
+            log.info(`Files to Update: ${plan.diff.files.length}`);
+            log.info(`Conflicts: ${plan.conflicts.length}`);
 
             if (plan.conflicts.length > 0) {
-              logger.warn('\nPotential Conflicts:');
+              log.warn('\nPotential Conflicts:');
               plan.conflicts.forEach((conflict) => {
-                logger.warn(`  ${conflict.file}: ${conflict.description}`);
+                log.warn(`  ${conflict.file}: ${conflict.description}`);
               });
             }
 
             if (plan.diff.files.length > 0) {
-              logger.info('\nPlanned Changes:');
+              log.info('\nPlanned Changes:');
               plan.diff.files.slice(0, 10).forEach((file) => {
-                logger.info(`  ${file.status}: ${file.path}`);
+                log.info(`  ${file.status}: ${file.path}`);
               });
               if (plan.diff.files.length > 10) {
-                logger.info(`  ... and ${plan.diff.files.length - 10} more files`);
+                log.info(`  ... and ${plan.diff.files.length - 10} more files`);
               }
             }
           } catch (error) {
-            logger.error(
+            log.error(
               `Update plan failed: ${error instanceof Error ? error.message : String(error)}`
             );
           }
@@ -206,9 +208,9 @@ export default function (program: Command, context: CommandContext) {
         }
 
         // Interactive mode if no specific option provided
-        logger.info('Interactive version management');
+        log.info('Interactive version management');
 
-        const action = await prompts.select({
+        const action = await prompt.select({
           message: 'What would you like to do?',
           options: [
             { value: 'validate', label: 'Validate semantic version' },
@@ -225,27 +227,27 @@ export default function (program: Command, context: CommandContext) {
 
         switch (action) {
           case 'validate': {
-            const version = await prompts.text({
+            const version = await prompt.text({
               message: 'Enter version to validate:',
               placeholder: '1.2.3',
             });
 
             try {
               const parsed = parseVersion(version);
-              logger.success(`✓ Valid semantic version: ${parsed.raw}`);
+              log.success(`✓ Valid semantic version: ${parsed.raw}`);
             } catch (error) {
-              logger.error(`✗ Invalid: ${error instanceof Error ? error.message : String(error)}`);
+              log.error(`✗ Invalid: ${error instanceof Error ? error.message : String(error)}`);
             }
             break;
           }
 
           case 'compare': {
-            const v1 = await prompts.text({
+            const v1 = await prompt.text({
               message: 'Enter first version:',
               placeholder: '1.0.0',
             });
 
-            const v2 = await prompts.text({
+            const v2 = await prompt.text({
               message: 'Enter second version:',
               placeholder: '2.0.0',
             });
@@ -256,14 +258,14 @@ export default function (program: Command, context: CommandContext) {
               const comparison = compareVersions(version1, version2);
 
               if (comparison < 0) {
-                logger.success(`${v1} < ${v2}`);
+                log.success(`${v1} < ${v2}`);
               } else if (comparison > 0) {
-                logger.success(`${v1} > ${v2}`);
+                log.success(`${v1} > ${v2}`);
               } else {
-                logger.success(`${v1} === ${v2}`);
+                log.success(`${v1} === ${v2}`);
               }
             } catch (error) {
-              logger.error(
+              log.error(
                 `Comparison failed: ${error instanceof Error ? error.message : String(error)}`
               );
             }
@@ -273,11 +275,11 @@ export default function (program: Command, context: CommandContext) {
           case 'list': {
             const tags = await getAllTags();
             if (tags.length === 0) {
-              logger.info('No tags found');
+              log.info('No tags found');
             } else {
-              logger.success(`Found ${tags.length} tags`);
+              log.success(`Found ${tags.length} tags`);
               for (const tag of tags) {
-                logger.info(`  ${tag}`);
+                log.info(`  ${tag}`);
               }
             }
             break;
@@ -287,16 +289,16 @@ export default function (program: Command, context: CommandContext) {
           case 'plan': {
             const tags = await getAllTags();
             if (tags.length < 2) {
-              logger.error('Need at least 2 tags for diff/plan operations');
+              log.error('Need at least 2 tags for diff/plan operations');
               break;
             }
 
-            const from = await prompts.select({
+            const from = await prompt.select({
               message: 'Select source version:',
               options: tags.map((tag) => ({ value: tag, label: tag })),
             });
 
-            const to = await prompts.select({
+            const to = await prompt.select({
               message: 'Select target version:',
               options: tags
                 .filter((tag) => tag !== from)
@@ -305,20 +307,20 @@ export default function (program: Command, context: CommandContext) {
 
             if (action === 'diff') {
               const diff = await getVersionDiff(from, to);
-              logger.success(`Diff: ${diff.from.raw} → ${diff.to.raw}`);
-              logger.info(`Files changed: ${diff.files.length}, Commits: ${diff.commits.length}`);
+              log.success(`Diff: ${diff.from.raw} → ${diff.to.raw}`);
+              log.info(`Files changed: ${diff.files.length}, Commits: ${diff.commits.length}`);
             } else {
               const plan = await createUpdatePlan(from, to, process.cwd());
-              logger.success(`Plan: ${plan.fromVersion} → ${plan.toVersion}`);
-              logger.info(`Strategy: ${plan.strategy.type}, Conflicts: ${plan.conflicts.length}`);
+              log.success(`Plan: ${plan.fromVersion} → ${plan.toVersion}`);
+              log.info(`Strategy: ${plan.strategy.type}, Conflicts: ${plan.conflicts.length}`);
             }
             break;
           }
         }
 
-        logger.outro('Version management completed');
+        log.outro('Version management completed');
       } catch (error) {
-        logger.error(`Command failed: ${error instanceof Error ? error.message : String(error)}`);
+        log.error(`Command failed: ${error instanceof Error ? error.message : String(error)}`);
       }
     });
 }

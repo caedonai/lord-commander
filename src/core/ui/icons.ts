@@ -155,12 +155,12 @@ export class PlatformCapabilities {
   /**
    * Check if we have a valid mocked environment in tests
    */
-  private static hasValidMockedEnvironment(indicators: any): boolean {
+  private static hasValidMockedEnvironment(indicators: Record<string, unknown>): boolean {
     // Safe environment access - handle null/undefined process.env
     const safeEnv = process.env || {};
 
     // If any platform-specific indicators are set, assume we have a mocked environment
-    return (
+    return Boolean(
       indicators.isVSCode ||
       indicators.isWindowsTerminal ||
       indicators.isConEmu ||
@@ -300,7 +300,7 @@ export class PlatformCapabilities {
  */
 // biome-ignore lint/complexity/noStaticOnlyClass: Utility class for icon management and fallbacks
 export class IconProvider {
-  private static icons: ExtendedIcons;
+  private static icons: ExtendedIcons | undefined;
 
   /**
    * Get icons with appropriate fallbacks based on platform capabilities
@@ -370,7 +370,7 @@ export class IconProvider {
    * Reset cached icons (useful for testing different platforms)
    */
   static reset(): void {
-    IconProvider.icons = undefined as any;
+    IconProvider.icons = undefined;
     PlatformCapabilities.reset();
   }
 

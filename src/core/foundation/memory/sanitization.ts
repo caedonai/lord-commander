@@ -32,6 +32,8 @@
  * ```
  */
 
+import type { SanitizableValue, SanitizableObject, TODO_REPLACE_ANY } from '../../../types/common.js';
+
 import { sanitizeErrorMessage } from '../errors/sanitization.js';
 import { analyzeLogSecurity, sanitizeLogOutputAdvanced } from '../logging/security.js';
 import { analyzeInputSecurity } from '../security/patterns.js';
@@ -148,7 +150,7 @@ export interface ObjectSanitizationResult {
   readonly isValid: boolean;
 
   /** Sanitized object (if successful) */
-  readonly sanitized?: any;
+  readonly sanitized?: SanitizableValue;
 
   /** Original object type classification */
   readonly originalType: ObjectType;
@@ -184,8 +186,8 @@ export interface ObjectSanitizationViolation {
   readonly severity: 'low' | 'medium' | 'high' | 'critical';
   readonly path: string;
   readonly description: string;
-  readonly originalValue: any;
-  readonly sanitizedValue: any;
+  readonly originalValue: SanitizableValue;
+  readonly sanitizedValue: SanitizableValue;
   readonly recommendation: string;
 }
 
@@ -346,7 +348,7 @@ export class AdvancedObjectSanitizer {
    * @param path - Current object path for violation reporting
    * @returns Sanitization result with metadata
    */
-  public async sanitizeObject(obj: any, path: string = 'root'): Promise<ObjectSanitizationResult> {
+  public async sanitizeObject(obj: SanitizableValue, path: string = 'root'): Promise<ObjectSanitizationResult> {
     const startTime = performance.now();
     const violations: ObjectSanitizationViolation[] = [];
     const warnings: string[] = [];
@@ -474,7 +476,7 @@ export class AdvancedObjectSanitizer {
    * @param objects - Array of objects to sanitize
    * @returns Array of sanitization results
    */
-  public async sanitizeBatch(objects: any[]): Promise<ObjectSanitizationResult[]> {
+  public async sanitizeBatch(objects: SanitizableValue[]): Promise<ObjectSanitizationResult[]> {
     if (!this.config.enableBatchProcessing || objects.length <= this.config.batchSize) {
       // Process all at once if batch processing disabled or small batch
       return Promise.all(objects.map((obj, index) => this.sanitizeObject(obj, `batch[${index}]`)));
@@ -505,7 +507,7 @@ export class AdvancedObjectSanitizer {
    * @param obj - Object to classify
    * @returns Object type classification
    */
-  private classifyObjectType(obj: any): ObjectType {
+  private classifyObjectType(obj: unknown): ObjectType {
     if (obj === null || obj === undefined) return 'primitive';
 
     const type = typeof obj;
@@ -552,7 +554,7 @@ export class AdvancedObjectSanitizer {
    * @returns Array of security violations
    */
   private async detectSecurityViolations(
-    obj: any,
+    obj: SanitizableValue,
     path: string,
     _type: ObjectType
   ): Promise<ObjectSanitizationViolation[]> {
@@ -649,7 +651,7 @@ export class AdvancedObjectSanitizer {
    * @returns Sanitization strategy
    */
   private determineSanitizationStrategy(
-    _obj: any,
+    _obj: SanitizableValue,
     type: ObjectType,
     violations: ObjectSanitizationViolation[]
   ): SanitizationStrategy {
@@ -714,16 +716,16 @@ export class AdvancedObjectSanitizer {
    * @returns Sanitized object and size reduction
    */
   private async applySanitizationStrategy(
-    obj: any,
+    obj: SanitizableValue,
     type: ObjectType,
     strategy: SanitizationStrategy,
     path: string,
     violations: ObjectSanitizationViolation[],
     warnings: string[]
-  ): Promise<{ sanitized: any; sizeReduction: number }> {
+  ): Promise<{ sanitized: SanitizableValue; sizeReduction: number }> {
     const originalSize = this.calculateObjectSize(obj);
 
-    let sanitized: any;
+    let sanitized: SanitizableValue;
 
     switch (strategy) {
       case 'preserve':
@@ -773,13 +775,13 @@ export class AdvancedObjectSanitizer {
    * @returns Sanitized object
    */
   private async deepSanitizeObject(
-    obj: any,
+    obj: SanitizableValue,
     path: string,
     violations: ObjectSanitizationViolation[],
     warnings: string[],
     depth: number = 0,
     seen: WeakSet<object> = new WeakSet()
-  ): Promise<any> {
+  ): Promise<SanitizableValue> {
     // Base cases
     if (obj === null || obj === undefined) return obj;
 
@@ -842,11 +844,11 @@ export class AdvancedObjectSanitizer {
    * @returns Sanitized primitive
    */
   private sanitizePrimitive(
-    value: any,
+    value: SanitizableValue,
     path: string,
     violations: ObjectSanitizationViolation[],
     warnings: string[]
-  ): any {
+  ): SanitizableValue {
     if (typeof value === 'string') {
       return this.sanitizeString(value, path, violations, warnings);
     }
@@ -940,7 +942,7 @@ export class AdvancedObjectSanitizer {
     path: string,
     _violations: ObjectSanitizationViolation[],
     warnings: string[]
-  ): any {
+  ): SanitizableValue {
     if (this.config.sanitizeFunctions) {
       warnings.push(`Function sanitized at path '${path}'`);
       return `[Function: ${func.name || 'anonymous'}]`;
@@ -960,13 +962,13 @@ export class AdvancedObjectSanitizer {
    * @returns Sanitized array
    */
   private async sanitizeArray(
-    arr: any[],
+    arr: SanitizableValue[],
     path: string,
     violations: ObjectSanitizationViolation[],
     warnings: string[],
     depth: number,
     seen: WeakSet<object>
-  ): Promise<any[]> {
+  ): Promise<SanitizableValue[]> {
     if (arr.length > this.config.maxArrayLength) {
       warnings.push(
         `Array truncated at path '${path}': ${arr.length} > ${this.config.maxArrayLength} elements`
@@ -974,7 +976,7 @@ export class AdvancedObjectSanitizer {
       arr = arr.slice(0, this.config.maxArrayLength);
     }
 
-    const sanitized: any[] = [];
+    const sanitized: SanitizableValue[] = [];
 
     for (let i = 0; i < arr.length; i++) {
       const elementPath = `${path}[${i}]`;
@@ -1004,14 +1006,14 @@ export class AdvancedObjectSanitizer {
    * @returns Sanitized object
    */
   private async sanitizePlainObject(
-    obj: any,
+    obj: SanitizableValue,
     path: string,
     violations: ObjectSanitizationViolation[],
     warnings: string[],
     depth: number,
     seen: WeakSet<object>
-  ): Promise<any> {
-    const sanitized: any = {};
+  ): Promise<SanitizableValue> {
+    const sanitized: SanitizableValue = {};
     const keys = Object.keys(obj);
 
     if (keys.length > this.config.maxProperties) {
@@ -1092,7 +1094,7 @@ export class AdvancedObjectSanitizer {
    * @param warnings - Warning array
    * @returns Sanitized representation
    */
-  private sanitizeBuffer(buffer: Buffer, path: string, warnings: string[]): any {
+  private sanitizeBuffer(buffer: Buffer, path: string, warnings: string[]): SanitizableValue {
     const maxBufferSize = 1024; // 1KB limit for buffers
 
     if (buffer.length > maxBufferSize) {
@@ -1115,7 +1117,7 @@ export class AdvancedObjectSanitizer {
    * @param path - Current path
    * @returns Redacted placeholder
    */
-  private redactObject(obj: any, type: ObjectType, _path: string): any {
+  private redactObject(obj: SanitizableValue, type: ObjectType, _path: string): SanitizableValue {
     switch (type) {
       case 'function':
         return `[Function: ${obj.name || 'anonymous'}]`;
@@ -1139,7 +1141,7 @@ export class AdvancedObjectSanitizer {
    * @param type - Object type
    * @returns Truncated object
    */
-  private truncateObject(obj: any, type: ObjectType): any {
+  private truncateObject(obj: SanitizableValue, type: ObjectType): SanitizableValue {
     if (type === 'array' && Array.isArray(obj)) {
       const truncated = obj.slice(0, Math.min(10, this.config.maxArrayLength));
       if (obj.length > truncated.length) {
@@ -1151,7 +1153,7 @@ export class AdvancedObjectSanitizer {
     if (type === 'plain-object' || type === 'class-instance') {
       const keys = Object.keys(obj);
       const maxKeys = Math.min(10, this.config.maxProperties);
-      const truncated: any = {};
+      const truncated: SanitizableObject = {};
 
       for (let i = 0; i < maxKeys && i < keys.length; i++) {
         truncated[keys[i]] = obj[keys[i]];
@@ -1177,11 +1179,11 @@ export class AdvancedObjectSanitizer {
    * @returns Flattened object
    */
   private flattenObject(
-    obj: any,
+    obj: SanitizableValue,
     path: string,
     _violations: ObjectSanitizationViolation[],
     warnings: string[]
-  ): any {
+  ): SanitizableValue {
     if (Array.isArray(obj)) {
       warnings.push(`Array flattened at path '${path}'`);
       return {
@@ -1212,7 +1214,7 @@ export class AdvancedObjectSanitizer {
    * @returns Array of injection violations
    */
   private async detectInjectionPatterns(
-    obj: any,
+    obj: SanitizableValue,
     path: string
   ): Promise<ObjectSanitizationViolation[]> {
     const violations: ObjectSanitizationViolation[] = [];
@@ -1255,14 +1257,14 @@ export class AdvancedObjectSanitizer {
 
   // Helper methods for object analysis
 
-  private hasPrototypePollution(obj: any): boolean {
+  private hasPrototypePollution(obj: unknown): boolean {
     if (typeof obj !== 'object' || obj === null) return false;
 
     const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
     return dangerousKeys.some((key) => Object.hasOwn(obj, key));
   }
 
-  private hasDangerousFunctions(obj: any): boolean {
+  private hasDangerousFunctions(obj: unknown): boolean {
     if (typeof obj !== 'object' || obj === null) return false;
 
     for (const value of Object.values(obj)) {
@@ -1281,10 +1283,10 @@ export class AdvancedObjectSanitizer {
     return false;
   }
 
-  private hasCircularReferences(obj: any): boolean {
+  private hasCircularReferences(obj: unknown): boolean {
     const seen = new WeakSet();
 
-    const check = (current: any): boolean => {
+    const check = (current: SanitizableValue): boolean => {
       if (typeof current !== 'object' || current === null) return false;
       if (seen.has(current)) return true;
 
@@ -1328,7 +1330,7 @@ export class AdvancedObjectSanitizer {
     return dangerous.includes(key);
   }
 
-  private calculateObjectSize(obj: any): number {
+  private calculateObjectSize(obj: unknown): number {
     if (obj === null || obj === undefined) return 0;
 
     try {
@@ -1351,12 +1353,12 @@ export class AdvancedObjectSanitizer {
     }
   }
 
-  private calculateObjectDepth(obj: any): number {
+  private calculateObjectDepth(obj: unknown): number {
     if (typeof obj !== 'object' || obj === null) return 0;
 
     const seen = new WeakSet();
 
-    const getDepth = (current: any): number => {
+    const getDepth = (current: SanitizableValue): number => {
       if (typeof current !== 'object' || current === null) return 0;
       if (seen.has(current)) return 0; // Avoid circular references
 
@@ -1383,7 +1385,7 @@ export class AdvancedObjectSanitizer {
 
   // Cache management methods
 
-  private generateCacheKey(obj: any, path: string): string {
+  private generateCacheKey(obj: SanitizableValue, path: string): string {
     try {
       const objStr = typeof obj === 'object' ? JSON.stringify(obj) : String(obj);
       const hash = this.simpleHash(objStr + path);
@@ -1452,8 +1454,8 @@ export class AdvancedObjectSanitizer {
   // Metrics and reporting methods
 
   private calculateMetrics(
-    _original: any,
-    sanitized: any,
+    _original: SanitizableValue,
+    sanitized: SanitizableValue,
     processingTime: number
   ): SanitizationMetrics {
     const sanitizedSize = this.calculateObjectSize(sanitized);
@@ -1470,8 +1472,8 @@ export class AdvancedObjectSanitizer {
   }
 
   private async generateSanitizationReport(
-    _original: any,
-    sanitized: any,
+    _original: SanitizableValue,
+    sanitized: SanitizableValue,
     violations: ObjectSanitizationViolation[],
     metrics: SanitizationMetrics
   ): Promise<SanitizationReport> {
@@ -1589,9 +1591,9 @@ export function createObjectSanitizer(
  * @returns Sanitized object or null if sanitization fails
  */
 export async function quickSanitizeObject(
-  obj: any,
+  obj: SanitizableValue,
   level: ObjectSanitizationLevel = 'standard'
-): Promise<any> {
+): Promise<SanitizableValue> {
   const sanitizer = createObjectSanitizer(level);
   const result = await sanitizer.sanitizeObject(obj);
 
@@ -1616,9 +1618,9 @@ export async function quickSanitizeObject(
  * @returns Array of sanitized objects
  */
 export async function batchSanitizeObjects(
-  objects: any[],
+  objects: SanitizableValue[],
   level: ObjectSanitizationLevel = 'standard'
-): Promise<any[]> {
+): Promise<SanitizableValue[]> {
   const sanitizer = createObjectSanitizer(level, { enableBatchProcessing: true });
   const results = await sanitizer.sanitizeBatch(objects);
 

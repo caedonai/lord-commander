@@ -13,6 +13,7 @@ import path from 'node:path';
 import { exists, readDir, readFile } from '../core/execution/fs.js';
 import { CLIError } from '../core/foundation/errors/errors.js';
 import { createLogger } from '../core/ui/logger.js';
+import { ConfigValue } from '../types/common.js';
 
 const workspaceLogger = createLogger({ prefix: 'workspace' });
 
@@ -85,9 +86,9 @@ export interface PackageJson {
   optionalDependencies?: Record<string, string>;
   private?: boolean;
   workspaces?: string[] | { packages: string[]; nohoist?: string[] };
-  nx?: Record<string, any>;
-  turbo?: Record<string, any>;
-  [key: string]: any;
+  nx?: Record<string, ConfigValue>;
+  turbo?: Record<string, ConfigValue>;
+  packageManager?: string;
 }
 
 export interface WorkspaceConfiguration {
@@ -140,11 +141,11 @@ export interface DependencyEdge {
 // Workspace tool configurations
 export interface NxConfiguration {
   version: string;
-  projects: Record<string, any>;
-  targetDefaults?: Record<string, any>;
-  namedInputs?: Record<string, any>;
-  generators?: Record<string, any>;
-  tasksRunnerOptions?: Record<string, any>;
+  projects: Record<string, ConfigValue>;
+  targetDefaults?: Record<string, ConfigValue>;
+  namedInputs?: Record<string, ConfigValue>;
+  generators?: Record<string, ConfigValue>;
+  tasksRunnerOptions?: Record<string, ConfigValue>;
 }
 
 export interface LernaConfiguration {
@@ -152,7 +153,7 @@ export interface LernaConfiguration {
   packages: string[];
   npmClient?: string;
   useWorkspaces?: boolean;
-  command?: Record<string, any>;
+  command?: Record<string, ConfigValue>;
 }
 
 export interface RushConfiguration {
@@ -168,7 +169,7 @@ export interface RushConfiguration {
 export interface TurboConfiguration {
   schema?: string;
   globalDependencies?: string[];
-  pipeline: Record<string, any>;
+  pipeline: Record<string, ConfigValue>;
   globalEnv?: string[];
 }
 
@@ -199,7 +200,7 @@ export interface BatchOperationOptions {
   ignore?: string[];
   since?: string;
   onProgress?: (current: number, total: number, packageName: string) => void;
-  onPackageComplete?: (pkg: WorkspacePackage, result: any) => void;
+  onPackageComplete?: (pkg: WorkspacePackage, result: unknown) => void;
   onPackageError?: (pkg: WorkspacePackage, error: Error) => void;
 }
 
@@ -332,7 +333,7 @@ export async function detectPackageManager(cwd: string = process.cwd()): Promise
     if (await exists(packageJsonPath)) {
       const packageJson: PackageJson = JSON.parse(await readFile(packageJsonPath));
 
-      if (packageJson.packageManager) {
+      if (packageJson.packageManager && typeof packageJson.packageManager === 'string') {
         const manager = packageJson.packageManager.split('@')[0];
         if (['npm', 'yarn', 'pnpm', 'bun'].includes(manager)) {
           return manager as PackageManager;

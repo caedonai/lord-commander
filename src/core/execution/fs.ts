@@ -8,6 +8,7 @@
 import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { JsonValue } from '../../types/common.js';
 import { DEFAULT_IGNORE_PATTERNS } from '../foundation/core/constants.js';
 import { FileSystemError } from '../foundation/errors/errors.js';
 import { createLogger } from '../ui/logger.js';
@@ -179,7 +180,7 @@ export async function writeFile(
 /**
  * Read and parse a JSON file
  */
-export async function readJSON<T = any>(filePath: string): Promise<T> {
+export async function readJSON<T = JsonValue>(filePath: string): Promise<T> {
   try {
     const content = await readFile(filePath);
     const parsed = JSON.parse(content);
@@ -198,7 +199,7 @@ export async function readJSON<T = any>(filePath: string): Promise<T> {
  */
 export async function writeJSON(
   filePath: string,
-  data: any,
+  data: JsonValue,
   options: FileOperationOptions & { indent?: number } = {}
 ): Promise<void> {
   try {

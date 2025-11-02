@@ -55,7 +55,7 @@ const DEFAULT_ERROR_HANDLER_CONFIG: ErrorHandlerSecurityOptions = {
  * @throws {ErrorHandlerValidationError} If validation fails
  */
 export function validateErrorHandler(
-  handler: any,
+  handler: unknown,
   options: ErrorHandlerSecurityOptions = {}
 ): void {
   const config = { ...DEFAULT_ERROR_HANDLER_CONFIG, ...options };
@@ -297,7 +297,7 @@ const DEFAULT_SECURITY_CONFIG: SecurityConfig = {
 /**
  * Calculate approximate memory size of an object
  */
-function getObjectMemorySize(obj: any, visited = new WeakSet()): number {
+function getObjectMemorySize(obj: unknown, visited = new WeakSet()): number {
   if (obj === null || obj === undefined) return 0;
   if (typeof obj === 'number') return 8;
   if (typeof obj === 'boolean') return 4;
@@ -326,7 +326,8 @@ function getObjectMemorySize(obj: any, visited = new WeakSet()): number {
 
     for (const key of limitedKeys) {
       size += key.length * 2; // Key string
-      size += getObjectMemorySize(obj[key], visited);
+      const value = (obj as Record<string, unknown>)[key];
+      size += getObjectMemorySize(value, visited);
       // Don't break early - let it calculate the full size for warning purposes
       // Just set a reasonable upper bound to prevent infinite calculation
       if (size > DEFAULT_SECURITY_CONFIG.maxErrorObjectSize * 10) break;

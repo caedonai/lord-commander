@@ -1,3 +1,5 @@
+// CLI interface types - using unknown for compatibility with type assertions in commands
+
 export interface CreateCliOptions {
   name?: string;
   version?: string;
@@ -34,16 +36,16 @@ export interface CreateCliOptions {
  */
 export interface CommandContext {
   // Core utilities
-  fs?: any; // File system operations (implemented)
-  execa?: any; // Process execution (implemented)
-  logger: any; // Logging and spinners (implemented)
-  prompts: any; // Interactive user input (implemented)
-  temp?: any; // Temporary workspace management (to be implemented)
+  fs?: unknown; // File system operations (implemented)
+  execa?: unknown; // Process execution (implemented)  
+  logger: unknown; // Logging and spinners (implemented)
+  prompts: unknown; // Interactive user input (implemented)
+  temp?: unknown; // Temporary workspace management (to be implemented)
 
   // Plugin utilities (all optional - only available when explicitly enabled)
-  git?: any; // Git operations (implemented, plugin)
-  config?: any; // Configuration management (to be implemented)
-  telemetry?: any; // Analytics and tracking (to be implemented)
+  git?: unknown; // Git operations (implemented, plugin)
+  config?: unknown; // Configuration management (to be implemented)
+  telemetry?: unknown; // Analytics and tracking (to be implemented)
 
   // Configuration and state
   cwd?: string; // Current working directory

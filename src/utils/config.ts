@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { ConfigValue } from '../types/common.js';
+
 export interface ConfigType {
-  [key: string]: any;
+  [key: string]: ConfigValue;
 }
 
 /**

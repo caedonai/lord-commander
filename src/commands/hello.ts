@@ -3,6 +3,9 @@ import type { CommandContext } from '../types/cli';
 
 export default function (program: Command, context: CommandContext) {
   const { logger, execa, fs } = context;
+  const log = logger as any;
+  const exec = execa as any;
+  const fileSystem = fs as any;
 
   program
     .command('hello')
@@ -14,68 +17,68 @@ export default function (program: Command, context: CommandContext) {
     .action(async (name = 'World', options) => {
       // Enable verbose logging if requested
       if (options.verbose) {
-        logger.enableVerbose();
+        log.enableVerbose();
       }
 
-      logger.intro('Hello Command');
-      logger.info(`Greeting ${name}...`);
+      log.intro('Hello Command');
+      log.info(`Greeting ${name}...`);
 
       let message = `Hello, ${name}!`;
 
       if (options.uppercase) {
         message = message.toUpperCase();
-        logger.debug('Message converted to uppercase');
+        log.debug('Message converted to uppercase');
       }
 
-      logger.success(message);
+      log.success(message);
 
       // Show basic system and project info if requested
       if (options.info) {
         try {
-          logger.info('Gathering system information...');
+          log.info('Gathering system information...');
 
           // Show Node.js version using execa
-          const nodeResult = await execa('node', ['--version']);
-          logger.info(`Node.js version: ${nodeResult.stdout}`);
+          const nodeResult = await exec('node', ['--version']);
+          log.info(`Node.js version: ${nodeResult.stdout}`);
 
           // Show npm version
-          const npmResult = await execa('npm', ['--version']);
-          logger.info(`npm version: ${npmResult.stdout}`);
+          const npmResult = await exec('npm', ['--version']);
+          log.info(`npm version: ${npmResult.stdout}`);
 
           // Show current working directory using fs
           const cwd = process.cwd();
-          logger.info(`Current directory: ${cwd}`);
+          log.info(`Current directory: ${cwd}`);
 
           // Check if package.json exists
-          const packageJsonExists = await fs.exists('package.json');
-          logger.info(`Has package.json: ${packageJsonExists ? '✅' : '❌'}`);
+          const packageJsonExists = await fileSystem.exists('package.json');
+          log.info(`Has package.json: ${packageJsonExists ? '✅' : '❌'}`);
 
           if (packageJsonExists) {
-            const packageJson = JSON.parse(await fs.readFile('package.json', 'utf8'));
-            logger.info(`Project: ${packageJson.name || 'unnamed'}`);
-            logger.info(`Version: ${packageJson.version || 'unknown'}`);
+            const packageJson = JSON.parse(await fileSystem.readFile('package.json', 'utf8'));
+            log.info(`Project: ${packageJson.name || 'unnamed'}`);
+            log.info(`Version: ${packageJson.version || 'unknown'}`);
 
             if (packageJson.dependencies) {
               const depCount = Object.keys(packageJson.dependencies).length;
-              logger.info(`Dependencies: ${depCount}`);
+              log.info(`Dependencies: ${depCount}`);
             }
 
             if (packageJson.scripts) {
               const scriptNames = Object.keys(packageJson.scripts);
-              logger.info(`Available scripts: ${scriptNames.join(', ')}`);
+              log.info(`Available scripts: ${scriptNames.join(', ')}`);
             }
           }
 
           // Show environment info
-          logger.info(`Platform: ${process.platform}`);
-          logger.info(`Architecture: ${process.arch}`);
+          log.info(`Platform: ${process.platform}`);
+          log.info(`Architecture: ${process.arch}`);
         } catch (error) {
-          logger.error(
+          log.error(
             `System info error: ${error instanceof Error ? error.message : String(error)}`
           );
         }
       }
 
-      logger.outro('Command completed!');
+      log.outro('Command completed!');
     });
 }
