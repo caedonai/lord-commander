@@ -27,8 +27,10 @@
   "scripts": {
     "build": "tsup --config tsup.config.ts",
     "dev": "node --loader ts-node/esm src/cli.ts",
-    "lint": "eslint src/**/*.ts --fix",
-    "lint:check": "eslint src/**/*.ts",
+    "lint": "ultracite fix .",
+    "lint:check": "ultracite check .",
+    "format": "ultracite fix .",
+    "format:check": "ultracite check .",
     "test": "vitest --run",
     "test:run": "vitest run",
     "test:watch": "vitest watch",
@@ -94,14 +96,12 @@
   },
   "devDependencies": {
     "@types/node": "^24.7.2",
-    "@typescript-eslint/eslint-plugin": "^8.46.2",
-    "@typescript-eslint/parser": "^8.46.2",
     "@vitest/coverage-v8": "3.2.4",
-    "eslint": "^9.38.0",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
+    "ultracite": "^6.1.0",
     "vitest": "^3.2.4"
   }
 }
