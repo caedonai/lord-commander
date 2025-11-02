@@ -1,19 +1,18 @@
 /**
  * Enhanced Framework Detection with Security Validation
- * 
+ *
  * This module extends the basic framework patterns with comprehensive security
  * validation to prevent attacks through malicious framework configurations.
- * 
+ *
  * @security This module validates framework configs before trusting them
  * @see Task 1.1.3: Framework Detection Patterns
  */
 
-import { readFile, stat } from 'fs/promises';
-import { join, resolve } from 'path';
-import { tmpdir } from 'os';
-import { FRAMEWORK_PATTERNS } from '../core/constants.js';
-import { analyzeInputSecurity, isPathSafe, isCommandSafe } from './patterns.js';
-import { ERROR_MESSAGES } from '../core/constants.js';
+import { readFile, stat } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { ERROR_MESSAGES, FRAMEWORK_PATTERNS } from '../core/constants.js';
+import { analyzeInputSecurity, isCommandSafe, isPathSafe } from './patterns.js';
 
 /**
  * Security validation result for framework detection
@@ -40,7 +39,7 @@ export interface FrameworkSecurityViolation {
 /**
  * Types of framework security violations
  */
-export type FrameworkViolationType = 
+export type FrameworkViolationType =
   | 'malicious-config-path'
   | 'suspicious-dependency'
   | 'unsafe-build-command'
@@ -105,15 +104,15 @@ export interface FrameworkBuildConfig {
 
 /**
  * Whitelist of trusted framework dependencies
- * 
+ *
  * This comprehensive list includes well-known, audited packages from major frameworks
  * and build tools that are considered safe for automatic validation. Packages not
  * in this list will be flagged as "unknown" but not necessarily dangerous.
- * 
+ *
  * @security Only packages that have been vetted for security should be added here
  * @security This Set is protected against runtime modification attacks
  * @see {@link https://docs.npmjs.com/about-registry-security}
- * 
+ *
  * Categories included:
  * - React ecosystem (react, react-dom, @types/react)
  * - Next.js ecosystem (next, @next/*)
@@ -123,98 +122,133 @@ export interface FrameworkBuildConfig {
  * - Build tools (vite, webpack, rollup, esbuild, parcel)
  * - Server frameworks (express, fastify, koa, hapi)
  * - TypeScript and testing tools
- * 
+ *
  * @example
  * ```typescript
  * if (TRUSTED_FRAMEWORK_DEPENDENCIES.has('react')) {
  *   console.log('React is a trusted dependency');
  * }
- * 
+ *
  * // Check if unknown dependencies exist
- * const unknownDeps = dependencies.filter(dep => 
+ * const unknownDeps = dependencies.filter(dep =>
  *   !TRUSTED_FRAMEWORK_DEPENDENCIES.has(dep)
  * );
  * ```
  */
 const _trustedDependenciesSet = new Set([
   // React ecosystem
-  'react', 'react-dom', '@types/react', '@types/react-dom',
-  
+  'react',
+  'react-dom',
+  '@types/react',
+  '@types/react-dom',
+
   // Next.js ecosystem
-  'next', '@next/env', '@next/bundle-analyzer',
-  
+  'next',
+  '@next/env',
+  '@next/bundle-analyzer',
+
   // Vue ecosystem
-  'vue', '@vue/cli-service', 'vue-router', 'vuex',
-  
+  'vue',
+  '@vue/cli-service',
+  'vue-router',
+  'vuex',
+
   // Angular ecosystem
-  '@angular/core', '@angular/cli', '@angular/common', '@angular/router',
-  
+  '@angular/core',
+  '@angular/cli',
+  '@angular/common',
+  '@angular/router',
+
   // Svelte ecosystem
-  'svelte', '@sveltejs/kit', '@sveltejs/adapter-auto',
-  
+  'svelte',
+  '@sveltejs/kit',
+  '@sveltejs/adapter-auto',
+
   // Build tools
-  'vite', 'webpack', 'rollup', 'esbuild', 'parcel',
-  
+  'vite',
+  'webpack',
+  'rollup',
+  'esbuild',
+  'parcel',
+
   // Astro ecosystem
-  'astro', '@astrojs/node', '@astrojs/react',
-  
+  'astro',
+  '@astrojs/node',
+  '@astrojs/react',
+
   // Remix ecosystem
-  '@remix-run/node', '@remix-run/react', '@remix-run/serve',
-  
+  '@remix-run/node',
+  '@remix-run/react',
+  '@remix-run/serve',
+
   // Nuxt ecosystem
-  'nuxt', 'nuxt3', '@nuxt/kit',
-  
+  'nuxt',
+  'nuxt3',
+  '@nuxt/kit',
+
   // Server frameworks
-  'express', 'fastify', 'koa', 'hapi',
-  
+  'express',
+  'fastify',
+  'koa',
+  'hapi',
+
   // TypeScript
-  'typescript', '@types/node',
-  
+  'typescript',
+  '@types/node',
+
   // Testing frameworks
-  'vitest', 'jest', '@testing-library/react'
+  'vitest',
+  'jest',
+  '@testing-library/react',
 ]);
 
 // SECURITY FIX: Create an immutable proxy that throws errors on mutation attempts
 // This prevents malicious code from adding untrusted dependencies to the trusted list
 const _immutableProxy = new Proxy(_trustedDependenciesSet, {
   set(_target, property, value) {
-    throw new TypeError(`Cannot modify trusted dependencies set: attempted to set ${String(property)} to ${value}`);
+    throw new TypeError(
+      `Cannot modify trusted dependencies set: attempted to set ${String(property)} to ${value}`
+    );
   },
-  
+
   get(target, property) {
     const value = target[property as keyof Set<string>];
-    
+
     // Prevent mutation methods
     if (property === 'add') {
-      return function(value: any) {
-        throw new TypeError(`Cannot add dependency '${value}' to trusted dependencies: set is immutable for security`);
+      return (value: any) => {
+        throw new TypeError(
+          `Cannot add dependency '${value}' to trusted dependencies: set is immutable for security`
+        );
       };
     }
-    
+
     if (property === 'delete') {
-      return function(value: any) {
-        throw new TypeError(`Cannot delete dependency '${value}' from trusted dependencies: set is immutable for security`);
+      return (value: any) => {
+        throw new TypeError(
+          `Cannot delete dependency '${value}' from trusted dependencies: set is immutable for security`
+        );
       };
     }
-    
+
     if (property === 'clear') {
-      return function() {
+      return () => {
         throw new TypeError('Cannot clear trusted dependencies: set is immutable for security');
       };
     }
-    
+
     // Allow read-only operations
     if (typeof value === 'function') {
       return value.bind(target);
     }
-    
+
     return value;
-  }
+  },
 });
 
 /**
  * Immutable Set of trusted framework dependencies
- * 
+ *
  * @security This Set is protected against runtime modification attacks
  * @security Any attempt to add, delete, or clear will throw TypeError
  */
@@ -222,12 +256,12 @@ export const TRUSTED_FRAMEWORK_DEPENDENCIES = _immutableProxy as ReadonlySet<str
 
 /**
  * Regular expression patterns for detecting suspicious dependency names
- * 
+ *
  * These patterns identify potentially malicious packages that may indicate
  * typosquatting attempts, malware, or other security threats in dependencies.
- * 
+ *
  * @security Used to flag dependencies that require manual security review
- * 
+ *
  * Patterns include:
  * - **Malicious prefixes**: `evil-`, `malicious-`, `hack-`
  * - **Malware indicators**: `backdoor`, `trojan`, `virus`, `malware`
@@ -235,21 +269,21 @@ export const TRUSTED_FRAMEWORK_DEPENDENCIES = _immutableProxy as ReadonlySet<str
  * - **Hidden packages**: Starting with `.` or `_` (internal/private packages)
  * - **Version-like names**: Mixed numbers and letters (e.g., `123abc456`)
  * - **Very short names**: 1-2 characters (often typosquatting popular packages)
- * 
+ *
  * @example
  * ```typescript
  * const suspiciousPackages = dependencies.filter(dep =>
  *   SUSPICIOUS_DEPENDENCY_PATTERNS.some(pattern => pattern.test(dep))
  * );
- * 
+ *
  * // Check specific package
  * const isEvil = SUSPICIOUS_DEPENDENCY_PATTERNS.some(p => p.test('evil-package'));
  * console.log(isEvil); // true
- * 
+ *
  * const isLegit = SUSPICIOUS_DEPENDENCY_PATTERNS.some(p => p.test('lodash'));
  * console.log(isLegit); // false
  * ```
- * 
+ *
  * @see {@link https://blog.npmjs.org/post/163723642530/crossenv-malware-on-the-npm-registry}
  */
 export const SUSPICIOUS_DEPENDENCY_PATTERNS = [
@@ -263,14 +297,14 @@ export const SUSPICIOUS_DEPENDENCY_PATTERNS = [
 
 /**
  * Regular expression patterns for detecting dangerous script commands
- * 
+ *
  * These patterns identify potentially malicious or dangerous operations in
  * package.json scripts that could compromise system security or indicate
  * malicious intent.
- * 
+ *
  * @security Used to prevent execution of scripts that could harm the system
  * @warning Scripts matching these patterns should be carefully reviewed before execution
- * 
+ *
  * Dangerous patterns include:
  * - **Privilege escalation**: `sudo`, `su` commands
  * - **Destructive operations**: `rm -rf`, `rmdir` (file deletion)
@@ -280,16 +314,16 @@ export const SUSPICIOUS_DEPENDENCY_PATTERNS = [
  * - **Background processes**: `> /dev/null &`, `nohup &` (hidden processes)
  * - **Network shells**: `nc -e`, `netcat -e` (reverse shells)
  * - **Interactive shells**: `bash -i`, `sh -i` (interactive access)
- * 
+ *
  * @example
  * ```typescript
  * const scripts = {
  *   'build': 'webpack --mode production',  // Safe
  *   'malicious': 'sudo rm -rf /'          // Dangerous - matches patterns
  * };
- * 
+ *
  * Object.entries(scripts).forEach(([name, script]) => {
- *   const isDangerous = DANGEROUS_SCRIPT_PATTERNS.some(pattern => 
+ *   const isDangerous = DANGEROUS_SCRIPT_PATTERNS.some(pattern =>
  *     pattern.test(script)
  *   );
  *   if (isDangerous) {
@@ -297,7 +331,7 @@ export const SUSPICIOUS_DEPENDENCY_PATTERNS = [
  *   }
  * });
  * ```
- * 
+ *
  * @see {@link https://docs.npmjs.com/cli/v8/using-npm/scripts#best-practices}
  */
 export const DANGEROUS_SCRIPT_PATTERNS = [
@@ -314,10 +348,10 @@ export const DANGEROUS_SCRIPT_PATTERNS = [
 
 /**
  * Securely detect framework in a project directory
- * 
+ *
  * @param projectPath - Path to the project directory
  * @returns Promise<SecureFrameworkInfo | null> - Detected framework with security validation
- * 
+ *
  * @example
  * ```typescript
  * const framework = await detectFrameworkSecurely('./my-project');
@@ -333,15 +367,16 @@ export async function detectFrameworkSecurely(
 ): Promise<SecureFrameworkInfo | null> {
   // Allow test temp directories in test environment
   const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
-  const isTestTempDir = isTestEnv && (projectPath.includes('Temp') || projectPath.includes('/tmp/'));
-  
+  const isTestTempDir =
+    isTestEnv && (projectPath.includes('Temp') || projectPath.includes('/tmp/'));
+
   // Validate project path for security BEFORE resolving (unless it's a test temp dir)
   if (!isTestTempDir && !isPathSafe(projectPath)) {
     throw new Error(ERROR_MESSAGES.INVALID_COMMAND_PATH(projectPath));
   }
 
   const resolvedPath = resolve(projectPath);
-  
+
   // Also validate resolved path for additional security (unless it's a test temp dir)
   if (!isTestTempDir && !isPathSafe(resolvedPath)) {
     throw new Error(ERROR_MESSAGES.INVALID_COMMAND_PATH(resolvedPath));
@@ -359,17 +394,19 @@ export async function detectFrameworkSecurely(
 
   // Try to detect framework using existing patterns
   // Sort frameworks by specificity (most specific first to avoid false positives)
-  const sortedFrameworks = Object.entries(FRAMEWORK_PATTERNS).sort(([_a, patternA], [_b, patternB]) => {
-    const aFiles = 'files' in patternA ? patternA.files?.length || 0 : 0;
-    const aDirs = 'directories' in patternA ? patternA.directories?.length || 0 : 0;
-    const aSpecificity = aFiles + aDirs;
-    
-    const bFiles = 'files' in patternB ? patternB.files?.length || 0 : 0;
-    const bDirs = 'directories' in patternB ? patternB.directories?.length || 0 : 0;
-    const bSpecificity = bFiles + bDirs;
-    
-    return bSpecificity - aSpecificity; // Higher specificity first
-  });
+  const sortedFrameworks = Object.entries(FRAMEWORK_PATTERNS).sort(
+    ([_a, patternA], [_b, patternB]) => {
+      const aFiles = 'files' in patternA ? patternA.files?.length || 0 : 0;
+      const aDirs = 'directories' in patternA ? patternA.directories?.length || 0 : 0;
+      const aSpecificity = aFiles + aDirs;
+
+      const bFiles = 'files' in patternB ? patternB.files?.length || 0 : 0;
+      const bDirs = 'directories' in patternB ? patternB.directories?.length || 0 : 0;
+      const bSpecificity = bFiles + bDirs;
+
+      return bSpecificity - aSpecificity; // Higher specificity first
+    }
+  );
 
   for (const [frameworkName, pattern] of sortedFrameworks) {
     const detectionResult = await validateFrameworkPattern(
@@ -388,7 +425,7 @@ export async function detectFrameworkSecurely(
 
 /**
  * Validate a specific framework pattern against a project directory
- * 
+ *
  * @param projectPath - Resolved project directory path
  * @param frameworkName - Name of the framework
  * @param pattern - Framework detection pattern
@@ -409,7 +446,7 @@ async function validateFrameworkPattern(
       const filePath = join(projectPath, file);
       try {
         await stat(filePath);
-        
+
         // Always add config file if it exists, but track security status
         matchedConfigFiles.push(file);
       } catch {
@@ -420,12 +457,12 @@ async function validateFrameworkPattern(
 
   // Check package.json for dependencies
   const dependencyInfo = await analyzeDependencies(projectPath, pattern);
-  
+
   // Check if this framework's specific dependencies are present
   const patternDependencies = 'dependencies' in pattern ? pattern.dependencies : undefined;
   if (patternDependencies && Array.isArray(patternDependencies)) {
     // Framework is valid only if it has its specific dependencies
-    hasValidDependencies = patternDependencies.some(requiredDep =>
+    hasValidDependencies = patternDependencies.some((requiredDep) =>
       dependencyInfo.trusted.includes(requiredDep)
     );
   } else {
@@ -436,11 +473,12 @@ async function validateFrameworkPattern(
   // SECURITY FIX: Always analyze projects with suspicious dependencies
   // Even if no trusted dependencies exist, we must validate suspicious ones
   const hasSuspiciousDeps = dependencyInfo.security.hasSuspiciousDeps;
-  const hasAnyDependencies = (dependencyInfo.production.length + dependencyInfo.development.length) > 0;
+  const hasAnyDependencies =
+    dependencyInfo.production.length + dependencyInfo.development.length > 0;
 
   // Must have either:
   // 1. Valid config files, OR
-  // 2. Framework-specific trusted dependencies, OR 
+  // 2. Framework-specific trusted dependencies, OR
   // 3. Suspicious dependencies that need security validation
   if (matchedConfigFiles.length === 0 && !hasValidDependencies && !hasSuspiciousDeps) {
     // Only return null if there are truly no dependencies or config files to analyze
@@ -463,13 +501,11 @@ async function validateFrameworkPattern(
   // Calculate validity: framework is valid if secure AND has trusted dependencies
   // Frameworks with only suspicious dependencies are detected but marked invalid
   // Only critical violations make frameworks invalid (high violations are allowed)
-  const hasOnlySuspiciousDeps = dependencyInfo.security.hasSuspiciousDeps && dependencyInfo.trusted.length === 0;
-  const hasCriticalViolations = securityResult.violations.some(v => 
-    v.severity === 'critical'
-  );
-  const isFrameworkValid = securityResult.isSecure && 
-                          !hasCriticalViolations && 
-                          !hasOnlySuspiciousDeps;
+  const hasOnlySuspiciousDeps =
+    dependencyInfo.security.hasSuspiciousDeps && dependencyInfo.trusted.length === 0;
+  const hasCriticalViolations = securityResult.violations.some((v) => v.severity === 'critical');
+  const isFrameworkValid =
+    securityResult.isSecure && !hasCriticalViolations && !hasOnlySuspiciousDeps;
 
   return {
     name: frameworkName,
@@ -478,13 +514,13 @@ async function validateFrameworkPattern(
     dependencies: dependencyInfo,
     buildConfig,
     security: securityResult,
-    isValid: isFrameworkValid
+    isValid: isFrameworkValid,
   };
 }
 
 /**
  * Validate security of a framework configuration file
- * 
+ *
  * @param configPath - Path to configuration file
  * @returns Promise<FrameworkSecurityResult> - Security validation result
  */
@@ -496,27 +532,28 @@ async function validateConfigFile(configPath: string): Promise<FrameworkSecurity
   try {
     // Allow test temp directories in test environment
     const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
-    const isTempPath = configPath.includes(tmpdir()) || configPath.includes('temp') || configPath.includes('tmp');
+    const isTempPath =
+      configPath.includes(tmpdir()) || configPath.includes('temp') || configPath.includes('tmp');
     const isTestTempDir = isTestEnv && isTempPath;
-    
+
     // Check if file path is secure (skip for test temp directories)
     if (!isTestTempDir && !isPathSafe(configPath)) {
       violations.push({
         type: 'malicious-config-path',
         severity: 'critical',
         description: 'Configuration file path contains potentially malicious elements',
-        file: configPath
+        file: configPath,
       });
     }
 
     // Read and analyze config file content
     const content = await readFile(configPath, 'utf-8');
-    
+
     // Check for script injection in config (but be lenient with legitimate config patterns)
     const inputAnalysis = analyzeInputSecurity(content);
-    
+
     // Filter out violations that are acceptable in config files
-    const dangerousViolations = inputAnalysis.violations.filter(v => {
+    const dangerousViolations = inputAnalysis.violations.filter((v) => {
       // Allow legitimate TypeScript/JavaScript patterns in config files
       if (v.type === 'command-injection' && /import\(['"][^'"]*['"]\)/.test(content)) {
         return false; // Allow import() statements
@@ -537,13 +574,25 @@ async function validateConfigFile(configPath: string): Promise<FrameworkSecurity
         // Extract the required module name
         const requireMatch = content.match(/require\(['"]([^'"]*)['"]\)/);
         const moduleName = requireMatch?.[1];
-        
+
         if (moduleName) {
           // Block dangerous modules and paths
-          const dangerousModules = ['child_process', 'fs', 'os', 'path', 'process', 'exec', 'spawn', 'eval'];
-          const hasDangerousModule = dangerousModules.some(dangerous => moduleName.includes(dangerous));
-          const hasPathTraversal = moduleName.includes('..') || moduleName.startsWith('/') || /^[A-Z]:\\/.test(moduleName);
-          
+          const dangerousModules = [
+            'child_process',
+            'fs',
+            'os',
+            'path',
+            'process',
+            'exec',
+            'spawn',
+            'eval',
+          ];
+          const hasDangerousModule = dangerousModules.some((dangerous) =>
+            moduleName.includes(dangerous)
+          );
+          const hasPathTraversal =
+            moduleName.includes('..') || moduleName.startsWith('/') || /^[A-Z]:\\/.test(moduleName);
+
           // Allow safe requires, block dangerous ones
           if (!hasDangerousModule && !hasPathTraversal) {
             return false; // Allow safe require() statements
@@ -554,7 +603,11 @@ async function validateConfigFile(configPath: string): Promise<FrameworkSecurity
         }
       }
       // Allow JavaScript object syntax (curly braces) in config files
-      if (v.type === 'command-injection' && v.pattern === 'shell-metacharacters' && /const\s+\w+\s*=\s*\{/.test(content)) {
+      if (
+        v.type === 'command-injection' &&
+        v.pattern === 'shell-metacharacters' &&
+        /const\s+\w+\s*=\s*\{/.test(content)
+      ) {
         return false; // Allow object declarations like "const config = {"
       }
       // Exclude Windows filename edge cases from file content analysis (only relevant for actual filenames)
@@ -563,13 +616,13 @@ async function validateConfigFile(configPath: string): Promise<FrameworkSecurity
       }
       return true; // Keep other violations
     });
-    
+
     if (dangerousViolations.length > 0) {
       violations.push({
         type: 'script-injection',
         severity: 'high',
         description: 'Configuration file contains potentially dangerous patterns',
-        file: configPath
+        file: configPath,
       });
     }
 
@@ -579,60 +632,62 @@ async function validateConfigFile(configPath: string): Promise<FrameworkSecurity
         type: 'script-injection',
         severity: 'critical',
         description: 'Configuration file contains dynamic code execution patterns',
-        file: configPath
+        file: configPath,
       });
     }
 
     // SECURITY FIX: Check for dangerous Node.js module usage and function calls
     const dangerousNodePatterns = [
-      /\bexec\s*\(/,                    // child_process.exec()
-      /\bspawn\s*\(/,                   // child_process.spawn()
-      /\bfork\s*\(/,                    // child_process.fork()
-      /\bexecSync\s*\(/,               // child_process.execSync()
+      /\bexec\s*\(/, // child_process.exec()
+      /\bspawn\s*\(/, // child_process.spawn()
+      /\bfork\s*\(/, // child_process.fork()
+      /\bexecSync\s*\(/, // child_process.execSync()
       /\brequire\s*\(\s*['"]child_process['"]/, // require('child_process')
       /\brequire\s*\(\s*['"]fs['"]/, // require('fs')
       /\brequire\s*\(\s*['"]process['"]/, // require('process')
-      /\bprocess\s*\.\s*exit\s*\(/,    // process.exit()
-      /\bprocess\s*\.\s*kill\s*\(/,    // process.kill()
-      /\brm\s+-rf\s+/,                 // rm -rf commands
-      /\bdel\s+\/[sq]\s+/,             // Windows del commands
+      /\bprocess\s*\.\s*exit\s*\(/, // process.exit()
+      /\bprocess\s*\.\s*kill\s*\(/, // process.kill()
+      /\brm\s+-rf\s+/, // rm -rf commands
+      /\bdel\s+\/[sq]\s+/, // Windows del commands
     ];
 
-    const hasDangerousNodeCall = dangerousNodePatterns.some(pattern => pattern.test(content));
+    const hasDangerousNodeCall = dangerousNodePatterns.some((pattern) => pattern.test(content));
     if (hasDangerousNodeCall) {
       violations.push({
         type: 'script-injection',
         severity: 'critical',
-        description: 'Configuration file contains dangerous Node.js function calls or shell commands',
-        file: configPath
+        description:
+          'Configuration file contains dangerous Node.js function calls or shell commands',
+        file: configPath,
       });
     }
 
     // Check for file size (prevent DoS through large configs)
-    if (content.length > 1024 * 1024) { // 1MB limit
+    if (content.length > 1024 * 1024) {
+      // 1MB limit
       warnings.push('Configuration file is unusually large');
     }
-
   } catch (error) {
     violations.push({
       type: 'config-tampering',
       severity: 'medium',
       description: `Failed to read configuration file: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      file: configPath
+      file: configPath,
     });
   }
 
   return {
-    isSecure: violations.filter(v => v.severity === 'critical' || v.severity === 'high').length === 0,
+    isSecure:
+      violations.filter((v) => v.severity === 'critical' || v.severity === 'high').length === 0,
     violations,
     warnings,
-    recommendations
+    recommendations,
   };
 }
 
 /**
  * Analyze dependencies in package.json for security issues
- * 
+ *
  * @param projectPath - Project directory path
  * @param pattern - Framework pattern to validate against
  * @returns Promise<FrameworkDependencyInfo> - Dependency analysis result
@@ -649,8 +704,8 @@ async function analyzeDependencies(
     security: {
       hasUnknownDeps: false,
       hasSuspiciousDeps: false,
-      untrustedSources: []
-    }
+      untrustedSources: [],
+    },
   };
 
   try {
@@ -672,12 +727,10 @@ async function analyzeDependencies(
         result.trusted.push(dep);
       } else {
         result.security.hasUnknownDeps = true;
-        
+
         // Check for suspicious patterns
-        const isSuspicious = SUSPICIOUS_DEPENDENCY_PATTERNS.some(pattern => 
-          pattern.test(dep)
-        );
-        
+        const isSuspicious = SUSPICIOUS_DEPENDENCY_PATTERNS.some((pattern) => pattern.test(dep));
+
         if (isSuspicious) {
           result.suspicious.push(dep);
           result.security.hasSuspiciousDeps = true;
@@ -688,16 +741,15 @@ async function analyzeDependencies(
     // Validate against expected framework dependencies
     const patternDependencies = 'dependencies' in pattern ? pattern.dependencies : undefined;
     if (patternDependencies && Array.isArray(patternDependencies)) {
-      const hasRequiredDeps = patternDependencies.some(requiredDep =>
+      const hasRequiredDeps = patternDependencies.some((requiredDep) =>
         result.trusted.includes(requiredDep)
       );
-      
+
       if (!hasRequiredDeps) {
         result.security.untrustedSources.push('Missing expected framework dependencies');
       }
     }
-
-  } catch (error) {
+  } catch (_error) {
     result.security.untrustedSources.push('Failed to read package.json');
   }
 
@@ -706,7 +758,7 @@ async function analyzeDependencies(
 
 /**
  * Analyze build configuration for security issues
- * 
+ *
  * @param projectPath - Project directory path
  * @returns Promise<FrameworkBuildConfig> - Build configuration analysis
  */
@@ -716,8 +768,8 @@ async function analyzeBuildConfig(projectPath: string): Promise<FrameworkBuildCo
     security: {
       hasSafeCommands: true,
       suspiciousScripts: [],
-      privilegeEscalation: []
-    }
+      privilegeEscalation: [],
+    },
   };
 
   try {
@@ -734,7 +786,7 @@ async function analyzeBuildConfig(projectPath: string): Promise<FrameworkBuildCo
       let isSuspicious = false;
 
       // Check for dangerous patterns
-      const hasDangerousPattern = DANGEROUS_SCRIPT_PATTERNS.some(pattern =>
+      const hasDangerousPattern = DANGEROUS_SCRIPT_PATTERNS.some((pattern) =>
         pattern.test(scriptContent)
       );
 
@@ -763,8 +815,7 @@ async function analyzeBuildConfig(projectPath: string): Promise<FrameworkBuildCo
     // Extract common build commands
     result.buildCommand = result.scripts.build;
     result.devCommand = result.scripts.dev || result.scripts.start;
-
-  } catch (error) {
+  } catch (_error) {
     // Failed to read package.json, mark as unsafe
     result.security.hasSafeCommands = false;
   }
@@ -774,7 +825,7 @@ async function analyzeBuildConfig(projectPath: string): Promise<FrameworkBuildCo
 
 /**
  * Perform comprehensive security validation of framework detection
- * 
+ *
  * @param _projectPath - Project directory path (reserved for future use)
  * @param configFiles - Detected configuration files
  * @param dependencies - Dependency analysis result
@@ -795,7 +846,7 @@ async function validateFrameworkSecurity(
   for (const configFile of configFiles) {
     const configPath = join(_projectPath, configFile);
     const configSecurity = await validateConfigFile(configPath);
-    
+
     violations.push(...configSecurity.violations);
     warnings.push(...configSecurity.warnings);
     recommendations.push(...configSecurity.recommendations);
@@ -807,7 +858,7 @@ async function validateFrameworkSecurity(
       type: 'suspicious-dependency',
       severity: 'high',
       description: `Suspicious dependencies detected: ${dependencies.suspicious.join(', ')}`,
-      value: dependencies.suspicious.join(', ')
+      value: dependencies.suspicious.join(', '),
     });
   }
 
@@ -815,7 +866,7 @@ async function validateFrameworkSecurity(
     violations.push({
       type: 'untrusted-source',
       severity: 'medium',
-      description: 'No trusted framework dependencies found'
+      description: 'No trusted framework dependencies found',
     });
   }
 
@@ -825,7 +876,7 @@ async function validateFrameworkSecurity(
       type: 'unsafe-build-command',
       severity: 'high',
       description: `Unsafe build scripts detected: ${buildConfig.security.suspiciousScripts.join(', ')}`,
-      value: buildConfig.security.suspiciousScripts.join(', ')
+      value: buildConfig.security.suspiciousScripts.join(', '),
     });
   }
 
@@ -834,7 +885,7 @@ async function validateFrameworkSecurity(
       type: 'privilege-escalation',
       severity: 'critical',
       description: `Scripts attempting privilege escalation: ${buildConfig.security.privilegeEscalation.join(', ')}`,
-      value: buildConfig.security.privilegeEscalation.join(', ')
+      value: buildConfig.security.privilegeEscalation.join(', '),
     });
   }
 
@@ -851,28 +902,29 @@ async function validateFrameworkSecurity(
     warnings.push('No trusted framework dependencies found');
   }
 
-  const criticalViolations = violations.filter(v => v.severity === 'critical').length;
+  const criticalViolations = violations.filter((v) => v.severity === 'critical').length;
 
   // For frameworks, only critical violations make them insecure
   // High violations are allowed for legitimate framework patterns
   // Exception: Projects with ONLY suspicious dependencies (no trusted ones) are insecure
-  const hasOnlySuspiciousDeps = dependencies.security.hasSuspiciousDeps && dependencies.trusted.length === 0;
+  const hasOnlySuspiciousDeps =
+    dependencies.security.hasSuspiciousDeps && dependencies.trusted.length === 0;
   const isSecure = criticalViolations === 0 && !hasOnlySuspiciousDeps;
 
   return {
     isSecure,
     violations,
     warnings,
-    recommendations
+    recommendations,
   };
 }
 
 /**
  * Get security recommendations for a detected framework
- * 
+ *
  * @param frameworkInfo - Framework detection result
  * @returns string[] - Array of security recommendations
- * 
+ *
  * @example
  * ```typescript
  * const framework = await detectFrameworkSecurely('./project');
@@ -882,9 +934,7 @@ async function validateFrameworkSecurity(
  * }
  * ```
  */
-export function getFrameworkSecurityRecommendations(
-  frameworkInfo: SecureFrameworkInfo
-): string[] {
+export function getFrameworkSecurityRecommendations(frameworkInfo: SecureFrameworkInfo): string[] {
   const recommendations: string[] = [];
 
   if (!frameworkInfo.isValid) {
@@ -919,11 +969,11 @@ export function getFrameworkSecurityRecommendations(
 
 /**
  * Validate if a framework is safe to use based on security analysis
- * 
+ *
  * @param frameworkInfo - Framework detection result
  * @param allowWarnings - Whether to allow frameworks with warnings
  * @returns boolean - True if framework is safe to use
- * 
+ *
  * @example
  * ```typescript
  * const framework = await detectFrameworkSecurely('./project');
@@ -940,7 +990,7 @@ export function isFrameworkSafe(
 ): boolean {
   // Never allow frameworks with critical or high severity violations
   const criticalViolations = frameworkInfo.security.violations.filter(
-    v => v.severity === 'critical' || v.severity === 'high'
+    (v) => v.severity === 'critical' || v.severity === 'high'
   );
 
   if (criticalViolations.length > 0) {
@@ -955,7 +1005,7 @@ export function isFrameworkSafe(
   // If warnings are not allowed, check for medium severity violations
   if (!allowWarnings) {
     const mediumViolations = frameworkInfo.security.violations.filter(
-      v => v.severity === 'medium'
+      (v) => v.severity === 'medium'
     );
     return mediumViolations.length === 0;
   }

@@ -1,17 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  PATH_TRAVERSAL_PATTERNS,
-  COMMAND_INJECTION_PATTERNS,
-  SCRIPT_INJECTION_PATTERNS,
-  PRIVILEGE_ESCALATION_PATTERNS,
-  FILE_SYSTEM_PATTERNS,
-  NETWORK_PATTERNS,
-  INPUT_VALIDATION_PATTERNS,
   analyzeInputSecurity,
-  sanitizeInput,
-  isPathSafe,
+  COMMAND_INJECTION_PATTERNS,
+  FILE_SYSTEM_PATTERNS,
+  INPUT_VALIDATION_PATTERNS,
   isCommandSafe,
-  isProjectNameSafe
+  isPathSafe,
+  isProjectNameSafe,
+  NETWORK_PATTERNS,
+  PATH_TRAVERSAL_PATTERNS,
+  PRIVILEGE_ESCALATION_PATTERNS,
+  SCRIPT_INJECTION_PATTERNS,
+  sanitizeInput,
 } from '../../../core/foundation/security/patterns.js';
 
 describe('Security Patterns', () => {
@@ -72,25 +72,37 @@ describe('Security Patterns', () => {
   describe('Script Injection Patterns', () => {
     it('should detect JavaScript injection', () => {
       expect(SCRIPT_INJECTION_PATTERNS.JAVASCRIPT_EVAL.test('eval("malicious")')).toBe(true);
-      expect(SCRIPT_INJECTION_PATTERNS.JAVASCRIPT_FUNCTION.test('Function("return evil")')).toBe(true);
-      expect(SCRIPT_INJECTION_PATTERNS.JAVASCRIPT_SETTIMEOUT.test('setTimeout("evil", 100)')).toBe(true);
+      expect(SCRIPT_INJECTION_PATTERNS.JAVASCRIPT_FUNCTION.test('Function("return evil")')).toBe(
+        true
+      );
+      expect(SCRIPT_INJECTION_PATTERNS.JAVASCRIPT_SETTIMEOUT.test('setTimeout("evil", 100)')).toBe(
+        true
+      );
     });
 
     it('should detect HTML/XML injection', () => {
       expect(SCRIPT_INJECTION_PATTERNS.SCRIPT_TAG.test('<script>alert("xss")</script>')).toBe(true);
-      expect(SCRIPT_INJECTION_PATTERNS.JAVASCRIPT_PROTOCOL.test('javascript:alert("xss")')).toBe(true);
-      expect(SCRIPT_INJECTION_PATTERNS.DATA_URI.test('data:text/html;base64,PHNjcmlwdD4=')).toBe(true);
+      expect(SCRIPT_INJECTION_PATTERNS.JAVASCRIPT_PROTOCOL.test('javascript:alert("xss")')).toBe(
+        true
+      );
+      expect(SCRIPT_INJECTION_PATTERNS.DATA_URI.test('data:text/html;base64,PHNjcmlwdD4=')).toBe(
+        true
+      );
     });
 
     it('should detect SQL injection patterns', () => {
       expect(SCRIPT_INJECTION_PATTERNS.SQL_KEYWORDS.test("'; DROP TABLE users; --")).toBe(true);
       expect(SCRIPT_INJECTION_PATTERNS.SQL_KEYWORDS.test('user WHERE SELECT')).toBe(true);
-      expect(SCRIPT_INJECTION_PATTERNS.SQL_COMMENTS.test('admin\' --')).toBe(true);
+      expect(SCRIPT_INJECTION_PATTERNS.SQL_COMMENTS.test("admin' --")).toBe(true);
     });
 
     it('should detect NoSQL injection', () => {
-      expect(SCRIPT_INJECTION_PATTERNS.NOSQL_OPERATORS.test('{"$where": "function() { return true; }"}')).toBe(true);
-      expect(SCRIPT_INJECTION_PATTERNS.NOSQL_OPERATORS.test('{"username": {"$ne": null}}')).toBe(true);
+      expect(
+        SCRIPT_INJECTION_PATTERNS.NOSQL_OPERATORS.test('{"$where": "function() { return true; }"}')
+      ).toBe(true);
+      expect(SCRIPT_INJECTION_PATTERNS.NOSQL_OPERATORS.test('{"username": {"$ne": null}}')).toBe(
+        true
+      );
     });
 
     it('should detect template injection', () => {
@@ -106,7 +118,9 @@ describe('Security Patterns', () => {
     });
 
     it('should detect Windows elevation', () => {
-      expect(PRIVILEGE_ESCALATION_PATTERNS.RUNAS_COMMAND.test('runas /user:Administrator cmd')).toBe(true);
+      expect(
+        PRIVILEGE_ESCALATION_PATTERNS.RUNAS_COMMAND.test('runas /user:Administrator cmd')
+      ).toBe(true);
       expect(PRIVILEGE_ESCALATION_PATTERNS.UAC_BYPASS.test('bypassuac technique')).toBe(true);
     });
 
@@ -116,8 +130,12 @@ describe('Security Patterns', () => {
     });
 
     it('should detect service and registry manipulation', () => {
-      expect(PRIVILEGE_ESCALATION_PATTERNS.SERVICE_COMMANDS.test('systemctl start malicious')).toBe(true);
-      expect(PRIVILEGE_ESCALATION_PATTERNS.REGISTRY_COMMANDS.test('reg add HKLM\\Software')).toBe(true);
+      expect(PRIVILEGE_ESCALATION_PATTERNS.SERVICE_COMMANDS.test('systemctl start malicious')).toBe(
+        true
+      );
+      expect(PRIVILEGE_ESCALATION_PATTERNS.REGISTRY_COMMANDS.test('reg add HKLM\\Software')).toBe(
+        true
+      );
     });
   });
 
@@ -130,7 +148,9 @@ describe('Security Patterns', () => {
     });
 
     it('should detect Windows sensitive files', () => {
-      expect(FILE_SYSTEM_PATTERNS.WINDOWS_SENSITIVE_FILES.test('\\windows\\system32\\config')).toBe(true);
+      expect(FILE_SYSTEM_PATTERNS.WINDOWS_SENSITIVE_FILES.test('\\windows\\system32\\config')).toBe(
+        true
+      );
       expect(FILE_SYSTEM_PATTERNS.WINDOWS_SENSITIVE_FILES.test('\\Program Files\\app')).toBe(true);
     });
 
@@ -195,7 +215,7 @@ describe('Security Patterns', () => {
   describe('Security Analysis Function', () => {
     it('should analyze safe input correctly', () => {
       const result = analyzeInputSecurity('my-safe-project');
-      
+
       expect(result.isSecure).toBe(true);
       expect(result.violations).toHaveLength(0);
       expect(result.riskScore).toBe(0);
@@ -204,7 +224,7 @@ describe('Security Patterns', () => {
 
     it('should detect path traversal violations', () => {
       const result = analyzeInputSecurity('../../../etc/passwd');
-      
+
       expect(result.isSecure).toBe(false);
       expect(result.violations).toHaveLength(2); // path traversal + sensitive file
       expect(result.violations[0].type).toBe('path-traversal');
@@ -214,33 +234,33 @@ describe('Security Patterns', () => {
 
     it('should detect command injection violations', () => {
       const result = analyzeInputSecurity('cmd; rm -rf /');
-      
+
       expect(result.isSecure).toBe(false);
-      expect(result.violations.some(v => v.type === 'command-injection')).toBe(true);
+      expect(result.violations.some((v) => v.type === 'command-injection')).toBe(true);
       expect(result.riskScore).toBeGreaterThan(0);
     });
 
     it('should detect script injection violations', () => {
       const result = analyzeInputSecurity('eval("malicious code")');
-      
+
       expect(result.isSecure).toBe(false);
-      expect(result.violations.some(v => v.type === 'script-injection')).toBe(true);
-      expect(result.violations.some(v => v.severity === 'critical')).toBe(true);
+      expect(result.violations.some((v) => v.type === 'script-injection')).toBe(true);
+      expect(result.violations.some((v) => v.severity === 'critical')).toBe(true);
       expect(result.riskScore).toBeGreaterThan(0);
     });
 
     it('should detect privilege escalation violations', () => {
       const result = analyzeInputSecurity('sudo rm -rf /');
-      
+
       expect(result.isSecure).toBe(false);
-      expect(result.violations.some(v => v.type === 'privilege-escalation')).toBe(true);
+      expect(result.violations.some((v) => v.type === 'privilege-escalation')).toBe(true);
       expect(result.riskScore).toBeGreaterThan(0);
     });
 
     it('should calculate risk scores correctly', () => {
       const lowRisk = analyzeInputSecurity('safe-input');
       const highRisk = analyzeInputSecurity('eval("evil"); sudo rm -rf /; ../../../etc/passwd');
-      
+
       expect(lowRisk.riskScore).toBe(0);
       expect(highRisk.riskScore).toBeGreaterThan(50);
       expect(highRisk.riskScore).toBeLessThanOrEqual(100);
@@ -339,11 +359,11 @@ describe('Security Patterns', () => {
     it('should handle inputs with mixed attacks', () => {
       const mixedAttack = '../../../etc/passwd; rm -rf /; eval("evil"); sudo malicious';
       const result = analyzeInputSecurity(mixedAttack);
-      
+
       expect(result.isSecure).toBe(false);
       expect(result.violations.length).toBeGreaterThan(1);
-      expect(result.violations.some(v => v.type === 'path-traversal')).toBe(true);
-      expect(result.violations.some(v => v.type === 'command-injection')).toBe(true);
+      expect(result.violations.some((v) => v.type === 'path-traversal')).toBe(true);
+      expect(result.violations.some((v) => v.type === 'command-injection')).toBe(true);
     });
   });
 });

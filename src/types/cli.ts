@@ -1,28 +1,28 @@
 export interface CreateCliOptions {
-    name?: string;
-    version?: string;
-    description?: string;
-    commandsPath?: string | string[];  // Support both single path and array of paths
-    autocomplete?: {
-        enabled?: boolean;
-        autoInstall?: boolean;
-        shells?: ('bash' | 'zsh' | 'fish' | 'powershell')[];
-        enableFileCompletion?: boolean;
-    };
-    builtinCommands?: {
-        completion?: boolean;    // Default: true - Shell autocomplete management
-        hello?: boolean;         // Default: false - Example command for learning
-        version?: boolean;       // Default: false - Advanced version management (conflicts with -V)
-    };
-    plugins?: {
-        git?: boolean;          // Default: false - Git operations plugin
-        workspace?: boolean;    // Default: false - Workspace management plugin
-        updater?: boolean;      // Default: false - Version update plugin
-    };
-    // Custom error handler for command execution errors
-    errorHandler?: (error: Error) => void | Promise<void>;
-    // Control CLI auto-start behavior - set to false for manual control
-    autoStart?: boolean; // Default: true - automatically start CLI with parseAsync()
+  name?: string;
+  version?: string;
+  description?: string;
+  commandsPath?: string | string[]; // Support both single path and array of paths
+  autocomplete?: {
+    enabled?: boolean;
+    autoInstall?: boolean;
+    shells?: ('bash' | 'zsh' | 'fish' | 'powershell')[];
+    enableFileCompletion?: boolean;
+  };
+  builtinCommands?: {
+    completion?: boolean; // Default: true - Shell autocomplete management
+    hello?: boolean; // Default: false - Example command for learning
+    version?: boolean; // Default: false - Advanced version management (conflicts with -V)
+  };
+  plugins?: {
+    git?: boolean; // Default: false - Git operations plugin
+    workspace?: boolean; // Default: false - Workspace management plugin
+    updater?: boolean; // Default: false - Version update plugin
+  };
+  // Custom error handler for command execution errors
+  errorHandler?: (error: Error) => void | Promise<void>;
+  // Control CLI auto-start behavior - set to false for manual control
+  autoStart?: boolean; // Default: true - automatically start CLI with parseAsync()
 }
 
 /**
@@ -33,46 +33,46 @@ export interface CreateCliOptions {
  * - Configuration and state management
  */
 export interface CommandContext {
-    // Core utilities
-    fs?: any;      // File system operations (implemented)
-    execa?: any;   // Process execution (implemented)
-    logger: any;   // Logging and spinners (implemented)
-    prompts: any;  // Interactive user input (implemented)
-    temp?: any;    // Temporary workspace management (to be implemented)
-    
-    // Plugin utilities (all optional - only available when explicitly enabled)
-    git?: any;     // Git operations (implemented, plugin)
-    config?: any;  // Configuration management (to be implemented)
-    telemetry?: any; // Analytics and tracking (to be implemented)
-    
-    // Configuration and state
-    cwd?: string;  // Current working directory
-    packageManager?: 'npm' | 'pnpm' | 'yarn' | 'bun';
+  // Core utilities
+  fs?: any; // File system operations (implemented)
+  execa?: any; // Process execution (implemented)
+  logger: any; // Logging and spinners (implemented)
+  prompts: any; // Interactive user input (implemented)
+  temp?: any; // Temporary workspace management (to be implemented)
+
+  // Plugin utilities (all optional - only available when explicitly enabled)
+  git?: any; // Git operations (implemented, plugin)
+  config?: any; // Configuration management (to be implemented)
+  telemetry?: any; // Analytics and tracking (to be implemented)
+
+  // Configuration and state
+  cwd?: string; // Current working directory
+  packageManager?: 'npm' | 'pnpm' | 'yarn' | 'bun';
 }
 
 /**
  * Plugin interface for extending CLI functionality
  */
 export interface CLIPlugin {
-    name: string;
-    version?: string;
-    setup?(context: CommandContext): Promise<void> | void;
-    teardown?(context: CommandContext): Promise<void> | void;
+  name: string;
+  version?: string;
+  setup?(context: CommandContext): Promise<void> | void;
+  teardown?(context: CommandContext): Promise<void> | void;
 }
 
 /**
  * Configuration for the CLI SDK
  */
 export interface CLIConfig {
-    theme?: {
-        primary?: string;
-        success?: string;
-        warning?: string;
-        error?: string;
-    };
-    telemetry?: {
-        enabled: boolean;
-        endpoint?: string;
-    };
-    verbose?: boolean;
+  theme?: {
+    primary?: string;
+    success?: string;
+    warning?: string;
+    error?: string;
+  };
+  telemetry?: {
+    enabled: boolean;
+    endpoint?: string;
+  };
+  verbose?: boolean;
 }

@@ -3,7 +3,7 @@
  * Tests various problematic scenarios that could occur in production
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createCLI } from '../../../core/createCLI.js';
 import { CLIError } from '../../../core/foundation/errors/index.js';
 
@@ -33,14 +33,16 @@ describe('Error Handling Edge Cases', () => {
         throw circularError;
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with circular reference error',
-        commandsPath: './non-existent',
-        autoStart: true,
-        errorHandler: mockErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with circular reference error',
+          commandsPath: './non-existent',
+          autoStart: true,
+          errorHandler: mockErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       // Should not crash with circular reference
       expect(process.exit).toHaveBeenCalledWith(1);
@@ -53,21 +55,23 @@ describe('Error Handling Edge Cases', () => {
 
       const circularCLIError = new CLIError('CLI error with circular context', {
         context: circular,
-        suggestion: 'Check your circular references'
+        suggestion: 'Check your circular references',
       });
 
       const mockErrorHandler = vi.fn((_error: Error) => {
         throw circularCLIError;
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0', 
-        description: 'Test CLI with circular CLIError',
-        commandsPath: './non-existent',
-        autoStart: true,
-        errorHandler: mockErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with circular CLIError',
+          commandsPath: './non-existent',
+          autoStart: true,
+          errorHandler: mockErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -82,14 +86,16 @@ describe('Error Handling Edge Cases', () => {
         throw largeError;
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with large error',
-        commandsPath: './non-existent',
-        autoStart: true,
-        errorHandler: mockErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with large error',
+          commandsPath: './non-existent',
+          autoStart: true,
+          errorHandler: mockErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -97,8 +103,9 @@ describe('Error Handling Edge Cases', () => {
     it('should handle error with massive stack trace', async () => {
       const errorWithLargeStack = new Error('Error with large stack');
       // Simulate a very deep stack trace
-      const fakeStack = Array.from({ length: 10000 }, (_, i) => 
-        `    at Function.${i} (/path/to/file${i}.js:${i}:${i})`
+      const fakeStack = Array.from(
+        { length: 10000 },
+        (_, i) => `    at Function.${i} (/path/to/file${i}.js:${i}:${i})`
       );
       errorWithLargeStack.stack = `Error: Error with large stack\n${fakeStack.join('\n')}`;
 
@@ -106,14 +113,16 @@ describe('Error Handling Edge Cases', () => {
         throw errorWithLargeStack;
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with large stack trace',
-        commandsPath: './non-existent',
-        autoStart: true,
-        errorHandler: mockErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with large stack trace',
+          commandsPath: './non-existent',
+          autoStart: true,
+          errorHandler: mockErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -134,14 +143,16 @@ describe('Error Handling Edge Cases', () => {
         }
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with nested async errors',
-        commandsPath: './non-existent',
-        autoStart: true,
-        errorHandler: deeplyNestedErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with nested async errors',
+          commandsPath: './non-existent',
+          autoStart: true,
+          errorHandler: deeplyNestedErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -153,14 +164,16 @@ describe('Error Handling Edge Cases', () => {
         await new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10));
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with hanging error handler',
-        commandsPath: './non-existent',
-        autoStart: true,
-        errorHandler: hangingErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with hanging error handler',
+          commandsPath: './non-existent',
+          autoStart: true,
+          errorHandler: hangingErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -172,14 +185,16 @@ describe('Error Handling Edge Cases', () => {
         process.exit(42); // Custom exit code
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with exiting error handler',
-        commandsPath: './non-existent',
-        autoStart: false, // Skip to avoid parseAsync complications
-        errorHandler: exitingErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with exiting error handler',
+          commandsPath: './non-existent',
+          autoStart: false, // Skip to avoid parseAsync complications
+          errorHandler: exitingErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       // In real scenario, process would exit with 42, but our mock captures the call
       // The error handler itself won't be called unless parseAsync actually fails
@@ -188,18 +203,20 @@ describe('Error Handling Edge Cases', () => {
 
     it('should handle async error handler that calls process.exit() after delay', async () => {
       const delayedExitErrorHandler = vi.fn(async (_error: Error) => {
-        await new Promise(resolve => setTimeout(resolve, 5));
+        await new Promise((resolve) => setTimeout(resolve, 5));
         process.exit(99);
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with delayed exit error handler',
-        commandsPath: './non-existent',
-        autoStart: false, // Skip to avoid parseAsync complications
-        errorHandler: delayedExitErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with delayed exit error handler',
+          commandsPath: './non-existent',
+          autoStart: false, // Skip to avoid parseAsync complications
+          errorHandler: delayedExitErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       // In real scenario, process would exit with 99, but our mock captures the call
       expect(delayedExitErrorHandler).not.toHaveBeenCalled(); // Not called because no actual parsing error occurred
@@ -214,14 +231,16 @@ describe('Error Handling Edge Cases', () => {
 
       // Simulate multiple CLI creations (like in a loop)
       for (let i = 0; i < 10; i++) {
-        await expect(createCLI({
-          name: `test-cli-${i}`,
-          version: '1.0.0',
-          description: `Test CLI ${i}`,
-          commandsPath: './non-existent',
-          autoStart: false, // Skip parsing to avoid test complications
-          errorHandler: failingErrorHandler
-        })).resolves.toBeDefined();
+        await expect(
+          createCLI({
+            name: `test-cli-${i}`,
+            version: '1.0.0',
+            description: `Test CLI ${i}`,
+            commandsPath: './non-existent',
+            autoStart: false, // Skip parsing to avoid test complications
+            errorHandler: failingErrorHandler,
+          })
+        ).resolves.toBeDefined();
       }
 
       // Since we're skipping argv parsing, error handlers won't be called
@@ -235,23 +254,25 @@ describe('Error Handling Edge Cases', () => {
         const largeArray = new Array(1000000).fill('memory-intensive-data');
         const largeObject = {
           data: largeArray,
-          metadata: { error: error.message, timestamp: Date.now() }
+          metadata: { error: error.message, timestamp: Date.now() },
         };
-        
+
         // Simulate some processing time
-        await new Promise(resolve => setTimeout(resolve, 1));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1));
+
         throw new Error(`Memory intensive operation failed: ${largeObject.metadata.error}`);
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with memory intensive error handler',
-        commandsPath: './non-existent',
-        autoStart: false, // Skip to avoid complications
-        errorHandler: memoryIntensiveErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with memory intensive error handler',
+          commandsPath: './non-existent',
+          autoStart: false, // Skip to avoid complications
+          errorHandler: memoryIntensiveErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       // Test that CLI creation completes without memory issues
       expect(memoryIntensiveErrorHandler).not.toHaveBeenCalled(); // No actual parsing errors
@@ -264,14 +285,16 @@ describe('Error Handling Edge Cases', () => {
         throw null;
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with null error',
-        commandsPath: './non-existent',
-        autoStart: true,
-        errorHandler: nullErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with null error',
+          commandsPath: './non-existent',
+          autoStart: true,
+          errorHandler: nullErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -281,14 +304,16 @@ describe('Error Handling Edge Cases', () => {
         throw 'String error message';
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with string error',
-        commandsPath: './non-existent',
-        autoStart: true,
-        errorHandler: stringErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with string error',
+          commandsPath: './non-existent',
+          autoStart: true,
+          errorHandler: stringErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -302,14 +327,16 @@ describe('Error Handling Edge Cases', () => {
         throw customError;
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with custom error object',
-        commandsPath: './non-existent',
-        autoStart: true,
-        errorHandler: customErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with custom error object',
+          commandsPath: './non-existent',
+          autoStart: true,
+          errorHandler: customErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -319,21 +346,23 @@ describe('Error Handling Edge Cases', () => {
       Object.defineProperty(trickyError, 'message', {
         get() {
           throw new Error('Message getter throws');
-        }
+        },
       });
 
       const trickyErrorHandler = vi.fn((_error: Error) => {
         throw trickyError;
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with tricky error object',
-        commandsPath: './non-existent',
-        autoStart: true,
-        errorHandler: trickyErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with tricky error object',
+          commandsPath: './non-existent',
+          autoStart: true,
+          errorHandler: trickyErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       expect(process.exit).toHaveBeenCalledWith(1);
     });
@@ -353,14 +382,16 @@ describe('Error Handling Edge Cases', () => {
       });
 
       try {
-        await expect(createCLI({
-          name: 'test-cli',
-          version: '1.0.0',
-          description: 'Test CLI with malformed stack in debug mode',
-          commandsPath: './non-existent',
-          autoStart: true,
-          errorHandler: mockErrorHandler
-        })).resolves.toBeDefined();
+        await expect(
+          createCLI({
+            name: 'test-cli',
+            version: '1.0.0',
+            description: 'Test CLI with malformed stack in debug mode',
+            commandsPath: './non-existent',
+            autoStart: true,
+            errorHandler: mockErrorHandler,
+          })
+        ).resolves.toBeDefined();
 
         expect(process.exit).toHaveBeenCalledWith(1);
       } finally {
@@ -381,8 +412,9 @@ describe('Error Handling Edge Cases', () => {
 
       const deepStackError = new Error('Deep stack error');
       // Create an extremely deep stack trace
-      const deepStack = Array.from({ length: 1000 }, (_, i) => 
-        `    at recursiveFunction${i} (/deep/path/file${i}.js:${i + 1}:${(i % 50) + 1})`
+      const deepStack = Array.from(
+        { length: 1000 },
+        (_, i) => `    at recursiveFunction${i} (/deep/path/file${i}.js:${i + 1}:${(i % 50) + 1})`
       );
       deepStackError.stack = `Error: Deep stack error\n${deepStack.join('\n')}`;
 
@@ -391,14 +423,16 @@ describe('Error Handling Edge Cases', () => {
       });
 
       try {
-        await expect(createCLI({
-          name: 'test-cli',
-          version: '1.0.0',
-          description: 'Test CLI with deep stack in debug mode',
-          commandsPath: './non-existent',
-          autoStart: true,
-          errorHandler: mockErrorHandler
-        })).resolves.toBeDefined();
+        await expect(
+          createCLI({
+            name: 'test-cli',
+            version: '1.0.0',
+            description: 'Test CLI with deep stack in debug mode',
+            commandsPath: './non-existent',
+            autoStart: true,
+            errorHandler: mockErrorHandler,
+          })
+        ).resolves.toBeDefined();
 
         expect(process.exit).toHaveBeenCalledWith(1);
       } finally {
@@ -415,9 +449,15 @@ describe('Error Handling Edge Cases', () => {
 
   describe('Concurrent Error Scenarios', () => {
     it('should handle multiple CLIs with errors simultaneously', async () => {
-      const error1Handler = vi.fn((_error: Error) => { throw new Error('Error 1'); });
-      const error2Handler = vi.fn((_error: Error) => { throw new Error('Error 2'); });
-      const error3Handler = vi.fn((_error: Error) => { throw new Error('Error 3'); });
+      const error1Handler = vi.fn((_error: Error) => {
+        throw new Error('Error 1');
+      });
+      const error2Handler = vi.fn((_error: Error) => {
+        throw new Error('Error 2');
+      });
+      const error3Handler = vi.fn((_error: Error) => {
+        throw new Error('Error 3');
+      });
 
       // Create multiple CLIs concurrently
       const cliPromises = [
@@ -427,7 +467,7 @@ describe('Error Handling Edge Cases', () => {
           description: 'Test CLI 1',
           commandsPath: './non-existent',
           autoStart: false, // Skip to test CLI creation without parsing
-          errorHandler: error1Handler
+          errorHandler: error1Handler,
         }),
         createCLI({
           name: 'test-cli-2',
@@ -435,7 +475,7 @@ describe('Error Handling Edge Cases', () => {
           description: 'Test CLI 2',
           commandsPath: './non-existent',
           autoStart: false, // Skip to test CLI creation without parsing
-          errorHandler: error2Handler
+          errorHandler: error2Handler,
         }),
         createCLI({
           name: 'test-cli-3',
@@ -443,11 +483,11 @@ describe('Error Handling Edge Cases', () => {
           description: 'Test CLI 3',
           commandsPath: './non-existent',
           autoStart: false, // Skip to test CLI creation without parsing
-          errorHandler: error3Handler
-        })
+          errorHandler: error3Handler,
+        }),
       ];
 
-      await Promise.all(cliPromises.map(p => expect(p).resolves.toBeDefined()));
+      await Promise.all(cliPromises.map((p) => expect(p).resolves.toBeDefined()));
 
       // Should have created all CLIs successfully without calling error handlers
       // (since no actual parsing errors occurred)
@@ -462,7 +502,7 @@ describe('Error Handling Edge Cases', () => {
       const mockErrorHandler = vi.fn((_error: Error) => {
         // Handler completes successfully
       });
-      
+
       // Create CLI but don't actually run parseAsync - we'll manually test the error path
       await createCLI({
         name: 'test-cli',
@@ -470,12 +510,12 @@ describe('Error Handling Edge Cases', () => {
         description: 'Test CLI for error handler testing',
         commandsPath: './non-existent',
         autoStart: false, // We'll manually test the error path
-        errorHandler: mockErrorHandler
+        errorHandler: mockErrorHandler,
       });
 
       // Manually simulate what happens when parseAsync fails
       const testError = new Error('Simulated command error');
-      
+
       // We can't easily test the actual parseAsync error flow without complex mocking,
       // but we can verify the error handler function works correctly
       mockErrorHandler(testError);
@@ -486,14 +526,14 @@ describe('Error Handling Edge Cases', () => {
       const throwingErrorHandler = vi.fn((_error: Error) => {
         throw new Error('Handler failed');
       });
-      
+
       await createCLI({
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI for error handler failure',
         commandsPath: './non-existent',
         autoStart: false,
-        errorHandler: throwingErrorHandler
+        errorHandler: throwingErrorHandler,
       });
 
       // Test that the error handler throws as expected

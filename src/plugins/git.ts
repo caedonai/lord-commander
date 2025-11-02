@@ -1,6 +1,6 @@
 /**
  * Git Plugin - Repository operations and version control utilities
- * 
+ *
  * Provides essential git functionality for CLI tools including:
  * - Repository status and validation
  * - Basic operations (init, clone, add, commit)
@@ -46,7 +46,7 @@ export interface CommitOptions {
 
 // Helper function to execute git commands with proper error handling
 async function gitExeca(
-  args: string[], 
+  args: string[],
   options: { cwd?: string; stream?: boolean } = {}
 ): Promise<{ stdout: string; stderr: string }> {
   try {
@@ -57,14 +57,11 @@ async function gitExeca(
       return await execa('git', args, { cwd: options.cwd });
     }
   } catch (error) {
-    throw new CLIError(
-      `Git command failed: git ${args.join(' ')}`,
-      {
-        code: 'GIT_COMMAND_FAILED',
-        cause: error instanceof Error ? error : undefined,
-        context: { args, options }
-      }
-    );
+    throw new CLIError(`Git command failed: git ${args.join(' ')}`, {
+      code: 'GIT_COMMAND_FAILED',
+      cause: error instanceof Error ? error : undefined,
+      context: { args, options },
+    });
   }
 }
 
@@ -117,25 +114,28 @@ export async function init(
   options: { bare?: boolean; defaultBranch?: string } = {}
 ): Promise<void> {
   const args = ['init'];
-  
+
   if (options.bare) {
     args.push('--bare');
   }
-  
+
   if (options.defaultBranch) {
     args.push('--initial-branch', options.defaultBranch);
   }
-  
+
   args.push(directory);
-  
+
   try {
     await execa('git', args, { cwd: directory });
   } catch (error) {
-    throw new CLIError(`Failed to initialize git repository: ${error instanceof Error ? error.message : String(error)}`, {
-      code: 'GIT_INIT_FAILED',
-      cause: error instanceof Error ? error : undefined,
-      context: { directory, options },
-    });
+    throw new CLIError(
+      `Failed to initialize git repository: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        code: 'GIT_INIT_FAILED',
+        cause: error instanceof Error ? error : undefined,
+        context: { directory, options },
+      }
+    );
   }
 }
 
@@ -148,27 +148,25 @@ export async function clone(
   options: CloneOptions = {}
 ): Promise<void> {
   const args = ['clone'];
-  
+
   if (options.branch) {
     args.push('--branch', options.branch);
   }
-  
+
   if (options.depth) {
     args.push('--depth', options.depth.toString());
   }
-  
+
   if (options.recursive) {
     args.push('--recursive');
   }
-  
 
-  
   if (options.progress) {
     args.push('--progress');
   }
-  
+
   args.push(url, directory);
-  
+
   try {
     if (options.progress) {
       await execaStream('git', args);
@@ -176,11 +174,14 @@ export async function clone(
       await execa('git', args);
     }
   } catch (error) {
-    throw new CLIError(`Failed to clone repository: ${error instanceof Error ? error.message : String(error)}`, {
-      code: 'GIT_CLONE_FAILED',
-      cause: error instanceof Error ? error : undefined,
-      context: { url, directory, options },
-    });
+    throw new CLIError(
+      `Failed to clone repository: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        code: 'GIT_CLONE_FAILED',
+        cause: error instanceof Error ? error : undefined,
+        context: { url, directory, options },
+      }
+    );
   }
 }
 
@@ -192,44 +193,51 @@ export async function getStatus(cwd: string = process.cwd()): Promise<GitStatus>
     // Get current branch and tracking info
     const branchResult = await execa('git', ['branch', '--show-current'], { cwd });
     const branch = branchResult.stdout.trim();
-    
+
     // Get ahead/behind counts
     let ahead = 0;
     let behind = 0;
     try {
-      const trackingResult = await execa('git', ['rev-list', '--count', '--left-right', '@{upstream}...HEAD'], { cwd });
+      const trackingResult = await execa(
+        'git',
+        ['rev-list', '--count', '--left-right', '@{upstream}...HEAD'],
+        { cwd }
+      );
       const [behindStr, aheadStr] = trackingResult.stdout.trim().split('\t');
-      behind = parseInt(behindStr) || 0;
-      ahead = parseInt(aheadStr) || 0;
+      behind = parseInt(behindStr, 10) || 0;
+      ahead = parseInt(aheadStr, 10) || 0;
     } catch {
       // No upstream branch
     }
-    
+
     // Get file status
     const statusResult = await execa('git', ['status', '--porcelain'], { cwd });
-    const lines = statusResult.stdout.trim().split('\n').filter(line => line);
-    
+    const lines = statusResult.stdout
+      .trim()
+      .split('\n')
+      .filter((line) => line);
+
     const staged: string[] = [];
     const unstaged: string[] = [];
     const untracked: string[] = [];
-    
+
     for (const line of lines) {
       const statusCode = line.substring(0, 2);
       const fileName = line.substring(3);
-      
+
       if (statusCode[0] !== ' ' && statusCode[0] !== '?') {
         staged.push(fileName);
       }
-      
+
       if (statusCode[1] !== ' ' && statusCode[1] !== '?') {
         unstaged.push(fileName);
       }
-      
+
       if (statusCode === '??') {
         untracked.push(fileName);
       }
     }
-    
+
     return {
       branch,
       ahead,
@@ -240,24 +248,24 @@ export async function getStatus(cwd: string = process.cwd()): Promise<GitStatus>
       clean: staged.length === 0 && unstaged.length === 0 && untracked.length === 0,
     };
   } catch (error) {
-    throw new CLIError(`Failed to get git status: ${error instanceof Error ? error.message : String(error)}`, {
-      code: 'GIT_STATUS_FAILED',
-      cause: error instanceof Error ? error : undefined,
-      context: { cwd },
-    });
+    throw new CLIError(
+      `Failed to get git status: ${error instanceof Error ? error.message : String(error)}`,
+      {
+        code: 'GIT_STATUS_FAILED',
+        cause: error instanceof Error ? error : undefined,
+        context: { cwd },
+      }
+    );
   }
 }
 
 /**
  * Add files to the staging area
  */
-export async function add(
-  files: string | string[],
-  cwd: string = process.cwd()
-): Promise<void> {
+export async function add(files: string | string[], cwd: string = process.cwd()): Promise<void> {
   const fileList = Array.isArray(files) ? files : [files];
   const args = ['add', ...fileList];
-  
+
   try {
     await gitExeca(args, { cwd });
   } catch (error) {
@@ -272,24 +280,21 @@ export async function add(
 /**
  * Create a commit
  */
-export async function commit(
-  options: CommitOptions,
-  cwd: string = process.cwd()
-): Promise<string> {
+export async function commit(options: CommitOptions, cwd: string = process.cwd()): Promise<string> {
   const args = ['commit', '-m', options.message];
-  
+
   if (options.amend) {
     args.push('--amend');
   }
-  
+
   if (options.signOff) {
     args.push('--signoff');
   }
-  
+
   if (options.allowEmpty) {
     args.push('--allow-empty');
   }
-  
+
   try {
     const result = await gitExeca(args, { cwd });
     // Extract commit hash from output
@@ -314,12 +319,12 @@ export async function getCommits(
   try {
     const format = '--pretty=format:%H|%h|%an|%ae|%ai|%s';
     const result = await gitExeca(['log', `-${count}`, format], { cwd });
-    
+
     return result.stdout
       .trim()
       .split('\n')
-      .filter(line => line)
-      .map(line => {
+      .filter((line) => line)
+      .map((line) => {
         const [hash, shortHash, author, email, date, message] = line.split('|');
         return {
           hash,
@@ -348,14 +353,14 @@ export async function getDiff(
   cwd: string = process.cwd()
 ): Promise<string> {
   const args = ['diff'];
-  
+
   if (from) {
     args.push(from);
     if (to) {
       args.push(to);
     }
   }
-  
+
   try {
     const result = await gitExeca(args, { cwd });
     return result.stdout;
@@ -376,18 +381,18 @@ export async function getBranches(
   includeRemote: boolean = false
 ): Promise<string[]> {
   const args = ['branch'];
-  
+
   if (includeRemote) {
     args.push('-a');
   }
-  
+
   try {
     const result = await gitExeca(args, { cwd });
     return result.stdout
       .trim()
       .split('\n')
-      .map(line => line.replace(/^\*?\s+/, '').trim())
-      .filter(line => line && !line.startsWith('->'));
+      .map((line) => line.replace(/^\*?\s+/, '').trim())
+      .filter((line) => line && !line.startsWith('->'));
   } catch (error) {
     throw new CLIError(`Failed to list branches`, {
       code: 'GIT_BRANCH_FAILED',
@@ -406,7 +411,7 @@ export async function createBranch(
   checkout: boolean = false
 ): Promise<void> {
   const args = checkout ? ['checkout', '-b', name] : ['branch', name];
-  
+
   try {
     await gitExeca(args, { cwd });
   } catch (error) {
@@ -421,10 +426,7 @@ export async function createBranch(
 /**
  * Checkout a branch or commit
  */
-export async function checkout(
-  ref: string,
-  cwd: string = process.cwd()
-): Promise<void> {
+export async function checkout(ref: string, cwd: string = process.cwd()): Promise<void> {
   try {
     await gitExeca(['checkout', ref], { cwd });
   } catch (error) {

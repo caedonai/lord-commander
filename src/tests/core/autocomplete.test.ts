@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Command } from 'commander';
-import { 
-  analyzeProgram, 
-  generateCompletion, 
-  generateCompletionScript,
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
+  analyzeProgram,
+  type CompletionContext,
+  checkCompletionStatus,
   detectShell,
+  generateCompletion,
+  generateCompletionScript,
   installCompletion,
   uninstallCompletion,
-  checkCompletionStatus,
-  CompletionContext 
 } from '../../core/commands/autocomplete.js';
 
 describe('Shell Autocomplete', () => {
@@ -33,10 +33,8 @@ describe('Shell Autocomplete', () => {
       .option('--dry-run', 'Show what would be deployed');
 
     // Add a nested command
-    const configCmd = testProgram
-      .command('config')
-      .description('Configuration management');
-    
+    const configCmd = testProgram.command('config').description('Configuration management');
+
     configCmd
       .command('set <key> <value>')
       .description('Set configuration value')
@@ -60,28 +58,28 @@ describe('Shell Autocomplete', () => {
       expect(testContext.globalOptions).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ flags: '-v, --verbose' }),
-          expect.objectContaining({ flags: '-c, --config <path>' })
+          expect.objectContaining({ flags: '-c, --config <path>' }),
         ])
       );
     });
 
     it('should extract commands with options', () => {
-      const deployCommand = testContext.commands.find(cmd => cmd.name === 'deploy');
+      const deployCommand = testContext.commands.find((cmd) => cmd.name === 'deploy');
       expect(deployCommand).toBeDefined();
       expect(deployCommand?.description).toBe('Deploy the application');
-      
+
       expect(deployCommand?.options).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ flags: '-f, --force' }),
-          expect.objectContaining({ flags: '--dry-run' })
+          expect.objectContaining({ flags: '--dry-run' }),
         ])
       );
     });
 
     it('should extract nested commands', () => {
-      const configSetCommand = testContext.commands.find(cmd => cmd.name === 'config set');
-      const configGetCommand = testContext.commands.find(cmd => cmd.name === 'config get');
-      
+      const configSetCommand = testContext.commands.find((cmd) => cmd.name === 'config set');
+      const configGetCommand = testContext.commands.find((cmd) => cmd.name === 'config get');
+
       expect(configSetCommand).toBeDefined();
       expect(configGetCommand).toBeDefined();
       expect(configSetCommand?.description).toBe('Set configuration value');
@@ -92,7 +90,7 @@ describe('Shell Autocomplete', () => {
   describe('generateCompletion', () => {
     it('should generate bash completion script', () => {
       const bashScript = generateCompletion(testProgram, 'bash');
-      
+
       expect(bashScript).toContain('_test-cli_completion');
       expect(bashScript).toContain('deploy');
       expect(bashScript).toContain('config');
@@ -103,7 +101,7 @@ describe('Shell Autocomplete', () => {
 
     it('should generate zsh completion script', () => {
       const zshScript = generateCompletion(testProgram, 'zsh');
-      
+
       expect(zshScript).toContain('#compdef test-cli');
       expect(zshScript).toContain('_test-cli()');
       expect(zshScript).toContain('deploy');
@@ -114,7 +112,7 @@ describe('Shell Autocomplete', () => {
 
     it('should generate fish completion script', () => {
       const fishScript = generateCompletion(testProgram, 'fish');
-      
+
       expect(fishScript).toContain('complete -c test-cli');
       expect(fishScript).toContain('-f -a "deploy"');
       expect(fishScript).toContain('-f -a "config"');
@@ -124,7 +122,7 @@ describe('Shell Autocomplete', () => {
 
     it('should generate PowerShell completion script', () => {
       const powershellScript = generateCompletion(testProgram, 'powershell');
-      
+
       expect(powershellScript).toContain('Register-ArgumentCompleter');
       expect(powershellScript).toContain('-CommandName test-cli');
       expect(powershellScript).toContain('deploy');
@@ -142,7 +140,7 @@ describe('Shell Autocomplete', () => {
   describe('generateCompletionScript', () => {
     it('should generate completion using context', () => {
       const bashScript = generateCompletionScript(testContext, 'bash');
-      
+
       expect(bashScript).toContain('_test-cli_completion');
       expect(bashScript).toContain('deploy');
       expect(bashScript).toContain('config');
@@ -194,7 +192,7 @@ describe('Shell Autocomplete', () => {
   describe('installCompletion', () => {
     it('should handle PowerShell installation gracefully', async () => {
       const result = await installCompletion(testProgram, { shell: 'powershell' });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('PowerShell completion requires manual installation');
       expect(result.restartRequired).toBe(false);
@@ -202,23 +200,23 @@ describe('Shell Autocomplete', () => {
 
     it('should handle unsupported shell', async () => {
       const result = await installCompletion(testProgram, { shell: 'unsupported' as any });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('Unsupported shell: unsupported');
     });
 
     it('should configure installation paths for global vs local', async () => {
       // Test with bash (most reliable for testing)
-      const globalResult = await installCompletion(testProgram, { 
-        shell: 'bash', 
-        global: true 
+      const globalResult = await installCompletion(testProgram, {
+        shell: 'bash',
+        global: true,
       });
-      
-      const localResult = await installCompletion(testProgram, { 
-        shell: 'bash', 
-        global: false 
+
+      const localResult = await installCompletion(testProgram, {
+        shell: 'bash',
+        global: false,
       });
-      
+
       // Both should attempt installation (may fail due to permissions in test environment)
       expect(typeof globalResult.success).toBe('boolean');
       expect(typeof localResult.success).toBe('boolean');
@@ -228,14 +226,14 @@ describe('Shell Autocomplete', () => {
   describe('uninstallCompletion', () => {
     it('should handle PowerShell uninstallation gracefully', async () => {
       const result = await uninstallCompletion(testProgram, { shell: 'powershell' });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('PowerShell completion requires manual removal');
     });
 
     it('should handle unsupported shell', async () => {
       const result = await uninstallCompletion(testProgram, { shell: 'unsupported' as any });
-      
+
       expect(result.success).toBe(false);
       expect(result.error).toContain('Unsupported shell: unsupported');
     });
@@ -244,7 +242,7 @@ describe('Shell Autocomplete', () => {
   describe('checkCompletionStatus', () => {
     it('should check status for bash shell', async () => {
       const status = await checkCompletionStatus(testProgram, 'bash');
-      
+
       expect(status.shell).toBe('bash');
       expect(status.cliName).toBe('test-cli');
       expect(typeof status.installed).toBe('boolean');
@@ -252,7 +250,7 @@ describe('Shell Autocomplete', () => {
 
     it('should check status for zsh shell', async () => {
       const status = await checkCompletionStatus(testProgram, 'zsh');
-      
+
       expect(status.shell).toBe('zsh');
       expect(status.cliName).toBe('test-cli');
       expect(typeof status.installed).toBe('boolean');
@@ -260,7 +258,7 @@ describe('Shell Autocomplete', () => {
 
     it('should check status for fish shell', async () => {
       const status = await checkCompletionStatus(testProgram, 'fish');
-      
+
       expect(status.shell).toBe('fish');
       expect(status.cliName).toBe('test-cli');
       expect(typeof status.installed).toBe('boolean');
@@ -268,16 +266,18 @@ describe('Shell Autocomplete', () => {
 
     it('should handle PowerShell with appropriate message', async () => {
       const status = await checkCompletionStatus(testProgram, 'powershell');
-      
+
       expect(status.shell).toBe('powershell');
       expect(status.cliName).toBe('test-cli');
       expect(status.installed).toBe(false);
-      expect(status.errorMessage).toContain('PowerShell completion status cannot be automatically detected');
+      expect(status.errorMessage).toContain(
+        'PowerShell completion status cannot be automatically detected'
+      );
     });
 
     it('should detect shell automatically if not specified', async () => {
       const status = await checkCompletionStatus(testProgram);
-      
+
       expect(status.shell).toBeDefined();
       expect(status.cliName).toBe('test-cli');
       expect(['bash', 'zsh', 'fish', 'powershell']).toContain(status.shell);
@@ -286,9 +286,7 @@ describe('Shell Autocomplete', () => {
 
   describe('Complex CLI Structures', () => {
     it('should handle CLIs with many nested commands', () => {
-      const complexProgram = new Command()
-        .name('complex-cli')
-        .version('1.0.0');
+      const complexProgram = new Command().name('complex-cli').version('1.0.0');
 
       // Create a deeply nested command structure
       const apiCmd = complexProgram.command('api').description('API management');
@@ -298,22 +296,25 @@ describe('Shell Autocomplete', () => {
       usersCmd.command('delete <id>').description('Delete user').option('--force', 'Force delete');
 
       const dbCmd = complexProgram.command('db').description('Database operations');
-      dbCmd.command('migrate').description('Run migrations').option('--rollback', 'Rollback last migration');
+      dbCmd
+        .command('migrate')
+        .description('Run migrations')
+        .option('--rollback', 'Rollback last migration');
       dbCmd.command('seed').description('Seed database').option('-e, --env <name>', 'Environment');
 
       const context = analyzeProgram(complexProgram);
-      
+
       expect(context.commands).toHaveLength(8); // api, users, create, list, delete, db, migrate, seed
-      expect(context.commands.map(c => c.name)).toEqual(
+      expect(context.commands.map((c) => c.name)).toEqual(
         expect.arrayContaining([
           'api',
           'api users',
           'api users create',
-          'api users list', 
+          'api users list',
           'api users delete',
           'db',
           'db migrate',
-          'db seed'
+          'db seed',
         ])
       );
 
@@ -327,25 +328,17 @@ describe('Shell Autocomplete', () => {
     });
 
     it('should handle CLIs with command aliases', () => {
-      const aliasProgram = new Command()
-        .name('alias-cli')
-        .version('1.0.0');
+      const aliasProgram = new Command().name('alias-cli').version('1.0.0');
 
-      aliasProgram
-        .command('deploy')
-        .alias('d')
-        .description('Deploy application');
+      aliasProgram.command('deploy').alias('d').description('Deploy application');
 
-      aliasProgram
-        .command('status')
-        .aliases(['s', 'stat'])
-        .description('Show status');
+      aliasProgram.command('status').aliases(['s', 'stat']).description('Show status');
 
       const context = analyzeProgram(aliasProgram);
-      
-      const deployCmd = context.commands.find(c => c.name === 'deploy');
-      const statusCmd = context.commands.find(c => c.name === 'status');
-      
+
+      const deployCmd = context.commands.find((c) => c.name === 'deploy');
+      const statusCmd = context.commands.find((c) => c.name === 'status');
+
       expect(deployCmd?.aliases).toContain('d');
       expect(statusCmd?.aliases).toEqual(expect.arrayContaining(['s', 'stat']));
     });
@@ -354,11 +347,11 @@ describe('Shell Autocomplete', () => {
   describe('Completion Script Validation', () => {
     it('should generate valid bash syntax', () => {
       const bashScript = generateCompletion(testProgram, 'bash');
-      
+
       // Basic syntax checks
       expect(bashScript).toMatch(/^#!/); // Starts with shebang
       expect(bashScript).toMatch(/complete -F/); // Has completion registration
-      
+
       // Count opening and closing braces/parentheses should be balanced
       const openBraces = (bashScript.match(/{/g) || []).length;
       const closeBraces = (bashScript.match(/}/g) || []).length;
@@ -367,7 +360,7 @@ describe('Shell Autocomplete', () => {
 
     it('should generate valid zsh syntax', () => {
       const zshScript = generateCompletion(testProgram, 'zsh');
-      
+
       expect(zshScript).toMatch(/^#compdef/); // Starts with compdef
       expect(zshScript).toContain('_test-cli() {'); // Has main completion function
       expect(zshScript).toContain('_test-cli "$@"'); // Has function call
@@ -375,10 +368,10 @@ describe('Shell Autocomplete', () => {
 
     it('should generate valid fish syntax', () => {
       const fishScript = generateCompletion(testProgram, 'fish');
-      
+
       // Fish uses complete command
       expect(fishScript).toMatch(/complete -c test-cli/);
-      
+
       // Should not have bash/zsh specific syntax
       expect(fishScript).not.toContain('function');
       expect(fishScript).not.toContain('case');
@@ -386,7 +379,7 @@ describe('Shell Autocomplete', () => {
 
     it('should generate valid PowerShell syntax', () => {
       const powershellScript = generateCompletion(testProgram, 'powershell');
-      
+
       expect(powershellScript).toContain('Register-ArgumentCompleter');
       expect(powershellScript).toContain('param(');
       expect(powershellScript).toContain('[System.Management.Automation.CompletionResult]');
@@ -402,10 +395,10 @@ describe('Shell Autocomplete', () => {
         .option('-h, --help', 'Show help');
 
       const context = analyzeProgram(emptyProgram);
-      
+
       expect(context.commands).toHaveLength(0);
       expect(context.globalOptions.length).toBeGreaterThan(0); // Should have help option
-      
+
       // Should still generate valid completion scripts
       const bashScript = generateCompletionScript(context, 'bash');
       expect(bashScript).toContain('empty-cli');
@@ -413,19 +406,15 @@ describe('Shell Autocomplete', () => {
     });
 
     it('should handle commands with no options', () => {
-      const simpleProgram = new Command()
-        .name('simple-cli')
-        .version('1.0.0');
+      const simpleProgram = new Command().name('simple-cli').version('1.0.0');
 
-      simpleProgram
-        .command('build')
-        .description('Build the project');
+      simpleProgram.command('build').description('Build the project');
 
       const context = analyzeProgram(simpleProgram);
-      const buildCmd = context.commands.find(c => c.name === 'build');
-      
+      const buildCmd = context.commands.find((c) => c.name === 'build');
+
       expect(buildCmd?.options).toHaveLength(0);
-      
+
       const fishScript = generateCompletionScript(context, 'fish');
       expect(fishScript).toContain('build');
     });

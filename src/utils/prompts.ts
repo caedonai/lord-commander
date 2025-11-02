@@ -1,14 +1,14 @@
-import { intro, outro, text, confirm, select, multiselect, spinner, note } from '@clack/prompts';
+import { confirm, intro, multiselect, note, outro, select, spinner, text } from '@clack/prompts';
 
 export const prompts = {
-    intro,
-    outro,
-    text,
-    confirm,
-    select,
-    multiselect,
-    spinner,
-    note
+  intro,
+  outro,
+  text,
+  confirm,
+  select,
+  multiselect,
+  spinner,
+  note,
 };
 
 export default prompts;

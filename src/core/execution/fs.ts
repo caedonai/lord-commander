@@ -1,13 +1,13 @@
 /**
  * File system utilities with safe operations and error handling
- * 
+ *
  * Provides secure file system operations with proper error handling,
  * progress tracking, and integration with the CLI logger system.
  */
 
-import fs from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
+import { existsSync } from 'node:fs';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { DEFAULT_IGNORE_PATTERNS } from '../foundation/core/constants.js';
 import { FileSystemError } from '../foundation/errors/errors.js';
 import { createLogger } from '../ui/logger.js';
@@ -84,11 +84,7 @@ export async function stat(filePath: string): Promise<FileStats> {
       created: stats.birthtime,
     };
   } catch (error) {
-    throw new FileSystemError(
-      `Failed to get stats for: ${filePath}`,
-      filePath,
-      error as Error
-    );
+    throw new FileSystemError(`Failed to get stats for: ${filePath}`, filePath, error as Error);
   }
 }
 
@@ -100,18 +96,17 @@ export async function ensureDir(dirPath: string): Promise<void> {
     await fs.mkdir(dirPath, { recursive: true });
     fsLogger.debug(`Ensured directory exists: ${dirPath}`);
   } catch (error) {
-    throw new FileSystemError(
-      `Failed to create directory: ${dirPath}`,
-      dirPath,
-      error as Error
-    );
+    throw new FileSystemError(`Failed to create directory: ${dirPath}`, dirPath, error as Error);
   }
 }
 
 /**
  * Remove a file or directory
  */
-export async function remove(targetPath: string, options: { recursive?: boolean } = {}): Promise<void> {
+export async function remove(
+  targetPath: string,
+  options: { recursive?: boolean } = {}
+): Promise<void> {
   try {
     if (!exists(targetPath)) {
       fsLogger.debug(`Path does not exist, nothing to remove: ${targetPath}`);
@@ -119,7 +114,7 @@ export async function remove(targetPath: string, options: { recursive?: boolean 
     }
 
     const stats = await stat(targetPath);
-    
+
     if (stats.isDirectory) {
       await fs.rmdir(targetPath, { recursive: options.recursive ?? true });
       fsLogger.debug(`Removed directory: ${targetPath}`);
@@ -128,28 +123,23 @@ export async function remove(targetPath: string, options: { recursive?: boolean 
       fsLogger.debug(`Removed file: ${targetPath}`);
     }
   } catch (error) {
-    throw new FileSystemError(
-      `Failed to remove: ${targetPath}`,
-      targetPath,
-      error as Error
-    );
+    throw new FileSystemError(`Failed to remove: ${targetPath}`, targetPath, error as Error);
   }
 }
 
 /**
  * Read a text file
  */
-export async function readFile(filePath: string, encoding: BufferEncoding = 'utf8'): Promise<string> {
+export async function readFile(
+  filePath: string,
+  encoding: BufferEncoding = 'utf8'
+): Promise<string> {
   try {
     const content = await fs.readFile(filePath, encoding);
     fsLogger.debug(`Read file: ${filePath} (${content.length} chars)`);
     return content;
   } catch (error) {
-    throw new FileSystemError(
-      `Failed to read file: ${filePath}`,
-      filePath,
-      error as Error
-    );
+    throw new FileSystemError(`Failed to read file: ${filePath}`, filePath, error as Error);
   }
 }
 
@@ -157,8 +147,8 @@ export async function readFile(filePath: string, encoding: BufferEncoding = 'utf
  * Write a text file
  */
 export async function writeFile(
-  filePath: string, 
-  content: string, 
+  filePath: string,
+  content: string,
   options: FileOperationOptions = {}
 ): Promise<void> {
   try {
@@ -182,11 +172,7 @@ export async function writeFile(
     fsLogger.debug(`Wrote file: ${filePath} (${content.length} chars)`);
   } catch (error) {
     if (error instanceof FileSystemError) throw error;
-    throw new FileSystemError(
-      `Failed to write file: ${filePath}`,
-      filePath,
-      error as Error
-    );
+    throw new FileSystemError(`Failed to write file: ${filePath}`, filePath, error as Error);
   }
 }
 
@@ -201,11 +187,7 @@ export async function readJSON<T = any>(filePath: string): Promise<T> {
     return parsed;
   } catch (error) {
     if (error instanceof SyntaxError) {
-      throw new FileSystemError(
-        `Invalid JSON in file: ${filePath}`,
-        filePath,
-        error
-      );
+      throw new FileSystemError(`Invalid JSON in file: ${filePath}`, filePath, error);
     }
     throw error;
   }
@@ -215,8 +197,8 @@ export async function readJSON<T = any>(filePath: string): Promise<T> {
  * Write an object as JSON file
  */
 export async function writeJSON(
-  filePath: string, 
-  data: any, 
+  filePath: string,
+  data: any,
   options: FileOperationOptions & { indent?: number } = {}
 ): Promise<void> {
   try {
@@ -225,11 +207,7 @@ export async function writeJSON(
     await writeFile(filePath, content, fileOptions);
     fsLogger.debug(`Wrote JSON file: ${filePath}`);
   } catch (error) {
-    throw new FileSystemError(
-      `Failed to write JSON file: ${filePath}`,
-      filePath,
-      error as Error
-    );
+    throw new FileSystemError(`Failed to write JSON file: ${filePath}`, filePath, error as Error);
   }
 }
 
@@ -237,8 +215,8 @@ export async function writeJSON(
  * Copy a file
  */
 export async function copyFile(
-  srcPath: string, 
-  destPath: string, 
+  srcPath: string,
+  destPath: string,
   options: CopyOptions = {}
 ): Promise<void> {
   try {
@@ -246,10 +224,7 @@ export async function copyFile(
 
     // Check if source exists
     if (!exists(srcPath)) {
-      throw new FileSystemError(
-        `Source file does not exist: ${srcPath}`,
-        srcPath
-      );
+      throw new FileSystemError(`Source file does not exist: ${srcPath}`, srcPath);
     }
 
     // Check if destination exists and overwrite is disabled
@@ -291,7 +266,7 @@ export async function copyFile(
  */
 function shouldIgnore(filePath: string, ignorePatterns: readonly string[]): boolean {
   const normalizedPath = path.normalize(filePath).replace(/\\/g, '/'); // Normalize path separators for cross-platform compatibility
-  return ignorePatterns.some(pattern => {
+  return ignorePatterns.some((pattern) => {
     // Simple glob-like matching - convert wildcards to regex
     if (pattern.includes('*')) {
       const regex = new RegExp(pattern.replace(/\*/g, '.*'));
@@ -306,8 +281,8 @@ function shouldIgnore(filePath: string, ignorePatterns: readonly string[]): bool
  * List directory contents
  */
 export async function readDir(
-  dirPath: string, 
-  options: { 
+  dirPath: string,
+  options: {
     recursive?: boolean; // Scan subdirectories recursively
     includeStats?: boolean; // Include file sizes and detailed stats
   } = {}
@@ -317,11 +292,11 @@ export async function readDir(
     const entries: DirectoryEntry[] = [];
 
     const items = await fs.readdir(dirPath);
-    
+
     for (const item of items) {
       const itemPath = path.join(dirPath, item);
       let stats: FileStats;
-      
+
       if (includeStats) {
         stats = await stat(itemPath);
       } else {
@@ -335,7 +310,7 @@ export async function readDir(
           created: fsStats.birthtime,
         };
       }
-      
+
       const entry: DirectoryEntry = {
         name: item,
         path: itemPath,
@@ -359,11 +334,7 @@ export async function readDir(
     fsLogger.debug(`Read directory: ${dirPath} (${entries.length} entries)`);
     return entries;
   } catch (error) {
-    throw new FileSystemError(
-      `Failed to read directory: ${dirPath}`,
-      dirPath,
-      error as Error
-    );
+    throw new FileSystemError(`Failed to read directory: ${dirPath}`, dirPath, error as Error);
   }
 }
 
@@ -371,25 +342,22 @@ export async function readDir(
  * Copy a directory and its contents
  */
 export async function copyDir(
-  srcDir: string, 
-  destDir: string, 
+  srcDir: string,
+  destDir: string,
   options: CopyOptions = {}
 ): Promise<void> {
   try {
-    const { 
-      overwrite = true, 
+    const {
+      overwrite = true,
       recursive = true,
       ignorePatterns = DEFAULT_IGNORE_PATTERNS,
       filter,
-      onProgress
+      onProgress,
     } = options;
 
     // Check if source directory exists
     if (!exists(srcDir)) {
-      throw new FileSystemError(
-        `Source directory does not exist: ${srcDir}`,
-        srcDir
-      );
+      throw new FileSystemError(`Source directory does not exist: ${srcDir}`, srcDir);
     }
 
     // Create destination directory
@@ -421,10 +389,10 @@ export async function copyDir(
       }
 
       if (entry.isFile) {
-        await copyFile(entry.path, destPath, { 
-          overwrite, 
+        await copyFile(entry.path, destPath, {
+          overwrite,
           createDirs: true,
-          preserveTimestamps: options.preserveTimestamps 
+          preserveTimestamps: options.preserveTimestamps,
         });
       } else if (entry.isDirectory) {
         await ensureDir(destPath);
@@ -447,38 +415,24 @@ export async function copyDir(
 /**
  * Copy files or directories (auto-detects type)
  */
-export async function copy(
-  src: string, 
-  dest: string, 
-  options: CopyOptions = {}
-): Promise<void> {
+export async function copy(src: string, dest: string, options: CopyOptions = {}): Promise<void> {
   try {
     if (!exists(src)) {
-      throw new FileSystemError(
-        `Source does not exist: ${src}`,
-        src
-      );
+      throw new FileSystemError(`Source does not exist: ${src}`, src);
     }
 
     const srcStats = await stat(src);
-    
+
     if (srcStats.isFile) {
       await copyFile(src, dest, options);
     } else if (srcStats.isDirectory) {
       await copyDir(src, dest, options);
     } else {
-      throw new FileSystemError(
-        `Source is neither a file nor a directory: ${src}`,
-        src
-      );
+      throw new FileSystemError(`Source is neither a file nor a directory: ${src}`, src);
     }
   } catch (error) {
     if (error instanceof FileSystemError) throw error;
-    throw new FileSystemError(
-      `Failed to copy: ${src} -> ${dest}`,
-      src,
-      error as Error
-    );
+    throw new FileSystemError(`Failed to copy: ${src} -> ${dest}`, src, error as Error);
   }
 }
 
@@ -488,7 +442,7 @@ export async function copy(
 export async function findFiles(
   searchDir: string,
   pattern: string | RegExp, // Pattern to match filenames (supports wildcards like '*.js')
-  options: { 
+  options: {
     recursive?: boolean; // Search subdirectories
     ignorePatterns?: readonly string[]; // Patterns to exclude from search
   } = {}
@@ -496,19 +450,17 @@ export async function findFiles(
   try {
     const { recursive = true, ignorePatterns = DEFAULT_IGNORE_PATTERNS } = options;
     const matches: string[] = [];
-    
+
     // Convert string patterns with wildcards to regex (e.g., '*.js' becomes /.*\.js/)
-    const regex = typeof pattern === 'string' 
-      ? new RegExp(pattern.replace(/\*/g, '.*'))
-      : pattern;
+    const regex = typeof pattern === 'string' ? new RegExp(pattern.replace(/\*/g, '.*')) : pattern;
 
     const entries = await readDir(searchDir, { recursive });
-    
+
     for (const entry of entries) {
       if (!entry.isFile) continue;
-      
+
       const relativePath = path.relative(searchDir, entry.path);
-      
+
       // Check ignore patterns
       if (shouldIgnore(relativePath, ignorePatterns)) {
         continue;
@@ -523,11 +475,7 @@ export async function findFiles(
     fsLogger.debug(`Found ${matches.length} files matching pattern in: ${searchDir}`);
     return matches;
   } catch (error) {
-    throw new FileSystemError(
-      `Failed to find files in: ${searchDir}`,
-      searchDir,
-      error as Error
-    );
+    throw new FileSystemError(`Failed to find files in: ${searchDir}`, searchDir, error as Error);
   }
 }
 
@@ -542,18 +490,14 @@ export async function cleanDir(dirPath: string): Promise<void> {
     }
 
     const entries = await readDir(dirPath);
-    
+
     for (const entry of entries) {
       await remove(entry.path, { recursive: true });
     }
 
     fsLogger.debug(`Cleaned directory: ${dirPath} (${entries.length} items removed)`);
   } catch (error) {
-    throw new FileSystemError(
-      `Failed to clean directory: ${dirPath}`,
-      dirPath,
-      error as Error
-    );
+    throw new FileSystemError(`Failed to clean directory: ${dirPath}`, dirPath, error as Error);
   }
 }
 
@@ -563,40 +507,37 @@ export async function cleanDir(dirPath: string): Promise<void> {
 export async function getSize(targetPath: string): Promise<number> {
   try {
     const stats = await stat(targetPath);
-    
+
     if (stats.isFile) {
       return stats.size;
     }
-    
+
     if (stats.isDirectory) {
       const entries = await readDir(targetPath, { recursive: true, includeStats: true });
       return entries
-        .filter(entry => entry.isFile)
+        .filter((entry) => entry.isFile)
         .reduce((total, entry) => total + (entry.size || 0), 0);
     }
-    
+
     return 0;
   } catch (error) {
-    throw new FileSystemError(
-      `Failed to get size of: ${targetPath}`,
-      targetPath,
-      error as Error
-    );
+    throw new FileSystemError(`Failed to get size of: ${targetPath}`, targetPath, error as Error);
   }
 }
 
 /**
  * Move (rename) a file or directory
  */
-export async function move(src: string, dest: string, options: FileOperationOptions = {}): Promise<void> {
+export async function move(
+  src: string,
+  dest: string,
+  options: FileOperationOptions = {}
+): Promise<void> {
   try {
     const { overwrite = true, createDirs = true } = options;
 
     if (!exists(src)) {
-      throw new FileSystemError(
-        `Source does not exist: ${src}`,
-        src
-      );
+      throw new FileSystemError(`Source does not exist: ${src}`, src);
     }
 
     if (!overwrite && exists(dest)) {
@@ -615,10 +556,6 @@ export async function move(src: string, dest: string, options: FileOperationOpti
     fsLogger.debug(`Moved: ${src} -> ${dest}`);
   } catch (error) {
     if (error instanceof FileSystemError) throw error;
-    throw new FileSystemError(
-      `Failed to move: ${src} -> ${dest}`,
-      src,
-      error as Error
-    );
+    throw new FileSystemError(`Failed to move: ${src} -> ${dest}`, src, error as Error);
   }
 }

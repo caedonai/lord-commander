@@ -1,16 +1,16 @@
 /**
  * Memory Exhaustion Protection Tests
- * 
+ *
  * Tests for security measures preventing DoS attacks via large error objects,
  * excessive memory usage, and resource exhaustion scenarios.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { 
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  createCLI,
+  getObjectMemorySize,
   sanitizeErrorObject,
   truncateErrorMessage,
-  getObjectMemorySize,
-  createCLI 
 } from '../../../core/createCLI.js';
 import { CLIError } from '../../../core/foundation/errors/errors.js';
 
@@ -33,7 +33,7 @@ describe('Memory Exhaustion Protection', () => {
     it('should truncate very long error messages', () => {
       const longMessage = 'A'.repeat(1000);
       const result = truncateErrorMessage(longMessage, 100);
-      
+
       expect(result.length).toBeLessThanOrEqual(100);
       expect(result).toContain('... [truncated for security]');
     });
@@ -41,7 +41,7 @@ describe('Memory Exhaustion Protection', () => {
     it('should preserve short messages unchanged', () => {
       const shortMessage = 'Short error message';
       const result = truncateErrorMessage(shortMessage, 100);
-      
+
       expect(result).toBe(shortMessage);
     });
 
@@ -54,7 +54,7 @@ describe('Memory Exhaustion Protection', () => {
     it('should use default length when not specified', () => {
       const longMessage = 'A'.repeat(1000);
       const result = truncateErrorMessage(longMessage);
-      
+
       // Default is 500 characters
       expect(result.length).toBeLessThanOrEqual(500);
     });
@@ -72,7 +72,7 @@ describe('Memory Exhaustion Protection', () => {
     it('should calculate memory size for objects', () => {
       const obj = { key: 'value', number: 42 };
       const size = getObjectMemorySize(obj);
-      
+
       expect(size).toBeGreaterThan(0);
       expect(size).toBeLessThan(10000); // Reasonable bounds
     });
@@ -80,7 +80,7 @@ describe('Memory Exhaustion Protection', () => {
     it('should handle circular references safely', () => {
       const circular: any = { name: 'test' };
       circular.self = circular;
-      
+
       // Should not crash or infinite loop
       const size = getObjectMemorySize(circular);
       expect(size).toBeGreaterThan(0);
@@ -90,7 +90,7 @@ describe('Memory Exhaustion Protection', () => {
     it('should limit memory calculation for very large objects', () => {
       const largeArray = new Array(10000).fill('large string'.repeat(100));
       const size = getObjectMemorySize(largeArray);
-      
+
       // Should calculate actual size but have upper bound to prevent infinite calculation
       // The array overhead (80KB) plus string content should be significant but not infinite
       expect(size).toBeGreaterThan(50000); // Should be substantial
@@ -102,12 +102,12 @@ describe('Memory Exhaustion Protection', () => {
         level1: {
           level2: {
             level3: {
-              data: 'deeply nested'
-            }
-          }
-        }
+              data: 'deeply nested',
+            },
+          },
+        },
       };
-      
+
       const size = getObjectMemorySize(nested);
       expect(size).toBeGreaterThan(0);
     });
@@ -117,17 +117,17 @@ describe('Memory Exhaustion Protection', () => {
     it('should sanitize basic error objects', () => {
       const error = new Error('Test error message');
       const sanitized = sanitizeErrorObject(error);
-      
+
       expect(sanitized).toBeInstanceOf(Error);
       expect(sanitized.message).toBe('Test error message');
       expect(sanitized.name).toBe('Error');
     });
 
     it('should truncate very long error messages', () => {
-      const longMessage = 'Error: ' + 'A'.repeat(1000);
+      const longMessage = `Error: ${'A'.repeat(1000)}`;
       const error = new Error(longMessage);
       const sanitized = sanitizeErrorObject(error);
-      
+
       expect(sanitized.message.length).toBeLessThanOrEqual(500);
       expect(sanitized.message).toContain('... [truncated for security]');
     });
@@ -136,9 +136,9 @@ describe('Memory Exhaustion Protection', () => {
       const error = new Error('Test error');
       // Create a fake stack trace with many lines
       error.stack = new Array(20).fill('    at someFunction (file.js:1:1)').join('\n');
-      
+
       const sanitized = sanitizeErrorObject(error);
-      
+
       if (sanitized.stack) {
         const lines = sanitized.stack.split('\n');
         expect(lines.length).toBeLessThanOrEqual(10); // Default max depth
@@ -150,12 +150,12 @@ describe('Memory Exhaustion Protection', () => {
         context: {
           operation: 'test',
           details: 'A'.repeat(200), // Long details
-          user: 'test-user'
-        }
+          user: 'test-user',
+        },
       });
-      
+
       const sanitized = sanitizeErrorObject(cliError);
-      
+
       expect(sanitized.message).toBe('CLI error');
       // Context should be limited and truncated
       if ((sanitized as any).context) {
@@ -165,7 +165,7 @@ describe('Memory Exhaustion Protection', () => {
 
     it('should warn about large error objects', () => {
       const consoleSpy = vi.spyOn(console, 'warn');
-      
+
       // Create an error with context that will exceed the 10KB limit
       // Each character is 2 bytes in UTF-16, so 12,000 chars = 24KB per string
       const massiveData = 'A'.repeat(12000);
@@ -173,12 +173,12 @@ describe('Memory Exhaustion Protection', () => {
         context: {
           data1: massiveData,
           data2: massiveData,
-          data3: 'extra data to ensure we exceed the limit'
-        }
+          data3: 'extra data to ensure we exceed the limit',
+        },
       });
-      
+
       sanitizeErrorObject(largeError);
-      
+
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining('[Security] Large error object detected')
       );
@@ -188,11 +188,11 @@ describe('Memory Exhaustion Protection', () => {
       // Create a plain object that looks like an error but has no stack
       const error = {
         name: 'Error',
-        message: 'No stack'
+        message: 'No stack',
       } as Error;
-      
+
       const sanitized = sanitizeErrorObject(error);
-      
+
       expect(sanitized.message).toBe('No stack');
       expect(sanitized.name).toBe('Error');
       // Since we didn't have a stack in the original, we shouldn't add one
@@ -203,22 +203,22 @@ describe('Memory Exhaustion Protection', () => {
   describe('Integration with createCLI', () => {
     it('should handle large error objects in error handlers', async () => {
       const largeLogs: string[] = [];
-      
+
       const memoryProtectedHandler = vi.fn((error: Error) => {
         // Log error details to verify truncation
         largeLogs.push(`Message length: ${error.message.length}`);
         largeLogs.push(`Stack present: ${!!error.stack}`);
       });
-      
+
       const cli = await createCLI({
         name: 'test-cli',
         version: '1.0.0',
         description: 'CLI with memory protection',
         commandsPath: './non-existent',
         autoStart: false,
-        errorHandler: memoryProtectedHandler
+        errorHandler: memoryProtectedHandler,
       });
-      
+
       expect(cli).toBeDefined();
       expect(memoryProtectedHandler).not.toHaveBeenCalled(); // No errors in setup
     });
@@ -230,16 +230,16 @@ describe('Memory Exhaustion Protection', () => {
         // Should not be able to create extremely large error objects
         expect(stringified.length).toBeLessThan(50000); // 50KB limit
       });
-      
+
       const cli = await createCLI({
         name: 'test-cli',
         version: '1.0.0',
         description: 'CLI with DoS protection',
         commandsPath: './non-existent',
         autoStart: false,
-        errorHandler: dosProtectionHandler
+        errorHandler: dosProtectionHandler,
       });
-      
+
       expect(cli).toBeDefined();
     });
   });
@@ -247,28 +247,29 @@ describe('Memory Exhaustion Protection', () => {
   describe('Performance and Resource Management', () => {
     it('should not cause memory leaks with repeated sanitization', () => {
       const initialMemory = process.memoryUsage().heapUsed;
-      
+
       // Sanitize many error objects
-      for (let i = 0; i < 100; i++) { // Reduced from 1000 for more realistic test
+      for (let i = 0; i < 100; i++) {
+        // Reduced from 1000 for more realistic test
         const error = new Error(`Error ${i}: ${'A'.repeat(100)}`);
         sanitizeErrorObject(error);
       }
-      
+
       // Force garbage collection if available
       if (global.gc) {
         global.gc();
       }
-      
+
       const finalMemory = process.memoryUsage().heapUsed;
       const memoryIncrease = finalMemory - initialMemory;
-      
+
       // Memory increase should be reasonable (less than 50MB for test environment)
       expect(memoryIncrease).toBeLessThan(50 * 1024 * 1024);
     });
 
     it('should handle concurrent error sanitization efficiently', async () => {
       const startTime = Date.now();
-      
+
       // Sanitize errors concurrently
       const promises = Array.from({ length: 100 }, (_, i) => {
         return Promise.resolve().then(() => {
@@ -276,27 +277,27 @@ describe('Memory Exhaustion Protection', () => {
           return sanitizeErrorObject(error);
         });
       });
-      
+
       const results = await Promise.all(promises);
       const duration = Date.now() - startTime;
-      
+
       expect(results).toHaveLength(100);
       expect(duration).toBeLessThan(1000); // Should complete within 1 second
     });
 
     it('should maintain reasonable performance with large objects', () => {
       const startTime = Date.now();
-      
+
       // Create a reasonably large error object
       const largeError = new CLIError('Large error', {
         context: {
-          data: new Array(1000).fill({ key: 'value', number: 42 })
-        }
+          data: new Array(1000).fill({ key: 'value', number: 42 }),
+        },
       });
-      
+
       const sanitized = sanitizeErrorObject(largeError);
       const duration = Date.now() - startTime;
-      
+
       expect(sanitized).toBeDefined();
       expect(duration).toBeLessThan(100); // Should complete within 100ms
     });
@@ -307,9 +308,9 @@ describe('Memory Exhaustion Protection', () => {
       const malformedError = Object.create(Error.prototype);
       malformedError.message = null;
       malformedError.stack = undefined;
-      
+
       const sanitized = sanitizeErrorObject(malformedError);
-      
+
       expect(sanitized).toBeInstanceOf(Error);
       expect(typeof sanitized.message).toBe('string');
     });
@@ -319,9 +320,9 @@ describe('Memory Exhaustion Protection', () => {
       Object.defineProperty(trickyError, 'context', {
         get() {
           throw new Error('Property access error');
-        }
+        },
       });
-      
+
       // Should not throw when sanitizing
       expect(() => sanitizeErrorObject(trickyError)).not.toThrow();
     });
@@ -331,9 +332,9 @@ describe('Memory Exhaustion Protection', () => {
       for (let i = 0; i < 100; i++) {
         nested = { next: nested, level: i };
       }
-      
+
       const error = new CLIError('Deeply nested', { context: { nested } });
-      
+
       // Should not cause stack overflow
       expect(() => sanitizeErrorObject(error)).not.toThrow();
     });

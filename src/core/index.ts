@@ -1,251 +1,236 @@
 /**
  * Core SDK modules - Essential utilities that form the foundation
- * 
+ *
  * These modules provide the fundamental building blocks for CLI applications:
  * - Process execution and file system operations
  * - Logging, prompts, and error handling
  * - Version management and temporary workspaces
- * 
+ *
  * Tree-shakeable exports - import only what you need:
  * import { logger } from '@caedonai/lord-commander/core/logger';
- * import { execa } from '@caedonai/lord-commander/core/execa'; 
+ * import { execa } from '@caedonai/lord-commander/core/execa';
  */
-
-// Foundation utilities - Core infrastructure
-export { 
-  PACKAGE_MANAGER_COMMANDS, 
-  DEFAULT_IGNORE_PATTERNS,
-  TEMP_DIR_PREFIX,
-  CLI_CONFIG_PATHS,
-  FRAMEWORK_PATTERNS,
-  FILE_EXTENSIONS,
-  DEFAULT_PORTS,
-  GIT_PATTERNS,
-  TELEMETRY_CONFIG,
-  BRANDING,
-  ERROR_MESSAGES,
-  type PackageManager,
-  type Framework 
-} from './foundation/core/constants.js';
-
-export { 
-  CLIError, 
-  ProcessError, 
-  FileSystemError,
-  NetworkError,
-  ConfigurationError,
-  ValidationError,
-  UserCancelledError,
-  ERROR_RECOVERY_SUGGESTIONS,
-  isCancel,
-  handleCancel,
-  gracefulExit,
-  formatError,
-  getRecoverySuggestion,
-  withErrorHandling,
-  setupGlobalErrorHandlers
-} from './foundation/errors/errors.js';
-
-// Security patterns and validation (Task 1.1.2)
-export {
-  PATH_TRAVERSAL_PATTERNS,
-  COMMAND_INJECTION_PATTERNS,
-  SCRIPT_INJECTION_PATTERNS,
-  PRIVILEGE_ESCALATION_PATTERNS,
-  FILE_SYSTEM_PATTERNS,
-  NETWORK_PATTERNS,
-  INPUT_VALIDATION_PATTERNS,
-  analyzeInputSecurity,
-  isPathSafe,
-  isCommandSafe,
-  isProjectNameSafe,
-  type SecurityAnalysisResult,
-  type SecurityViolation
-} from './foundation/security/patterns.js';
-
-// Framework security detection (Task 1.1.3)
-export {
-  detectFrameworkSecurely,
-  getFrameworkSecurityRecommendations,
-  isFrameworkSafe,
-  TRUSTED_FRAMEWORK_DEPENDENCIES,
-  SUSPICIOUS_DEPENDENCY_PATTERNS,
-  DANGEROUS_SCRIPT_PATTERNS,
-  type SecureFrameworkInfo,
-  type FrameworkSecurityResult,
-  type FrameworkSecurityViolation,
-  type FrameworkDependencyInfo,
-  type FrameworkBuildConfig
-} from './foundation/security/framework.js';
-
-// Input validation utilities (Task 1.2.1)
-export {
-  validateProjectName,
-  validatePackageManager,
-  sanitizeCommandArgs,
-  sanitizePath,
-  validateInput,
-  DEFAULT_VALIDATION_CONFIG,
-  TRUSTED_PACKAGE_MANAGERS,
-  PROJECT_NAME_PATTERNS,
-  SHELL_METACHARACTERS,
-  type ValidationConfig,
-  type ValidationResult,
-  type InputValidationViolation
-} from './foundation/security/validation.js';
-
-// Error sanitization utilities (Task 1.3.3 - New Context Sanitization)
-export {
-  sanitizeErrorContext,
-  createSafeErrorForForwarding,
-  analyzeErrorContextSecurity,
-  type ErrorContextConfig,
-  type SanitizedErrorContext,
-  type SensitiveContextDetection,
-  DEFAULT_ERROR_CONTEXT_CONFIG
-} from './foundation/errors/sanitization.js';
-
-// User interface utilities
-export { 
-  createLogger,
-  type Logger,
-  type LoggerOptions 
-} from './ui/logger.js';
-
-export {
-  IconProvider,
-  IconSecurity,
-  PlatformCapabilities,
-  icons,
-  platformInfo,
-  type ExtendedIcons
-} from './ui/icons.js';
-
-export { 
-  confirm,
-  select,
-  multiselect,
-  text,
-  password,
-  spinner,
-  outro,
-  intro,
-  note,
-  cancel,
-  log,
-  printSeparator,
-  printSection,
-  printTaskStart,
-  printTaskComplete,
-  printSpacing,
-  printPromptHeader,
-  printPromptFooter,
-  PromptFlow,
-  enhancedText,
-  enhancedConfirm,
-  enhancedSelect,
-  type SelectOption,
-  type MultiSelectOption
-} from './ui/prompts.js';
-
-// Execution utilities  
-export { 
-  exists,
-  stat,
-  ensureDir,
-  remove,
-  readFile,
-  writeFile,
-  readJSON,
-  writeJSON,
-  copyFile,
-  readDir,
-  copyDir,
-  copy,
-  findFiles,
-  cleanDir,
-  getSize,
-  move,
-  type FileStats,
-  type FileOperationOptions,
-  type CopyOptions,
-  type DirectoryEntry
-} from './execution/fs.js';
-
-export { 
-  execa,
-  execaSync,
-  execaStream,
-  type ExecResult,
-  type ExecOptions
-} from './execution/execa.js';
-
-// CLI Creation and Command Registration  
-export { 
-  createCLI, 
-  registerBuiltinCommands,
-  validateErrorHandler,
-  executeErrorHandlerSafely,
-  ErrorHandlerValidationError,
-  sanitizeErrorMessage,
-  sanitizeStackTrace,
-  sanitizeErrorObject,
-  truncateErrorMessage,
-  getObjectMemorySize,
-  isDebugMode,
-  shouldShowDetailedErrors,
-  formatErrorForDisplay,
-  sanitizeLogOutput,
-  sanitizeLogOutputAdvanced,
-  analyzeLogSecurity,
-  type EnhancedCommand,
-  type LogInjectionConfig
-} from './createCLI.js';
-
-// Memory Protection Framework
-export {
-  MemoryProtectionManager,
-  MemorySizeCalculator,
-  MemoryViolationAnalyzer,
-  MemoryProtectionError,
-  createMemoryGuard,
-  isMemorySafe,
-  truncateForMemory,
-  sanitizeErrorObjectWithMemoryProtection,
-  truncateMessageWithMemoryProtection,
-  processContextWithMemoryProtection,
-  DEFAULT_MEMORY_CONFIG,
-  MemoryConfigPresets,
-  type MemoryProtectionConfig,
-  type MemoryProtectionLevel,
-  type MemoryUsageLevel,
-  type MemoryViolationType,
-  type MemoryViolation,
-  type MemoryAnalysisResult,
-  type ProtectedOperationResult
-} from './foundation/memory/protection.js';
-
-export { registerCommands, resetCommandTracking } from './commands/registerCommands.js';
-
-// Shell Autocomplete Support
-export { 
-  analyzeProgram,
-  generateCompletion,
-  generateCompletionScript,
-  generateBashCompletion,
-  generateZshCompletion,
-  generateFishCompletion,
-  generatePowerShellCompletion,
-  installCompletion,
-  uninstallCompletion,
-  detectShell,
-  checkCompletionStatus,
-  type CompletionOptions,
-  type CompletionContext,
-  type CompletionResult,
-  type InstallationOptions,
-  type CompletionStatus
-} from './commands/autocomplete.js';
 
 // Re-export Commander for advanced CLI control
 export { Command } from 'commander';
+// Shell Autocomplete Support
+export {
+  analyzeProgram,
+  type CompletionContext,
+  type CompletionOptions,
+  type CompletionResult,
+  type CompletionStatus,
+  checkCompletionStatus,
+  detectShell,
+  generateBashCompletion,
+  generateCompletion,
+  generateCompletionScript,
+  generateFishCompletion,
+  generatePowerShellCompletion,
+  generateZshCompletion,
+  type InstallationOptions,
+  installCompletion,
+  uninstallCompletion,
+} from './commands/autocomplete.js';
+export { registerCommands, resetCommandTracking } from './commands/registerCommands.js';
+// CLI Creation and Command Registration
+export {
+  analyzeLogSecurity,
+  createCLI,
+  type EnhancedCommand,
+  ErrorHandlerValidationError,
+  executeErrorHandlerSafely,
+  formatErrorForDisplay,
+  getObjectMemorySize,
+  isDebugMode,
+  type LogInjectionConfig,
+  registerBuiltinCommands,
+  sanitizeErrorMessage,
+  sanitizeErrorObject,
+  sanitizeLogOutput,
+  sanitizeLogOutputAdvanced,
+  sanitizeStackTrace,
+  shouldShowDetailedErrors,
+  truncateErrorMessage,
+  validateErrorHandler,
+} from './createCLI.js';
+export {
+  type ExecOptions,
+  type ExecResult,
+  execa,
+  execaStream,
+  execaSync,
+} from './execution/execa.js';
+// Execution utilities
+export {
+  type CopyOptions,
+  cleanDir,
+  copy,
+  copyDir,
+  copyFile,
+  type DirectoryEntry,
+  ensureDir,
+  exists,
+  type FileOperationOptions,
+  type FileStats,
+  findFiles,
+  getSize,
+  move,
+  readDir,
+  readFile,
+  readJSON,
+  remove,
+  stat,
+  writeFile,
+  writeJSON,
+} from './execution/fs.js';
+// Foundation utilities - Core infrastructure
+export {
+  BRANDING,
+  CLI_CONFIG_PATHS,
+  DEFAULT_IGNORE_PATTERNS,
+  DEFAULT_PORTS,
+  ERROR_MESSAGES,
+  FILE_EXTENSIONS,
+  FRAMEWORK_PATTERNS,
+  type Framework,
+  GIT_PATTERNS,
+  PACKAGE_MANAGER_COMMANDS,
+  type PackageManager,
+  TELEMETRY_CONFIG,
+  TEMP_DIR_PREFIX,
+} from './foundation/core/constants.js';
+export {
+  CLIError,
+  ConfigurationError,
+  ERROR_RECOVERY_SUGGESTIONS,
+  FileSystemError,
+  formatError,
+  getRecoverySuggestion,
+  gracefulExit,
+  handleCancel,
+  isCancel,
+  NetworkError,
+  ProcessError,
+  setupGlobalErrorHandlers,
+  UserCancelledError,
+  ValidationError,
+  withErrorHandling,
+} from './foundation/errors/errors.js';
+// Error sanitization utilities (Task 1.3.3 - New Context Sanitization)
+export {
+  analyzeErrorContextSecurity,
+  createSafeErrorForForwarding,
+  DEFAULT_ERROR_CONTEXT_CONFIG,
+  type ErrorContextConfig,
+  type SanitizedErrorContext,
+  type SensitiveContextDetection,
+  sanitizeErrorContext,
+} from './foundation/errors/sanitization.js';
+// Memory Protection Framework
+export {
+  createMemoryGuard,
+  DEFAULT_MEMORY_CONFIG,
+  isMemorySafe,
+  type MemoryAnalysisResult,
+  MemoryConfigPresets,
+  type MemoryProtectionConfig,
+  MemoryProtectionError,
+  type MemoryProtectionLevel,
+  MemoryProtectionManager,
+  MemorySizeCalculator,
+  type MemoryUsageLevel,
+  type MemoryViolation,
+  MemoryViolationAnalyzer,
+  type MemoryViolationType,
+  type ProtectedOperationResult,
+  processContextWithMemoryProtection,
+  sanitizeErrorObjectWithMemoryProtection,
+  truncateForMemory,
+  truncateMessageWithMemoryProtection,
+} from './foundation/memory/protection.js';
+// Framework security detection (Task 1.1.3)
+export {
+  DANGEROUS_SCRIPT_PATTERNS,
+  detectFrameworkSecurely,
+  type FrameworkBuildConfig,
+  type FrameworkDependencyInfo,
+  type FrameworkSecurityResult,
+  type FrameworkSecurityViolation,
+  getFrameworkSecurityRecommendations,
+  isFrameworkSafe,
+  type SecureFrameworkInfo,
+  SUSPICIOUS_DEPENDENCY_PATTERNS,
+  TRUSTED_FRAMEWORK_DEPENDENCIES,
+} from './foundation/security/framework.js';
+// Security patterns and validation (Task 1.1.2)
+export {
+  analyzeInputSecurity,
+  COMMAND_INJECTION_PATTERNS,
+  FILE_SYSTEM_PATTERNS,
+  INPUT_VALIDATION_PATTERNS,
+  isCommandSafe,
+  isPathSafe,
+  isProjectNameSafe,
+  NETWORK_PATTERNS,
+  PATH_TRAVERSAL_PATTERNS,
+  PRIVILEGE_ESCALATION_PATTERNS,
+  SCRIPT_INJECTION_PATTERNS,
+  type SecurityAnalysisResult,
+  type SecurityViolation,
+} from './foundation/security/patterns.js';
+// Input validation utilities (Task 1.2.1)
+export {
+  DEFAULT_VALIDATION_CONFIG,
+  type InputValidationViolation,
+  PROJECT_NAME_PATTERNS,
+  SHELL_METACHARACTERS,
+  sanitizeCommandArgs,
+  sanitizePath,
+  TRUSTED_PACKAGE_MANAGERS,
+  type ValidationConfig,
+  type ValidationResult,
+  validateInput,
+  validatePackageManager,
+  validateProjectName,
+} from './foundation/security/validation.js';
+export {
+  type ExtendedIcons,
+  IconProvider,
+  IconSecurity,
+  icons,
+  PlatformCapabilities,
+  platformInfo,
+} from './ui/icons.js';
+// User interface utilities
+export {
+  createLogger,
+  type Logger,
+  type LoggerOptions,
+} from './ui/logger.js';
+export {
+  cancel,
+  confirm,
+  enhancedConfirm,
+  enhancedSelect,
+  enhancedText,
+  intro,
+  log,
+  type MultiSelectOption,
+  multiselect,
+  note,
+  outro,
+  PromptFlow,
+  password,
+  printPromptFooter,
+  printPromptHeader,
+  printSection,
+  printSeparator,
+  printSpacing,
+  printTaskComplete,
+  printTaskStart,
+  type SelectOption,
+  select,
+  spinner,
+  text,
+} from './ui/prompts.js';

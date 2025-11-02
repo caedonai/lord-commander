@@ -1,11 +1,11 @@
 /**
  * Task 1.4.2 Security Vulnerability Tests
- * 
+ *
  * Comprehensive security testing for ALL identified vulnerabilities and edge cases
  * in the structured logging implementation.
- * 
+ *
  * Critical Security Issues Tested:
- * 1. Prototype Pollution Vulnerabilities  
+ * 1. Prototype Pollution Vulnerabilities
  * 2. Recursive Depth Explosion (DoS)
  * 3. Circular Reference Memory Exhaustion
  * 4. Configuration Injection Vulnerabilities
@@ -22,10 +22,10 @@
  * 15. Error Propagation Edge Cases
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { 
-  StructuredLogger, 
-  type StructuredLoggingConfig 
+import { beforeEach, describe, expect, it } from 'vitest';
+import {
+  StructuredLogger,
+  type StructuredLoggingConfig,
 } from '../../../core/foundation/logging/structured.js';
 
 describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
@@ -38,12 +38,12 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
   describe('1. Prototype Pollution Vulnerabilities', () => {
     it('should prevent prototype pollution via __proto__', () => {
       const maliciousContext = {
-        "__proto__": { "isAdmin": true },
-        "normalField": "value"
+        __proto__: { isAdmin: true },
+        normalField: 'value',
       };
 
       const result = logger.createLogEntry('Test message', {
-        context: maliciousContext
+        context: maliciousContext,
       });
 
       // Should not pollute Object.prototype
@@ -55,14 +55,14 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
     it('should prevent prototype pollution via constructor.prototype', () => {
       const maliciousContext = {
-        "constructor": { 
-          "prototype": { "isHacked": true } 
+        constructor: {
+          prototype: { isHacked: true },
         },
-        "data": "legitimate"
+        data: 'legitimate',
       };
 
       const result = logger.createLogEntry('Test message', {
-        context: maliciousContext
+        context: maliciousContext,
       });
 
       // Should not pollute constructor prototype
@@ -77,7 +77,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       pollutedObj.legitimate = 'data';
 
       const result = logger.createLogEntry('Test message', {
-        context: pollutedObj
+        context: pollutedObj,
       });
 
       // Should only process own properties, not inherited ones
@@ -99,7 +99,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       // Should not crash or hang
       expect(() => {
         const result = logger.createLogEntry('Deep nesting test', {
-          context: { deep: deepObject }
+          context: { deep: deepObject },
         });
         expect(result.entry.context).toBeDefined();
       }).not.toThrow();
@@ -116,7 +116,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
       const startTime = Date.now();
       const result = logger.createLogEntry('Extreme depth test', {
-        context: { extremelyDeep: veryDeep }
+        context: { extremelyDeep: veryDeep },
       });
       const endTime = Date.now();
 
@@ -141,7 +141,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       }
 
       const result = logger.createLogEntry('Mixed nesting test', {
-        context: mixed
+        context: mixed,
       });
 
       // Should complete successfully with warnings about depth
@@ -159,7 +159,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       // Should not hang or crash
       expect(() => {
         const result = logger.createLogEntry('Circular reference test', {
-          context: circular
+          context: circular,
         });
         expect(result.entry.context).toBeDefined();
       }).not.toThrow();
@@ -169,13 +169,13 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       const objA: any = { name: 'A' };
       const objB: any = { name: 'B' };
       const objC: any = { name: 'C' };
-      
+
       objA.ref = objB;
       objB.ref = objC;
       objC.ref = objA; // Creates A -> B -> C -> A cycle
 
       const result = logger.createLogEntry('Complex circular test', {
-        context: { chain: objA }
+        context: { chain: objA },
       });
 
       expect(result.entry.context).toBeDefined();
@@ -188,7 +188,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       arr.push(arr); // Self-referential array
 
       const result = logger.createLogEntry('Circular array test', {
-        context: { circularArray: arr }
+        context: { circularArray: arr },
       });
 
       expect(result.entry.context).toBeDefined();
@@ -205,11 +205,11 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       };
 
       const maliciousLogger = new StructuredLogger(maliciousConfig);
-      
+
       // Should not cause memory issues with large context
       const hugeContext = { data: 'x'.repeat(10000) };
       const result = maliciousLogger.createLogEntry('Config injection test', {
-        context: hugeContext
+        context: hugeContext,
       });
 
       expect(result.entry.context).toBeDefined();
@@ -219,15 +219,15 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
     it('should handle nested configuration object pollution', () => {
       const maliciousConfig = {
         logInjectionConfig: {
-          "__proto__": { compromised: true },
+          __proto__: { compromised: true },
           maxLineLength: -1,
-          enableProtection: false
-        }
+          enableProtection: false,
+        },
       };
 
       const result = new StructuredLogger(maliciousConfig);
       expect(result).toBeDefined();
-      
+
       // Should not pollute prototype
       expect((Object.prototype as any).compromised).toBeUndefined();
     });
@@ -241,7 +241,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
       const configLogger = new StructuredLogger(invalidConfig);
       const result = configLogger.createLogEntry('Invalid config test', {
-        context: { test: 'data' }
+        context: { test: 'data' },
       });
 
       // Should handle gracefully with fallbacks
@@ -255,7 +255,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       const symbolKey = Symbol.for('secret');
       const context = {
         normal: 'visible',
-        [symbolKey]: 'hidden_password_123'
+        [symbolKey]: 'hidden_password_123',
       };
 
       const result = logger.createLogEntry('Symbol key test', { context });
@@ -269,14 +269,16 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
     it('should handle well-known symbols safely', () => {
       const context = {
-        [Symbol.iterator]: function* () { yield 'attack'; },
+        [Symbol.iterator]: function* () {
+          yield 'attack';
+        },
         [Symbol.toPrimitive]: () => 'malicious',
-        ['toString']: () => 'exploit',
-        normal: 'data'
+        toString: () => 'exploit',
+        normal: 'data',
       };
 
       const result = logger.createLogEntry('Well-known symbols test', { context });
-      
+
       expect(result.entry.context).toHaveProperty('normal', 'data');
       // Should not execute symbol methods during processing
       expect(result.entry.context).toBeDefined();
@@ -286,11 +288,11 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       const maliciousSymbol = Symbol.for('__proto__');
       const context = {
         [maliciousSymbol]: { admin: true },
-        legitimate: 'value'
+        legitimate: 'value',
       };
 
       const result = logger.createLogEntry('Symbol pollution test', { context });
-      
+
       expect(result.entry.context).toHaveProperty('legitimate', 'value');
       expect((Object.prototype as any).admin).toBeUndefined();
     });
@@ -304,18 +306,18 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       // Test timing consistency across different field names
       for (const field of sensitiveFields) {
         const context = { [field]: 'sensitive_data' };
-        
+
         const start = performance.now();
         logger.createLogEntry('Timing test', { context });
         const end = performance.now();
-        
+
         timings.push(end - start);
       }
 
       // Timing should be relatively consistent (within reasonable variance)
       const avgTiming = timings.reduce((a, b) => a + b) / timings.length;
-      const maxDeviation = Math.max(...timings.map(t => Math.abs(t - avgTiming)));
-      
+      const maxDeviation = Math.max(...timings.map((t) => Math.abs(t - avgTiming)));
+
       // Should not have extreme timing variations (> 10x average)
       expect(maxDeviation).toBeLessThan(avgTiming * 10);
     });
@@ -323,16 +325,16 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
     it('should handle timing attacks via field name length variations', () => {
       const shortField = 'p';
       const longField = 'p'.repeat(1000);
-      
+
       const timings: number[] = [];
-      
-      [shortField, longField].forEach(field => {
+
+      [shortField, longField].forEach((field) => {
         const context = { [field]: 'test' };
-        
+
         const start = performance.now();
         logger.createLogEntry('Length timing test', { context });
         const end = performance.now();
-        
+
         timings.push(end - start);
       });
 
@@ -351,7 +353,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       sparseArray[999999] = 'end';
 
       const result = logger.createLogEntry('Large array test', {
-        context: { sparse: sparseArray }
+        context: { sparse: sparseArray },
       });
 
       expect(result.entry.context).toBeDefined();
@@ -365,7 +367,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       arr[-999] = 'very_negative';
 
       const result = logger.createLogEntry('Negative index test', {
-        context: { negativeArray: arr }
+        context: { negativeArray: arr },
       });
 
       expect(result.entry.context).toBeDefined();
@@ -375,10 +377,10 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
     it('should handle arrays with non-numeric properties', () => {
       const arr: any = [1, 2, 3];
       arr.customProp = 'should_be_handled';
-      arr['string_index'] = 'also_handled';
+      arr.string_index = 'also_handled';
 
       const result = logger.createLogEntry('Array property test', {
-        context: { mixedArray: arr }
+        context: { mixedArray: arr },
       });
 
       expect(result.entry.context).toBeDefined();
@@ -391,11 +393,11 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
         toJSON() {
           throw new Error('toJSON attack');
         },
-        data: 'legitimate'
+        data: 'legitimate',
       };
 
       const result = logger.createLogEntry('toJSON attack test', {
-        context: maliciousObj
+        context: maliciousObj,
       });
 
       // Should handle toJSON errors gracefully
@@ -412,11 +414,11 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
             return { nested: recursiveObj };
           }
           return 'stop';
-        }
+        },
       };
 
       const result = logger.createLogEntry('Recursive toJSON test', {
-        context: { recursive: recursiveObj }
+        context: { recursive: recursiveObj },
       });
 
       expect(result.entry.context).toBeDefined();
@@ -430,7 +432,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
         symbol: Symbol('test'),
         undefined: undefined,
         function: () => 'attack',
-        normal: 'value'
+        normal: 'value',
       };
 
       const result = logger.createLogEntry('Non-serializable test', { context });
@@ -444,10 +446,10 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
   describe('9. Date/Timestamp Manipulation', () => {
     it('should handle Date.prototype pollution', () => {
       const originalToISOString = Date.prototype.toISOString;
-      
+
       try {
         // Pollute Date.prototype.toISOString
-        Date.prototype.toISOString = function() {
+        Date.prototype.toISOString = () => {
           throw new Error('Date pollution attack');
         };
 
@@ -464,7 +466,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
     it('should handle invalid Date objects', () => {
       const originalNow = Date.now;
-      
+
       try {
         // Mock Date.now to return invalid value
         Date.now = () => NaN;
@@ -486,7 +488,9 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
       // Force error in log creation by mocking Date
       const originalToISOString = Date.prototype.toISOString;
-      Date.prototype.toISOString = () => { throw new Error('Forced error'); };
+      Date.prototype.toISOString = () => {
+        throw new Error('Forced error');
+      };
 
       try {
         const result = logger.createLogEntry(hugeMessage);
@@ -506,7 +510,9 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
       // Force error in processing
       const originalJSON = JSON.stringify;
-      JSON.stringify = () => { throw new Error('JSON error'); };
+      JSON.stringify = () => {
+        throw new Error('JSON error');
+      };
 
       try {
         const result = logger.createLogEntry('Memory test', { error });
@@ -522,9 +528,9 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
   describe('11. Unicode & Encoding Edge Cases', () => {
     it('should handle null bytes in context keys', () => {
       const context = {
-        'normal': 'value',
+        normal: 'value',
         'null\x00byte': 'should_be_handled',
-        'multi\x00null\x00': 'bytes'
+        'multi\x00null\x00': 'bytes',
       };
 
       const result = logger.createLogEntry('Null byte test', { context });
@@ -535,9 +541,9 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
     it('should handle Unicode normalization attacks', () => {
       const context = {
-        'passw0rd': 'normal', // Normal characters
-        'passw０rd': 'fullwidth', // Fullwidth '0' (U+FF10)
-        'pаssword': 'cyrillic_a', // Cyrillic 'а' (U+0430)
+        passw0rd: 'normal', // Normal characters
+        passw０rd: 'fullwidth', // Fullwidth '0' (U+FF10)
+        pаssword: 'cyrillic_a', // Cyrillic 'а' (U+0430)
       };
 
       const result = logger.createLogEntry('Unicode normalization test', { context });
@@ -551,7 +557,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       const context = {
         normal: 'value',
         malformed: malformedSurrogate,
-        combined: 'prefix' + malformedSurrogate + 'suffix'
+        combined: `prefix${malformedSurrogate}suffix`,
       };
 
       const result = logger.createLogEntry('Surrogate pair test', { context });
@@ -564,7 +570,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       const zeroWidth = '\u200B\u200C\u200D\uFEFF'; // Various zero-width chars
       const context = {
         [`hidden${zeroWidth}field`]: 'value',
-        normal: 'visible'
+        normal: 'visible',
       };
 
       const result = logger.createLogEntry('Zero-width test', { context });
@@ -577,7 +583,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
   describe('12. Number Boundary Conditions', () => {
     it('should handle infinite duration values', () => {
       const result = logger.createLogEntry('Infinity test', {
-        duration: Infinity
+        duration: Infinity,
       });
 
       expect(result.entry.duration).toBeDefined();
@@ -587,7 +593,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
     it('should handle NaN values in options', () => {
       const result = logger.createLogEntry('NaN test', {
         duration: NaN,
-        level: NaN as any
+        level: NaN as any,
       });
 
       expect(result.entry).toBeDefined();
@@ -599,8 +605,8 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
         duration: Number.MAX_SAFE_INTEGER + 1000,
         context: {
           bigNumber: Number.MAX_VALUE,
-          veryBig: 1e308
-        }
+          veryBig: 1e308,
+        },
       });
 
       expect(result.entry.context).toBeDefined();
@@ -610,16 +616,18 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
   describe('13. Concurrent Access Issues', () => {
     it('should handle concurrent configuration updates', async () => {
-      const promises = Array.from({ length: 10 }, (_, i) => 
-        new Promise<void>(resolve => {
-          setTimeout(() => {
-            logger.updateConfig({ 
-              maxMessageLength: 1001 + i * 100, // Changed from 1000 to 1001 to ensure always > 1000
-              format: i % 2 === 0 ? 'json' : 'text'
-            });
-            resolve();
-          }, Math.random() * 10);
-        })
+      const promises = Array.from(
+        { length: 10 },
+        (_, i) =>
+          new Promise<void>((resolve) => {
+            setTimeout(() => {
+              logger.updateConfig({
+                maxMessageLength: 1001 + i * 100, // Changed from 1000 to 1001 to ensure always > 1000
+                format: i % 2 === 0 ? 'json' : 'text',
+              });
+              resolve();
+            }, Math.random() * 10);
+          })
       );
 
       await Promise.all(promises);
@@ -633,9 +641,11 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
     it('should handle concurrent log creation', async () => {
       const promises = Array.from({ length: 50 }, (_, i) =>
-        Promise.resolve(logger.createLogEntry(`Concurrent message ${i}`, {
-          context: { index: i, random: Math.random() }
-        }))
+        Promise.resolve(
+          logger.createLogEntry(`Concurrent message ${i}`, {
+            context: { index: i, random: Math.random() },
+          })
+        )
       );
 
       const results = await Promise.all(promises);
@@ -651,13 +661,15 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
   describe('14. Platform-Specific Edge Cases', () => {
     it('should handle process.memoryUsage errors', () => {
       const originalMemoryUsage = process.memoryUsage;
-      
+
       try {
-        (process as any).memoryUsage = () => { throw new Error('Memory access denied'); };
+        (process as any).memoryUsage = () => {
+          throw new Error('Memory access denied');
+        };
 
         const memoryLogger = new StructuredLogger({
           enablePerformanceMetrics: true,
-          includeMemoryUsage: true
+          includeMemoryUsage: true,
         });
 
         const result = memoryLogger.createLogEntry('Memory error test');
@@ -674,11 +686,11 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       const largeArray = Array.from({ length: 100000 }, (_, i) => ({
         id: i,
         data: 'x'.repeat(100),
-        nested: { level: i, info: 'test' }
+        nested: { level: i, info: 'test' },
       }));
 
       const result = logger.createLogEntry('Heap test', {
-        context: { large: largeArray }
+        context: { large: largeArray },
       });
 
       expect(result.entry.context).toBeDefined();
@@ -693,11 +705,11 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       Object.defineProperty(maliciousError, 'maliciousProp', {
         get() {
           throw new Error('Getter attack');
-        }
+        },
       });
 
       const result = logger.createLogEntry('Malicious error test', {
-        error: maliciousError
+        error: maliciousError,
       });
 
       expect(result.entry.error).toBeDefined();
@@ -707,12 +719,12 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
     it('should handle infinite error cause chains', () => {
       const errorA = new Error('Error A');
       const errorB = new Error('Error B');
-      
+
       (errorA as any).cause = errorB;
       (errorB as any).cause = errorA; // Circular cause chain
 
       const result = logger.createLogEntry('Circular error test', {
-        error: errorA
+        error: errorA,
       });
 
       expect(result.entry.error).toBeDefined();
@@ -721,18 +733,18 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
     it('should handle Error.prototype pollution', () => {
       const originalStack = Object.getOwnPropertyDescriptor(Error.prototype, 'stack');
-      
+
       try {
         Object.defineProperty(Error.prototype, 'stack', {
           get() {
             throw new Error('Stack pollution attack');
           },
-          configurable: true
+          configurable: true,
         });
 
         const testError = new Error('Test error');
         const result = logger.createLogEntry('Stack pollution test', {
-          error: testError
+          error: testError,
         });
 
         expect(result.entry.error).toBeDefined();

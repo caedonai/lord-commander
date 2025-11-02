@@ -1,20 +1,20 @@
 /**
  * Process execution wrapper with async/await support and error handling
- * 
+ *
  * Provides secure command execution with proper error handling,
  * output capture, streaming, and cancellation support using execa.
  */
 
+import { mkdir } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import type { ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa';
 // Note: execa package needs to be installed as a dependency
 // npm install execa@^8.0.1
 import { execa as execaLib, execaSync as execaSyncLib } from 'execa';
-import type { ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { mkdir } from 'node:fs/promises';
+import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/core/constants.js';
 import { ProcessError } from '../foundation/errors/errors.js';
 import { createLogger } from '../ui/logger.js';
-import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/core/constants.js';
 
 // Create a logger instance for internal execa operations
 const execaLogger = createLogger({ prefix: 'execa' });
@@ -24,7 +24,7 @@ const execaLogger = createLogger({ prefix: 'execa' });
  */
 export interface ExecResult {
   stdout: string; // Standard output from the command
-  stderr: string; // Standard error output  
+  stderr: string; // Standard error output
   exitCode: number; // Exit code (0 = success, non-zero = error)
   command: string; // The full command that was executed
   failed: boolean; // True if the command failed (exitCode !== 0)
@@ -83,7 +83,7 @@ export interface ExecStreamOptions extends ExecOptions {
 export interface PackageManagerInfo {
   manager: PackageManager;
   lockFile: string;
-  commands: typeof PACKAGE_MANAGER_COMMANDS[PackageManager];
+  commands: (typeof PACKAGE_MANAGER_COMMANDS)[PackageManager];
 }
 
 /**
@@ -105,10 +105,10 @@ function createSandboxEnv(config: SandboxConfig = {}): Record<string, string> {
   const sandboxConfig = { ...DEFAULT_SANDBOX_CONFIG, ...config };
   let sandboxEnv: Record<string, string> = {};
 
-  execaLogger.debug(`createSandboxEnv called with config:`, { 
-    enabled: sandboxConfig.enabled, 
+  execaLogger.debug(`createSandboxEnv called with config:`, {
+    enabled: sandboxConfig.enabled,
     restrictEnvironment: sandboxConfig.restrictEnvironment,
-    allowedEnvVars: sandboxConfig.allowedEnvVars 
+    allowedEnvVars: sandboxConfig.allowedEnvVars,
   });
 
   // Create restricted environment if enabled
@@ -117,15 +117,19 @@ function createSandboxEnv(config: SandboxConfig = {}): Record<string, string> {
     sandboxEnv = {
       NODE_ENV: 'production', // Safe default
     };
-    
+
     // Add allowed environment variables
     for (const envVar of sandboxConfig.allowedEnvVars) {
-      if (process.env[envVar]) {
-        sandboxEnv[envVar] = process.env[envVar]!;
+      const envValue = process.env[envVar];
+      if (envValue) {
+        sandboxEnv[envVar] = envValue;
       }
     }
-    
-    execaLogger.debug(`Created restricted environment with ${Object.keys(sandboxEnv).length} variables:`, Object.keys(sandboxEnv));
+
+    execaLogger.debug(
+      `Created restricted environment with ${Object.keys(sandboxEnv).length} variables:`,
+      Object.keys(sandboxEnv)
+    );
   } else {
     // Use current environment if not restricting
     sandboxEnv = Object.fromEntries(
@@ -140,20 +144,26 @@ function createSandboxEnv(config: SandboxConfig = {}): Record<string, string> {
 /**
  * Create a secure sandbox environment for command execution
  */
-async function createSandbox(config: SandboxConfig = {}): Promise<{ cwd: string; env: Record<string, string> }> {
+async function createSandbox(
+  config: SandboxConfig = {}
+): Promise<{ cwd: string; env: Record<string, string> }> {
   const sandboxConfig = { ...DEFAULT_SANDBOX_CONFIG, ...config };
-  
+
   let sandboxCwd = process.cwd();
 
   // Create isolated working directory if enabled
   if (sandboxConfig.enabled && sandboxConfig.isolateWorkingDirectory) {
     try {
-      const sandboxDir = sandboxConfig.customSandboxDir || 
-        join(tmpdir(), `${sandboxConfig.sandboxPrefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-      
+      const sandboxDir =
+        sandboxConfig.customSandboxDir ||
+        join(
+          tmpdir(),
+          `${sandboxConfig.sandboxPrefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        );
+
       await mkdir(sandboxDir, { recursive: true });
       sandboxCwd = sandboxDir;
-      
+
       execaLogger.debug(`Created sandbox directory: ${sandboxDir}`);
     } catch (error) {
       execaLogger.warn(`Failed to create sandbox directory, using current directory: ${error}`);
@@ -169,21 +179,21 @@ async function createSandbox(config: SandboxConfig = {}): Promise<{ cwd: string;
  */
 function secureExecOptions(options: ExecOptions): ExecOptions {
   const securedOptions = { ...options };
-  
+
   // Force shell to false for security unless explicitly overridden
   if (securedOptions.shell === undefined) {
     securedOptions.shell = false;
   }
-  
+
   // Add security warnings for shell usage
   if (securedOptions.shell === true || typeof securedOptions.shell === 'string') {
     execaLogger.warn('⚠️  Shell execution enabled - this may introduce security risks');
   }
-  
+
   // Set secure defaults
   securedOptions.cleanup = securedOptions.cleanup ?? true;
   securedOptions.windowsHide = securedOptions.windowsHide ?? true;
-  
+
   return securedOptions;
 }
 
@@ -197,7 +207,7 @@ export async function execa(
 ): Promise<ExecResult> {
   const startTime = Date.now();
   const fullCommand = `${command} ${args.join(' ')}`.trim();
-  
+
   try {
     // Apply security defaults and extract options
     const securedOptions = secureExecOptions(options);
@@ -218,10 +228,10 @@ export async function execa(
     const finalEnv = userEnv ? { ...sandboxResult.env, ...userEnv } : sandboxResult.env;
 
     if (!silent) {
-      execaLogger.debug(`Executing: ${fullCommand}`, { 
+      execaLogger.debug(`Executing: ${fullCommand}`, {
         cwd: finalCwd,
         sandbox: sandbox?.enabled !== false ? 'enabled' : 'disabled',
-        envVars: Object.keys(finalEnv).length
+        envVars: Object.keys(finalEnv).length,
       });
     }
 
@@ -258,7 +268,7 @@ export async function execa(
     return result;
   } catch (error: any) {
     const duration = Date.now() - startTime;
-    
+
     // Handle execa-specific errors
     if (error.exitCode !== undefined) {
       const result: ExecResult = {
@@ -308,7 +318,7 @@ export function execaSync(
 ): ExecResult {
   const startTime = Date.now();
   const fullCommand = `${command} ${args.join(' ')}`.trim();
-  
+
   try {
     // Apply security defaults and extract options
     const securedOptions = secureExecOptions(options);
@@ -328,16 +338,16 @@ export function execaSync(
     const finalEnv = userEnv ? { ...sandboxEnv, ...userEnv } : sandboxEnv;
 
     if (!silent) {
-      execaLogger.debug(`Executing sync: ${fullCommand}`, { 
+      execaLogger.debug(`Executing sync: ${fullCommand}`, {
         cwd: originalCwd,
         sandbox: sandbox?.enabled !== false ? 'enabled' : 'disabled',
-        envVars: Object.keys(finalEnv).length
+        envVars: Object.keys(finalEnv).length,
       });
     }
 
     // Filter out options that don't apply to sync execution and handle type compatibility
-    const { signal, encoding, ...syncOptions } = execaOptions;
-    
+    const { signal: _signal, encoding, ...syncOptions } = execaOptions;
+
     const execaResult: ExecaSyncReturnValue = execaSyncLib(command, args, {
       cwd: originalCwd,
       env: finalEnv, // Always pass explicit environment
@@ -372,7 +382,7 @@ export function execaSync(
     return result;
   } catch (error: any) {
     const duration = Date.now() - startTime;
-    
+
     if (error.exitCode !== undefined) {
       const result: ExecResult = {
         stdout: error.stdout || '',
@@ -416,15 +426,10 @@ export async function execaStream(
 ): Promise<ExecResult> {
   const startTime = Date.now();
   const fullCommand = `${command} ${args.join(' ')}`.trim();
-  
+
   try {
     // Extract stream-specific options first
-    const {
-      onStdout,
-      onStderr,
-      onProgress,
-      ...baseOptions
-    } = options;
+    const { onStdout, onStderr, onProgress, ...baseOptions } = options;
 
     // Apply security defaults and extract options
     const securedOptions = secureExecOptions(baseOptions);
@@ -444,10 +449,10 @@ export async function execaStream(
     const finalEnv = userEnv ? { ...sandboxResult.env, ...userEnv } : sandboxResult.env;
 
     if (!silent) {
-      execaLogger.debug(`Streaming: ${fullCommand}`, { 
+      execaLogger.debug(`Streaming: ${fullCommand}`, {
         cwd: finalCwd,
         sandbox: sandbox?.enabled !== false ? 'enabled' : 'disabled',
-        envVars: Object.keys(finalEnv).length
+        envVars: Object.keys(finalEnv).length,
       });
     }
 
@@ -471,7 +476,7 @@ export async function execaStream(
       });
     }
 
-    // Handle stderr streaming  
+    // Handle stderr streaming
     if (subprocess.stderr && (onStderr || onProgress)) {
       subprocess.stderr.on('data', (chunk: Buffer) => {
         const data = chunk.toString();
@@ -526,10 +531,10 @@ export async function execaWithOutput(
   args: string[] = [],
   options: ExecOptions = {}
 ): Promise<ExecResult> {
-  return execa(command, args, { 
-    ...options, 
+  return execa(command, args, {
+    ...options,
     reject: false, // Don't throw on non-zero exit codes
-    silent: options.silent ?? true // Default to silent for output capture
+    silent: options.silent ?? true, // Default to silent for output capture
   });
 }
 
@@ -540,7 +545,7 @@ export async function commandExists(command: string): Promise<boolean> {
   try {
     const isWindows = process.platform === 'win32';
     const checkCommand = isWindows ? 'where' : 'which';
-    
+
     const result = await execaWithOutput(checkCommand, [command]);
     return result.exitCode === 0 && result.stdout.trim().length > 0;
   } catch {
@@ -551,11 +556,13 @@ export async function commandExists(command: string): Promise<boolean> {
 /**
  * Detect the package manager used in a project
  */
-export async function detectPackageManager(cwd: string = process.cwd()): Promise<PackageManagerInfo | null> {
+export async function detectPackageManager(
+  cwd: string = process.cwd()
+): Promise<PackageManagerInfo | null> {
   try {
     // Check for lock files in order of preference
     const { exists } = await import('./fs');
-    const { join } = await import('path');
+    const { join } = await import('node:path');
 
     for (const [manager, config] of Object.entries(PACKAGE_MANAGER_COMMANDS)) {
       const lockFilePath = join(cwd, config.lockFile);
@@ -595,7 +602,7 @@ export async function runPackageManagerExeca(
   options: ExecOptions = {}
 ): Promise<ExecResult> {
   const pmInfo = await detectPackageManager(options.cwd);
-  
+
   if (!pmInfo) {
     throw new ProcessError(
       'No package manager detected. Please install npm, pnpm, yarn, or bun.',
@@ -617,8 +624,8 @@ export async function runPackageManagerExeca(
         args.push(...installParts.slice(1));
       }
       break;
-    
-    case 'installDev':
+
+    case 'installDev': {
       const installDevParts = pmInfo.commands.installDev.split(' ');
       command = installDevParts[0];
       args.push(...installDevParts.slice(1));
@@ -626,8 +633,9 @@ export async function runPackageManagerExeca(
         args.push(packageOrScript);
       }
       break;
-    
-    case 'run':
+    }
+
+    case 'run': {
       if (!packageOrScript) {
         throw new ProcessError('Script name is required for run command', 'run-command');
       }
@@ -635,8 +643,9 @@ export async function runPackageManagerExeca(
       command = runParts[0];
       args.push(...runParts.slice(1), packageOrScript);
       break;
-    
-    case 'create':
+    }
+
+    case 'create': {
       if (!packageOrScript) {
         throw new ProcessError('Package name is required for create command', 'create-command');
       }
@@ -644,13 +653,16 @@ export async function runPackageManagerExeca(
       command = createParts[0];
       args.push(...createParts.slice(1), packageOrScript);
       break;
-    
+    }
+
     default:
       throw new ProcessError(`Unknown package manager action: ${action}`, 'unknown-action');
   }
 
-  execaLogger.info(`Running ${pmInfo.manager} ${action}${packageOrScript ? ` ${packageOrScript}` : ''}`);
-  
+  execaLogger.info(
+    `Running ${pmInfo.manager} ${action}${packageOrScript ? ` ${packageOrScript}` : ''}`
+  );
+
   return execa(command, args, {
     ...options,
     stdio: options.stdio ?? 'inherit', // Show output by default for package manager commands
@@ -667,10 +679,7 @@ export async function gitExeca(
 ): Promise<ExecResult> {
   // Check if git is available
   if (!(await commandExists('git'))) {
-    throw new ProcessError(
-      'Git is not installed or not available in PATH',
-      'git-not-found'
-    );
+    throw new ProcessError('Git is not installed or not available in PATH', 'git-not-found');
   }
 
   return execa('git', [subcommand, ...args], {
@@ -686,10 +695,14 @@ export function createCancellableExecution(): {
   signal: AbortSignal;
   cancel: () => void;
   execa: (command: string, args?: string[], options?: ExecOptions) => Promise<ExecResult>;
-  execStream: (command: string, args?: string[], options?: ExecStreamOptions) => Promise<ExecResult>;
+  execStream: (
+    command: string,
+    args?: string[],
+    options?: ExecStreamOptions
+  ) => Promise<ExecResult>;
 } {
   const controller = new AbortController();
-  
+
   return {
     signal: controller.signal,
     cancel: () => controller.abort(),
@@ -716,9 +729,9 @@ export async function execaSequence(
         cwd,
         ...cmdOptions,
       });
-      
+
       results.push(result);
-      
+
       if (result.failed && stopOnError) {
         break;
       }
@@ -751,8 +764,12 @@ export async function execaParallel(
   options: { cwd?: string; maxConcurrency?: number } = {}
 ): Promise<ExecResult[]> {
   const { cwd, maxConcurrency = 5 } = options;
-  
-  const executeCommand = async ({ command, args = [], options: cmdOptions = {} }: typeof commands[0]) => {
+
+  const executeCommand = async ({
+    command,
+    args = [],
+    options: cmdOptions = {},
+  }: (typeof commands)[0]) => {
     return execa(command, args, { cwd, ...cmdOptions });
   };
 
@@ -761,17 +778,19 @@ export async function execaParallel(
   const executing: Promise<void>[] = [];
 
   for (const cmd of commands) {
-    const promise = executeCommand(cmd).then(result => {
+    const promise = executeCommand(cmd).then((result) => {
       results.push(result);
     });
-    
+
     executing.push(promise);
-    
+
     if (executing.length >= maxConcurrency) {
       await Promise.race(executing);
       // Remove completed promises
       for (let i = executing.length - 1; i >= 0; i--) {
-        if (await Promise.allSettled([executing[i]]).then(([{status}]) => status === 'fulfilled')) {
+        if (
+          await Promise.allSettled([executing[i]]).then(([{ status }]) => status === 'fulfilled')
+        ) {
           executing.splice(i, 1);
         }
       }

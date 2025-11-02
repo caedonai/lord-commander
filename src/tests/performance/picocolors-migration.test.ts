@@ -1,14 +1,14 @@
 /**
  * Picocolors Migration Tests
- * 
+ *
  * Tests to verify the successful migration from chalk to picocolors,
  * ensuring API compatibility, color output, and bundle size benefits.
  */
 
-import { describe, it, expect } from 'vitest';
 import colors from 'picocolors';
-import { createLogger, LogLevel, type LoggerTheme } from '../../core/ui/logger.js';
+import { describe, expect, it } from 'vitest';
 import { formatError } from '../../core/foundation/errors/errors.js';
+import { createLogger, type LoggerTheme, LogLevel } from '../../core/ui/logger.js';
 
 describe('Picocolors Migration Tests', () => {
   describe('Picocolors API Compatibility', () => {
@@ -32,17 +32,17 @@ describe('Picocolors Migration Tests', () => {
 
     it('should apply colors correctly', () => {
       const testText = 'test message';
-      
+
       // Test basic color functions
       const redText = colors.red(testText);
       const greenText = colors.green(testText);
       const blueText = colors.blue(testText);
-      
+
       // Verify colored text includes ANSI escape sequences
       expect(redText).toContain('\u001b[');
       expect(greenText).toContain('\u001b[');
       expect(blueText).toContain('\u001b[');
-      
+
       // Verify text content is preserved
       expect(redText).toContain(testText);
       expect(greenText).toContain(testText);
@@ -51,10 +51,10 @@ describe('Picocolors Migration Tests', () => {
 
     it('should handle chained color functions', () => {
       const testText = 'chained colors';
-      
+
       // Test function chaining (picocolors supports this)
       const chainedText = colors.bold(colors.red(testText));
-      
+
       expect(chainedText).toContain('\u001b[');
       expect(chainedText).toContain(testText);
     });
@@ -81,7 +81,7 @@ describe('Picocolors Migration Tests', () => {
           muted: colors.gray,
           highlight: colors.magenta,
           dim: colors.dim,
-        }
+        },
       });
 
       expect(logger).toBeDefined();
@@ -93,7 +93,7 @@ describe('Picocolors Migration Tests', () => {
 
     it('should use default theme with picocolors', () => {
       const logger = createLogger();
-      
+
       // Verify logger creation with default picocolors theme
       expect(logger).toBeDefined();
       expect(typeof logger.enableVerbose).toBe('function');
@@ -115,7 +115,7 @@ describe('Picocolors Migration Tests', () => {
       // Verify theme functions work correctly
       const primaryText = testTheme.primary('primary message');
       const errorText = testTheme.error('error message');
-      
+
       expect(primaryText).toContain('primary message');
       expect(errorText).toContain('error message');
       expect(primaryText).toContain('\u001b[');
@@ -127,7 +127,7 @@ describe('Picocolors Migration Tests', () => {
     it('should format errors with picocolors', () => {
       const testError = new Error('Test error message');
       const formattedError = formatError(testError);
-      
+
       // Verify error formatting includes color codes
       expect(formattedError).toContain('Test error message');
       expect(typeof formattedError).toBe('string');
@@ -140,7 +140,7 @@ describe('Picocolors Migration Tests', () => {
         new ReferenceError('Reference error'),
       ];
 
-      errors.forEach(error => {
+      errors.forEach((error) => {
         const formatted = formatError(error);
         expect(formatted).toContain(error.message);
         expect(typeof formatted).toBe('string');
@@ -154,10 +154,10 @@ describe('Picocolors Migration Tests', () => {
       // verification happens at build time, but we can verify picocolors
       // is the library being used
       const packageInfo = require('picocolors/package.json');
-      
+
       // Verify we're using picocolors
       expect(packageInfo.name).toBe('picocolors');
-      
+
       // picocolors is known to be ~6KB vs chalk's ~44KB
       // This test documents the expected size benefit
       const expectedSizeReduction = 0.85; // 85% smaller
@@ -167,18 +167,18 @@ describe('Picocolors Migration Tests', () => {
     it('should have fast color application', () => {
       const testText = 'performance test';
       const iterations = 1000;
-      
+
       const startTime = performance.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         colors.red(testText);
         colors.green(testText);
         colors.blue(testText);
       }
-      
+
       const endTime = performance.now();
       const duration = endTime - startTime;
-      
+
       // Should complete 3000 color operations in reasonable time
       // (This is more for detecting major performance regressions)
       expect(duration).toBeLessThan(1000); // Less than 1 second
@@ -195,27 +195,34 @@ describe('Picocolors Migration Tests', () => {
     it('should have all functions used in logger.ts', () => {
       // Verify all picocolors functions used in our codebase exist
       const requiredFunctions = [
-        'cyan', 'green', 'yellow', 'red', 'blue', 
-        'gray', 'magenta', 'dim', 'bold'
+        'cyan',
+        'green',
+        'yellow',
+        'red',
+        'blue',
+        'gray',
+        'magenta',
+        'dim',
+        'bold',
       ];
-      
-      requiredFunctions.forEach(funcName => {
+
+      requiredFunctions.forEach((funcName) => {
         expect(typeof (colors as any)[funcName]).toBe('function');
       });
     });
 
     it('should maintain color consistency with previous chalk usage', () => {
       const testMessage = 'consistency test';
-      
+
       // Test that basic color functions produce expected ANSI codes
       const redText = colors.red(testMessage);
       const greenText = colors.green(testMessage);
-      
+
       // Red should start with ANSI red escape sequence
       expect(redText).toMatch(/^\u001b\[31m/);
-      // Green should start with ANSI green escape sequence  
+      // Green should start with ANSI green escape sequence
       expect(greenText).toMatch(/^\u001b\[32m/);
-      
+
       // Both should end with reset sequence
       expect(redText).toMatch(/\u001b\[39m$/);
       expect(greenText).toMatch(/\u001b\[39m$/);
@@ -227,7 +234,7 @@ describe('Picocolors Migration Tests', () => {
       // Verify picocolors works alongside @clack/prompts
       // which also uses color functions
       const coloredText = colors.cyan('clack integration test');
-      
+
       expect(coloredText).toContain('clack integration test');
       expect(coloredText).toContain('\u001b[');
     });
@@ -242,7 +249,7 @@ describe('Picocolors Migration Tests', () => {
         colors.green('test');
         colors.blue('test');
       };
-      
+
       expect(colorTest).not.toThrow();
     });
 
@@ -250,17 +257,17 @@ describe('Picocolors Migration Tests', () => {
       // Test with NO_COLOR environment variable
       const originalNoColor = process.env.NO_COLOR;
       const originalForceColor = process.env.FORCE_COLOR;
-      
+
       try {
         // Set NO_COLOR and clear FORCE_COLOR
         process.env.NO_COLOR = '1';
         delete process.env.FORCE_COLOR;
-        
+
         // Note: picocolors caches color support on module load
         // In test environment, this test documents the expected behavior
         // rather than testing runtime color support changes
         const result = colors.red('test');
-        
+
         // Accept either plain text (NO_COLOR respected) or colored text (cached)
         // This documents that picocolors behavior depends on initialization time
         expect(typeof result).toBe('string');
@@ -288,7 +295,7 @@ describe('Picocolors Migration Tests', () => {
         '\x00\x01\x02', // Control characters
       ];
 
-      maliciousInputs.forEach(input => {
+      maliciousInputs.forEach((input) => {
         expect(() => colors.red(input)).not.toThrow();
         const result = colors.red(input);
         expect(typeof result).toBe('string');
@@ -296,14 +303,9 @@ describe('Picocolors Migration Tests', () => {
     });
 
     it('should not execute code in color input', () => {
-      const codeInputs = [
-        '$(rm -rf /)',
-        '`eval(malicious)`',
-        '${dangerous}',
-        'test"; rm -rf /',
-      ];
+      const codeInputs = ['$(rm -rf /)', '`eval(malicious)`', `${'dangerous'}`, 'test"; rm -rf /'];
 
-      codeInputs.forEach(input => {
+      codeInputs.forEach((input) => {
         const result = colors.green(input);
         expect(result).toContain(input);
         expect(typeof result).toBe('string');

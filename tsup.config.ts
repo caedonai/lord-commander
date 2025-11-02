@@ -8,7 +8,7 @@ export default defineConfig([
     dts: true,
     clean: true,
     target: 'node18',
-    shims: true
+    shims: true,
   },
   // CLI binary with shebang
   {
@@ -18,7 +18,7 @@ export default defineConfig([
     target: 'node18',
     shims: true,
     banner: {
-      js: '#!/usr/bin/env node'
-    }
-  }
+      js: '#!/usr/bin/env node',
+    },
+  },
 ]);

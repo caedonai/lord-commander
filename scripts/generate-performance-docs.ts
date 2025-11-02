@@ -2,14 +2,13 @@
 
 /**
  * Performance Documentation Generator
- * 
+ *
  * Automatically generates and updates performance metrics and analysis for docs/performance.md
  * Includes startup times, memory usage, bundle optimization, and benchmarking results.
  */
 
-import fs from 'fs/promises';
-import path from 'path';
-import { execaSync } from 'execa';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 interface PerformanceMetrics {
   startup: StartupMetrics;
@@ -95,233 +94,233 @@ interface OptimizationMetrics {
 
 async function measureStartupPerformance(): Promise<StartupMetrics> {
   console.log('⚡ Measuring startup performance...');
-  
+
   // Simulate startup measurements
   const measurements: number[] = [];
-  
+
   for (let i = 0; i < 5; i++) {
     const start = process.hrtime.bigint();
-    
+
     // Simulate CLI initialization
     await simulateStartup();
-    
+
     const end = process.hrtime.bigint();
     const durationMs = Number(end - start) / 1000000;
     measurements.push(durationMs);
   }
-  
+
   const coreSDK = Math.round(measurements.reduce((a, b) => a + b) / measurements.length);
   const withPlugins = Math.round(coreSDK * 1.15); // ~15% overhead for plugins
   const industryAverage = 280;
   const improvement = Math.round((1 - coreSDK / industryAverage) * 100);
-  
+
   console.log(`   🚀 Core SDK: ${coreSDK}ms`);
   console.log(`   🔧 With Plugins: ${withPlugins}ms`);
   console.log(`   📈 ${improvement}% faster than industry average`);
-  
+
   return {
     coreSDK,
-    withPlugins, 
+    withPlugins,
     industryAverage,
     improvement,
     breakdown: {
       moduleLoading: Math.round(coreSDK * 0.4),
       commandRegistration: Math.round(coreSDK * 0.25),
       initialization: Math.round(coreSDK * 0.25),
-      firstCommand: Math.round(coreSDK * 0.1)
-    }
+      firstCommand: Math.round(coreSDK * 0.1),
+    },
   };
 }
 
 async function simulateStartup(): Promise<void> {
   // Simulate actual SDK startup operations
-  await new Promise(resolve => setTimeout(resolve, Math.random() * 50 + 100));
+  await new Promise((resolve) => setTimeout(resolve, Math.random() * 50 + 100));
 }
 
 function measureMemoryUsage(): MemoryMetrics {
   console.log('💾 Analyzing memory usage...');
-  
+
   // Use minimal CLI baseline (7.81MB) as measured by minimal Node.js process
   const baseline = 7.81; // Minimal Node.js CLI heap usage
-  
+
   // Simulate realistic CLI SDK memory usage
   const coreLoaded = baseline + 4; // ~4MB for core SDK (createCLI + dependencies)
   const withPlugins = coreLoaded + 3; // ~3MB for plugins (git, updater, workspace)
   const peakUsage = withPlugins * 1.4; // 40% peak during operations
   const gcEfficiency = 85; // 85% garbage collection efficiency
-  
+
   console.log(`   📊 Baseline (minimal CLI): ${baseline}MB`);
   console.log(`   🎯 Core SDK loaded: ${coreLoaded}MB`);
   console.log(`   🔧 With plugins: ${withPlugins}MB`);
   console.log(`   📈 Peak usage: ${peakUsage}MB`);
-  
+
   return {
     baseline,
     coreLoaded,
     withPlugins,
     peakUsage,
-    gcEfficiency
+    gcEfficiency,
   };
 }
 
 function measureBundlePerformance(): BundlePerformance {
   console.log('📦 Measuring bundle performance...');
-  
+
   // Simulate bundle performance metrics
   const loadTime = 12; // ms to load bundle
   const parseTime = 8; // ms to parse JavaScript
   const treeshakingEffectiveness = 97; // 97% reduction
   const compressionRatio = 3.2; // 3.2:1 gzip ratio
   const cacheEfficiency = 92; // 92% cache hit rate
-  
+
   console.log(`   ⚡ Load time: ${loadTime}ms`);
   console.log(`   🌲 Tree-shaking: ${treeshakingEffectiveness}% reduction`);
   console.log(`   📦 Compression: ${compressionRatio}:1 ratio`);
-  
+
   return {
     loadTime,
     parseTime,
     treeshakingEffectiveness,
     compressionRatio,
-    cacheEfficiency
+    cacheEfficiency,
   };
 }
 
 function generateBenchmarkResults(): BenchmarkResults {
   console.log('🏆 Generating benchmark results...');
-  
+
   const commandExecution: CommandBenchmark[] = [
     {
       command: 'help',
       averageMs: 45,
       p95Ms: 62,
-      description: 'Display command help and usage information'
+      description: 'Display command help and usage information',
     },
     {
       command: 'init',
       averageMs: 850,
       p95Ms: 1200,
-      description: 'Initialize new project with dependencies'
+      description: 'Initialize new project with dependencies',
     },
     {
       command: 'build',
       averageMs: 2400,
       p95Ms: 3100,
-      description: 'Build project with TypeScript compilation'
+      description: 'Build project with TypeScript compilation',
     },
     {
       command: 'completion install',
       averageMs: 120,
       p95Ms: 180,
-      description: 'Install shell completion scripts'
-    }
+      description: 'Install shell completion scripts',
+    },
   ];
-  
+
   const fileOperations: FileBenchmark[] = [
     {
       operation: 'Directory scan',
       averageMs: 25,
       throughputMBs: 450,
-      description: 'Recursive directory scanning for command discovery'
+      description: 'Recursive directory scanning for command discovery',
     },
     {
       operation: 'Template copy',
       averageMs: 180,
       throughputMBs: 85,
-      description: 'Copy project templates with file processing'
+      description: 'Copy project templates with file processing',
     },
     {
       operation: 'Config read/write',
       averageMs: 12,
       throughputMBs: 1200,
-      description: 'Read and write configuration files'
-    }
+      description: 'Read and write configuration files',
+    },
   ];
-  
+
   const processExecution: ProcessBenchmark[] = [
     {
       process: 'npm install',
       averageMs: 8500,
       overhead: 15,
-      description: 'Package manager dependency installation'
+      description: 'Package manager dependency installation',
     },
     {
       process: 'git init',
       averageMs: 85,
       overhead: 8,
-      description: 'Git repository initialization'
+      description: 'Git repository initialization',
     },
     {
       process: 'tsc build',
       averageMs: 2200,
       overhead: 12,
-      description: 'TypeScript compilation process'
-    }
+      description: 'TypeScript compilation process',
+    },
   ];
-  
+
   const memoryStress: MemoryBenchmark = {
     maxHeapMB: 48,
     steadyStateMB: 12,
     gcFrequencyMs: 2500,
-    leakDetection: 'No memory leaks detected over 1000 operations'
+    leakDetection: 'No memory leaks detected over 1000 operations',
   };
-  
+
   return {
     commandExecution,
     fileOperations,
     processExecution,
-    memoryStress
+    memoryStress,
   };
 }
 
 function calculateOptimizations(): OptimizationMetrics {
   console.log('🎯 Calculating optimization metrics...');
-  
-  const treeshakingReduction = 97;    // 97% bundle reduction
-  const bundleCompression = 68;       // 68% gzip compression
-  const startupOptimization = 44;     // 44% faster startup
-  const memoryOptimization = 35;      // 35% memory efficiency
-  
+
+  const treeshakingReduction = 97; // 97% bundle reduction
+  const bundleCompression = 68; // 68% gzip compression
+  const startupOptimization = 44; // 44% faster startup
+  const memoryOptimization = 35; // 35% memory efficiency
+
   const overallImprovement = Math.round(
     (treeshakingReduction + bundleCompression + startupOptimization + memoryOptimization) / 4
   );
-  
+
   console.log(`   🌲 Tree-shaking: ${treeshakingReduction}% reduction`);
   console.log(`   📦 Bundle: ${bundleCompression}% compression`);
   console.log(`   ⚡ Startup: ${startupOptimization}% faster`);
   console.log(`   💾 Memory: ${memoryOptimization}% more efficient`);
   console.log(`   🎯 Overall: ${overallImprovement}% improvement`);
-  
+
   return {
     treeshakingReduction,
     bundleCompression,
     startupOptimization,
     memoryOptimization,
-    overallImprovement
+    overallImprovement,
   };
 }
 
 async function collectPerformanceMetrics(): Promise<PerformanceMetrics> {
   console.log('📊 Collecting comprehensive performance metrics...\n');
-  
+
   const startup = await measureStartupPerformance();
   const memory = measureMemoryUsage();
   const bundle = measureBundlePerformance();
   const benchmarks = generateBenchmarkResults();
   const optimization = calculateOptimizations();
-  
+
   return {
     startup,
     memory,
     bundle,
     benchmarks,
-    optimization
+    optimization,
   };
 }
 
 async function generatePerformanceDoc(metrics: PerformanceMetrics): Promise<void> {
   const docPath = path.join(process.cwd(), 'docs', 'performance.md');
-  
+
   const content = `# Performance Analysis
 
 > ⚡ Comprehensive performance metrics and optimization analysis for the lord-commander SDK
@@ -343,10 +342,10 @@ async function generatePerformanceDoc(metrics: PerformanceMetrics): Promise<void
 ### Startup Time Breakdown
 \`\`\`
 Total Startup: ${metrics.startup.coreSDK}ms
-├── Module Loading (${Math.round(metrics.startup.breakdown.moduleLoading / metrics.startup.coreSDK * 100)}%)    ${metrics.startup.breakdown.moduleLoading}ms
-├── Command Registration (${Math.round(metrics.startup.breakdown.commandRegistration / metrics.startup.coreSDK * 100)}%) ${metrics.startup.breakdown.commandRegistration}ms  
-├── Initialization (${Math.round(metrics.startup.breakdown.initialization / metrics.startup.coreSDK * 100)}%)       ${metrics.startup.breakdown.initialization}ms
-└── First Command (${Math.round(metrics.startup.breakdown.firstCommand / metrics.startup.coreSDK * 100)}%)          ${metrics.startup.breakdown.firstCommand}ms
+├── Module Loading (${Math.round((metrics.startup.breakdown.moduleLoading / metrics.startup.coreSDK) * 100)}%)    ${metrics.startup.breakdown.moduleLoading}ms
+├── Command Registration (${Math.round((metrics.startup.breakdown.commandRegistration / metrics.startup.coreSDK) * 100)}%) ${metrics.startup.breakdown.commandRegistration}ms  
+├── Initialization (${Math.round((metrics.startup.breakdown.initialization / metrics.startup.coreSDK) * 100)}%)       ${metrics.startup.breakdown.initialization}ms
+└── First Command (${Math.round((metrics.startup.breakdown.firstCommand / metrics.startup.coreSDK) * 100)}%)          ${metrics.startup.breakdown.firstCommand}ms
 \`\`\`
 
 ### Configuration Impact
@@ -395,21 +394,25 @@ Memory Usage Progression
 | Command | Average | P95 | Description |
 |---------|---------|-----|-------------|
 ${metrics.benchmarks.commandExecution
-  .map(cmd => `| \`${cmd.command}\` | ${cmd.averageMs}ms | ${cmd.p95Ms}ms | ${cmd.description} |`)
+  .map((cmd) => `| \`${cmd.command}\` | ${cmd.averageMs}ms | ${cmd.p95Ms}ms | ${cmd.description} |`)
   .join('\n')}
 
 ### File Operation Performance
 | Operation | Average | Throughput | Description |
 |-----------|---------|------------|-------------|
 ${metrics.benchmarks.fileOperations
-  .map(op => `| ${op.operation} | ${op.averageMs}ms | ${op.throughputMBs}MB/s | ${op.description} |`)
+  .map(
+    (op) => `| ${op.operation} | ${op.averageMs}ms | ${op.throughputMBs}MB/s | ${op.description} |`
+  )
   .join('\n')}
 
 ### Process Execution Performance  
 | Process | Average | Overhead | Description |
 |---------|---------|----------|-------------|
 ${metrics.benchmarks.processExecution
-  .map(proc => `| ${proc.process} | ${proc.averageMs}ms | ${proc.overhead}% | ${proc.description} |`)
+  .map(
+    (proc) => `| ${proc.process} | ${proc.averageMs}ms | ${proc.overhead}% | ${proc.description} |`
+  )
   .join('\n')}
 
 ## 🧪 Stress Testing Results
@@ -578,13 +581,12 @@ describe('Performance Tests', () => {
 
 async function main(): Promise<void> {
   console.log('⚡ Performance Documentation Generator\n');
-  
+
   try {
     const metrics = await collectPerformanceMetrics();
     await generatePerformanceDoc(metrics);
-    
+
     console.log('\n🎉 Performance documentation updated!');
-    
   } catch (error) {
     console.error('❌ Failed to generate performance documentation:', error);
     process.exit(1);
@@ -594,9 +596,12 @@ async function main(): Promise<void> {
 // Export for potential module usage
 export { collectPerformanceMetrics, generatePerformanceDoc };
 
-// Run if called directly  
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('generate-performance-docs.ts')) {
-  main().catch(error => {
+// Run if called directly
+if (
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith('generate-performance-docs.ts')
+) {
+  main().catch((error) => {
     console.error('❌ Script failed:', error);
     process.exit(1);
   });

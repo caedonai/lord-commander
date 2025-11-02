@@ -1,9 +1,9 @@
 /**
  * Task 1.4.2: Structured Logging with Security
- * 
+ *
  * Comprehensive structured logging system with automatic sanitization and security features.
  * Builds on Task 1.4.1 (Log Injection Protection) to provide enterprise-grade structured logging.
- * 
+ *
  * Features:
  * - Structured log entries with consistent formatting
  * - Automatic sanitization of log data using existing security framework
@@ -12,15 +12,20 @@
  * - Multiple output formats (JSON, text, structured)
  * - Contextual logging with security-aware field handling
  * - Integration with existing Logger and log injection protection
- * 
+ *
  * @security Leverages comprehensive log injection protection from Task 1.4.1
  * @compliance OWASP logging guidelines, enterprise audit requirements
  * @performance Optimized serialization with bounded memory usage
  * @architecture Builds on existing security foundation while maintaining API compatibility
  */
 
-import { sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig, type LogSecurityAnalysis } from './security.js';
 import { sanitizeErrorMessage, sanitizeStackTrace } from '../errors/sanitization.js';
+import {
+  analyzeLogSecurity,
+  type LogInjectionConfig,
+  type LogSecurityAnalysis,
+  sanitizeLogOutputAdvanced,
+} from './security.js';
 
 /**
  * Log severity levels for structured logging
@@ -53,33 +58,33 @@ export interface StructuredLogEntry {
   level: StructuredLogLevel;
   levelName: string;
   message: string;
-  
+
   // Security metadata
   sanitized: boolean;
   securityFlags: string[];
   classification: SecurityClassification;
   securityAnalysis?: LogSecurityAnalysis;
-  
+
   // Context and tracing
   context: Record<string, unknown>;
   traceId?: string;
   spanId?: string;
   correlationId?: string;
-  
+
   // Application metadata
   component?: string;
   operation?: string;
   userId?: string;
   sessionId?: string;
-  
+
   // Error handling
   error?: StructuredError;
   stack?: string;
-  
+
   // Performance metrics
   duration?: number;
   memoryUsage?: NodeJS.MemoryUsage;
-  
+
   // Compliance and audit
   auditEvent?: boolean;
   complianceFlags?: string[];
@@ -109,26 +114,26 @@ export interface StructuredLoggingConfig {
   format: 'json' | 'text' | 'structured';
   prettyPrint: boolean;
   includeMetadata: boolean;
-  
+
   // Security configuration
   logInjectionConfig: LogInjectionConfig;
   defaultClassification: SecurityClassification;
   sanitizeByDefault: boolean;
   includeSecurityAnalysis: boolean;
-  
+
   // Performance configuration
   maxMessageLength: number;
   maxContextSize: number;
   maxStackDepth: number;
   maxRecursionDepth: number;
   enablePerformanceMetrics: boolean;
-  
+
   // Field inclusion/exclusion
   includeStackTraces: boolean;
   includeMemoryUsage: boolean;
   excludeFields: string[];
   maskFields: string[];
-  
+
   // Compliance configuration
   enableAuditMode: boolean;
   retentionPolicies: Record<StructuredLogLevel, string>;
@@ -142,7 +147,7 @@ export const DEFAULT_STRUCTURED_LOGGING_CONFIG: StructuredLoggingConfig = {
   format: 'json',
   prettyPrint: false,
   includeMetadata: true,
-  
+
   logInjectionConfig: {
     enableProtection: true,
     maxLineLength: 8192,
@@ -152,18 +157,18 @@ export const DEFAULT_STRUCTURED_LOGGING_CONFIG: StructuredLoggingConfig = {
   defaultClassification: SecurityClassification.INTERNAL,
   sanitizeByDefault: true,
   includeSecurityAnalysis: true,
-  
+
   maxMessageLength: 8192,
   maxContextSize: 65536, // 64KB limit for context
   maxStackDepth: 50,
   maxRecursionDepth: 10,
   enablePerformanceMetrics: true,
-  
+
   includeStackTraces: true,
   includeMemoryUsage: false,
   excludeFields: [],
   maskFields: ['password', 'token', 'secret', 'key', 'authorization'],
-  
+
   enableAuditMode: false,
   retentionPolicies: {
     [StructuredLogLevel.TRACE]: '7d',
@@ -224,18 +229,18 @@ export class StructuredLogger {
   private safeStringify(obj: unknown, warnings?: string[]): string {
     let totalToJSONCalls = 0;
     const maxTotalToJSONCalls = 5;
-    
+
     // Recursively neutralize toJSON methods before JSON.stringify
     const neutralizeToJSON = (value: any, depth = 0): any => {
       if (depth > 10 || totalToJSONCalls > maxTotalToJSONCalls) {
         warnings?.push(`Maximum processing depth or toJSON calls exceeded`);
         return '[PROCESSING_STOPPED]';
       }
-      
+
       if (value === null || value === undefined || typeof value !== 'object') {
         return value;
       }
-      
+
       // If this object has a toJSON method, call it once and neutralize future calls
       if ('toJSON' in value && typeof value.toJSON === 'function') {
         totalToJSONCalls++;
@@ -243,7 +248,7 @@ export class StructuredLogger {
           warnings?.push(`Too many toJSON calls (${totalToJSONCalls}), blocking further calls`);
           return '[TOJSON_BLOCKED]';
         }
-        
+
         try {
           const result = value.toJSON();
           if (result === value) {
@@ -257,12 +262,12 @@ export class StructuredLogger {
           return '[TOJSON_ERROR]';
         }
       }
-      
+
       // For arrays
       if (Array.isArray(value)) {
-        return value.map(item => neutralizeToJSON(item, depth + 1));
+        return value.map((item) => neutralizeToJSON(item, depth + 1));
       }
-      
+
       // For objects, create a copy and process recursively
       if (typeof value === 'object') {
         const result: any = {};
@@ -271,13 +276,13 @@ export class StructuredLogger {
         }
         return result;
       }
-      
+
       return value;
     };
-    
+
     // Pre-process the object to safely handle toJSON methods
     const processedObj = neutralizeToJSON(obj);
-    
+
     // Simple replacer for final cleanup
     const replacer = (_key: string, value: unknown): unknown => {
       if (typeof value === 'bigint') {
@@ -306,53 +311,51 @@ export class StructuredLogger {
   /**
    * Create a structured log entry with comprehensive security handling
    */
-  createLogEntry(
-    message: string,
-    options: LogEntryOptions = {}
-  ): CreateLogEntryResult {
+  createLogEntry(message: string, options: LogEntryOptions = {}): CreateLogEntryResult {
     const warnings: string[] = [];
     let truncated = false;
     let sanitizationApplied = false;
-    
+
     try {
       // Check for extremely large messages that could cause memory issues
-      if (message.length > 100000) { // 100KB limit before processing
+      if (message.length > 100000) {
+        // 100KB limit before processing
         throw new Error('Message too large for processing');
       }
-      
+
       // Generate unique identifiers if not provided
       const timestamp = this.safeTimestamp();
       const level = options.level ?? StructuredLogLevel.INFO;
       const levelName = StructuredLogLevel[level];
-      
+
       // Sanitize message if required
       let sanitizedMessage = message;
       let securityAnalysis: LogSecurityAnalysis | undefined;
-      
+
       if (this.config.sanitizeByDefault && !options.skipSanitization) {
         const originalMessage = message;
         sanitizedMessage = sanitizeLogOutputAdvanced(message, this.config.logInjectionConfig);
         sanitizationApplied = sanitizedMessage !== originalMessage;
-        
+
         if (this.config.includeSecurityAnalysis) {
           securityAnalysis = analyzeLogSecurity(originalMessage);
         }
       }
-      
+
       // Truncate message if too long
       if (sanitizedMessage.length > this.config.maxMessageLength) {
-        sanitizedMessage = sanitizedMessage.substring(0, this.config.maxMessageLength) + '...[truncated]';
+        sanitizedMessage = `${sanitizedMessage.substring(0, this.config.maxMessageLength)}...[truncated]`;
         truncated = true;
         warnings.push(`Message truncated to ${this.config.maxMessageLength} characters`);
       }
-      
+
       // Process context with security-aware handling
       const processedContext = this.processContext(options.context || {}, warnings);
-      
+
       // Handle error information
       let structuredError: StructuredError | undefined;
       let stackTrace: string | undefined;
-      
+
       if (options.error) {
         structuredError = this.createStructuredError(options.error, new WeakSet(), 0, warnings);
         if (this.config.includeStackTraces && options.error.stack) {
@@ -361,64 +364,63 @@ export class StructuredLogger {
           });
         }
       }
-      
+
       // Collect security flags
       const securityFlags: string[] = [];
       if (sanitizationApplied) securityFlags.push('sanitized');
       if (truncated) securityFlags.push('truncated');
       if (securityAnalysis?.violations.length) securityFlags.push('violations_detected');
       if (options.auditEvent) securityFlags.push('audit_event');
-      
+
       // Performance metrics
       let memoryUsage: NodeJS.MemoryUsage | undefined;
       if (this.config.enablePerformanceMetrics && this.config.includeMemoryUsage) {
         try {
           memoryUsage = process.memoryUsage();
-        } catch (error) {
+        } catch (_error) {
           warnings.push('Failed to collect memory usage metrics');
         }
       }
-      
+
       // Build log entry
       const entry: StructuredLogEntry = {
         timestamp,
         level,
         levelName,
         message: sanitizedMessage,
-        
+
         sanitized: sanitizationApplied,
         securityFlags,
         classification: options.classification ?? this.config.defaultClassification,
         securityAnalysis,
-        
+
         context: processedContext,
         traceId: options.traceId,
         spanId: options.spanId,
         correlationId: options.correlationId,
-        
+
         component: options.component,
         operation: options.operation,
         userId: options.userId,
         sessionId: options.sessionId,
-        
+
         error: structuredError,
         stack: stackTrace,
-        
+
         duration: options.duration,
         memoryUsage,
-        
+
         auditEvent: options.auditEvent ?? false,
         complianceFlags: this.generateComplianceFlags(level, options),
         retentionPolicy: this.config.retentionPolicies[level],
       };
-      
+
       return {
         entry: this.applyFieldFiltering(entry),
         warnings,
         truncated,
         sanitizationApplied,
       };
-      
     } catch (error) {
       // Fallback for critical errors in log entry creation
       const fallbackEntry: StructuredLogEntry = {
@@ -429,13 +431,17 @@ export class StructuredLogger {
         sanitized: false,
         securityFlags: ['creation_error'],
         classification: SecurityClassification.INTERNAL,
-        context: { 
-          originalMessage: message.length > 1000 ? message.substring(0, 1000) + '...[truncated]' : message, 
-          creationError: String(error).length > 500 ? String(error).substring(0, 500) + '...[truncated]' : String(error)
+        context: {
+          originalMessage:
+            message.length > 1000 ? `${message.substring(0, 1000)}...[truncated]` : message,
+          creationError:
+            String(error).length > 500
+              ? `${String(error).substring(0, 500)}...[truncated]`
+              : String(error),
         },
         auditEvent: false,
       };
-      
+
       return {
         entry: fallbackEntry,
         warnings: [`Log entry creation failed: ${String(error)}`],
@@ -471,16 +477,25 @@ export class StructuredLogger {
       const date = new Date();
       const safeToISOString = Date.prototype.toISOString;
       return safeToISOString.call(date);
-    } catch (error) {
+    } catch (_error) {
       // Fallback to manual ISO string creation when Date.prototype is polluted
       const date = new Date();
-      return date.getFullYear() + '-' +
-             String(date.getMonth() + 1).padStart(2, '0') + '-' +
-             String(date.getDate()).padStart(2, '0') + 'T' +
-             String(date.getHours()).padStart(2, '0') + ':' +
-             String(date.getMinutes()).padStart(2, '0') + ':' +
-             String(date.getSeconds()).padStart(2, '0') + '.' +
-             String(date.getMilliseconds()).padStart(3, '0') + 'Z';
+      return (
+        date.getFullYear() +
+        '-' +
+        String(date.getMonth() + 1).padStart(2, '0') +
+        '-' +
+        String(date.getDate()).padStart(2, '0') +
+        'T' +
+        String(date.getHours()).padStart(2, '0') +
+        ':' +
+        String(date.getMinutes()).padStart(2, '0') +
+        ':' +
+        String(date.getSeconds()).padStart(2, '0') +
+        '.' +
+        String(date.getMilliseconds()).padStart(3, '0') +
+        'Z'
+      );
     }
   }
 
@@ -507,7 +522,7 @@ export class StructuredLogger {
       size = 4; // Boolean
     } else if (typeof obj === 'object' && obj !== null) {
       visited.add(obj);
-      
+
       if (Array.isArray(obj)) {
         for (const item of obj) {
           size += this.getObjectMemorySize(item, visited);
@@ -533,18 +548,18 @@ export class StructuredLogger {
   ): Record<string, unknown> {
     try {
       const processed: Record<string, unknown> = {};
-      
+
       // Check recursion depth limit
       if (depth >= this.config.maxRecursionDepth) {
         warnings.push(`Context processing depth limit (${this.config.maxRecursionDepth}) exceeded`);
         return { depthLimitExceeded: true, originalType: typeof context };
       }
-      
+
       // Skip empty contexts
       if (!context || Object.keys(context).length === 0) {
         return {};
       }
-      
+
       let serialized: string;
       try {
         serialized = this.safeStringify(context, warnings);
@@ -552,26 +567,28 @@ export class StructuredLogger {
         warnings.push(`Context processing failed: ${String(serializationError)}`);
         return { contextError: 'Failed to process context' };
       }
-      
+
       // Check context size limits
       if (serialized.length > this.config.maxContextSize) {
-        warnings.push(`Context truncated from ${serialized.length} to ${this.config.maxContextSize} bytes`);
+        warnings.push(
+          `Context truncated from ${serialized.length} to ${this.config.maxContextSize} bytes`
+        );
         // Truncate by removing properties until under size limit
         const keys = Object.keys(context);
         let currentSize = 0;
-        
+
         for (const key of keys) {
           const value = context[key];
           let valueSize: number;
-          
+
           try {
             valueSize = JSON.stringify({ [key]: value }).length;
-          } catch (valueSerializationError) {
+          } catch (_valueSerializationError) {
             // Skip fields that can't be serialized
             warnings.push(`Context field '${key}' excluded due to serialization error`);
             continue;
           }
-          
+
           if (currentSize + valueSize <= this.config.maxContextSize) {
             processed[key] = this.processContextValueWithDepth(key, value, warnings, depth + 1);
             currentSize += valueSize;
@@ -580,31 +597,29 @@ export class StructuredLogger {
             break;
           }
         }
-        
+
         return processed;
       }
-      
+
       // Process all context fields
       for (const [key, value] of Object.entries(context)) {
         processed[key] = this.processContextValueWithDepth(key, value, warnings, depth + 1);
       }
-      
+
       return processed;
-      
     } catch (error) {
       warnings.push(`Context processing failed: ${String(error)}`);
       return { contextError: 'Failed to process context' };
     }
   }
 
-
   /**
    * Process individual context values with masking, sanitization, and depth limiting
    */
   private processContextValueWithDepth(
-    key: string, 
-    value: unknown, 
-    warnings: string[], 
+    key: string,
+    value: unknown,
+    warnings: string[],
     depth: number
   ): unknown {
     // Check recursion depth limit
@@ -620,27 +635,27 @@ export class StructuredLogger {
 
     // Check if field should be masked (case-insensitive)
     const lowerKey = key.toLowerCase();
-    const shouldMask = this.config.maskFields.some(maskField => 
+    const shouldMask = this.config.maskFields.some((maskField) =>
       lowerKey.includes(maskField.toLowerCase())
     );
-    
+
     if (shouldMask) {
       return '[MASKED]';
     }
-    
+
     // Handle functions
     if (typeof value === 'function') {
       return '[Function]';
     }
 
-    // Handle symbols  
+    // Handle symbols
     if (typeof value === 'symbol') {
       return '[Symbol]';
     }
 
     // Handle bigint
     if (typeof value === 'bigint') {
-      return value.toString() + 'n';
+      return `${value.toString()}n`;
     }
 
     // Handle Date objects - protect against prototype pollution
@@ -653,35 +668,35 @@ export class StructuredLogger {
       const errorObj: any = {
         name: value.name,
         message: value.message,
-        stack: value.stack
+        stack: value.stack,
       };
-      
+
       // Handle error causes with circular reference protection (ES2022+ feature)
       const errorAny = value as any;
       if (errorAny.cause && depth < this.config.maxRecursionDepth - 1) {
         errorObj.cause = this.processContextValueWithDepth(
-          `${key}.cause`, 
-          errorAny.cause, 
-          warnings, 
+          `${key}.cause`,
+          errorAny.cause,
+          warnings,
           depth + 1
         );
       }
-      
+
       return errorObj;
     }
-    
+
     // Sanitize string values
     if (typeof value === 'string') {
       return sanitizeLogOutputAdvanced(value, this.config.logInjectionConfig);
     }
-    
+
     // Handle arrays
     if (Array.isArray(value)) {
-      return value.map((item, index) => 
+      return value.map((item, index) =>
         this.processContextValueWithDepth(`${key}[${index}]`, item, warnings, depth + 1)
       );
     }
-    
+
     // Handle objects (with depth limiting to prevent deep nesting issues)
     if (value && typeof value === 'object') {
       const processed: Record<string, unknown> = {};
@@ -691,12 +706,17 @@ export class StructuredLogger {
           processed[subKey] = '[PROTECTED]';
         } else {
           // For nested objects, check the subKey directly for masking
-          processed[subKey] = this.processContextValueWithDepth(subKey, subValue, warnings, depth + 1);
+          processed[subKey] = this.processContextValueWithDepth(
+            subKey,
+            subValue,
+            warnings,
+            depth + 1
+          );
         }
       }
       return processed;
     }
-    
+
     // Handle primitives (number, boolean)
     if (typeof value === 'number' || typeof value === 'boolean') {
       return value;
@@ -709,7 +729,12 @@ export class StructuredLogger {
   /**
    * Create structured error representation with sanitization and circular reference protection
    */
-  private createStructuredError(error: Error, visited = new WeakSet<Error>(), depth = 0, warnings?: string[]): StructuredError {
+  private createStructuredError(
+    error: Error,
+    visited = new WeakSet<Error>(),
+    depth = 0,
+    warnings?: string[]
+  ): StructuredError {
     // Prevent infinite recursion from circular error causes
     if (visited.has(error)) {
       return {
@@ -718,40 +743,40 @@ export class StructuredLogger {
         sanitized: true,
       };
     }
-    
+
     visited.add(error);
-    
+
     const sanitizedMessage = sanitizeErrorMessage(error.message);
     const sanitized = sanitizedMessage !== error.message;
-    
+
     const structuredError: StructuredError = {
       name: error.name,
       message: sanitizedMessage,
       sanitized,
     };
-    
+
     // Add error code if available
     if ('code' in error && error.code !== undefined) {
       structuredError.code = error.code as string | number;
     }
-    
+
     // Add sanitized stack trace
     if (error.stack && this.config.includeStackTraces) {
       structuredError.stack = sanitizeStackTrace(error.stack, {
         maxStackDepth: this.config.maxStackDepth,
       });
     }
-    
+
     // Process custom properties on the error object
     const customProps: Record<string, unknown> = {};
     const standardProps = ['name', 'message', 'stack', 'code', 'cause'];
-    
+
     for (const [key, value] of Object.entries(error)) {
       if (!standardProps.includes(key)) {
         customProps[key] = value;
       }
     }
-    
+
     // If there are custom properties, try to serialize them
     if (Object.keys(customProps).length > 0) {
       try {
@@ -767,7 +792,7 @@ export class StructuredLogger {
         structuredError.serializationError = String(serializationError);
       }
     }
-    
+
     // Handle error cause chain with depth limit and circular protection
     if ('cause' in error && error.cause instanceof Error && depth < this.config.maxRecursionDepth) {
       structuredError.cause = this.createStructuredError(error.cause, visited, depth + 1, warnings);
@@ -778,35 +803,32 @@ export class StructuredLogger {
         sanitized: true,
       };
     }
-    
+
     return structuredError;
   }
 
   /**
    * Generate compliance flags based on log level and options
    */
-  private generateComplianceFlags(
-    level: StructuredLogLevel,
-    options: LogEntryOptions
-  ): string[] {
+  private generateComplianceFlags(level: StructuredLogLevel, options: LogEntryOptions): string[] {
     const flags: string[] = [];
-    
+
     if (this.config.complianceMode) {
       flags.push('compliance_mode');
     }
-    
+
     if (options.auditEvent) {
       flags.push('audit_required');
     }
-    
+
     if (level >= StructuredLogLevel.ERROR) {
       flags.push('error_reporting');
     }
-    
+
     if (options.userId) {
       flags.push('user_associated');
     }
-    
+
     return flags;
   }
 
@@ -815,19 +837,19 @@ export class StructuredLogger {
    */
   private applyFieldFiltering(entry: StructuredLogEntry): StructuredLogEntry {
     const filtered = { ...entry };
-    
+
     // Remove excluded fields
     for (const field of this.config.excludeFields) {
       delete (filtered as any)[field];
     }
-    
+
     // Apply additional metadata filtering based on configuration
     if (!this.config.includeMetadata) {
       delete filtered.securityAnalysis;
       delete filtered.memoryUsage;
       delete filtered.complianceFlags;
     }
-    
+
     return filtered;
   }
 
@@ -838,16 +860,14 @@ export class StructuredLogger {
     try {
       switch (this.config.format) {
         case 'json':
-          return this.config.prettyPrint 
-            ? JSON.stringify(entry, null, 2)
-            : JSON.stringify(entry);
-            
+          return this.config.prettyPrint ? JSON.stringify(entry, null, 2) : JSON.stringify(entry);
+
         case 'text':
           return this.formatAsText(entry);
-          
+
         case 'structured':
           return this.formatAsStructured(entry);
-          
+
         default:
           return JSON.stringify(entry);
       }
@@ -866,24 +886,21 @@ export class StructuredLogger {
    * Format entry as human-readable text
    */
   private formatAsText(entry: StructuredLogEntry): string {
-    const parts = [
-      entry.timestamp,
-      `[${entry.levelName}]`,
-    ];
-    
+    const parts = [entry.timestamp, `[${entry.levelName}]`];
+
     if (entry.component) parts.push(`(${entry.component})`);
     if (entry.operation) parts.push(`{${entry.operation}}`);
-    
+
     parts.push(entry.message);
-    
+
     if (entry.error) {
       parts.push(`Error: ${entry.error.message}`);
     }
-    
+
     if (entry.securityFlags.length > 0) {
       parts.push(`Security: [${entry.securityFlags.join(', ')}]`);
     }
-    
+
     return parts.join(' ');
   }
 
@@ -896,25 +913,25 @@ export class StructuredLogger {
       `level=${entry.levelName}`,
       `message="${entry.message}"`,
     ];
-    
+
     if (entry.component) lines.push(`component=${entry.component}`);
     if (entry.operation) lines.push(`operation=${entry.operation}`);
     if (entry.userId) lines.push(`userId=${entry.userId}`);
     if (entry.traceId) lines.push(`traceId=${entry.traceId}`);
-    
+
     if (entry.error) {
       lines.push(`error.name=${entry.error.name}`);
       lines.push(`error.message="${entry.error.message}"`);
     }
-    
+
     if (entry.securityFlags.length > 0) {
       lines.push(`securityFlags=[${entry.securityFlags.join(',')}]`);
     }
-    
+
     if (Object.keys(entry.context).length > 0) {
       lines.push(`context=${JSON.stringify(entry.context)}`);
     }
-    
+
     return lines.join(' ');
   }
 
@@ -995,10 +1012,7 @@ export const structuredLog = {
   /**
    * Create an audit log entry
    */
-  audit: (
-    message: string,
-    options: Omit<LogEntryOptions, 'auditEvent'> = {}
-  ) => {
+  audit: (message: string, options: Omit<LogEntryOptions, 'auditEvent'> = {}) => {
     const logger = createStructuredLogger('audit');
     return logger.createLogEntry(message, { ...options, auditEvent: true });
   },
@@ -1006,10 +1020,7 @@ export const structuredLog = {
   /**
    * Create a security log entry
    */
-  security: (
-    message: string,
-    options: LogEntryOptions = {}
-  ) => {
+  security: (message: string, options: LogEntryOptions = {}) => {
     const logger = createStructuredLogger('security');
     return logger.createLogEntry(message, {
       ...options,
@@ -1020,11 +1031,7 @@ export const structuredLog = {
   /**
    * Create an error log entry with comprehensive error handling
    */
-  error: (
-    message: string,
-    error: Error,
-    options: LogEntryOptions = {}
-  ) => {
+  error: (message: string, error: Error, options: LogEntryOptions = {}) => {
     const logger = createStructuredLogger('production');
     return logger.createLogEntry(message, {
       ...options,
@@ -1036,11 +1043,7 @@ export const structuredLog = {
   /**
    * Create a performance log entry with timing information
    */
-  performance: (
-    message: string,
-    duration: number,
-    options: LogEntryOptions = {}
-  ) => {
+  performance: (message: string, duration: number, options: LogEntryOptions = {}) => {
     const logger = createStructuredLogger('production', {
       enablePerformanceMetrics: true,
     });

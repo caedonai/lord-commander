@@ -1,6 +1,6 @@
 /**
  * Task 1.4.2 Tests: Structured Logging with Security - Comprehensive Test Suite
- * 
+ *
  * Tests all aspects of the structured logging system including:
  * - Basic structured log entry creation
  * - Security features and sanitization integration
@@ -13,24 +13,27 @@
  * - Multiple output formats and serialization
  * - Context processing and size limits
  * - Audit and compliance features
- * 
+ *
  * @security Validates comprehensive security features from Task 1.4.1 integration
  * @performance Tests memory limits, size constraints, and processing bounds
  * @architecture Tests clean integration with existing logging infrastructure
  */
 
-import { describe, it, expect, beforeEach, vi, type MockedFunction } from 'vitest';
+import { beforeEach, describe, expect, it, type MockedFunction, vi } from 'vitest';
 import {
+  analyzeLogSecurity,
+  sanitizeLogOutputAdvanced,
+} from '../../../core/foundation/logging/security.js';
+import {
+  createStructuredLogger,
+  DEFAULT_STRUCTURED_LOGGING_CONFIG,
+  type LogEntryOptions,
+  SecurityClassification,
+  type StructuredLogEntry,
   StructuredLogger,
   StructuredLogLevel,
-  SecurityClassification,
-  createStructuredLogger,
   structuredLog,
-  type LogEntryOptions,
-  type StructuredLogEntry,
-  DEFAULT_STRUCTURED_LOGGING_CONFIG,
 } from '../../../core/foundation/logging/structured.js';
-import { sanitizeLogOutputAdvanced, analyzeLogSecurity } from '../../../core/foundation/logging/security.js';
 
 // Mock the log security functions to control test behavior
 vi.mock('../../../core/foundation/logging/security.js', () => ({
@@ -133,7 +136,8 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
     it('should handle error objects in log entries', () => {
       const testError = new Error('Database connection failed');
       testError.name = 'ConnectionError';
-      testError.stack = 'Error: Database connection failed\n    at connect (db.js:10:5)\n    at app.js:25:10';
+      testError.stack =
+        'Error: Database connection failed\n    at connect (db.js:10:5)\n    at app.js:25:10';
 
       const result = logger.createLogEntry('Operation failed', {
         error: testError,
@@ -218,15 +222,17 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
         riskScore: 60,
         threatCategories: ['terminal-manipulation'],
         warnings: ['ANSI escape sequences detected'],
-        violations: [{ 
-          type: 'ansi-escape' as const, 
-          severity: 'medium' as const,
-          description: 'ANSI escape detected',
-          originalInput: 'test',
-          sanitizedOutput: 'test',
-          timestamp: new Date(),
-          recommendedAction: 'warn' as const,
-        }],
+        violations: [
+          {
+            type: 'ansi-escape' as const,
+            severity: 'medium' as const,
+            description: 'ANSI escape detected',
+            originalInput: 'test',
+            sanitizedOutput: 'test',
+            timestamp: new Date(),
+            recommendedAction: 'warn' as const,
+          },
+        ],
         attackVectors: ['ansi-escape'],
         recommendedAction: 'warn' as const,
         securityRecommendations: ['Sanitize ANSI codes'],
@@ -235,7 +241,9 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
         sanitizationRequired: true,
       };
 
-      (analyzeLogSecurity as MockedFunction<typeof analyzeLogSecurity>).mockReturnValue(mockAnalysis);
+      (analyzeLogSecurity as MockedFunction<typeof analyzeLogSecurity>).mockReturnValue(
+        mockAnalysis
+      );
 
       const loggerWithAnalysis = new StructuredLogger({
         sanitizeByDefault: true,
@@ -266,7 +274,7 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
 
     it('should sanitize error messages in structured errors', () => {
       const testError = new Error('Connection failed: secret data here');
-      
+
       const result = logger.createLogEntry('Operation failed', {
         error: testError,
       });
@@ -282,12 +290,15 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
         maxMessageLength: 50,
       });
 
-      const longMessage = 'This is a very long message that exceeds the configured maximum length limit';
+      const longMessage =
+        'This is a very long message that exceeds the configured maximum length limit';
       const result = loggerWithLimit.createLogEntry(longMessage);
 
       // The message should be exactly 50 characters plus '...[truncated]'
       expect(result.entry.message).toHaveLength(50 + '...[truncated]'.length);
-      expect(result.entry.message).toMatch(/^This is a very long message that exceeds the confi\.\.\.\[truncated\]$/);
+      expect(result.entry.message).toMatch(
+        /^This is a very long message that exceeds the confi\.\.\.\[truncated\]$/
+      );
       expect(result.entry.securityFlags).toContain('truncated');
       expect(result.truncated).toBe(true);
       expect(result.warnings).toContain('Message truncated to 50 characters');
@@ -309,9 +320,7 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
       });
 
       expect(result.warnings).toEqual(
-        expect.arrayContaining([
-          expect.stringMatching(/Context truncated from \d+ to 100 bytes/),
-        ])
+        expect.arrayContaining([expect.stringMatching(/Context truncated from \d+ to 100 bytes/)])
       );
     });
 
@@ -321,7 +330,10 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
       });
 
       const testError = new Error('Test error');
-      testError.stack = Array.from({ length: 10 }, (_, i) => `    at function${i} (file${i}.js:${i}:${i})`).join('\n');
+      testError.stack = Array.from(
+        { length: 10 },
+        (_, i) => `    at function${i} (file${i}.js:${i}:${i})`
+      ).join('\n');
 
       const result = loggerWithLimit.createLogEntry('Error occurred', {
         error: testError,
@@ -410,7 +422,11 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
         context: contextWithArrays,
       });
 
-      expect(result.entry.context.tags).toEqual(['important', 'password=[REDACTED]', 'user-action']);
+      expect(result.entry.context.tags).toEqual([
+        'important',
+        'password=[REDACTED]',
+        'user-action',
+      ]);
       expect(result.entry.context.coordinates).toEqual([10.5, 20.3]);
     });
 
@@ -424,18 +440,20 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
 
       expect(result.warnings).toEqual(
         expect.arrayContaining([
-          expect.stringMatching(/Maximum processing depth or toJSON calls exceeded|Context value depth limit exceeded/),
+          expect.stringMatching(
+            /Maximum processing depth or toJSON calls exceeded|Context value depth limit exceeded/
+          ),
         ])
       );
-      
+
       // Verify circular reference was handled with depth limiting
       expect(result.entry.context).toHaveProperty('circular');
       expect(result.entry.context.circular).toMatchObject({
         circular: expect.objectContaining({
-          circular: expect.any(Object)
-        })
+          circular: expect.any(Object),
+        }),
       });
-      
+
       // Verify depth was limited properly
       const contextStr = JSON.stringify(result.entry.context);
       expect(contextStr).toContain('[DEPTH_LIMIT_EXCEEDED]');
@@ -670,7 +688,7 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
 
     it('should create error log entries with error objects', () => {
       const testError = new Error('Database timeout');
-      
+
       const result = structuredLog.error('Database operation failed', testError, {
         component: 'database',
         operation: 'query',
@@ -700,10 +718,10 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
       const malformedError = Object.create(Error.prototype);
       malformedError.message = undefined;
       malformedError.stack = undefined;
-      
+
       const result = logger.createLogEntry('Test message', {
         context: { some: 'data' },
-        error: malformedError
+        error: malformedError,
       });
 
       // When error processing fails, should use fallback error entry
@@ -772,9 +790,7 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
       });
 
       expect(result.warnings).toEqual(
-        expect.arrayContaining([
-          expect.stringMatching(/Context truncated from \d+ to 200 bytes/),
-        ])
+        expect.arrayContaining([expect.stringMatching(/Context truncated from \d+ to 200 bytes/)])
       );
       expect(Object.keys(result.entry.context)).not.toHaveLength(20);
     });
@@ -880,8 +896,9 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
 
   describe('Security Vulnerability Testing', () => {
     it('should prevent log injection through message content', () => {
-      const injectionAttempt = 'Valid message\n[FAKE] 2025-01-01 CRITICAL: System compromised\nContinue normal message';
-      
+      const injectionAttempt =
+        'Valid message\n[FAKE] 2025-01-01 CRITICAL: System compromised\nContinue normal message';
+
       const secureLogger = new StructuredLogger({
         sanitizeByDefault: true,
       });
@@ -921,7 +938,7 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
 
     it('should prevent DoS attacks through message length limits', () => {
       const attackPayload = 'A'.repeat(100000); // Very large message
-      
+
       const protectedLogger = new StructuredLogger({
         maxMessageLength: 1000,
       });
@@ -950,9 +967,7 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
       });
 
       expect(result.warnings).toEqual(
-        expect.arrayContaining([
-          expect.stringMatching(/Context truncated from \d+ to 1000 bytes/),
-        ])
+        expect.arrayContaining([expect.stringMatching(/Context truncated from \d+ to 1000 bytes/)])
       );
     });
 
@@ -982,9 +997,11 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
 
       // Create multiple concurrent log entries
       const promises = Array.from({ length: 10 }, (_, i) =>
-        Promise.resolve(concurrentLogger.createLogEntry(`Concurrent message ${i}`, {
-          context: { index: i, timestamp: Date.now() },
-        }))
+        Promise.resolve(
+          concurrentLogger.createLogEntry(`Concurrent message ${i}`, {
+            context: { index: i, timestamp: Date.now() },
+          })
+        )
       );
 
       const results = await Promise.all(promises);
@@ -1012,7 +1029,7 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
 
     it('should have appropriate retention policies', () => {
       const policies = DEFAULT_STRUCTURED_LOGGING_CONFIG.retentionPolicies;
-      
+
       expect(policies[StructuredLogLevel.TRACE]).toBe('7d');
       expect(policies[StructuredLogLevel.DEBUG]).toBe('30d');
       expect(policies[StructuredLogLevel.INFO]).toBe('90d');

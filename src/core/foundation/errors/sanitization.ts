@@ -1,21 +1,21 @@
 /**
  * Enhanced Error Sanitization for Information Disclosure Protection
- * 
+ *
  * This module provides comprehensive error sanitization to prevent sensitive
  * information disclosure in error messages, stack traces, and error context.
  * Implements Task 1.3.1: Information Disclosure Protection requirements.
- * 
+ *
  * @see Task 1.3.1: Information Disclosure Protection
  * @since 1.0.0
  */
 
 /**
  * Configuration interface for error sanitization behavior
- * 
+ *
  * Controls which types of sensitive information should be redacted
  * from error messages and stack traces. Allows fine-grained control
  * over sanitization behavior for different deployment environments.
- * 
+ *
  * @example
  * ```typescript
  * const config: ErrorSanitizationConfig = {
@@ -66,7 +66,7 @@ export interface ErrorSanitizationConfig {
 
 /**
  * Default configuration for error sanitization
- * 
+ *
  * Provides secure defaults that protect against common information
  * disclosure vectors while maintaining debugging capabilities.
  */
@@ -85,12 +85,12 @@ export const DEFAULT_ERROR_SANITIZATION_CONFIG: ErrorSanitizationConfig = {
   stackTraceLevel: 'sanitized', // Default to sanitized for security
   removeSourceMaps: true, // Remove source maps by default for security
   sanitizeModuleNames: true, // Sanitize module names to hide internal structure
-  removeLineNumbers: false // Keep line numbers for debugging (can be overridden per environment)
+  removeLineNumbers: false, // Keep line numbers for debugging (can be overridden per environment)
 };
 
 /**
  * Comprehensive security patterns for sensitive data detection
- * 
+ *
  * Organized by category for maintainability and performance.
  * Each pattern includes both case-sensitive and case-insensitive variants
  * where appropriate to catch various naming conventions.
@@ -172,17 +172,17 @@ const SECURITY_PATTERNS = {
   // File paths that might contain sensitive information
   filePaths: [
     // User directories (must be first to handle before config files)
-    /\/Users\/[^\/\s]+/g,
-    /C:[\\\/]+Users[\\\/]+[^\\\/\s]+/g,
-    /\/home\/[^\/\s]+/g,
+    /\/Users\/[^/\s]+/g,
+    /C:[\\/]+Users[\\/]+[^\\/\s]+/g,
+    /\/home\/[^/\s]+/g,
     // Config and credential files (will only match if not already handled by user dir patterns)
-    /[^\/\\\s]*(?:config|credential|secret|key|token|password)[^\/\\\s]*\.(?:json|yaml|yml|toml|ini|env|conf)/gi,
+    /[^/\\\s]*(?:config|credential|secret|key|token|password)[^/\\\s]*\.(?:json|yaml|yml|toml|ini|env|conf)/gi,
     // Hidden files and directories that might contain secrets
-    /\/\.[^\/\s]*(?:secret|key|token|credential|auth)[^\/\s]*/gi,
-    /[\/\\]\.[^\/\\\s]*(?:secret|key|token|credential|auth)[^\/\\\s]*/gi,
+    /\/\.[^/\s]*(?:secret|key|token|credential|auth)[^/\s]*/gi,
+    /[/\\]\.[^/\\\s]*(?:secret|key|token|credential|auth)[^/\\\s]*/gi,
     // Generic sensitive paths
     /\/(?:etc\/shadow|etc\/passwd|var\/log\/auth\.log)/g,
-    /C:[\/\\]Windows[\/\\]System32[\/\\]config[\/\\]SAM/gi,
+    /C:[/\\]Windows[/\\]System32[/\\]config[/\\]SAM/gi,
   ],
 
   // Network information
@@ -244,26 +244,26 @@ const SECURITY_PATTERNS = {
 
 /**
  * Sanitize error message for production use
- * 
+ *
  * Removes sensitive information based on configuration while preserving
  * enough context for debugging. Implements comprehensive pattern matching
  * to catch various forms of sensitive data disclosure.
- * 
+ *
  * **Security Features:**
  * - DoS Protection: Pre-truncates extremely large messages to prevent regex DoS attacks
  * - Pattern-based sanitization for passwords, API keys, file paths, etc.
  * - Configurable sanitization levels and custom patterns
- * 
+ *
  * @param message - The error message to sanitize
  * @param config - Sanitization configuration options
  * @returns Sanitized message safe for production logging
- * 
+ *
  * @example
  * ```typescript
  * // Basic usage with default config
  * const safe = sanitizeErrorMessage('Connection failed: password=secret123');
  * console.log(safe); // "Connection failed: password=***"
- * 
+ *
  * // Custom configuration
  * const customConfig = {
  *   ...DEFAULT_ERROR_SANITIZATION_CONFIG,
@@ -272,19 +272,19 @@ const SECURITY_PATTERNS = {
  * };
  * const safe2 = sanitizeErrorMessage(errorMsg, customConfig);
  * ```
- * 
+ *
  * @see {@link ErrorSanitizationConfig} for configuration options
  */
 export function sanitizeErrorMessage(
-  message: string, 
+  message: string,
   config: Partial<ErrorSanitizationConfig> = {}
 ): string {
   // Handle null/undefined/empty messages
   if (!message) return '';
-  
+
   // Merge with defaults
   const fullConfig = { ...DEFAULT_ERROR_SANITIZATION_CONFIG, ...config };
-  
+
   // DoS Protection: Pre-truncate extremely large messages to prevent resource exhaustion
   // This is a critical security measure to prevent regex DoS attacks
   let sanitized = message;
@@ -292,17 +292,17 @@ export function sanitizeErrorMessage(
   if (sanitized.length > maxProcessingLength) {
     sanitized = sanitized.substring(0, maxProcessingLength);
   }
-  
+
   // Remove injection patterns first (highest priority)
   for (const pattern of SECURITY_PATTERNS.injectionPatterns) {
     sanitized = sanitized.replace(pattern, '');
   }
-  
+
   // Apply custom patterns first (they can be more specific than built-in patterns)
   for (const pattern of fullConfig.customPatterns) {
     sanitized = sanitized.replace(pattern, '***');
   }
-  
+
   // Apply sanitization based on configuration
   if (fullConfig.redactApiKeys) {
     for (const pattern of SECURITY_PATTERNS.apiKeys) {
@@ -310,9 +310,9 @@ export function sanitizeErrorMessage(
         // Handle complete quoted strings first
         if (/^['"](sk|pk|tok|key|secret)-[a-zA-Z0-9_-]+['"]$/.test(match)) {
           const quote = match[0];
-          return quote + '***' + quote;
+          return `${quote}***${quote}`;
         }
-        
+
         // Handle JSON-style quoted keys
         if (/^['"]\w*[Aa][Pp][Ii][Kk][Ee][Yy]\w*["']:\s*["'][^"']+["']$/.test(match)) {
           // Replace both the key name and the value with ***
@@ -321,31 +321,31 @@ export function sanitizeErrorMessage(
           if (keyQuoteMatch && valueQuoteMatch) {
             const keyQuote = keyQuoteMatch[1];
             const valueQuote = valueQuoteMatch[1];
-            return keyQuote + '***' + keyQuote + ': ' + valueQuote + '***' + valueQuote;
+            return `${keyQuote}***${keyQuote}: ${valueQuote}***${valueQuote}`;
           }
         }
-        
+
         // Handle quoted values in key=value format
         if (match.includes('"') && match.indexOf('"') !== match.lastIndexOf('"')) {
           const firstQuote = match.indexOf('"');
           const beforeQuote = match.substring(0, firstQuote + 1);
-          return beforeQuote + '***"';
+          return `${beforeQuote}***"`;
         }
         if (match.includes("'") && match.indexOf("'") !== match.lastIndexOf("'")) {
           const firstQuote = match.indexOf("'");
           const beforeQuote = match.substring(0, firstQuote + 1);
-          return beforeQuote + "***'";
+          return `${beforeQuote}***'`;
         }
-        
+
         // Preserve the key name but redact the value
         const equalIndex = match.indexOf('=');
         const colonIndex = match.indexOf(':');
         const dashIndex = match.indexOf('-');
-        
+
         // Find the first separator that exists
         let separatorIndex = -1;
         let separator = '=';
-        
+
         if (equalIndex !== -1) {
           separatorIndex = equalIndex;
           separator = '=';
@@ -356,32 +356,32 @@ export function sanitizeErrorMessage(
           separatorIndex = dashIndex;
           separator = '='; // Standardize to = for output
         }
-        
+
         if (separatorIndex !== -1) {
           const keyPart = match.substring(0, separatorIndex);
-          return keyPart + separator + '***';
+          return `${keyPart + separator}***`;
         }
         return '***';
       });
     }
   }
-  
+
   if (fullConfig.redactPasswords) {
     for (const pattern of SECURITY_PATTERNS.passwords) {
       sanitized = sanitized.replace(pattern, (match) => {
         const equalIndex = match.indexOf('=');
         const colonIndex = match.indexOf(':');
         const separatorIndex = equalIndex !== -1 ? equalIndex : colonIndex;
-        
+
         if (separatorIndex !== -1) {
           const keyPart = match.substring(0, separatorIndex);
-          return keyPart + '=***';
+          return `${keyPart}=***`;
         }
         return '***';
       });
     }
   }
-  
+
   if (fullConfig.redactDatabaseUrls) {
     for (const pattern of SECURITY_PATTERNS.databaseUrls) {
       sanitized = sanitized.replace(pattern, (match) => {
@@ -389,68 +389,69 @@ export function sanitizeErrorMessage(
         if (match.includes('://')) {
           const protocolEnd = match.indexOf('://');
           const protocol = match.substring(0, protocolEnd + 3);
-          return protocol + '***@***';
+          return `${protocol}***@***`;
         }
         // For other patterns, use standard redaction
         const equalIndex = match.indexOf('=');
         const colonIndex = match.indexOf(':');
         const separatorIndex = equalIndex !== -1 ? equalIndex : colonIndex;
-        
+
         if (separatorIndex !== -1) {
           const keyPart = match.substring(0, separatorIndex);
-          return keyPart + '=***';
+          return `${keyPart}=***`;
         }
         return '***';
       });
     }
   }
-  
+
   if (fullConfig.redactFilePaths) {
     // Apply user directory patterns first - replace usernames but preserve rest of path
     sanitized = sanitized
-      .replace(/\/Users\/[^\/\s]+/g, '/Users/***')
-      .replace(/C:[\\\/]+Users[\\\/]+[^\\\/\s]+/g, (match) => {
+      .replace(/\/Users\/[^/\s]+/g, '/Users/***')
+      .replace(/C:[\\/]+Users[\\/]+[^\\/\s]+/g, (match) => {
         // Preserve the original path separators
-        const separators = match.match(/[\\\/]+/g);
+        const separators = match.match(/[\\/]+/g);
         if (separators && separators.length >= 2) {
-          const driveAndUsers = 'C:' + separators[0] + 'Users' + separators[1];
-          return driveAndUsers + '***';
+          const driveAndUsers = `C:${separators[0]}Users${separators[1]}`;
+          return `${driveAndUsers}***`;
         }
         return 'C:\\Users\\***'; // Fallback
       })
-      .replace(/\/home\/[^\/\s]+/g, '/home/***');
-    
+      .replace(/\/home\/[^/\s]+/g, '/home/***');
+
     // Apply other file path patterns only to files not in user directories
     const otherFilePatterns = SECURITY_PATTERNS.filePaths.slice(3); // Skip user dir patterns
-    
+
     for (const pattern of otherFilePatterns) {
       sanitized = sanitized.replace(pattern, (match, offset, string) => {
         // Check if this match is within a user directory that was already sanitized
         const beforeMatch = string.substring(0, offset);
-        const isInUserDir = beforeMatch.includes('Users\\***') || 
-                           beforeMatch.includes('Users/***') || 
-                           beforeMatch.includes('home/***');
-        
+        const isInUserDir =
+          beforeMatch.includes('Users\\***') ||
+          beforeMatch.includes('Users/***') ||
+          beforeMatch.includes('home/***');
+
         if (isInUserDir) {
           return match; // Don't modify if in user directory
         }
-        
+
         // For config files and sensitive filenames in other locations
         if (match.includes('.')) {
           // If it's a full path, preserve directory structure
           if (match.includes('/') || match.includes('\\')) {
-            return match.replace(/\/[^\/]+\//, '/***/');
+            return match.replace(/\/[^/]+\//, '/***/');
           } else {
             // For just filenames, replace with generic filename
             const extension = match.substring(match.lastIndexOf('.'));
-            return '***' + extension;
+            return `***${extension}`;
           }
         }
         return '***';
       });
     }
   }
-  
+
   if (fullConfig.redactNetworkInfo) {
     for (const pattern of SECURITY_PATTERNS.networkInfo) {
       sanitized = sanitized.replace(pattern, (match) => {
@@ -459,25 +460,32 @@ export function sanitizeErrorMessage(
         } else if (match.includes(':') && /:\d+/.test(match)) {
           // Port number - replace just the port part
           return match.replace(/:\d+/, ':***');
-        } else if (match.toLowerCase().includes('port') || match.toLowerCase().includes('host') || match.toLowerCase().includes('server')) {
+        } else if (
+          match.toLowerCase().includes('port') ||
+          match.toLowerCase().includes('host') ||
+          match.toLowerCase().includes('server')
+        ) {
           const equalIndex = match.indexOf('=');
           const colonIndex = match.indexOf(':');
           const separatorIndex = equalIndex !== -1 ? equalIndex : colonIndex;
-          
+
           if (separatorIndex !== -1) {
             const keyPart = match.substring(0, separatorIndex);
-            return keyPart + '=***';
+            return `${keyPart}=***`;
           }
         }
         return '***';
       });
     }
   }
-  
+
   if (fullConfig.redactPersonalInfo) {
     for (const pattern of SECURITY_PATTERNS.personalInfo) {
       sanitized = sanitized.replace(pattern, (match) => {
-        if (match.includes('@') && /[a-zA-Z0-9._%+-]+@(?:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|localhost)/.test(match)) {
+        if (
+          match.includes('@') &&
+          /[a-zA-Z0-9._%+-]+@(?:[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|localhost)/.test(match)
+        ) {
           return '***@***.***'; // Email (including localhost)
         } else if (/\b(?:\d{4}[\s-]?){3}\d{4}\b/.test(match)) {
           return '****-****-****-****'; // Credit card
@@ -486,21 +494,21 @@ export function sanitizeErrorMessage(
         } else if (/\b\d{9}\b/.test(match)) {
           return '***-**-****'; // SSN without dashes
         }
-        
+
         // Generic pattern with separator
         const equalIndex = match.indexOf('=');
         const colonIndex = match.indexOf(':');
         const separatorIndex = equalIndex !== -1 ? equalIndex : colonIndex;
-        
+
         if (separatorIndex !== -1) {
           const keyPart = match.substring(0, separatorIndex);
-          return keyPart + '=***';
+          return `${keyPart}=***`;
         }
         return '***';
       });
     }
   }
-  
+
   // Apply length limits FIRST to prevent DoS attacks via large messages
   const truncationSuffix = '... [truncated for security]';
   if (message.length > fullConfig.maxMessageLength * 2) {
@@ -509,10 +517,12 @@ export function sanitizeErrorMessage(
     const earlyTruncateLength = fullConfig.maxMessageLength * 2;
     sanitized = sanitized.substring(0, earlyTruncateLength);
   }
-  
+
   // Final truncation after sanitization (for normal-sized messages or post-early-truncation)
   if (sanitized.length > fullConfig.maxMessageLength) {
-    sanitized = sanitized.substring(0, fullConfig.maxMessageLength - truncationSuffix.length) + truncationSuffix;
+    sanitized =
+      sanitized.substring(0, fullConfig.maxMessageLength - truncationSuffix.length) +
+      truncationSuffix;
   }
 
   return sanitized;
@@ -520,52 +530,60 @@ export function sanitizeErrorMessage(
 
 /**
  * Sanitize stack trace for production use
- * 
+ *
  * Removes sensitive file paths and limits stack depth while preserving
  * enough information for debugging. Provides different levels of sanitization
  * based on environment configuration.
- * 
+ *
  * @param stack - The stack trace string to sanitize
  * @param config - Sanitization configuration options
  * @returns Sanitized stack trace safe for production logging
- * 
+ *
  * @example
  * ```typescript
  * const error = new Error('Something went wrong');
  * const safeStack = sanitizeStackTrace(error.stack);
- * 
+ *
  * // In production, this might return empty string for security
  * // In development, returns sanitized paths with limited depth
  * ```
  */
 export function sanitizeStackTrace(
-  stack: string, 
+  stack: string,
   config: Partial<ErrorSanitizationConfig> = {}
 ): string {
   if (!stack) return stack;
-  
+
   // Security: Prevent DoS attacks via extremely large stack traces
   const MAX_STACK_SIZE = 50000; // 50KB limit
   if (stack.length > MAX_STACK_SIZE) {
     const truncated = stack.substring(0, MAX_STACK_SIZE);
-    console.warn(`Stack trace truncated from ${stack.length} to ${MAX_STACK_SIZE} chars for security`);
-    return truncated + '\n... [Stack trace truncated for security]';
+    console.warn(
+      `Stack trace truncated from ${stack.length} to ${MAX_STACK_SIZE} chars for security`
+    );
+    return `${truncated}\n... [Stack trace truncated for security]`;
   }
-  
+
   // Merge with defaults and validate configuration
   const fullConfig = { ...DEFAULT_ERROR_SANITIZATION_CONFIG, ...config };
-  
+
   // Security: Validate configuration values to prevent exploitation
-  if (fullConfig.maxStackDepth && (fullConfig.maxStackDepth < 1 || fullConfig.maxStackDepth > 1000)) {
+  if (
+    fullConfig.maxStackDepth &&
+    (fullConfig.maxStackDepth < 1 || fullConfig.maxStackDepth > 1000)
+  ) {
     console.warn('Invalid maxStackDepth, using default: 20');
     fullConfig.maxStackDepth = 20;
   }
-  
-  if (fullConfig.maxMessageLength && (fullConfig.maxMessageLength < 10 || fullConfig.maxMessageLength > 100000)) {
+
+  if (
+    fullConfig.maxMessageLength &&
+    (fullConfig.maxMessageLength < 10 || fullConfig.maxMessageLength > 100000)
+  ) {
     console.warn('Invalid maxMessageLength, using default: 500');
     fullConfig.maxMessageLength = 500;
   }
-  
+
   // Handle different stack trace levels
   switch (fullConfig.stackTraceLevel) {
     case 'none':
@@ -585,31 +603,28 @@ export function sanitizeStackTrace(
  * Minimal stack trace sanitization - removes most information, keeps error location only
  * @private
  */
-function _sanitizeStackMinimal(
-  stack: string, 
-  config: ErrorSanitizationConfig
-): string {
+function _sanitizeStackMinimal(stack: string, config: ErrorSanitizationConfig): string {
   const lines = stack.split('\n');
   if (lines.length === 0) return stack;
-  
+
   // Keep only the first line (error message) and first stack frame
   const errorLine = lines[0] || '';
-  const firstFrame = lines.find(line => line.trim().startsWith('at ')) || '';
-  
+  const firstFrame = lines.find((line) => line.trim().startsWith('at ')) || '';
+
   if (!firstFrame) return errorLine;
-  
+
   // Sanitize the first frame heavily - use bounded patterns to prevent ReDoS
   let sanitizedFrame = firstFrame
-    .replace(/\/[^\/]{1,50}\//g, '/')  // Remove path components safely
-    .replace(/C:\\[^\\]{1,50}\\/g, 'C:\\')  // Remove Windows path components safely  
-    .replace(/:\d{1,6}:\d{1,6}/g, '')  // Remove line:column numbers with bounds
-    .replace(/\([^)]{0,200}node_modules[^)]{0,200}\)/g, '(node_modules)')  // Bound node_modules patterns
-    .replace(/\([^)\/]{0,100}\/[^)]{0,100}\)/g, '(internal)');  // Bound other path patterns
-  
+    .replace(/\/[^/]{1,50}\//g, '/') // Remove path components safely
+    .replace(/C:\\[^\\]{1,50}\\/g, 'C:\\') // Remove Windows path components safely
+    .replace(/:\d{1,6}:\d{1,6}/g, '') // Remove line:column numbers with bounds
+    .replace(/\([^)]{0,200}node_modules[^)]{0,200}\)/g, '(node_modules)') // Bound node_modules patterns
+    .replace(/\([^)/]{0,100}\/[^)]{0,100}\)/g, '(internal)'); // Bound other path patterns
+
   if (config.removeLineNumbers) {
     sanitizedFrame = sanitizedFrame.replace(/:\d+/g, '');
   }
-  
+
   return `${errorLine}\n${sanitizedFrame}`;
 }
 
@@ -617,21 +632,18 @@ function _sanitizeStackMinimal(
  * Standard sanitized stack trace - removes sensitive paths but keeps structure
  * @private
  */
-function _sanitizeStackSanitized(
-  stack: string, 
-  config: ErrorSanitizationConfig
-): string {
+function _sanitizeStackSanitized(stack: string, config: ErrorSanitizationConfig): string {
   let sanitizedStack = stack;
-  
+
   // Memory protection: Split processing for very large stacks
   if (stack.length > 10000) {
     const chunks = [];
     for (let i = 0; i < stack.length; i += 5000) {
       chunks.push(stack.substring(i, i + 5000));
     }
-    sanitizedStack = chunks.map(chunk => _processSanitizationChunk(chunk, config)).join('');
+    sanitizedStack = chunks.map((chunk) => _processSanitizationChunk(chunk, config)).join('');
   }
-  
+
   // Remove source map references for security
   if (config.removeSourceMaps) {
     sanitizedStack = sanitizedStack
@@ -640,32 +652,34 @@ function _sanitizeStackSanitized(
       .replace(/\.js\.map/g, '.js')
       .replace(/\.ts\.map/g, '.ts');
   }
-  
+
   // Apply file path sanitization if configured - use secure string processing
   if (config.redactFilePaths) {
     // Use aggressive sanitization to block all path disclosure attempts
     sanitizedStack = _sanitizePaths(sanitizedStack);
   }
-  
+
   // Sanitize module names that might reveal internal structure
   if (config.sanitizeModuleNames) {
     sanitizedStack = sanitizedStack
-      .replace(/(@[^\/]+\/[^\/\s\n)]+)/g, '@***/***')  // Scoped packages
-      .replace(/(internal\/[^\/\s\n)]+)/g, 'internal/***')  // Internal modules
-      .replace(/(lib\/[^\/\s\n)]+)/g, 'lib/***')  // Library paths
-      .replace(/(src\/[^\/\s\n)]+)/g, 'src/***');  // Source paths
+      .replace(/(@[^/]+\/[^/\s\n)]+)/g, '@***/***') // Scoped packages
+      .replace(/(internal\/[^/\s\n)]+)/g, 'internal/***') // Internal modules
+      .replace(/(lib\/[^/\s\n)]+)/g, 'lib/***') // Library paths
+      .replace(/(src\/[^/\s\n)]+)/g, 'src/***'); // Source paths
   }
-  
+
   // Remove line and column numbers if configured
   if (config.removeLineNumbers) {
     sanitizedStack = sanitizedStack.replace(/:\d+:\d+/g, '');
   }
-  
+
   // Limit stack depth
   const lines = sanitizedStack.split('\n');
   if (lines.length > config.maxStackDepth) {
-    return lines.slice(0, config.maxStackDepth).join('\n') + 
-           `\n... [${lines.length - config.maxStackDepth} more frames hidden for security]`;
+    return (
+      lines.slice(0, config.maxStackDepth).join('\n') +
+      `\n... [${lines.length - config.maxStackDepth} more frames hidden for security]`
+    );
   }
   return sanitizedStack;
 }
@@ -679,28 +693,28 @@ function _sanitizeStackSanitized(
  */
 /**
  * Sanitizes file paths in stack traces to prevent information disclosure
- * 
+ *
  * Implements comprehensive path sanitization following SOLID principles by breaking
  * down the sanitization process into focused, single-responsibility functions.
  * Each step handles a specific category of path patterns to prevent information
  * leakage while maintaining stack trace readability for debugging.
- * 
+ *
  * @param stack - The stack trace string to sanitize
  * @returns Sanitized stack trace with sensitive paths redacted
- * 
+ *
  * @example
  * ```typescript
  * const unsafeStack = "Error: Test\\n  at /Users/admin/secret/file.js:10:5";
  * const safe = _sanitizePaths(unsafeStack);
  * // Result: "Error: Test\\n  at /Users/***"
  * ```
- * 
+ *
  * @security Prevents disclosure of user directories, system paths, and sensitive files
  * @internal This is a private function used by sanitizeStackTrace
  */
 function _sanitizePaths(stack: string): string {
   let sanitized = stack;
-  
+
   // Apply sanitization steps in logical order
   sanitized = _sanitizeControlCharacters(sanitized);
   sanitized = _sanitizeNodeModulesPaths(sanitized);
@@ -712,28 +726,28 @@ function _sanitizePaths(stack: string): string {
   sanitized = _sanitizeSensitiveFiles(sanitized);
   sanitized = _sanitizeBuildDirectories(sanitized);
   sanitized = _cleanupRepeatingCharacters(sanitized);
-  
+
   return sanitized;
 }
 
 /**
  * Removes control characters while preserving essential formatting
- * 
+ *
  * Follows Single Responsibility Principle by focusing solely on control character
  * sanitization. Removes potentially dangerous control characters that could be used
  * for terminal manipulation attacks while preserving newlines and tabs needed for
  * proper stack trace formatting.
- * 
+ *
  * @param input - The input string to sanitize
  * @returns String with control characters removed, preserving newlines and tabs
- * 
+ *
  * @example
  * ```typescript
  * const malicious = "Error\x07\x1B[31m malicious content";
  * const safe = _sanitizeControlCharacters(malicious);
  * // Result: "Error malicious content" (bell and ANSI escape removed)
  * ```
- * 
+ *
  * @security Prevents terminal manipulation via control character injection
  * @internal Private helper function for path sanitization
  */
@@ -748,18 +762,27 @@ function _sanitizeControlCharacters(input: string): string {
  */
 function _sanitizeNodeModulesPaths(input: string): string {
   let result = input;
-  
+
   // Handle node_modules paths first to ensure consistent formatting
   // Pattern 1: Full path with subdirectories
-  result = result.replace(/[^\/\n\r\t \(\)]*\/[^\/\n\r\t \(\)]*\/[^\/\n\r\t \(\)]*\/node_modules\/([^\\\/\n\r\t \)]+)\/+([^\\\/\n\r\t \)]+)/g, 'node_modules/$1/$2');
-  
+  result = result.replace(
+    /[^/\n\r\t ()]*\/[^/\n\r\t ()]*\/[^/\n\r\t ()]*\/node_modules\/([^\\/\n\r\t )]+)\/+([^\\/\n\r\t )]+)/g,
+    'node_modules/$1/$2'
+  );
+
   // Pattern 2: Simple path with node_modules
-  result = result.replace(/[^\/\n\r\t \(\)]*\/[^\/\n\r\t \(\)]*\/node_modules\/([^\\\/\n\r\t \)]+)/g, 'node_modules/$1/');
-  
+  result = result.replace(
+    /[^/\n\r\t ()]*\/[^/\n\r\t ()]*\/node_modules\/([^\\/\n\r\t )]+)/g,
+    'node_modules/$1/'
+  );
+
   // Pattern 3: Windows style paths
-  result = result.replace(/C:\\[^\\]*\\[^\\]*\\node_modules\\([^\\\/\n\r\t \)]+)\\([^\\\/\n\r\t \)]+)/g, 'node_modules/$1/$2');
-  result = result.replace(/C:\\[^\\]*\\node_modules\\([^\\\/\n\r\t \)]+)/g, 'node_modules/$1/');
-  
+  result = result.replace(
+    /C:\\[^\\]*\\[^\\]*\\node_modules\\([^\\/\n\r\t )]+)\\([^\\/\n\r\t )]+)/g,
+    'node_modules/$1/$2'
+  );
+  result = result.replace(/C:\\[^\\]*\\node_modules\\([^\\/\n\r\t )]+)/g, 'node_modules/$1/');
+
   return result;
 }
 
@@ -776,32 +799,32 @@ function _sanitizePathTraversal(input: string): string {
 
 /**
  * Sanitizes user directory paths with cross-platform support
- * 
+ *
  * Handles mixed path separators and Windows-specific patterns to prevent
  * disclosure of sensitive user directory information. Processes Windows
  * backslash patterns first (most specific) then handles mixed separator
  * attack patterns that combine forward and backward slashes.
- * 
+ *
  * @param input - The input string containing potential user directory paths
  * @returns String with user directory paths sanitized to generic patterns
- * 
+ *
  * @example
  * ```typescript
  * const paths = "at C:\\Users\\administrator\\secrets\\file.js:10";
  * const safe = _sanitizeUserDirectories(paths);
  * // Result: "at C:\\Users\\***"
  * ```
- * 
+ *
  * @security Prevents disclosure of usernames and user directory structures
  * @internal Private helper for comprehensive path sanitization
  */
 function _sanitizeUserDirectories(input: string): string {
   let result = input;
-  
+
   // Unix-style user paths
-  result = result.replace(/\/Users\/[^\/\n\r\t \)\:]+/g, '/Users/***');
-  result = result.replace(/\/home\/[^\/\n\r\t \)\:]+/g, '/home/***');
-  
+  result = result.replace(/\/Users\/[^/\n\r\t ):]+/g, '/Users/***');
+  result = result.replace(/\/home\/[^/\n\r\t ):]+/g, '/home/***');
+
   // Pure Windows backslash patterns first (most specific to least specific)
   // This preserves the expected C:\Users\*** format
   const windowsUserPatterns = [
@@ -809,17 +832,17 @@ function _sanitizeUserDirectories(input: string): string {
     /C:\\Users\\[^\\*\n\r]+\\[^\\\n\r]*\\[^\\\n\r]*\\[^\\\n\r]*\\[^\\\n\r]*/g,
     /C:\\Users\\[^\\*\n\r]+\\[^\\\n\r]*\\[^\\\n\r]*/g,
     /C:\\Users\\[^\\*\n\r]+\\[^\\\n\r]*/g,
-    /C:\\Users\\[^\\*\n\r]+$/gm
+    /C:\\Users\\[^\\*\n\r]+$/gm,
   ];
-  
-  windowsUserPatterns.forEach(pattern => {
+
+  windowsUserPatterns.forEach((pattern) => {
     result = result.replace(pattern, 'C:\\Users\\***');
   });
-  
+
   // Mixed path separator patterns (e.g., C:/Users\\admin/) handled after pure Windows paths
   // This catches any remaining mixed patterns
-  result = result.replace(/C:[\\/]Users[\\/\\]+[^\/\\\n\r\t \)\:*]+[\\/]/g, 'C:\\Users\\***');
-  
+  result = result.replace(/C:[\\/]Users[\\/\\]+[^/\\\n\r\t ):*]+[\\/]/g, 'C:\\Users\\***');
+
   return result;
 }
 
@@ -829,8 +852,16 @@ function _sanitizeUserDirectories(input: string): string {
  */
 function _sanitizeSystemDirectories(input: string): string {
   const systemPaths = [
-    '/etc/', '/root/', '/opt/', '/var/', '/usr/', '/bin/', '/sbin/',
-    'C:\\Windows\\', 'C:\\Program Files\\', 'C:\\ProgramData\\'
+    '/etc/',
+    '/root/',
+    '/opt/',
+    '/var/',
+    '/usr/',
+    '/bin/',
+    '/sbin/',
+    'C:\\Windows\\',
+    'C:\\Program Files\\',
+    'C:\\ProgramData\\',
   ];
 
   return _sanitizePathList(input, systemPaths, (line) => {
@@ -844,106 +875,110 @@ function _sanitizeSystemDirectories(input: string): string {
  * Conservative approach to avoid breaking legitimate stack traces
  */
 function _sanitizeProjectDirectories(input: string): string {
-  const projectPaths = [
-    '/workspace/', '/project/', '/src/', '/dist/', '/build/'
-  ];
-  
+  const projectPaths = ['/workspace/', '/project/', '/src/', '/dist/', '/build/'];
+
   let result = input;
-  
-  projectPaths.forEach(path => {
+
+  projectPaths.forEach((path) => {
     if (result.includes(path)) {
-      const regex = new RegExp(path.replace(/[\\\/]/g, '[\\\\/]') + '[^\\\\/\\n\\r\\t \\)]*', 'gi');
-      result = result.replace(regex, path + '***');
+      const regex = new RegExp(`${path.replace(/[\\/]/g, '[\\\\/]')}[^\\\\/\\n\\r\\t \\)]*`, 'gi');
+      result = result.replace(regex, `${path}***`);
     }
   });
-  
+
   // Handle complex workspace patterns
-  result = result.replace(/\/mnt\/[^\/\n\r\t \)\:]+\/[^\/\n\r\t \)\:]+/g, '/mnt/***/***');
-  
+  result = result.replace(/\/mnt\/[^/\n\r\t ):]+\/[^/\n\r\t ):]+/g, '/mnt/***/***');
+
   return result;
 }
 
 /**
  * Sanitizes Windows UNC paths and device paths with comprehensive security
- * 
+ *
  * Handles device name sanitization and dangerous device blocking to prevent
  * access to sensitive Windows system resources. Processes UNC paths, device
  * paths, and dangerous device names that could expose system internals.
- * 
+ *
  * @param input - The input string containing potential UNC/device paths
  * @returns String with UNC and device paths sanitized
- * 
+ *
  * @example
  * ```typescript
  * const dangerous = "at \\\\.\\GLOBALROOT\\Device\\PhysicalDrive0";
  * const safe = _sanitizeUncAndDevicePaths(dangerous);
  * // Result: "at \\\\.\\[DEVICE]"
  * ```
- * 
+ *
  * @security Prevents access to Windows device paths and network shares
  * @internal Private helper for Windows-specific path sanitization
  */
 function _sanitizeUncAndDevicePaths(input: string): string {
   let result = input;
-  
+
   // UNC and device path patterns
-  result = result.replace(/\\\\[^\\\/\n\r\t ]+\\[^\\\/\n\r\t ]*/g, '\\\\[SERVER]\\[SHARE]');
+  result = result.replace(/\\\\[^\\/\n\r\t ]+\\[^\\/\n\r\t ]*/g, '\\\\[SERVER]\\[SHARE]');
   result = result.replace(/\\\\\?\\/g, '\\\\[DEVICE]\\');
-  result = result.replace(/\\\\\.\\[^\\\/\n\r\t ]*/g, '\\\\.\\[DEVICE]');
-  
+  result = result.replace(/\\\\\.\\[^\\/\n\r\t ]*/g, '\\\\.\\[DEVICE]');
+
   // Dangerous device name sanitization
   const dangerousDevices = ['PhysicalDrive0', 'GLOBALROOT', 'Device', 'CON', 'PRN', 'AUX', 'NUL'];
   result = _sanitizeDangerousDeviceNames(result, dangerousDevices);
-  
+
   // Drive roots and Unix device paths
   result = result.replace(/[A-Z]:\\$/gm, '[DRIVE]:\\');
-  result = result.replace(/\/dev\/[^\/\n\r\t ]*/g, '/dev/[DEVICE]');
-  
+  result = result.replace(/\/dev\/[^/\n\r\t ]*/g, '/dev/[DEVICE]');
+
   return result;
 }
 
 /**
  * Sanitizes dangerous Windows device names with multiple pattern matching
- * 
+ *
  * Implements comprehensive device name blocking using multiple pattern matching
  * strategies to catch device names in various contexts (UNC paths, standalone
  * references, drive patterns). Helps prevent exposure of sensitive Windows
  * system devices and hardware identifiers.
- * 
+ *
  * @param input - The input string to scan for dangerous device names
  * @param devices - Array of dangerous device names to sanitize
  * @returns String with dangerous device names replaced with generic placeholders
- * 
+ *
  * @example
  * ```typescript
  * const dangerous = "Error at PhysicalDrive0: Access denied";
  * const safe = _sanitizeDangerousDeviceNames(dangerous, ['PhysicalDrive0']);
  * // Result: "Error at [DEVICE]: Access denied"
  * ```
- * 
+ *
  * @security Prevents disclosure of hardware device names and system identifiers
  * @internal Private helper implementing DRY principle for device name sanitization
  */
 function _sanitizeDangerousDeviceNames(input: string, devices: string[]): string {
   let result = input;
-  
-  devices.forEach(device => {
+
+  devices.forEach((device) => {
     const patterns = [
       // Device names in UNC paths (pre-processing)
-      { regex: new RegExp(`\\\\\\\\[^\\\\]*\\\\${device}\\b`, 'gi'), replacement: '\\\\[SERVER]\\[DEVICE]' },
+      {
+        regex: new RegExp(`\\\\\\\\[^\\\\]*\\\\${device}\\b`, 'gi'),
+        replacement: '\\\\[SERVER]\\[DEVICE]',
+      },
       // Device names after UNC processing
-      { regex: new RegExp(`\\\\\\\\\\[SERVER\\]\\\\\\[SHARE\\]\\\\${device}\\b`, 'gi'), replacement: '\\\\[SERVER]\\[SHARE]\\[DEVICE]' },
+      {
+        regex: new RegExp(`\\\\\\\\\\[SERVER\\]\\\\\\[SHARE\\]\\\\${device}\\b`, 'gi'),
+        replacement: '\\\\[SERVER]\\[SHARE]\\[DEVICE]',
+      },
       // Standalone device references
       { regex: new RegExp(`\\b${device}\\b`, 'gi'), replacement: '[DEVICE]' },
       // Device colon patterns (e.g., PhysicalDrive0:)
-      { regex: new RegExp(`\\b${device}:`, 'gi'), replacement: '[DEVICE]:' }
+      { regex: new RegExp(`\\b${device}:`, 'gi'), replacement: '[DEVICE]:' },
     ];
-    
+
     patterns.forEach(({ regex, replacement }) => {
       result = result.replace(regex, replacement);
     });
   });
-  
+
   return result;
 }
 
@@ -954,12 +989,12 @@ function _sanitizeDangerousDeviceNames(input: string, devices: string[]): string
 function _sanitizeSensitiveFiles(input: string): string {
   const sensitiveFiles = ['passwd', 'shadow', 'hosts', 'secrets.txt', '.env', '.ssh'];
   let result = input;
-  
-  sensitiveFiles.forEach(file => {
+
+  sensitiveFiles.forEach((file) => {
     const fileRegex = new RegExp(file.replace('.', '\\.'), 'gi');
     result = result.replace(fileRegex, '[REDACTED]');
   });
-  
+
   return result;
 }
 
@@ -968,7 +1003,7 @@ function _sanitizeSensitiveFiles(input: string): string {
  * Focused helper for build-specific path handling
  */
 function _sanitizeBuildDirectories(input: string): string {
-  return input.replace(/[\\/](dist|build|out)[\\/][^\\\/\n\r\t \)\:]*/g, '/$1/***');
+  return input.replace(/[\\/](dist|build|out)[\\/][^\\/\n\r\t ):]*/g, '/$1/***');
 }
 
 /**
@@ -981,69 +1016,69 @@ function _cleanupRepeatingCharacters(input: string): string {
 
 /**
  * Generic helper for sanitizing path lists with optional filtering
- * 
+ *
  * Implements DRY principle for path list processing by providing a reusable
  * function that can handle different types of path sanitization with optional
  * line-level filtering. Supports both simple global replacement and complex
  * line-by-line processing with custom filter functions.
- * 
+ *
  * @param input - The input string to sanitize
  * @param paths - Array of path patterns to sanitize
  * @param shouldProcess - Optional filter function for line-level processing
  * @returns String with specified paths sanitized according to the configuration
- * 
+ *
  * @example
  * ```typescript
  * const text = "Error at /etc/passwd\\n  at /node_modules/pkg/index.js";
  * const safe = _sanitizePathList(text, ['/etc/'], (line) => !line.includes('node_modules'));
  * // Result: "Error at /etc/***\\n  at /node_modules/pkg/index.js" (node_modules preserved)
  * ```
- * 
+ *
  * @security Provides flexible path sanitization with preservation of legitimate paths
  * @internal Private helper implementing DRY principle for path processing
  */
 function _sanitizePathList(
-  input: string, 
-  paths: string[], 
+  input: string,
+  paths: string[],
   shouldProcess?: (line: string) => boolean
 ): string {
   let result = input;
-  
-  paths.forEach(path => {
+
+  paths.forEach((path) => {
     if (result.includes(path)) {
       if (shouldProcess) {
         // Line-by-line processing with filtering
         const lines = result.split('\n');
-        const processedLines = lines.map(line => {
+        const processedLines = lines.map((line) => {
           if (!shouldProcess(line)) {
             return line; // Skip processing for filtered lines
           }
-          const regex = new RegExp(path.replace(/[\\\/]/g, '[\\\\/]') + '[^\\\\/\\n\\r\\t ]*', 'gi');
-          return line.replace(regex, path + '***');
+          const regex = new RegExp(`${path.replace(/[\\/]/g, '[\\\\/]')}[^\\\\/\\n\\r\\t ]*`, 'gi');
+          return line.replace(regex, `${path}***`);
         });
         result = processedLines.join('\n');
       } else {
         // Simple global replacement
-        const regex = new RegExp(path.replace(/[\\\/]/g, '[\\\\/]') + '[^\\\\/\\n\\r\\t ]*', 'gi');
-        result = result.replace(regex, path + '***');
+        const regex = new RegExp(`${path.replace(/[\\/]/g, '[\\\\/]')}[^\\\\/\\n\\r\\t ]*`, 'gi');
+        result = result.replace(regex, `${path}***`);
       }
     }
   });
-  
+
   return result;
 }
 
 function _processSanitizationChunk(chunk: string, config: ErrorSanitizationConfig): string {
   let processedChunk = chunk;
-  
+
   // Apply basic path sanitization only to prevent ReDoS on chunks
   if (config.redactFilePaths) {
     processedChunk = processedChunk
-      .replace(/\/Users\/[^\/\s]{1,50}/g, '/Users/***')
+      .replace(/\/Users\/[^/\s]{1,50}/g, '/Users/***')
       .replace(/C:\\Users\\[^\\]{1,50}/g, 'C:\\Users\\***')
-      .replace(/\/home\/[^\/\s]{1,50}/g, '/home/***');
+      .replace(/\/home\/[^/\s]{1,50}/g, '/home/***');
   }
-  
+
   return processedChunk;
 }
 
@@ -1051,88 +1086,87 @@ function _processSanitizationChunk(chunk: string, config: ErrorSanitizationConfi
  * Full stack trace with minimal sanitization - for development environments
  * @private
  */
-function _sanitizeStackFull(
-  stack: string, 
-  config: ErrorSanitizationConfig
-): string {
+function _sanitizeStackFull(stack: string, config: ErrorSanitizationConfig): string {
   let sanitizedStack = stack;
-  
+
   // Even in full mode, we may want to remove source maps for security
   if (config.removeSourceMaps) {
     sanitizedStack = sanitizedStack
       .replace(/\/\/# sourceMappingURL=.*/g, '')
       .replace(/\/\*# sourceMappingURL=.*\*\//g, '');
   }
-  
+
   // Apply minimal path sanitization only if specifically requested
   if (config.redactFilePaths) {
     sanitizedStack = sanitizedStack
       // Only sanitize very sensitive paths, keep most for debugging
-      .replace(/\/Users\/[^\/\s]+\/\.ssh/g, '/Users/***/[hidden]')
-      .replace(/\/home\/[^\/\s]+\/\.ssh/g, '/home/***/[hidden]')
-      .replace(/\.env\b/g, '[env-file]')  // Hide .env file references
+      .replace(/\/Users\/[^/\s]+\/\.ssh/g, '/Users/***/[hidden]')
+      .replace(/\/home\/[^/\s]+\/\.ssh/g, '/home/***/[hidden]')
+      .replace(/\.env\b/g, '[env-file]') // Hide .env file references
       .replace(/password|secret|key|token/gi, (match) => `[${match.toLowerCase()}]`);
   }
-  
+
   // Still respect stack depth limits even in full mode
   const lines = sanitizedStack.split('\n');
   if (lines.length > config.maxStackDepth) {
-    return lines.slice(0, config.maxStackDepth).join('\n') + 
-           `\n... [${lines.length - config.maxStackDepth} more frames, use higher maxStackDepth for full trace]`;
+    return (
+      lines.slice(0, config.maxStackDepth).join('\n') +
+      `\n... [${lines.length - config.maxStackDepth} more frames, use higher maxStackDepth for full trace]`
+    );
   }
-  
+
   return sanitizedStack;
 }
 
 /**
  * Sanitize complete error object for production use
- * 
+ *
  * Creates a sanitized copy of an Error object with sensitive information
  * removed from message, stack trace, and any custom properties. Preserves
  * error type and code information for debugging while protecting sensitive data.
- * 
+ *
  * @param error - The error object to sanitize
  * @param config - Sanitization configuration options
  * @returns New Error object with sanitized properties
- * 
+ *
  * @example
  * ```typescript
  * const originalError = new Error('Database connection failed: password=secret123');
  * originalError.stack = 'Error: Database connection failed...\n    at /home/user/.config/app/db.js:15';
- * 
+ *
  * const safeError = sanitizeErrorForProduction(originalError, {
  *   redactPasswords: true,
  *   redactFilePaths: true
  * });
- * 
+ *
  * console.log(safeError.message); // "Database connection failed: password=***"
  * console.log(safeError.stack);   // Sanitized stack without sensitive paths
  * ```
- * 
+ *
  * @see {@link ErrorSanitizationConfig} for configuration options
  */
 export function sanitizeErrorForProduction(
-  error: Error, 
+  error: Error,
   config: Partial<ErrorSanitizationConfig> = {}
 ): Error {
   // Handle null/undefined errors
   if (!error) return new Error('Unknown error occurred');
-  
+
   // Merge with defaults
   const fullConfig = { ...DEFAULT_ERROR_SANITIZATION_CONFIG, ...config };
-  
+
   // Create new error with sanitized message
   const sanitizedMessage = sanitizeErrorMessage(error.message || '', fullConfig);
   const sanitizedError = new Error(sanitizedMessage);
-  
+
   // Preserve error name and constructor
   sanitizedError.name = error.name;
-  
+
   // Sanitize stack trace
   if (error.stack) {
     sanitizedError.stack = sanitizeStackTrace(error.stack, fullConfig);
   }
-  
+
   // Handle custom error properties while preserving error codes
   if (fullConfig.preserveErrorCodes) {
     // Preserve common error code properties
@@ -1146,7 +1180,7 @@ export function sanitizeErrorForProduction(
       (sanitizedError as any).syscall = error.syscall;
     }
   }
-  
+
   // Sanitize any custom properties that might contain sensitive data
   for (const [key, value] of Object.entries(error)) {
     if (key !== 'message' && key !== 'stack' && key !== 'name') {
@@ -1161,19 +1195,19 @@ export function sanitizeErrorForProduction(
       }
     }
   }
-  
+
   return sanitizedError;
 }
 
 /**
  * Check if current environment should show detailed error information
- * 
+ *
  * Determines whether full error details should be displayed based on
  * environment variables and debug settings. Used to control information
  * disclosure in different deployment environments.
- * 
+ *
  * @returns true if detailed errors should be shown, false otherwise
- * 
+ *
  * @example
  * ```typescript
  * if (shouldShowDetailedErrors()) {
@@ -1188,25 +1222,25 @@ export function shouldShowDetailedErrors(): boolean {
   if (process.env.NODE_ENV === 'production') {
     return false;
   }
-  
+
   // Check for explicit debug flags
   if (process.env.DEBUG || process.env.CLI_DEBUG) {
     return true;
   }
-  
+
   // Show detailed errors in development by default
   return process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
 }
 
 /**
  * Check if running in debug mode
- * 
+ *
  * Determines if the application is running in debug mode based on
  * environment variables. Used to control logging verbosity and
  * error detail levels.
- * 
+ *
  * @returns true if in debug mode, false otherwise
- * 
+ *
  * @example
  * ```typescript
  * if (isDebugMode()) {
@@ -1219,10 +1253,10 @@ export function isDebugMode(): boolean {
   if (process.env.NODE_ENV === 'production') {
     return false;
   }
-  
+
   return !!(
-    process.env.DEBUG || 
-    process.env.CLI_DEBUG || 
+    process.env.DEBUG ||
+    process.env.CLI_DEBUG ||
     process.env.NODE_ENV === 'development' ||
     process.argv.includes('--debug') ||
     process.argv.includes('--verbose')
@@ -1231,20 +1265,20 @@ export function isDebugMode(): boolean {
 
 /**
  * Create error sanitization configuration for specific environments
- * 
+ *
  * Provides pre-configured sanitization settings for common deployment
  * environments (development, staging, production) with appropriate
  * security and debugging balance.
- * 
+ *
  * @param environment - Target environment ('development' | 'staging' | 'production')
  * @param customOverrides - Additional configuration overrides
  * @returns Complete sanitization configuration
- * 
+ *
  * @example
  * ```typescript
  * // Production configuration with maximum security
  * const prodConfig = createEnvironmentConfig('production');
- * 
+ *
  * // Staging with some debugging capability
  * const stagingConfig = createEnvironmentConfig('staging', {
  *   redactFilePaths: false // Allow file paths for debugging
@@ -1289,20 +1323,20 @@ export function createEnvironmentConfig(
       removeLineNumbers: true,
     },
   };
-  
+
   return { ...baseConfigs[environment], ...customOverrides };
 }
 
 /**
  * Analyze stack trace for potential security risks and sensitive information
- * 
+ *
  * Examines stack traces for patterns that might indicate information disclosure
  * risks, such as exposed file paths, source maps, or internal module structure.
  * Useful for security auditing and compliance validation.
- * 
+ *
  * @param stack - Stack trace string to analyze
  * @returns Analysis result with risk assessment and recommendations
- * 
+ *
  * @example
  * ```typescript
  * const analysis = analyzeStackTraceSecurity(error.stack);
@@ -1320,101 +1354,105 @@ export function analyzeStackTraceSecurity(stack: string): {
   if (!stack) {
     return { riskLevel: 'low', risks: [], recommendations: [], sensitivePatterns: [] };
   }
-  
+
   // Security: Limit analysis input size to prevent DoS
   const MAX_ANALYSIS_SIZE = 10000; // 10KB limit for analysis
-  const analysisStack = stack.length > MAX_ANALYSIS_SIZE 
-    ? stack.substring(0, MAX_ANALYSIS_SIZE) 
-    : stack;
-  
+  const analysisStack =
+    stack.length > MAX_ANALYSIS_SIZE ? stack.substring(0, MAX_ANALYSIS_SIZE) : stack;
+
   const risks: string[] = [];
   const recommendations: string[] = [];
   const sensitivePatterns: Array<{ pattern: string; description: string; line: string }> = [];
-  
+
   const lines = analysisStack.split('\n').slice(0, 100); // Limit to 100 lines max
-  
+
   // Check for various security risks with bounded, safe regex patterns
-  lines.forEach(line => {
+  lines.forEach((line) => {
     // Limit line length to prevent ReDoS on individual lines
-    const safeLine = line.length > 500 ? line.substring(0, 500) + '...' : line;
-    
+    const safeLine = line.length > 500 ? `${line.substring(0, 500)}...` : line;
+
     // Check for user home directories - use bounded patterns
-    if (/\/Users\/[^\/\s]{1,50}|C:\\Users\\[^\\]{1,50}|\/home\/[^\/\s]{1,50}/.test(safeLine)) {
+    if (/\/Users\/[^/\s]{1,50}|C:\\Users\\[^\\]{1,50}|\/home\/[^/\s]{1,50}/.test(safeLine)) {
       risks.push('User home directory paths exposed');
       sensitivePatterns.push({
         pattern: 'home-directory',
         description: 'User home directory path revealed',
-        line: safeLine.trim()
+        line: safeLine.trim(),
       });
     }
-    
+
     // Check for source map references
     if (/sourceMappingURL|\.js\.map|\.ts\.map/.test(safeLine)) {
       risks.push('Source map references present');
       sensitivePatterns.push({
         pattern: 'source-maps',
         description: 'Source map reference found',
-        line: safeLine.trim()
+        line: safeLine.trim(),
       });
     }
-    
+
     // Check for potentially sensitive file patterns
     if (/\.env|config|secret|password|key|token/i.test(safeLine)) {
       risks.push('Potentially sensitive file or variable names');
       sensitivePatterns.push({
         pattern: 'sensitive-names',
         description: 'Sensitive file or variable name detected',
-        line: safeLine.trim()
+        line: safeLine.trim(),
       });
     }
-    
+
     // Check for internal module structure exposure
     if (/internal\/|lib\/private|src\/.*\/private/.test(safeLine)) {
       risks.push('Internal module structure exposed');
       sensitivePatterns.push({
         pattern: 'internal-structure',
         description: 'Internal module structure revealed',
-        line: safeLine.trim()
+        line: safeLine.trim(),
       });
     }
-    
+
     // Check for absolute paths that might reveal deployment structure
-    if (/^[\s]*at.*[\/\\](?:opt|var|srv|app|workspace)[\/\\]/.test(safeLine)) {
+    if (/^[\s]*at.*[/\\](?:opt|var|srv|app|workspace)[/\\]/.test(safeLine)) {
       risks.push('Deployment path structure exposed');
       sensitivePatterns.push({
         pattern: 'deployment-paths',
         description: 'Deployment directory structure revealed',
-        line: safeLine.trim()
+        line: safeLine.trim(),
       });
     }
-    
+
     // Check for extremely long paths or repeated patterns that could be attacks
     if (line.length > 500 || /([a-z])\1{50,}|([A-Z])\2{50,}|([0-9])\3{50,}/.test(line)) {
       risks.push('Suspicious long or repetitive path patterns');
       sensitivePatterns.push({
         pattern: 'long-paths',
         description: 'Long or repetitive path pattern detected',
-        line: safeLine.trim()
+        line: safeLine.trim(),
       });
     }
   });
-  
+
   // Determine risk level - be more sensitive to security issues
   let riskLevel: 'low' | 'medium' | 'high' = 'low';
-  
+
   // If we found multiple sensitive patterns, it's definitely high risk
   if (sensitivePatterns.length >= 5 || risks.length >= 3) {
     riskLevel = 'high';
   } else if (risks.length > 0 || sensitivePatterns.length > 0) {
     // Any sensitive patterns found should at least be medium risk
     riskLevel = 'medium';
-    
+
     // If we found user home directories or deployment paths, elevate to high
-    if (risks.some(r => r.includes('User home') || r.includes('Deployment path') || r.includes('sensitive file'))) {
+    if (
+      risks.some(
+        (r) =>
+          r.includes('User home') || r.includes('Deployment path') || r.includes('sensitive file')
+      )
+    ) {
       riskLevel = 'high';
     }
   }
-  
+
   // Generate recommendations based on risks
   if (risks.includes('User home directory paths exposed')) {
     recommendations.push('Enable redactFilePaths in sanitization config');
@@ -1431,7 +1469,7 @@ export function analyzeStackTraceSecurity(stack: string): {
   if (sensitivePatterns.length > 0) {
     recommendations.push('Consider using higher stack trace sanitization level');
   }
-  
+
   return { riskLevel, risks, recommendations, sensitivePatterns };
 }
 
@@ -1441,10 +1479,10 @@ export function analyzeStackTraceSecurity(stack: string): {
 
 /**
  * Configuration for error context sanitization behavior
- * 
+ *
  * Controls how error context information is handled during sanitization,
  * balancing security concerns with debugging requirements.
- * 
+ *
  * @example
  * ```typescript
  * const config: ErrorContextConfig = {
@@ -1482,7 +1520,7 @@ export interface ErrorContextConfig {
 
 /**
  * Default configuration for error context sanitization
- * 
+ *
  * Provides secure defaults that protect sensitive information while
  * maintaining sufficient debugging context for troubleshooting.
  */
@@ -1496,12 +1534,12 @@ export const DEFAULT_ERROR_CONTEXT_CONFIG: ErrorContextConfig = {
   sanitizeNestedObjects: true,
   preserveTimestamps: true,
   sanitizeFunctionNames: true,
-  customContextPatterns: []
+  customContextPatterns: [],
 };
 
 /**
  * Result of error context sanitization
- * 
+ *
  * Contains the sanitized context along with metadata about
  * what was redacted and secure identifiers.
  */
@@ -1540,17 +1578,17 @@ export interface SensitiveContextDetection {
 
 /**
  * Sanitizes error context to prevent information disclosure
- * 
+ *
  * This function processes error context objects (commonly used in logging
  * and telemetry) to remove sensitive information while preserving debugging
  * value. It supports selective redaction, secure ID generation, and provides
  * hints about what was removed.
- * 
+ *
  * @param error - The error object to extract context from
  * @param additionalContext - Additional context to include
  * @param config - Configuration options for sanitization behavior
  * @returns Sanitized error context with secure identifier
- * 
+ *
  * @example
  * ```typescript
  * // Basic usage
@@ -1558,7 +1596,7 @@ export interface SensitiveContextDetection {
  * console.log(result.errorId); // "ERR_2024_A3B7F9C2"
  * console.log(result.context.operation); // "login"
  * console.log(result.redactionHints.userId); // "User identifier (redacted)"
- * 
+ *
  * // Custom configuration
  * const result = sanitizeErrorContext(error, context, {
  *   redactionLevel: 'partial',
@@ -1566,7 +1604,7 @@ export interface SensitiveContextDetection {
  *   customContextPatterns: [/internal-id-\d+/gi]
  * });
  * ```
- * 
+ *
  * @security This function prevents information disclosure by:
  * - Removing user credentials, API keys, and personal information
  * - Sanitizing file paths and system information
@@ -1588,13 +1626,13 @@ export function sanitizeErrorContext(
   let hadSensitiveData = false;
 
   // Generate secure error ID
-  const errorId = fullConfig.generateSecureIds 
+  const errorId = fullConfig.generateSecureIds
     ? _generateSecureErrorId(error)
     : `ERR_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
   // Build initial context with security filtering and safe error property access
   const rawContext: Record<string, unknown> = {};
-  
+
   // Safely extract error properties with sanitization
   let messageSanitized = false;
   try {
@@ -1607,13 +1645,13 @@ export function sanitizeErrorContext(
   } catch {
     rawContext.message = 'Error message access failed';
   }
-  
+
   try {
     rawContext.name = error.name || 'Error';
   } catch {
     rawContext.name = 'Error';
   }
-  
+
   // Safely extract all enumerable properties from the error object
   try {
     for (const key in error) {
@@ -1631,13 +1669,13 @@ export function sanitizeErrorContext(
   } catch {
     // Ignore if property enumeration fails
   }
-  
+
   // Add additional context safely
   Object.assign(rawContext, additionalContext);
 
   // Remove dangerous properties that could be used for injection attacks
   const initialContext = _removeDangerousProperties(rawContext);
-  
+
   // Early detection of problematic context structure before processing
   try {
     JSON.stringify(rawContext);
@@ -1666,7 +1704,7 @@ export function sanitizeErrorContext(
   // DoS protection: Pre-truncate large context
   let processedContext = initialContext;
   let contextSize = 0;
-  
+
   // Calculate rough context size
   for (const [, value] of Object.entries(initialContext)) {
     if (typeof value === 'string') {
@@ -1679,7 +1717,7 @@ export function sanitizeErrorContext(
       }
     }
   }
-  
+
   // Check if context is too large (including the base context from error)
   const sizeLimit = fullConfig.maxContextLength * 3;
   if (contextSize > sizeLimit) {
@@ -1687,7 +1725,7 @@ export function sanitizeErrorContext(
     // Truncate each property that's too long
     for (const [key, value] of Object.entries(initialContext)) {
       if (typeof value === 'string' && value.length > 200) {
-        initialContext[key] = value.substring(0, 200) + '...[truncated]';
+        initialContext[key] = `${value.substring(0, 200)}...[truncated]`;
         redactionHints[key] = 'Long content truncated for security';
       }
     }
@@ -1697,7 +1735,7 @@ export function sanitizeErrorContext(
       // Test if we can safely serialize the context
       _safeJsonStringify(initialContext);
       processedContext = initialContext;
-    } catch (error) {
+    } catch (_error) {
       // Handle circular references or other serialization issues
       securityWarnings.push('Serialization error detected in context - applying safe fallback');
       processedContext = _removeDangerousProperties(initialContext);
@@ -1725,18 +1763,18 @@ export function sanitizeErrorContext(
       break;
     }
   }
-  
+
   if (hasThrowingProperties) {
     securityWarnings.push('Properties with access errors detected in context');
   }
 
   // Detect and handle sensitive content
   const sensitiveDetections = _detectSensitiveContent(processedContext, fullConfig);
-  
+
   // Apply sanitization based on redaction level
   const sanitizedContext = _applyContextRedaction(
-    processedContext, 
-    sensitiveDetections, 
+    processedContext,
+    sensitiveDetections,
     fullConfig,
     redactedProperties,
     redactionHints
@@ -1744,29 +1782,31 @@ export function sanitizeErrorContext(
 
   // Update flags based on detections and message sanitization
   hadSensitiveData = sensitiveDetections.length > 0 || messageSanitized;
-  
+
   // Add security warnings for high-severity detections
-  sensitiveDetections
-    .filter(d => d.severity === 'high' || d.severity === 'critical')
-    .forEach(d => securityWarnings.push(`${d.sensitiveType} detected in ${d.propertyPath}`));
+  for (const d of sensitiveDetections.filter(
+    (d) => d.severity === 'high' || d.severity === 'critical'
+  )) {
+    securityWarnings.push(`${d.sensitiveType} detected in ${d.propertyPath}`);
+  }
 
   // Final size check with safe JSON serialization
   let finalSize: number;
   try {
     finalSize = _safeJsonStringify(sanitizedContext).length;
-  } catch (error) {
+  } catch (_error) {
     // If we can't serialize safely, estimate size and add warning
     finalSize = Object.keys(sanitizedContext).length * 50; // Rough estimate
     securityWarnings.push('Unable to calculate exact context size - using safe defaults');
   }
-  
+
   if (finalSize > fullConfig.maxContextLength) {
     securityWarnings.push('Context size exceeded limits after sanitization');
     // Further truncate if needed
     for (const [key, value] of Object.entries(sanitizedContext)) {
       if (typeof value === 'string' && value.length > 100) {
-        sanitizedContext[key] = value.substring(0, 100) + '...[size-limited]';
-        redactionHints[key] = (redactionHints[key] || '') + ' (size limited)';
+        sanitizedContext[key] = `${value.substring(0, 100)}...[size-limited]`;
+        redactionHints[key] = `${redactionHints[key] || ''} (size limited)`;
       }
     }
   }
@@ -1774,7 +1814,9 @@ export function sanitizeErrorContext(
   // Performance monitoring
   const processingTime = Date.now() - startTime;
   if (processingTime > 100) {
-    securityWarnings.push(`Context sanitization took ${processingTime}ms - consider reducing context size`);
+    securityWarnings.push(
+      `Context sanitization took ${processingTime}ms - consider reducing context size`
+    );
   }
 
   // Safely extract final error code
@@ -1797,22 +1839,22 @@ export function sanitizeErrorContext(
     redactedProperties,
     securityWarnings,
     hadSensitiveData,
-    redactionHints
+    redactionHints,
   };
 }
 
 /**
  * Creates a safe error object for forwarding to external systems
- * 
+ *
  * This function sanitizes an error and its context for safe transmission
  * to logging, telemetry, or monitoring systems. It ensures no sensitive
  * information is leaked while maintaining debugging utility.
- * 
+ *
  * @param error - The error object to sanitize
  * @param context - Additional context to include
  * @param config - Configuration for sanitization behavior
  * @returns Safe error object ready for external forwarding
- * 
+ *
  * @example
  * ```typescript
  * // For telemetry systems
@@ -1820,17 +1862,17 @@ export function sanitizeErrorContext(
  *   operation: 'user-login',
  *   component: 'auth-service'
  * });
- * 
+ *
  * // Send to external monitoring
  * await telemetry.recordError(safeError);
- * 
+ *
  * // For logging systems with custom config
  * const safeError = createSafeErrorForForwarding(error, context, {
  *   redactionLevel: 'full',
  *   allowedProperties: ['timestamp', 'component']
  * });
  * ```
- * 
+ *
  * @security This function ensures safe external forwarding by:
  * - Applying comprehensive context sanitization
  * - Removing all stack trace information by default
@@ -1860,7 +1902,7 @@ export function createSafeErrorForForwarding(
     redactionLevel: 'partial', // More restrictive by default
     maxContextLength: 500, // Smaller limit for external systems
     preserveTimestamps: true, // Always preserve timestamps for correlation
-    ...config
+    ...config,
   };
 
   // Sanitize the error context
@@ -1874,40 +1916,44 @@ export function createSafeErrorForForwarding(
     redactFilePaths: true,
     redactDatabaseUrls: true,
     redactNetworkInfo: true,
-    redactPersonalInfo: true
+    redactPersonalInfo: true,
   });
 
   // Apply aggressive size limiting for telemetry systems
   let finalContext = sanitized.context;
   let finalSecurityWarnings = [...sanitized.securityWarnings];
-  
+
   // Calculate the size of the result so far
   const currentSize = JSON.stringify({
     errorId: sanitized.errorId,
     message: sanitizedMessage,
     type: error.name || 'Error',
     timestamp: sanitized.timestamp || new Date().toISOString(),
-    context: finalContext
+    context: finalContext,
   }).length;
-  
+
   // If the payload is too large, apply aggressive reduction for telemetry
   const maxTelemetrySize = 8000; // Target under 10KB with some buffer
   if (currentSize > maxTelemetrySize) {
-    finalSecurityWarnings.push('Payload size exceeded telemetry limits - applying aggressive reduction');
-    
+    finalSecurityWarnings.push(
+      'Payload size exceeded telemetry limits - applying aggressive reduction'
+    );
+
     // Priority order for property preservation
     const priorityProperties = ['timestamp', 'level', 'operation', 'component', 'status'];
     const reducedContext: Record<string, unknown> = {};
-    
+
     // First, preserve high-priority properties
     for (const prop of priorityProperties) {
       if (prop in finalContext) {
         reducedContext[prop] = finalContext[prop];
       }
     }
-    
+
     // Then add other properties until we hit the size limit
-    const remainingProperties = Object.keys(finalContext).filter(key => !priorityProperties.includes(key));
+    const remainingProperties = Object.keys(finalContext).filter(
+      (key) => !priorityProperties.includes(key)
+    );
     for (const prop of remainingProperties) {
       const testContext = { ...reducedContext, [prop]: finalContext[prop] };
       const testSize = JSON.stringify({
@@ -1915,24 +1961,24 @@ export function createSafeErrorForForwarding(
         message: sanitizedMessage,
         type: error.name || 'Error',
         timestamp: sanitized.timestamp || new Date().toISOString(),
-        context: testContext
+        context: testContext,
       }).length;
-      
+
       if (testSize < maxTelemetrySize) {
         reducedContext[prop] = finalContext[prop];
       } else {
         // Try with truncated property value if it's a string
         if (typeof finalContext[prop] === 'string') {
-          const truncated = (finalContext[prop] as string).substring(0, 50) + '...[truncated]';
+          const truncated = `${(finalContext[prop] as string).substring(0, 50)}...[truncated]`;
           const testTruncatedContext = { ...reducedContext, [prop]: truncated };
           const testTruncatedSize = JSON.stringify({
             errorId: sanitized.errorId,
             message: sanitizedMessage,
             type: error.name || 'Error',
             timestamp: sanitized.timestamp || new Date().toISOString(),
-            context: testTruncatedContext
+            context: testTruncatedContext,
           }).length;
-          
+
           if (testTruncatedSize < maxTelemetrySize) {
             reducedContext[prop] = truncated;
           }
@@ -1941,7 +1987,7 @@ export function createSafeErrorForForwarding(
         break;
       }
     }
-    
+
     finalContext = reducedContext;
   }
 
@@ -1950,7 +1996,9 @@ export function createSafeErrorForForwarding(
   if (finalSecurityWarnings.length > maxTelemetryWarnings) {
     const warningCount = finalSecurityWarnings.length;
     finalSecurityWarnings = finalSecurityWarnings.slice(0, maxTelemetryWarnings);
-    finalSecurityWarnings.push(`... and ${warningCount - maxTelemetryWarnings} more security warnings (truncated for telemetry)`);
+    finalSecurityWarnings.push(
+      `... and ${warningCount - maxTelemetryWarnings} more security warnings (truncated for telemetry)`
+    );
   }
 
   // Determine severity based on error type and sensitive data detection
@@ -1972,22 +2020,22 @@ export function createSafeErrorForForwarding(
     metadata: {
       hadSensitiveData: sanitized.hadSensitiveData,
       redactedCount: sanitized.redactedProperties.length,
-      securityWarnings: finalSecurityWarnings
-    }
+      securityWarnings: finalSecurityWarnings,
+    },
   };
 }
 
 /**
  * Analyzes error context for sensitive information without modifying it
- * 
+ *
  * This function performs a security analysis of error context to identify
  * potential information disclosure risks. Useful for auditing and security
  * monitoring without actually sanitizing the content.
- * 
+ *
  * @param context - The context object to analyze
  * @param config - Configuration for analysis behavior
  * @returns Analysis results with detected risks and recommendations
- * 
+ *
  * @example
  * ```typescript
  * const analysis = analyzeErrorContextSecurity({
@@ -1995,7 +2043,7 @@ export function createSafeErrorForForwarding(
  *   apiKey: 'sk-123456789',
  *   filePath: '/home/user/.env'
  * });
- * 
+ *
  * console.log(analysis.riskLevel); // 'high'
  * console.log(analysis.sensitiveDetections.length); // 3
  * console.log(analysis.recommendations); // ['Remove user credentials', 'Redact API keys', ...]
@@ -2012,7 +2060,7 @@ export function analyzeErrorContextSecurity(
 } {
   const fullConfig: ErrorContextConfig = {
     ...DEFAULT_ERROR_CONTEXT_CONFIG,
-    ...config
+    ...config,
   };
 
   const sensitiveDetections = _detectSensitiveContent(context, fullConfig);
@@ -2021,10 +2069,10 @@ export function analyzeErrorContextSecurity(
 
   // Determine risk level
   let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
-  
-  const criticalDetections = sensitiveDetections.filter(d => d.severity === 'critical').length;
-  const highDetections = sensitiveDetections.filter(d => d.severity === 'high').length;
-  const mediumDetections = sensitiveDetections.filter(d => d.severity === 'medium').length;
+
+  const criticalDetections = sensitiveDetections.filter((d) => d.severity === 'critical').length;
+  const highDetections = sensitiveDetections.filter((d) => d.severity === 'high').length;
+  const mediumDetections = sensitiveDetections.filter((d) => d.severity === 'medium').length;
 
   if (criticalDetections > 0) {
     riskLevel = 'critical';
@@ -2036,38 +2084,41 @@ export function analyzeErrorContextSecurity(
 
   // Generate recommendations
   const recommendations: string[] = [];
-  
+
   if (criticalDetections > 0) {
     recommendations.push('CRITICAL: Remove all credential and authentication information');
   }
-  if (sensitiveDetections.some(d => d.sensitiveType.includes('password'))) {
+  if (sensitiveDetections.some((d) => d.sensitiveType.includes('password'))) {
     recommendations.push('Remove password and authentication data');
   }
-  if (sensitiveDetections.some(d => d.sensitiveType.includes('api'))) {
+  if (sensitiveDetections.some((d) => d.sensitiveType.includes('api'))) {
     recommendations.push('Remove API keys and tokens');
   }
-  if (sensitiveDetections.some(d => d.sensitiveType.includes('path'))) {
+  if (sensitiveDetections.some((d) => d.sensitiveType.includes('path'))) {
     recommendations.push('Sanitize file paths and directory information');
   }
-  if (sensitiveDetections.some(d => d.sensitiveType.includes('personal'))) {
+  if (sensitiveDetections.some((d) => d.sensitiveType.includes('personal'))) {
     recommendations.push('Remove personal information (emails, names, etc.)');
   }
   if (sensitiveProperties > totalProperties * 0.3) {
-    recommendations.push('Consider using redactionLevel: "full" due to high sensitive content ratio');
+    recommendations.push(
+      'Consider using redactionLevel: "full" due to high sensitive content ratio'
+    );
   }
   if (totalProperties > 20) {
-    recommendations.push('Reduce context size - large contexts increase information disclosure risk');
+    recommendations.push(
+      'Reduce context size - large contexts increase information disclosure risk'
+    );
   }
 
-  const estimatedRedactionPercentage = totalProperties > 0 
-    ? Math.round((sensitiveProperties / totalProperties) * 100)
-    : 0;
+  const estimatedRedactionPercentage =
+    totalProperties > 0 ? Math.round((sensitiveProperties / totalProperties) * 100) : 0;
 
   return {
     riskLevel,
     sensitiveDetections,
     recommendations,
-    estimatedRedactionPercentage
+    estimatedRedactionPercentage,
   };
 }
 
@@ -2077,10 +2128,10 @@ export function analyzeErrorContextSecurity(
 
 /**
  * Generates a secure, non-sensitive error identifier
- * 
+ *
  * Creates identifiers that are unique for correlation but don't expose
  * sensitive information about the system or error content.
- * 
+ *
  * @param error - The error to generate an ID for
  * @returns Secure error identifier
  */
@@ -2088,11 +2139,11 @@ function _generateSecureErrorId(error: Error): string {
   const timestamp = Date.now();
   const year = new Date().getFullYear();
   const random = Math.random();
-  
+
   // Create a hash based on error properties but not sensitive content
   const hashInput = `${error.name}-${error.message.length}-${timestamp}-${random}`;
   const hash = _simpleHash(hashInput);
-  
+
   // Format: ERR_YEAR_HASH (e.g., ERR_2024_A3B7F9C2)
   // Ensure exactly 8 characters by padding with zeros
   const paddedHash = hash.substring(0, 8).toUpperCase().padEnd(8, '0');
@@ -2101,7 +2152,7 @@ function _generateSecureErrorId(error: Error): string {
 
 /**
  * Simple hash function for generating error IDs
- * 
+ *
  * @param input - String to hash
  * @returns Hash string
  */
@@ -2109,7 +2160,7 @@ function _simpleHash(input: string): string {
   let hash = 0;
   for (let i = 0; i < input.length; i++) {
     const char = input.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
   return Math.abs(hash).toString(16);
@@ -2117,7 +2168,7 @@ function _simpleHash(input: string): string {
 
 /**
  * Detects sensitive content in error context
- * 
+ *
  * @param context - Context object to analyze
  * @param config - Configuration for detection
  * @returns Array of sensitive content detections
@@ -2147,14 +2198,14 @@ function _detectSensitiveContent(
             _analyzeSensitiveString(item, `${path}[${index}]`, detections);
           }
         });
-        
+
         // If array has sensitive content, mark the whole array
         if (hasSensitiveItems) {
           detections.push({
             propertyPath: path,
             sensitiveType: 'sensitive-array',
             hint: 'Array containing sensitive data',
-            severity: 'high'
+            severity: 'high',
           });
         }
       } else {
@@ -2174,7 +2225,7 @@ function _detectSensitiveContent(
 
 /**
  * Analyzes a string value for sensitive content patterns
- * 
+ *
  * @param value - String value to analyze
  * @param path - Property path for reporting
  * @param detections - Array to add detections to
@@ -2185,24 +2236,28 @@ function _analyzeSensitiveString(
   detections: SensitiveContextDetection[]
 ): void {
   // Check for passwords
-  if (/password|passwd|pwd|secret|key/i.test(path) || 
-      /password[=:]\s*\S+|secret[=:]\s*\S+/i.test(value)) {
+  if (
+    /password|passwd|pwd|secret|key/i.test(path) ||
+    /password[=:]\s*\S+|secret[=:]\s*\S+/i.test(value)
+  ) {
     detections.push({
       propertyPath: path,
       sensitiveType: 'password/secret',
       hint: 'Authentication credential',
-      severity: 'critical'
+      severity: 'critical',
     });
   }
 
   // Check for API keys and tokens
-  if (/api[_-]?key|token|bearer|authorization/i.test(path) ||
-      /sk-[a-zA-Z0-9]+|pk-[a-zA-Z0-9]+|[a-zA-Z0-9]{32,}/g.test(value)) {
+  if (
+    /api[_-]?key|token|bearer|authorization/i.test(path) ||
+    /sk-[a-zA-Z0-9]+|pk-[a-zA-Z0-9]+|[a-zA-Z0-9]{32,}/g.test(value)
+  ) {
     detections.push({
       propertyPath: path,
       sensitiveType: 'api-key/token',
       hint: 'API authentication token',
-      severity: 'critical'
+      severity: 'critical',
     });
   }
 
@@ -2212,17 +2267,17 @@ function _analyzeSensitiveString(
       propertyPath: path,
       sensitiveType: 'personal-email',
       hint: 'Email address',
-      severity: 'high'
+      severity: 'high',
     });
   }
 
   // Check for file paths
-  if (/^\/|^[A-Z]:[\\\/]|\/home\/|\/Users\/|\\Users\\/.test(value)) {
+  if (/^\/|^[A-Z]:[\\/]|\/home\/|\/Users\/|\\Users\\/.test(value)) {
     detections.push({
       propertyPath: path,
       sensitiveType: 'file-path',
       hint: 'File system path',
-      severity: 'medium'
+      severity: 'medium',
     });
   }
 
@@ -2232,7 +2287,7 @@ function _analyzeSensitiveString(
       propertyPath: path,
       sensitiveType: 'url-with-credentials',
       hint: 'URL containing credentials',
-      severity: 'critical'
+      severity: 'critical',
     });
   }
 
@@ -2242,7 +2297,7 @@ function _analyzeSensitiveString(
       propertyPath: path,
       sensitiveType: 'database-connection',
       hint: 'Database connection string',
-      severity: 'critical'
+      severity: 'critical',
     });
   }
 
@@ -2252,14 +2307,14 @@ function _analyzeSensitiveString(
       propertyPath: path,
       sensitiveType: 'ip-address',
       hint: 'IP address',
-      severity: 'medium'
+      severity: 'medium',
     });
   }
 }
 
 /**
  * Applies context redaction based on configuration and detections
- * 
+ *
  * @param context - Original context object
  * @param detections - Sensitive content detections
  * @param config - Configuration for redaction
@@ -2278,22 +2333,22 @@ function _applyContextRedaction(
 
   // Helper to check if a property should be preserved
   const isAllowedProperty = (key: string): boolean => {
-    return config.allowedProperties.includes(key) || 
-           config.allowedProperties.includes('*');
+    return config.allowedProperties.includes(key) || config.allowedProperties.includes('*');
   };
 
   // Helper to check if a path has sensitive content
   const hasSensitiveContent = (path: string): boolean => {
-    return detections.some(d => 
-      d.propertyPath === path || 
-      d.propertyPath.startsWith(path + '.') ||
-      path.startsWith(d.propertyPath + '.')
+    return detections.some(
+      (d) =>
+        d.propertyPath === path ||
+        d.propertyPath.startsWith(`${path}.`) ||
+        path.startsWith(`${d.propertyPath}.`)
     );
   };
 
   // Helper to get the detection for a path
   const getDetection = (path: string): SensitiveContextDetection | undefined => {
-    return detections.find(d => d.propertyPath === path);
+    return detections.find((d) => d.propertyPath === path);
   };
 
   for (const [key, value] of Object.entries(context)) {
@@ -2325,9 +2380,9 @@ function _applyContextRedaction(
         }
       } else {
         // Not sensitive - include it (potentially with nested sanitization)
-        result[key] = config.sanitizeNestedObjects ? 
-          _sanitizeNestedValue(value, `${key}`, detections, config) : 
-          value;
+        result[key] = config.sanitizeNestedObjects
+          ? _sanitizeNestedValue(value, `${key}`, detections, config)
+          : value;
       }
     }
   }
@@ -2337,7 +2392,7 @@ function _applyContextRedaction(
 
 /**
  * Sanitizes nested values in objects and arrays
- * 
+ *
  * @param value - Value to sanitize
  * @param path - Current property path
  * @param detections - Sensitive content detections
@@ -2354,14 +2409,16 @@ function _sanitizeNestedValue(
     if (Array.isArray(value)) {
       return value.map((item, index) => {
         const itemPath = `${path}[${index}]`;
-        const hasDetection = detections.some(d => d.propertyPath === itemPath);
-        return hasDetection ? '[redacted]' : _sanitizeNestedValue(item, itemPath, detections, config);
+        const hasDetection = detections.some((d) => d.propertyPath === itemPath);
+        return hasDetection
+          ? '[redacted]'
+          : _sanitizeNestedValue(item, itemPath, detections, config);
       });
     } else {
       const result: Record<string, unknown> = {};
       Object.entries(value as Record<string, unknown>).forEach(([key, val]) => {
         const nestedPath = `${path}.${key}`;
-        const hasDetection = detections.some(d => d.propertyPath === nestedPath);
+        const hasDetection = detections.some((d) => d.propertyPath === nestedPath);
         if (!hasDetection) {
           result[key] = _sanitizeNestedValue(val, nestedPath, detections, config);
         }
@@ -2374,39 +2431,43 @@ function _sanitizeNestedValue(
 
 /**
  * Counts the total number of properties in a nested object
- * 
+ *
  * @param obj - Object to count properties in
  * @returns Total property count
  */
 function _countProperties(obj: Record<string, unknown>): number {
   let count = 0;
-  
+
   function countRecursive(value: unknown): void {
     if (typeof value === 'object' && value !== null) {
       if (Array.isArray(value)) {
         count += value.length;
-        value.forEach(item => countRecursive(item));
+        for (const item of value) {
+          countRecursive(item);
+        }
       } else {
         const entries = Object.entries(value as Record<string, unknown>);
         count += entries.length;
-        entries.forEach(([, val]) => countRecursive(val));
+        for (const [, val] of entries) {
+          countRecursive(val);
+        }
       }
     }
   }
-  
+
   countRecursive(obj);
   return count;
 }
 
 /**
  * Removes dangerous properties that could be used for context injection attacks
- * 
+ *
  * @param obj - Object to clean
  * @param visited - Set to track visited objects (for circular reference protection)
  * @returns Cleaned object without dangerous properties
  */
 function _removeDangerousProperties(
-  obj: Record<string, unknown>, 
+  obj: Record<string, unknown>,
   visited: WeakSet<object> = new WeakSet()
 ): Record<string, unknown> {
   // Check for circular reference
@@ -2414,35 +2475,32 @@ function _removeDangerousProperties(
     return {}; // Return empty object for circular references
   }
   visited.add(obj);
-  
+
   const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
   const cleaned: Record<string, unknown> = {};
-  
+
   for (const [key, value] of Object.entries(obj)) {
     // Skip dangerous keys
     if (dangerousKeys.includes(key)) {
       continue;
     }
-    
+
     // Recursively clean nested objects
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       try {
         cleaned[key] = _removeDangerousProperties(value as Record<string, unknown>, visited);
-      } catch {
-        // If we can't process it safely, skip it
-        continue;
-      }
+      } catch {}
     } else {
       cleaned[key] = value;
     }
   }
-  
+
   return cleaned;
 }
 
 /**
  * Safe JSON stringification that handles problematic data types
- * 
+ *
  * @param obj - Object to stringify
  * @returns JSON string or fallback representation
  */
@@ -2453,48 +2511,48 @@ function _safeJsonStringify(obj: unknown): string {
       if (typeof value === 'bigint') {
         return `[BigInt: ${value.toString()}]`;
       }
-      
+
       // Handle functions
       if (typeof value === 'function') {
         return `[Function: ${value.name || 'anonymous'}]`;
       }
-      
+
       // Handle symbols
       if (typeof value === 'symbol') {
         return `[Symbol: ${value.toString()}]`;
       }
-      
+
       // Handle undefined (normally omitted)
       if (value === undefined) {
         return '[Undefined]';
       }
-      
+
       // Handle RegExp
       if (value instanceof RegExp) {
         return `[RegExp: ${value.toString()}]`;
       }
-      
+
       // Handle Date
       if (value instanceof Date) {
         return value.toISOString();
       }
-      
+
       // Handle Buffer and typed arrays
       if (value instanceof Buffer) {
         return `[Buffer: ${value.length} bytes]`;
       }
-      
+
       if (value instanceof Uint8Array) {
         return `[Uint8Array: ${value.length} bytes]`;
       }
-      
+
       if (value instanceof ArrayBuffer) {
         return `[ArrayBuffer: ${value.byteLength} bytes]`;
       }
-      
+
       return value;
     });
-  } catch (error) {
+  } catch (_error) {
     // Fallback for objects that can't be stringified
     return `[Object: ${typeof obj}]`;
   }
@@ -2502,7 +2560,7 @@ function _safeJsonStringify(obj: unknown): string {
 
 /**
  * Safely merges configuration objects, handling invalid values
- * 
+ *
  * @param defaultConfig - Default configuration
  * @param userConfig - User-provided configuration
  * @returns Merged configuration with fallbacks for invalid values
@@ -2512,56 +2570,58 @@ function _mergeConfigSafely(
   userConfig: Partial<ErrorContextConfig>
 ): ErrorContextConfig {
   const merged: ErrorContextConfig = { ...defaultConfig };
-  
+
   if (!userConfig || typeof userConfig !== 'object') {
     return merged;
   }
-  
+
   // Safely merge each property with validation
-  if (typeof userConfig.redactionLevel === 'string' && 
-      ['none', 'partial', 'full'].includes(userConfig.redactionLevel)) {
+  if (
+    typeof userConfig.redactionLevel === 'string' &&
+    ['none', 'partial', 'full'].includes(userConfig.redactionLevel)
+  ) {
     merged.redactionLevel = userConfig.redactionLevel;
   }
-  
+
   if (typeof userConfig.maxContextLength === 'number' && userConfig.maxContextLength >= 0) {
     merged.maxContextLength = userConfig.maxContextLength;
   }
-  
+
   if (Array.isArray(userConfig.allowedProperties)) {
-    merged.allowedProperties = userConfig.allowedProperties.filter(prop => 
-      typeof prop === 'string'
+    merged.allowedProperties = userConfig.allowedProperties.filter(
+      (prop) => typeof prop === 'string'
     );
   }
-  
+
   if (Array.isArray(userConfig.customContextPatterns)) {
-    merged.customContextPatterns = userConfig.customContextPatterns.filter(pattern => 
-      pattern instanceof RegExp
+    merged.customContextPatterns = userConfig.customContextPatterns.filter(
+      (pattern) => pattern instanceof RegExp
     );
   }
-  
+
   if (typeof userConfig.preserveTimestamps === 'boolean') {
     merged.preserveTimestamps = userConfig.preserveTimestamps;
   }
-  
+
   if (typeof userConfig.preserveErrorCodes === 'boolean') {
     merged.preserveErrorCodes = userConfig.preserveErrorCodes;
   }
-  
+
   if (typeof userConfig.generateSecureIds === 'boolean') {
     merged.generateSecureIds = userConfig.generateSecureIds;
   }
-  
+
   if (typeof userConfig.sanitizeNestedObjects === 'boolean') {
     merged.sanitizeNestedObjects = userConfig.sanitizeNestedObjects;
   }
-  
+
   if (typeof userConfig.includeContextHints === 'boolean') {
     merged.includeContextHints = userConfig.includeContextHints;
   }
-  
+
   if (typeof userConfig.sanitizeFunctionNames === 'boolean') {
     merged.sanitizeFunctionNames = userConfig.sanitizeFunctionNames;
   }
-  
+
   return merged;
 }

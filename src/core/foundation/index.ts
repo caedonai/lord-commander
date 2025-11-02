@@ -1,6 +1,6 @@
 /**
  * Foundation utilities - Core infrastructure and shared components
- * 
+ *
  * These modules provide the foundational building blocks that other
  * parts of the SDK depend on: constants, types, and error handling.
  */

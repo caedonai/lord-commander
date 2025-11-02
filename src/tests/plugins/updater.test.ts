@@ -1,12 +1,20 @@
 /**
  * Updater Plugin - Basic Test Suite
- * 
+ *
  * Tests core semantic version functionality and basic git operations
  * using Vitest framework.
  */
 
-import { describe, it, expect } from 'vitest';
-import { parseVersion, compareVersions, getChangeType, satisfiesRange, getAllTags, getLatestTag, tagExists } from '../../plugins/updater.js';
+import { describe, expect, it } from 'vitest';
+import {
+  compareVersions,
+  getAllTags,
+  getChangeType,
+  getLatestTag,
+  parseVersion,
+  satisfiesRange,
+  tagExists,
+} from '../../plugins/updater.js';
 
 describe('Updater Plugin - Basic Tests', () => {
   describe('Semantic Version Parsing', () => {
@@ -16,7 +24,7 @@ describe('Updater Plugin - Basic Tests', () => {
         major: 1,
         minor: 2,
         patch: 3,
-        raw: '1.2.3'
+        raw: '1.2.3',
       });
     });
 
@@ -27,7 +35,7 @@ describe('Updater Plugin - Basic Tests', () => {
         minor: 0,
         patch: 0,
         prerelease: 'beta.1',
-        raw: 'v2.0.0-beta.1'
+        raw: 'v2.0.0-beta.1',
       });
     });
 
@@ -38,7 +46,7 @@ describe('Updater Plugin - Basic Tests', () => {
         minor: 2,
         patch: 3,
         build: 'build.123',
-        raw: '1.2.3+build.123'
+        raw: '1.2.3+build.123',
       });
     });
 
@@ -50,7 +58,7 @@ describe('Updater Plugin - Basic Tests', () => {
         patch: 0,
         prerelease: 'beta.2',
         build: 'build.123',
-        raw: '2.0.0-beta.2+build.123'
+        raw: '2.0.0-beta.2+build.123',
       });
     });
 
@@ -69,7 +77,7 @@ describe('Updater Plugin - Basic Tests', () => {
       { v1: '1.0.0-alpha', v2: '1.0.0', expected: -1, changeType: 'prerelease' },
       { v1: '1.0.0-alpha.1', v2: '1.0.0-alpha.2', expected: -1, changeType: 'prerelease' },
       { v1: '1.0.0', v2: '1.0.0', expected: 0, changeType: 'none' },
-      { v1: '2.0.0', v2: '1.0.0', expected: 1, changeType: 'major' }
+      { v1: '2.0.0', v2: '1.0.0', expected: 1, changeType: 'major' },
     ];
 
     testCases.forEach(({ v1, v2, expected, changeType }) => {
@@ -105,20 +113,80 @@ describe('Updater Plugin - Basic Tests', () => {
 
   describe('Version Range Satisfaction', () => {
     const rangeCases = [
-      { version: '1.2.3', range: '^1.0.0', expected: true, description: 'caret range - compatible' },
-      { version: '1.2.3', range: '^2.0.0', expected: false, description: 'caret range - incompatible' },
-      { version: '1.2.3', range: '~1.2.0', expected: true, description: 'tilde range - compatible' },
-      { version: '1.3.0', range: '~1.2.0', expected: false, description: 'tilde range - incompatible' },
-      { version: '1.2.3', range: '>=1.2.0', expected: true, description: 'greater than or equal - satisfied' },
-      { version: '1.1.9', range: '>=1.2.0', expected: false, description: 'greater than or equal - not satisfied' },
-      { version: '1.2.3', range: '>1.2.0', expected: true, description: 'greater than - satisfied' },
-      { version: '1.2.0', range: '>1.2.0', expected: false, description: 'greater than - not satisfied' },
-      { version: '1.2.3', range: '<=1.3.0', expected: true, description: 'less than or equal - satisfied' },
-      { version: '1.4.0', range: '<=1.3.0', expected: false, description: 'less than or equal - not satisfied' },
+      {
+        version: '1.2.3',
+        range: '^1.0.0',
+        expected: true,
+        description: 'caret range - compatible',
+      },
+      {
+        version: '1.2.3',
+        range: '^2.0.0',
+        expected: false,
+        description: 'caret range - incompatible',
+      },
+      {
+        version: '1.2.3',
+        range: '~1.2.0',
+        expected: true,
+        description: 'tilde range - compatible',
+      },
+      {
+        version: '1.3.0',
+        range: '~1.2.0',
+        expected: false,
+        description: 'tilde range - incompatible',
+      },
+      {
+        version: '1.2.3',
+        range: '>=1.2.0',
+        expected: true,
+        description: 'greater than or equal - satisfied',
+      },
+      {
+        version: '1.1.9',
+        range: '>=1.2.0',
+        expected: false,
+        description: 'greater than or equal - not satisfied',
+      },
+      {
+        version: '1.2.3',
+        range: '>1.2.0',
+        expected: true,
+        description: 'greater than - satisfied',
+      },
+      {
+        version: '1.2.0',
+        range: '>1.2.0',
+        expected: false,
+        description: 'greater than - not satisfied',
+      },
+      {
+        version: '1.2.3',
+        range: '<=1.3.0',
+        expected: true,
+        description: 'less than or equal - satisfied',
+      },
+      {
+        version: '1.4.0',
+        range: '<=1.3.0',
+        expected: false,
+        description: 'less than or equal - not satisfied',
+      },
       { version: '1.2.3', range: '<1.3.0', expected: true, description: 'less than - satisfied' },
-      { version: '1.3.0', range: '<1.3.0', expected: false, description: 'less than - not satisfied' },
+      {
+        version: '1.3.0',
+        range: '<1.3.0',
+        expected: false,
+        description: 'less than - not satisfied',
+      },
       { version: '1.2.3', range: '1.2.3', expected: true, description: 'exact match - satisfied' },
-      { version: '1.2.4', range: '1.2.3', expected: false, description: 'exact match - not satisfied' }
+      {
+        version: '1.2.4',
+        range: '1.2.3',
+        expected: false,
+        description: 'exact match - not satisfied',
+      },
     ];
 
     rangeCases.forEach(({ version, range, expected, description }) => {
@@ -155,7 +223,7 @@ describe('Updater Plugin - Basic Tests', () => {
 
     it('should validate existing tags if any exist', async () => {
       const tags = await getAllTags();
-      
+
       if (tags.length > 0) {
         // Test the first tag
         const firstTag = tags[0];
@@ -235,10 +303,10 @@ describe('Updater Plugin - Basic Tests', () => {
         'v1.2.3',
         '1.2.3-alpha.1',
         '1.2.3+build.123',
-        'v2.0.0-beta.1+exp.sha.5114f85'
+        'v2.0.0-beta.1+exp.sha.5114f85',
       ];
 
-      inputs.forEach(input => {
+      inputs.forEach((input) => {
         const version = parseVersion(input);
         expect(version.raw).toBe(input);
       });

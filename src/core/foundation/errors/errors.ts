@@ -1,6 +1,6 @@
 /**
  * Error handling and cancellation utilities for the CLI SDK
- * 
+ *
  * Provides graceful error management, user-friendly messages,
  * and proper cleanup for CLI operations.
  */
@@ -62,8 +62,10 @@ export class ProcessError extends CLIError {
   constructor(message: string, command: string, exitCode?: number, cause?: Error) {
     super(message, {
       code: 'PROCESS_ERROR',
-      suggestion: exitCode === 127 ? `Command not found: ${command}. Make sure it's installed and in your PATH.` : 
-                  `Command failed: ${command}. Check the command syntax and try again.`,
+      suggestion:
+        exitCode === 127
+          ? `Command not found: ${command}. Make sure it's installed and in your PATH.`
+          : `Command failed: ${command}. Check the command syntax and try again.`,
       recoverable: true,
       context: { command, exitCode },
       cause,
@@ -74,7 +76,7 @@ export class ProcessError extends CLIError {
 export class NetworkError extends CLIError {
   constructor(message: string, url?: string, cause?: Error) {
     super(message, {
-      code: 'NETWORK_ERROR', 
+      code: 'NETWORK_ERROR',
       suggestion: 'Check your internet connection and try again.',
       recoverable: true,
       context: { url },
@@ -87,9 +89,9 @@ export class ConfigurationError extends CLIError {
   constructor(message: string, configPath?: string, cause?: Error) {
     super(message, {
       code: 'CONFIG_ERROR',
-      suggestion: configPath ? 
-        `Check the configuration file format: ${configPath}` :
-        'Verify your configuration settings and try again.',
+      suggestion: configPath
+        ? `Check the configuration file format: ${configPath}`
+        : 'Verify your configuration settings and try again.',
       recoverable: true,
       context: { configPath },
       cause,
@@ -101,9 +103,9 @@ export class ValidationError extends CLIError {
   constructor(message: string, field?: string, value?: any) {
     super(message, {
       code: 'VALIDATION_ERROR',
-      suggestion: field ? 
-        `Please provide a valid value for: ${field}` :
-        'Please check your input and try again.',
+      suggestion: field
+        ? `Please provide a valid value for: ${field}`
+        : 'Please check your input and try again.',
       recoverable: true,
       context: { field, value },
     });
@@ -137,7 +139,8 @@ export const ERROR_RECOVERY_SUGGESTIONS = {
   ECONNREFUSED: 'Connection refused. Check if the service is running and accessible.',
   ETIMEDOUT: 'Operation timed out. Check your network connection and try again.',
   ENOTFOUND: 'DNS lookup failed. Check the hostname and your internet connection.',
-  COMMAND_NOT_FOUND: 'Command not found. Make sure the required tool is installed and in your PATH.',
+  COMMAND_NOT_FOUND:
+    'Command not found. Make sure the required tool is installed and in your PATH.',
   INVALID_JSON: 'Invalid JSON format. Check the file syntax and try again.',
   UNSUPPORTED_NODE_VERSION: 'Unsupported Node.js version. Please upgrade to a supported version.',
 } as const;
@@ -160,7 +163,7 @@ export function handleCancel(operation?: string): never {
  * Graceful exit function with cleanup
  */
 export function gracefulExit(
-  code: number = 0, 
+  code: number = 0,
   message?: string,
   cleanup?: () => Promise<void> | void
 ): never {
@@ -185,7 +188,7 @@ export function gracefulExit(
 
   // Handle both sync and async cleanup
   exit();
-  
+
   // This line will never be reached, but satisfies TypeScript's never return type
   throw new Error('Process should have exited');
 }
@@ -193,21 +196,19 @@ export function gracefulExit(
 /**
  * Format error with stack trace prettification
  */
-export function formatError(error: Error, options: {
-  showStack?: boolean;
-  showSuggestion?: boolean;
-  showContext?: boolean;
-  colorize?: boolean;
-} = {}): string {
-  const {
-    showStack = false,
-    showSuggestion = true,
-    showContext = true,
-    colorize = true
-  } = options;
+export function formatError(
+  error: Error,
+  options: {
+    showStack?: boolean;
+    showSuggestion?: boolean;
+    showContext?: boolean;
+    colorize?: boolean;
+  } = {}
+): string {
+  const { showStack = false, showSuggestion = true, showContext = true, colorize = true } = options;
 
   const parts: string[] = [];
-  
+
   // Error name and message
   const errorHeader = `${error.name}: ${error.message}`;
   parts.push(colorize ? colors.red(errorHeader) : errorHeader);
@@ -252,7 +253,8 @@ export function formatError(error: Error, options: {
 export function getRecoverySuggestion(error: Error): string | undefined {
   // Check for known error codes
   if ('code' in error && typeof error.code === 'string') {
-    const suggestion = ERROR_RECOVERY_SUGGESTIONS[error.code as keyof typeof ERROR_RECOVERY_SUGGESTIONS];
+    const suggestion =
+      ERROR_RECOVERY_SUGGESTIONS[error.code as keyof typeof ERROR_RECOVERY_SUGGESTIONS];
     if (suggestion) return suggestion;
   }
 
@@ -263,7 +265,8 @@ export function getRecoverySuggestion(error: Error): string | undefined {
 
   // Check for common Node.js error codes
   if ('errno' in error && typeof error.errno === 'string') {
-    const suggestion = ERROR_RECOVERY_SUGGESTIONS[error.errno as keyof typeof ERROR_RECOVERY_SUGGESTIONS];
+    const suggestion =
+      ERROR_RECOVERY_SUGGESTIONS[error.errno as keyof typeof ERROR_RECOVERY_SUGGESTIONS];
     if (suggestion) return suggestion;
   }
 
@@ -293,27 +296,21 @@ export function withErrorHandling<T extends any[], R>(
 
       // Wrap other errors in CLIError
       if (error instanceof Error) {
-        throw new CLIError(
-          `${operation ? `${operation}: ` : ''}${error.message}`,
-          {
-            code: 'WRAPPED_ERROR',
-            suggestion: getRecoverySuggestion(error),
-            recoverable: true,
-            context: { operation },
-            cause: error,
-          }
-        );
+        throw new CLIError(`${operation ? `${operation}: ` : ''}${error.message}`, {
+          code: 'WRAPPED_ERROR',
+          suggestion: getRecoverySuggestion(error),
+          recoverable: true,
+          context: { operation },
+          cause: error,
+        });
       }
 
       // Handle non-Error objects
-      throw new CLIError(
-        `${operation ? `${operation}: ` : ''}Unknown error occurred`,
-        {
-          code: 'UNKNOWN_ERROR',
-          recoverable: false,
-          context: { operation, error },
-        }
-      );
+      throw new CLIError(`${operation ? `${operation}: ` : ''}Unknown error occurred`, {
+        code: 'UNKNOWN_ERROR',
+        recoverable: false,
+        context: { operation, error },
+      });
     }
   };
 }
@@ -321,16 +318,18 @@ export function withErrorHandling<T extends any[], R>(
 /**
  * Setup global error handlers for unhandled errors
  */
-export function setupGlobalErrorHandlers(options: {
-  onUnhandledRejection?: (error: Error) => void;
-  onUncaughtException?: (error: Error) => void;
-} = {}): void {
+export function setupGlobalErrorHandlers(
+  options: {
+    onUnhandledRejection?: (error: Error) => void;
+    onUncaughtException?: (error: Error) => void;
+  } = {}
+): void {
   const { onUnhandledRejection, onUncaughtException } = options;
 
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (reason) => {
     const error = reason instanceof Error ? reason : new Error(String(reason));
-    
+
     if (onUnhandledRejection) {
       onUnhandledRejection(error);
     } else {

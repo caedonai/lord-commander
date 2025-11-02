@@ -1,12 +1,12 @@
 /**
  * Performance and Memory Tests for Icon System
- * 
+ *
  * Tests for icon caching efficiency, memory usage optimization,
  * high-volume usage scenarios, and performance bottlenecks.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { PlatformCapabilities, IconProvider, IconSecurity } from '../../core/ui/icons.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { IconProvider, IconSecurity, PlatformCapabilities } from '../../core/ui/icons.js';
 import { createLogger } from '../../core/ui/logger.js';
 
 // Mock @clack/prompts to avoid stdout.write issues
@@ -17,7 +17,7 @@ vi.mock('@clack/prompts', () => ({
     warning: vi.fn(),
     error: vi.fn(),
     success: vi.fn(),
-    step: vi.fn()
+    step: vi.fn(),
   },
   intro: vi.fn(),
   outro: vi.fn(),
@@ -28,8 +28,8 @@ vi.mock('@clack/prompts', () => ({
   spinner: vi.fn(() => ({
     start: vi.fn(),
     stop: vi.fn(),
-    message: vi.fn()
-  }))
+    message: vi.fn(),
+  })),
 }));
 
 describe('Icon System Performance and Memory', () => {
@@ -48,7 +48,7 @@ describe('Icon System Performance and Memory', () => {
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       // First call (should compute)
@@ -72,7 +72,7 @@ describe('Icon System Performance and Memory', () => {
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       const start1 = Date.now();
@@ -93,7 +93,7 @@ describe('Icon System Performance and Memory', () => {
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       // First icon generation
@@ -116,24 +116,24 @@ describe('Icon System Performance and Memory', () => {
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       const icons1 = IconProvider.getIcons();
-      
+
       // Reset should invalidate cache
       IconProvider.reset();
       PlatformCapabilities.reset();
-      
+
       // Change environment
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: {} // Different environment
+        env: {}, // Different environment
       });
 
       const icons2 = IconProvider.getIcons();
-      
+
       // Should be different objects with potentially different icons
       expect(icons2).not.toBe(icons1);
       // Rocket icon should be different (emoji vs ASCII)
@@ -146,17 +146,17 @@ describe('Icon System Performance and Memory', () => {
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       // Create many icon instances
       const iconSets: any[] = [];
-      
+
       for (let i = 0; i < 100; i++) {
         // Each call should return the same cached object
         const icons = IconProvider.getIcons();
         iconSets.push(icons);
-        
+
         // Force garbage collection point
         if (i % 10 === 0 && global.gc) {
           global.gc();
@@ -165,7 +165,7 @@ describe('Icon System Performance and Memory', () => {
 
       // All should be the same object (no memory duplication)
       const firstSet = iconSets[0];
-      iconSets.forEach(set => {
+      iconSets.forEach((set) => {
         expect(set).toBe(firstSet);
       });
     });
@@ -176,8 +176,8 @@ describe('Icon System Performance and Memory', () => {
         platform: ['win32', 'darwin', 'linux'][i % 3] as NodeJS.Platform,
         env: {
           TERM_PROGRAM: i % 2 === 0 ? 'vscode' : undefined,
-          CI: i % 3 === 0 ? 'true' : undefined
-        }
+          CI: i % 3 === 0 ? 'true' : undefined,
+        },
       }));
 
       scenarios.forEach((scenario, index) => {
@@ -188,7 +188,7 @@ describe('Icon System Performance and Memory', () => {
           ...process,
           platform: scenario.platform,
           stdout: { isTTY: true },
-          env: scenario.env
+          env: scenario.env,
         });
 
         // Should not consume excessive memory
@@ -211,18 +211,18 @@ describe('Icon System Performance and Memory', () => {
 
       // Test that security validation doesn't create excessive objects
       const start = Date.now();
-      
+
       for (let i = 0; i < iterations; i++) {
         IconSecurity.sanitizeIcon(testIcon);
         IconSecurity.isValidIcon(testIcon);
-        
+
         // Should be very fast for safe icons
         if (i > 0 && i % 100 === 0) {
           const elapsed = Date.now() - start;
           expect(elapsed).toBeLessThan((i / 100) * 20); // Less than 20ms per 100 operations
         }
       }
-      
+
       const totalElapsed = Date.now() - start;
       expect(totalElapsed).toBeLessThan(100); // Total should be under 100ms
     });
@@ -237,15 +237,15 @@ describe('Icon System Performance and Memory', () => {
       vi.spyOn(console, 'log').mockImplementation(() => {});
 
       const start = Date.now();
-      
+
       for (let i = 0; i < messageCount; i++) {
         logger.rocket(`Message ${i}`);
         logger.cloud(`Cloud message ${i}`);
         logger.package(`Package message ${i}`);
       }
-      
+
       const elapsed = Date.now() - start;
-      
+
       // Should handle 3000 icon messages in reasonable time
       expect(elapsed).toBeLessThan(1000); // Less than 1ms per message
     });
@@ -254,7 +254,7 @@ describe('Icon System Performance and Memory', () => {
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       // Create concurrent promises accessing icons
@@ -288,10 +288,10 @@ describe('Icon System Performance and Memory', () => {
 
       for (let i = 0; i < iterations; i++) {
         const input = mixedInputs[i % mixedInputs.length];
-        
+
         IconSecurity.sanitizeIcon(input);
         IconSecurity.isValidIcon(input);
-        
+
         // Occasionally run full analysis (more expensive)
         if (i % 10 === 0) {
           IconSecurity.analyzeIconSecurity(input);
@@ -299,7 +299,7 @@ describe('Icon System Performance and Memory', () => {
       }
 
       const elapsed = Date.now() - start;
-      
+
       // Should handle mixed inputs efficiently
       expect(elapsed).toBeLessThan(200);
     });
@@ -307,14 +307,14 @@ describe('Icon System Performance and Memory', () => {
     it('should maintain performance with large security analysis', () => {
       // Create progressively larger inputs to test performance scaling
       const inputSizes = [10, 100, 1000, 5000];
-      
-      inputSizes.forEach(size => {
+
+      inputSizes.forEach((size) => {
         const largeInput = '🚀'.repeat(size);
-        
+
         const start = Date.now();
         const analysis = IconSecurity.analyzeIconSecurity(largeInput);
         const elapsed = Date.now() - start;
-        
+
         // Should complete analysis regardless of size (with truncation)
         expect(analysis).toBeDefined();
         expect(elapsed).toBeLessThan(50); // Should be fast due to length limiting
@@ -328,28 +328,28 @@ describe('Icon System Performance and Memory', () => {
         { env: {}, expected: 'minimal' },
         { env: { TERM_PROGRAM: 'vscode' }, expected: 'modern' },
         { env: { CI: 'true', GITHUB_ACTIONS: 'true' }, expected: 'ci' },
-        { env: { WT_SESSION: 'abc', COLORTERM: 'truecolor' }, expected: 'advanced' }
+        { env: { WT_SESSION: 'abc', COLORTERM: 'truecolor' }, expected: 'advanced' },
       ];
 
       testEnvironments.forEach(({ env }) => {
         PlatformCapabilities.reset();
-        
+
         vi.stubGlobal('process', {
           ...process,
           stdout: { isTTY: true },
-          env
+          env,
         });
 
         const start = Date.now();
-        
+
         // Multiple calls to same environment
         for (let i = 0; i < 10; i++) {
           PlatformCapabilities.supportsUnicode();
           PlatformCapabilities.supportsEmoji();
         }
-        
+
         const elapsed = Date.now() - start;
-        
+
         // All environments should be fast (cached after first)
         expect(elapsed).toBeLessThan(20);
       });
@@ -357,8 +357,8 @@ describe('Icon System Performance and Memory', () => {
 
     it('should profile icon generation performance', () => {
       const platforms: NodeJS.Platform[] = ['win32', 'darwin', 'linux'];
-      
-      platforms.forEach(platform => {
+
+      platforms.forEach((platform) => {
         PlatformCapabilities.reset();
         IconProvider.reset();
 
@@ -366,22 +366,22 @@ describe('Icon System Performance and Memory', () => {
           ...process,
           platform,
           stdout: { isTTY: true },
-          env: { TERM_PROGRAM: 'vscode' }
+          env: { TERM_PROGRAM: 'vscode' },
         });
 
         const start = Date.now();
-        
+
         // Generate icons and access individual icons
         const icons = IconProvider.getIcons();
-        
+
         // Access all icon types
         const iconKeys = Object.keys(icons);
-        iconKeys.forEach(key => {
+        iconKeys.forEach((key) => {
           IconProvider.get(key as any);
         });
-        
+
         const elapsed = Date.now() - start;
-        
+
         // Icon generation should be consistent across platforms
         expect(elapsed).toBeLessThan(50);
       });
@@ -394,23 +394,23 @@ describe('Icon System Performance and Memory', () => {
         { input: 'A', type: 'safe-ascii' },
         { input: '\\x1b[31mtest\\x1b[0m', type: 'ansi-attack' },
         { input: 'test\\x07', type: 'control-char' },
-        { input: '\\u202Etest\\u202C', type: 'unicode-attack' }
+        { input: '\\u202Etest\\u202C', type: 'unicode-attack' },
       ];
 
       securityTests.forEach(({ input, type }) => {
         const iterations = 100;
         const start = Date.now();
-        
+
         for (let i = 0; i < iterations; i++) {
           IconSecurity.sanitizeIcon(input);
           IconSecurity.isValidIcon(input);
         }
-        
+
         const elapsed = Date.now() - start;
-        
+
         // All security validations should be fast
         expect(elapsed).toBeLessThan(100);
-        
+
         // Safe inputs should be particularly fast
         if (type.startsWith('safe-')) {
           expect(elapsed).toBeLessThan(20);
@@ -422,15 +422,15 @@ describe('Icon System Performance and Memory', () => {
   describe('Memory Leak Detection', () => {
     it('should not leak memory through platform detection', () => {
       const initialMemory = process.memoryUsage ? process.memoryUsage().heapUsed : 0;
-      
+
       // Create many platform detection cycles
       for (let i = 0; i < 100; i++) {
         PlatformCapabilities.reset();
-        
+
         vi.stubGlobal('process', {
           ...process,
           stdout: { isTTY: true },
-          env: { TERM_PROGRAM: `test-${i}` }
+          env: { TERM_PROGRAM: `test-${i}` },
         });
 
         PlatformCapabilities.supportsUnicode();
@@ -444,7 +444,7 @@ describe('Icon System Performance and Memory', () => {
       }
 
       const finalMemory = process.memoryUsage ? process.memoryUsage().heapUsed : 0;
-      
+
       // Memory should not grow excessively
       if (initialMemory > 0 && finalMemory > 0) {
         const memoryGrowth = finalMemory - initialMemory;
@@ -454,22 +454,22 @@ describe('Icon System Performance and Memory', () => {
 
     it('should not leak memory through icon generation', () => {
       const initialMemory = process.memoryUsage ? process.memoryUsage().heapUsed : 0;
-      
+
       // Create many icon generation cycles
       for (let i = 0; i < 50; i++) {
         IconProvider.reset();
         PlatformCapabilities.reset();
-        
+
         vi.stubGlobal('process', {
           ...process,
           stdout: { isTTY: true },
-          env: { TERM_PROGRAM: i % 2 === 0 ? 'vscode' : undefined }
+          env: { TERM_PROGRAM: i % 2 === 0 ? 'vscode' : undefined },
         });
 
         const icons = IconProvider.getIcons();
-        
+
         // Access all icons
-        Object.keys(icons).forEach(key => {
+        Object.keys(icons).forEach((key) => {
           IconProvider.get(key as any);
         });
       }
@@ -479,7 +479,7 @@ describe('Icon System Performance and Memory', () => {
       }
 
       const finalMemory = process.memoryUsage ? process.memoryUsage().heapUsed : 0;
-      
+
       if (initialMemory > 0 && finalMemory > 0) {
         const memoryGrowth = finalMemory - initialMemory;
         expect(memoryGrowth).toBeLessThan(512 * 1024); // Less than 512KB growth
@@ -487,19 +487,17 @@ describe('Icon System Performance and Memory', () => {
     });
 
     it('should not leak memory through security validation', () => {
-      const testInputs = [
-        '🚀', '\\x1b[31mtest\\x1b[0m', 'A'.repeat(1000), '\\u202Etest\\u202C'
-      ];
+      const testInputs = ['🚀', '\\x1b[31mtest\\x1b[0m', 'A'.repeat(1000), '\\u202Etest\\u202C'];
 
       const initialMemory = process.memoryUsage ? process.memoryUsage().heapUsed : 0;
 
       // Perform many security validations
       for (let i = 0; i < 1000; i++) {
         const input = testInputs[i % testInputs.length];
-        
+
         IconSecurity.sanitizeIcon(input);
         IconSecurity.isValidIcon(input);
-        
+
         if (i % 100 === 0) {
           IconSecurity.analyzeIconSecurity(input);
         }
@@ -510,7 +508,7 @@ describe('Icon System Performance and Memory', () => {
       }
 
       const finalMemory = process.memoryUsage ? process.memoryUsage().heapUsed : 0;
-      
+
       if (initialMemory > 0 && finalMemory > 0) {
         const memoryGrowth = finalMemory - initialMemory;
         expect(memoryGrowth).toBeLessThan(10 * 1024 * 1024); // Less than 10MB growth (realistic for test environment)
@@ -523,27 +521,27 @@ describe('Icon System Performance and Memory', () => {
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       const icons = IconProvider.getIcons();
       const iconCount = Object.keys(icons).length;
-      
+
       // Should handle current icon count efficiently
       expect(iconCount).toBeGreaterThan(20); // We have many icons
-      
+
       const start = Date.now();
-      
+
       // Access all icons multiple times
       for (let i = 0; i < 10; i++) {
-        Object.keys(icons).forEach(key => {
+        Object.keys(icons).forEach((key) => {
           const icon = IconProvider.get(key as any);
           expect(icon).toBeTruthy();
         });
       }
-      
+
       const elapsed = Date.now() - start;
-      
+
       // Should scale linearly with icon count
       const timePerIcon = elapsed / (iconCount * 10);
       expect(timePerIcon).toBeLessThan(0.1); // Less than 0.1ms per icon access
@@ -553,16 +551,16 @@ describe('Icon System Performance and Memory', () => {
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       vi.spyOn(console, 'log').mockImplementation(() => {});
 
       // Create multiple logger instances
       const loggers = Array.from({ length: 10 }, () => createLogger());
-      
+
       const start = Date.now();
-      
+
       // Have all loggers use icons concurrently
       loggers.forEach((logger, index) => {
         for (let i = 0; i < 10; i++) {
@@ -570,9 +568,9 @@ describe('Icon System Performance and Memory', () => {
           logger.cloud(`Logger ${index} cloud ${i}`);
         }
       });
-      
+
       const elapsed = Date.now() - start;
-      
+
       // Should handle multiple logger instances efficiently
       expect(elapsed).toBeLessThan(100);
     });
@@ -584,20 +582,20 @@ describe('Icon System Performance and Memory', () => {
         { icon: '🚀', type: 'Emoji' },
         { icon: '🏳️‍🌈', type: 'Complex Emoji Sequence' },
         { icon: 'é', type: 'Composed Character' },
-        { icon: 'e\\u0301', type: 'Decomposed Character' }
+        { icon: 'e\\u0301', type: 'Decomposed Character' },
       ];
 
       unicodeComplexities.forEach(({ icon }) => {
         const iterations = 100;
         const start = Date.now();
-        
+
         for (let i = 0; i < iterations; i++) {
           IconSecurity.sanitizeIcon(icon);
           IconSecurity.analyzeIconSecurity(icon);
         }
-        
+
         const elapsed = Date.now() - start;
-        
+
         // All Unicode complexities should be handled efficiently
         expect(elapsed).toBeLessThan(50);
       });

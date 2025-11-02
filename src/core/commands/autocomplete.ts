@@ -1,11 +1,11 @@
 /**
  * Shell Autocomplete Core Module
- * 
+ *
  * Provides comprehensive shell completion support for CLI applications built with the SDK.
  * Supports bash, zsh, fish, and PowerShell with command, option, and argument completion.
  */
 
-import { Command } from 'commander';
+import type { Command } from 'commander';
 import { execa } from '../execution/execa.js';
 import { createLogger } from '../ui/logger.js';
 
@@ -14,17 +14,21 @@ export interface CompletionOptions {
    * Custom completion function for command arguments
    */
   argumentCompletion?: (partial: string, command: string) => Promise<string[]> | string[];
-  
+
   /**
    * Custom completion function for option values
    */
-  optionCompletion?: (partial: string, option: string, command: string) => Promise<string[]> | string[];
-  
+  optionCompletion?: (
+    partial: string,
+    option: string,
+    command: string
+  ) => Promise<string[]> | string[];
+
   /**
    * Enable file/directory completion for arguments
    */
   enableFileCompletion?: boolean;
-  
+
   /**
    * Shell-specific completion customizations
    */
@@ -41,12 +45,12 @@ export interface CompletionContext {
    * The CLI program instance
    */
   program: Command;
-  
+
   /**
    * CLI name for completion scripts
    */
   cliName: string;
-  
+
   /**
    * Analyzed commands
    */
@@ -65,7 +69,7 @@ export interface CompletionContext {
       variadic: boolean;
     }>;
   }>;
-  
+
   /**
    * Global options available to all commands
    */
@@ -73,7 +77,7 @@ export interface CompletionContext {
     flags: string;
     description: string;
   }>;
-  
+
   /**
    * Completion options
    */
@@ -88,41 +92,41 @@ export function analyzeProgram(program: Command, cliName?: string): CompletionCo
   const globalOptions: any[] = [];
 
   // Extract global options
-  program.options.forEach(option => {
+  program.options.forEach((option) => {
     globalOptions.push({
       flags: option.flags,
-      description: option.description || ''
+      description: option.description || '',
     });
   });
 
   // Extract commands recursively
   function extractCommands(cmd: Command, parentName = '') {
-    cmd.commands.forEach(subCmd => {
+    cmd.commands.forEach((subCmd) => {
       const fullName = parentName ? `${parentName} ${subCmd.name()}` : subCmd.name();
-      
+
       const cmdInfo = {
         name: fullName,
         aliases: (subCmd as any)._aliases || [],
         description: subCmd.description() || '',
         options: [] as any[],
-        arguments: [] as any[]
+        arguments: [] as any[],
       };
 
       // Extract command options
-      subCmd.options.forEach(option => {
+      subCmd.options.forEach((option) => {
         cmdInfo.options.push({
           flags: option.flags,
           description: option.description || '',
-          required: option.required || false
+          required: option.required || false,
         });
       });
 
       // Extract command arguments
-      subCmd.registeredArguments?.forEach(arg => {
+      subCmd.registeredArguments?.forEach((arg) => {
         cmdInfo.arguments.push({
           name: arg.name(),
           required: arg.required,
-          variadic: arg.variadic
+          variadic: arg.variadic,
         });
       });
 
@@ -137,11 +141,11 @@ export function analyzeProgram(program: Command, cliName?: string): CompletionCo
 
   extractCommands(program);
 
-  return { 
-    program, 
+  return {
+    program,
     cliName: cliName || program.name() || 'cli',
-    commands, 
-    globalOptions 
+    commands,
+    globalOptions,
   };
 }
 
@@ -151,10 +155,8 @@ export function analyzeProgram(program: Command, cliName?: string): CompletionCo
 export function generateBashCompletion(context: CompletionContext): string {
   const { cliName, options, commands, globalOptions } = context;
 
-  const commandNames = commands.map(cmd => cmd.name).join(' ');
-  const globalOptionFlags = globalOptions
-    .map(opt => opt.flags.split(',')[0].trim())
-    .join(' ');
+  const commandNames = commands.map((cmd) => cmd.name).join(' ');
+  const globalOptionFlags = globalOptions.map((opt) => opt.flags.split(',')[0].trim()).join(' ');
 
   const bashScript = `#!/bin/bash
 # ${cliName} bash completion script
@@ -180,24 +182,28 @@ _${cliName}_completion() {
 
     # Complete command-specific options
     case "\${COMP_WORDS[1]}" in
-${commands.map(cmd => {
-  const cmdOptions = cmd.options
-    .map(opt => opt.flags.split(',')[0].trim())
-    .join(' ');
-  
-  return `        "${cmd.name}")
+${commands
+  .map((cmd) => {
+    const cmdOptions = cmd.options.map((opt) => opt.flags.split(',')[0].trim()).join(' ');
+
+    return `        "${cmd.name}")
             COMPREPLY=( $(compgen -W "${cmdOptions} ${globalOptionFlags}" -- \${cur}) )
             return 0
             ;;`;
-}).join('\n')}
+  })
+  .join('\n')}
     esac
 
-    ${options?.enableFileCompletion ? `
+    ${
+      options?.enableFileCompletion
+        ? `
     # File/directory completion for arguments
     if [[ "\${cur}" != -* ]]; then
         COMPREPLY=( $(compgen -f -- \${cur}) )
         return 0
-    fi` : ''}
+    fi`
+        : ''
+    }
 
     ${options?.shellCustomizations?.bash || ''}
 }
@@ -223,46 +229,58 @@ _${cliName}() {
     typeset -A opt_args
 
     _arguments -C \\
-${globalOptions.map(opt => {
-  const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1];
-  const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1];
-  const flags = [shortFlag && `-${shortFlag}`, longFlag && `--${longFlag}`].filter(Boolean).join(',');
-  return `        '${flags}[${opt.description}]' \\`;
-}).join('\n')}
+${globalOptions
+  .map((opt) => {
+    const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1];
+    const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1];
+    const flags = [shortFlag && `-${shortFlag}`, longFlag && `--${longFlag}`]
+      .filter(Boolean)
+      .join(',');
+    return `        '${flags}[${opt.description}]' \\`;
+  })
+  .join('\n')}
         '1: :_${cliName}_commands' \\
         '*::arg:->args'
 
     case $line[1] in
-${commands.map(cmd => {
-  return `        ${cmd.name})
+${commands
+  .map((cmd) => {
+    return `        ${cmd.name})
             _${cliName}_${cmd.name.replace(/[^a-zA-Z0-9]/g, '_')}_args
             ;;`;
-}).join('\n')}
+  })
+  .join('\n')}
     esac
 }
 
 _${cliName}_commands() {
     local commands; commands=(
-${commands.map(cmd => `        '${cmd.name}:${cmd.description}'`).join('\n')}
+${commands.map((cmd) => `        '${cmd.name}:${cmd.description}'`).join('\n')}
     )
     _describe 'command' commands
 }
 
-${commands.map(cmd => {
-  const funcName = `_${cliName}_${cmd.name.replace(/[^a-zA-Z0-9]/g, '_')}_args`;
-  const cmdOptions = cmd.options.map(opt => {
-    const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1];
-    const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1];
-    const flags = [shortFlag && `-${shortFlag}`, longFlag && `--${longFlag}`].filter(Boolean).join(',');
-    return `        '${flags}[${opt.description}]' \\`;
-  }).join('\n');
+${commands
+  .map((cmd) => {
+    const funcName = `_${cliName}_${cmd.name.replace(/[^a-zA-Z0-9]/g, '_')}_args`;
+    const cmdOptions = cmd.options
+      .map((opt) => {
+        const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1];
+        const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1];
+        const flags = [shortFlag && `-${shortFlag}`, longFlag && `--${longFlag}`]
+          .filter(Boolean)
+          .join(',');
+        return `        '${flags}[${opt.description}]' \\`;
+      })
+      .join('\n');
 
-  return `${funcName}() {
+    return `${funcName}() {
     _arguments \\
 ${cmdOptions}
         ${options?.enableFileCompletion ? "'*:file:_files'" : "'*:argument:'"}
 }`;
-}).join('\n\n')}
+  })
+  .join('\n\n')}
 
 ${options?.shellCustomizations?.zsh || ''}
 
@@ -284,10 +302,10 @@ export function generateFishCompletion(context: CompletionContext): string {
 `;
 
   // Global options
-  globalOptions.forEach(opt => {
+  globalOptions.forEach((opt) => {
     const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1];
     const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1];
-    
+
     if (shortFlag) {
       fishScript += `complete -c ${cliName} -s ${shortFlag} -d "${opt.description}"\n`;
     }
@@ -299,16 +317,16 @@ export function generateFishCompletion(context: CompletionContext): string {
   fishScript += '\n';
 
   // Commands
-  commands.forEach(cmd => {
+  commands.forEach((cmd) => {
     fishScript += `complete -c ${cliName} -f -a "${cmd.name}" -d "${cmd.description}"\n`;
-    
+
     // Command-specific options
-    cmd.options.forEach(opt => {
+    cmd.options.forEach((opt) => {
       const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1];
       const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1];
-      
+
       const condition = `__fish_seen_subcommand_from ${cmd.name}`;
-      
+
       if (shortFlag) {
         fishScript += `complete -c ${cliName} -s ${shortFlag} -n "${condition}" -d "${opt.description}"\n`;
       }
@@ -344,14 +362,17 @@ Register-ArgumentCompleter -Native -CommandName ${cliName} -ScriptBlock {
     param($commandName, $wordToComplete, $cursorPosition)
     
     $commands = @(
-${commands.map(cmd => `        "${cmd.name}"`).join(',\n')}
+${commands.map((cmd) => `        "${cmd.name}"`).join(',\n')}
     )
     
     $globalOptions = @(
-${globalOptions.map(opt => {
-  const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1];
-  return longFlag ? `        "--${longFlag}"` : null;
-}).filter(Boolean).join(',\n')}
+${globalOptions
+  .map((opt) => {
+    const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1];
+    return longFlag ? `        "--${longFlag}"` : null;
+  })
+  .filter(Boolean)
+  .join(',\n')}
     )
     
     # Get the current command line
@@ -370,29 +391,35 @@ ${globalOptions.map(opt => {
     # Complete command-specific options
     $command = $commandElements[1]
     switch ($command) {
-${commands.map(cmd => {
-  const cmdOptions = cmd.options
-    .map(opt => opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1])
-    .filter(Boolean)
-    .map(flag => `"--${flag}"`);
-  
-  return `        "${cmd.name}" {
+${commands
+  .map((cmd) => {
+    const cmdOptions = cmd.options
+      .map((opt) => opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1])
+      .filter(Boolean)
+      .map((flag) => `"--${flag}"`);
+
+    return `        "${cmd.name}" {
             $options = @(${cmdOptions.join(', ')})
             $completions = $options + $globalOptions | Where-Object { $_ -like "$lastElement*" }
             $completions | ForEach-Object {
                 [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
             }
         }`;
-}).join('\n        ')}
+  })
+  .join('\n        ')}
     }
     
-    ${options?.enableFileCompletion ? `
+    ${
+      options?.enableFileCompletion
+        ? `
     # File completion for arguments
     if ($lastElement -notmatch '^-') {
         Get-ChildItem -Path "$lastElement*" | ForEach-Object {
             [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, 'ProviderItem', $_.Name)
         }
-    }` : ''}
+    }`
+        : ''
+    }
     
     ${options?.shellCustomizations?.powershell || ''}
 }
@@ -453,7 +480,7 @@ export async function installCompletion(
 ): Promise<CompletionResult> {
   const context = analyzeProgram(program);
   const { cliName } = context;
-  
+
   // Detect shell if not specified
   let shell = options.shell;
   if (!shell) {
@@ -470,7 +497,7 @@ export async function installCompletion(
   switch (shell) {
     case 'bash':
       script = generateBashCompletion(context);
-      installPath = options.global 
+      installPath = options.global
         ? `/etc/bash_completion.d/${cliName}`
         : `~/.local/share/bash-completion/completions/${cliName}`;
       installCommand = options.global
@@ -480,7 +507,7 @@ export async function installCompletion(
 
     case 'zsh':
       script = generateZshCompletion(context);
-      installPath = options.global 
+      installPath = options.global
         ? `/usr/local/share/zsh/site-functions/_${cliName}`
         : `~/.zsh/completions/_${cliName}`;
       installCommand = options.global
@@ -504,14 +531,14 @@ export async function installCompletion(
         success: false,
         error: 'PowerShell completion requires manual installation',
         restartRequired: false,
-        activationCommand: 'Add the completion script to your PowerShell profile'
+        activationCommand: 'Add the completion script to your PowerShell profile',
       };
 
     default:
       return {
         success: false,
         error: `Unsupported shell: ${shell}`,
-        restartRequired: false
+        restartRequired: false,
       };
   }
 
@@ -520,13 +547,13 @@ export async function installCompletion(
     return {
       success: true,
       restartRequired: true,
-      activationCommand: shell === 'bash' ? `source ${installPath}` : `exec ${shell}`
+      activationCommand: shell === 'bash' ? `source ${installPath}` : `exec ${shell}`,
     };
   } catch (error) {
     return {
       success: false,
       error: `Failed to install completion: ${error}`,
-      restartRequired: false
+      restartRequired: false,
     };
   }
 }
@@ -536,16 +563,16 @@ export async function installCompletion(
  */
 export async function detectShell(): Promise<'bash' | 'zsh' | 'fish' | 'powershell'> {
   const shell = process.env.SHELL || '';
-  
+
   if (shell.includes('zsh')) return 'zsh';
   if (shell.includes('fish')) return 'fish';
   if (shell.includes('bash')) return 'bash';
-  
+
   // Check for PowerShell on Windows
   if (process.platform === 'win32') {
     return 'powershell';
   }
-  
+
   return 'bash'; // Default fallback
 }
 
@@ -561,7 +588,7 @@ export async function uninstallCompletion(
 ): Promise<CompletionResult> {
   const context = analyzeProgram(program);
   const { cliName } = context;
-  
+
   // Detect shell if not specified
   let shell = options.shell;
   if (!shell) {
@@ -576,44 +603,38 @@ export async function uninstallCompletion(
 
   switch (shell) {
     case 'bash':
-      installPath = options.global 
+      installPath = options.global
         ? `/etc/bash_completion.d/${cliName}`
         : `~/.local/share/bash-completion/completions/${cliName}`;
-      removeCommand = options.global
-        ? `sudo rm -f ${installPath}`
-        : `rm -f ${installPath}`;
+      removeCommand = options.global ? `sudo rm -f ${installPath}` : `rm -f ${installPath}`;
       break;
 
     case 'zsh':
-      installPath = options.global 
+      installPath = options.global
         ? `/usr/local/share/zsh/site-functions/_${cliName}`
         : `~/.zsh/completions/_${cliName}`;
-      removeCommand = options.global
-        ? `sudo rm -f ${installPath}`
-        : `rm -f ${installPath}`;
+      removeCommand = options.global ? `sudo rm -f ${installPath}` : `rm -f ${installPath}`;
       break;
 
     case 'fish':
       installPath = options.global
         ? `/usr/share/fish/completions/${cliName}.fish`
         : `~/.config/fish/completions/${cliName}.fish`;
-      removeCommand = options.global
-        ? `sudo rm -f ${installPath}`
-        : `rm -f ${installPath}`;
+      removeCommand = options.global ? `sudo rm -f ${installPath}` : `rm -f ${installPath}`;
       break;
 
     case 'powershell':
       return {
         success: false,
         error: 'PowerShell completion requires manual removal from your profile',
-        restartRequired: false
+        restartRequired: false,
       };
 
     default:
       return {
         success: false,
         error: `Unsupported shell: ${shell}`,
-        restartRequired: false
+        restartRequired: false,
       };
   }
 
@@ -621,13 +642,13 @@ export async function uninstallCompletion(
     await execa('bash', ['-c', removeCommand]);
     return {
       success: true,
-      restartRequired: false
+      restartRequired: false,
     };
   } catch (error) {
     return {
       success: false,
       error: `Failed to uninstall completion: ${error}`,
-      restartRequired: false
+      restartRequired: false,
     };
   }
 }
@@ -641,7 +662,7 @@ export async function checkCompletionStatus(
 ): Promise<CompletionStatus> {
   const context = analyzeProgram(program);
   const { cliName } = context;
-  
+
   // Detect shell if not specified
   if (!shell) {
     shell = await detectShell();
@@ -650,7 +671,7 @@ export async function checkCompletionStatus(
   const status: CompletionStatus = {
     shell,
     cliName,
-    installed: false
+    installed: false,
   };
 
   try {
@@ -660,8 +681,11 @@ export async function checkCompletionStatus(
       case 'bash':
         possiblePaths = [
           { path: `/etc/bash_completion.d/${cliName}`, type: 'global' },
-          { path: `${process.env.HOME}/.local/share/bash-completion/completions/${cliName}`, type: 'local' },
-          { path: `${process.env.HOME}/.bash_completion.d/${cliName}`, type: 'local' }
+          {
+            path: `${process.env.HOME}/.local/share/bash-completion/completions/${cliName}`,
+            type: 'local',
+          },
+          { path: `${process.env.HOME}/.bash_completion.d/${cliName}`, type: 'local' },
         ];
         break;
 
@@ -670,19 +694,20 @@ export async function checkCompletionStatus(
           { path: `/usr/local/share/zsh/site-functions/_${cliName}`, type: 'global' },
           { path: `/usr/share/zsh/site-functions/_${cliName}`, type: 'global' },
           { path: `${process.env.HOME}/.zsh/completions/_${cliName}`, type: 'local' },
-          { path: `${process.env.HOME}/.zsh/site-functions/_${cliName}`, type: 'local' }
+          { path: `${process.env.HOME}/.zsh/site-functions/_${cliName}`, type: 'local' },
         ];
         break;
 
       case 'fish':
         possiblePaths = [
           { path: `/usr/share/fish/completions/${cliName}.fish`, type: 'global' },
-          { path: `${process.env.HOME}/.config/fish/completions/${cliName}.fish`, type: 'local' }
+          { path: `${process.env.HOME}/.config/fish/completions/${cliName}.fish`, type: 'local' },
         ];
         break;
 
       case 'powershell':
-        status.errorMessage = 'PowerShell completion status cannot be automatically detected (requires manual profile inspection)';
+        status.errorMessage =
+          'PowerShell completion status cannot be automatically detected (requires manual profile inspection)';
         return status;
 
       default:
@@ -698,7 +723,7 @@ export async function checkCompletionStatus(
         status.installed = true;
         status.installationPath = path;
         status.installationType = type;
-        
+
         // Try to determine if it's active by checking file content
         try {
           const content = await fs.readFile(path, 'utf-8');
@@ -706,7 +731,7 @@ export async function checkCompletionStatus(
         } catch {
           status.isActive = undefined; // Cannot determine
         }
-        
+
         break; // Found installation, stop checking
       } catch {
         // File doesn't exist, continue checking

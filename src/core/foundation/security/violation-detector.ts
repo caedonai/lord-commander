@@ -1,17 +1,17 @@
 /**
  * Security Violation Detection Engine (Task 1.2.2)
- * 
+ *
  * Centralized security violation detection system that provides comprehensive
  * threat analysis, risk scoring, attack correlation, and compliance mapping.
- * 
+ *
  * @security This module is the core of the security validation framework
  * @see Task 1.2.2: Security Violation Detection
  */
 
-import { 
-  analyzeInputSecurity, 
-  SecurityViolation as BaseSecurityViolation,
-  SecurityAnalysisResult 
+import {
+  analyzeInputSecurity,
+  type SecurityViolation as BaseSecurityViolation,
+  type SecurityAnalysisResult,
 } from './patterns.js';
 
 /**
@@ -39,7 +39,14 @@ export interface EnhancedSecurityViolation extends BaseSecurityViolation {
  */
 export interface ViolationContext {
   /** Type of input being validated */
-  inputType: 'project-name' | 'package-manager' | 'file-path' | 'command-arg' | 'config-value' | 'url' | 'email';
+  inputType:
+    | 'project-name'
+    | 'package-manager'
+    | 'file-path'
+    | 'command-arg'
+    | 'config-value'
+    | 'url'
+    | 'email';
   /** User role performing the action */
   userRole?: 'admin' | 'user' | 'guest' | 'service';
   /** Environment where validation occurs */
@@ -217,43 +224,43 @@ export interface RiskScoringConfig {
  */
 export const DEFAULT_RISK_SCORING_CONFIG: RiskScoringConfig = {
   severityWeights: {
-    'critical': 40,
-    'high': 30,
-    'medium': 20,
-    'low': 10
+    critical: 40,
+    high: 30,
+    medium: 20,
+    low: 10,
   },
   contextMultipliers: {
-    'production': 2.0,
-    'staging': 1.5,
-    'development': 1.0,
-    'test': 0.8
+    production: 2.0,
+    staging: 1.5,
+    development: 1.0,
+    test: 0.8,
   },
   attackVectorWeights: {
     'path-traversal': 35,
     'command-injection': 40,
     'script-injection': 45,
     'privilege-escalation': 50,
-    'deserialization': 45,
-    'xxe': 35,
-    'ssti': 40,
+    deserialization: 45,
+    xxe: 35,
+    ssti: 40,
     'ldap-injection': 30,
     'xpath-injection': 30,
     'expression-injection': 40,
     'csv-injection': 25,
-    'log-forging': 20
+    'log-forging': 20,
   },
   environmentalFactors: {
     'admin-user': 1.8,
     'service-account': 1.5,
     'regular-user': 1.0,
-    'guest-user': 0.8
+    'guest-user': 0.8,
   },
   correlationBonuses: {
     'chained-attack': 25,
     'multi-vector': 20,
     'persistent-attempt': 15,
-    'sophisticated-pattern': 30
-  }
+    'sophisticated-pattern': 30,
+  },
 };
 
 /**
@@ -268,7 +275,7 @@ interface ViolationHistory {
 
 /**
  * Advanced Security Violation Detection Engine
- * 
+ *
  * Provides centralized, comprehensive security violation detection with:
  * - Advanced risk scoring algorithms
  * - Attack pattern correlation
@@ -287,30 +294,26 @@ export class SecurityViolationDetector {
       violations: [],
       sessionCorrelations: new Map(),
       clientCorrelations: new Map(),
-      timeWindows: new Map()
+      timeWindows: new Map(),
     };
   }
 
   /**
    * Analyze input for security violations with comprehensive analysis
-   * 
+   *
    * @param input - Input string to analyze
    * @param context - Validation context
    * @returns Comprehensive violation analysis result
    */
   async analyzeViolations(
-    input: string, 
+    input: string,
     context: ViolationContext
   ): Promise<ViolationAnalysisResult> {
     // Perform base security analysis
     const securityAnalysis = analyzeInputSecurity(input);
-    
+
     // Convert to enhanced violations
-    const violations = await this.enhanceViolations(
-      securityAnalysis.violations,
-      input,
-      context
-    );
+    const violations = await this.enhanceViolations(securityAnalysis.violations, input, context);
 
     // Calculate advanced risk score
     const calculatedRiskScore = this.calculateAdvancedRiskScore(violations, context);
@@ -342,7 +345,7 @@ export class SecurityViolationDetector {
       threatCategories,
       attackCorrelations,
       complianceStatus,
-      recommendedActions
+      recommendedActions,
     };
   }
 
@@ -354,23 +357,25 @@ export class SecurityViolationDetector {
 
     for (const violation of violations) {
       const categoryName = this.getCategoryName(violation.type);
-      
+
       if (!categories.has(categoryName)) {
         categories.set(categoryName, {
           name: categoryName,
           description: this.getCategoryDescription(categoryName),
           level: 'low',
           violations: [],
-          mitigations: this.getCategoryMitigations(categoryName)
+          mitigations: this.getCategoryMitigations(categoryName),
         });
       }
 
-      const category = categories.get(categoryName)!;
-      category.violations.push(violation);
-      
-      // Update threat level based on highest severity
-      if (this.getSeverityLevel(violation.severity) > this.getSeverityLevel(category.level)) {
-        category.level = violation.severity;
+      const category = categories.get(categoryName);
+      if (category) {
+        category.violations.push(violation);
+
+        // Update threat level based on highest severity
+        if (this.getSeverityLevel(violation.severity) > this.getSeverityLevel(category.level)) {
+          category.level = violation.severity;
+        }
       }
     }
 
@@ -381,7 +386,7 @@ export class SecurityViolationDetector {
    * Escalate severity based on context and risk factors
    */
   escalateSeverity(
-    violation: EnhancedSecurityViolation, 
+    violation: EnhancedSecurityViolation,
     context: ViolationContext
   ): EnhancedSecurityViolation {
     let escalatedSeverity = violation.severity;
@@ -393,9 +398,9 @@ export class SecurityViolationDetector {
         type: 'environmental',
         name: 'production-environment',
         impact: 20,
-        description: 'Violation detected in production environment'
+        description: 'Violation detected in production environment',
       });
-      
+
       if (violation.severity === 'medium') escalatedSeverity = 'high';
       if (violation.severity === 'high') escalatedSeverity = 'critical';
     }
@@ -406,7 +411,7 @@ export class SecurityViolationDetector {
         type: 'contextual',
         name: 'admin-user-context',
         impact: 15,
-        description: 'Violation from administrative user account'
+        description: 'Violation from administrative user account',
       });
     }
 
@@ -416,16 +421,16 @@ export class SecurityViolationDetector {
         type: 'contextual',
         name: 'command-context-injection',
         impact: 25,
-        description: 'Command injection in command argument context'
+        description: 'Command injection in command argument context',
       });
-      
+
       if (violation.severity !== 'critical') escalatedSeverity = 'critical';
     }
 
     return {
       ...violation,
       severity: escalatedSeverity,
-      riskFactors
+      riskFactors,
     };
   }
 
@@ -433,7 +438,7 @@ export class SecurityViolationDetector {
    * Correlate attack patterns across violations
    */
   private async correlateAttackPatterns(
-    violations: EnhancedSecurityViolation[], 
+    violations: EnhancedSecurityViolation[],
     context: ViolationContext
   ): Promise<AttackCorrelation[]> {
     const correlations: AttackCorrelation[] = [];
@@ -447,7 +452,7 @@ export class SecurityViolationDetector {
         attackPattern: 'multi-vector-attack',
         combinedRiskScore: this.calculateCombinedRisk(violations),
         sophisticationLevel: this.assessSophistication(violations),
-        recommendedResponse: this.getRecommendedResponse(violations)
+        recommendedResponse: this.getRecommendedResponse(violations),
       });
     }
 
@@ -462,7 +467,7 @@ export class SecurityViolationDetector {
    * Calculate advanced risk score using algorithmic approach
    */
   private calculateAdvancedRiskScore(
-    violations: EnhancedSecurityViolation[], 
+    violations: EnhancedSecurityViolation[],
     context: ViolationContext
   ): number {
     if (violations.length === 0) return 0;
@@ -473,25 +478,28 @@ export class SecurityViolationDetector {
     for (const violation of violations) {
       // Base severity weight
       const severityWeight = this.config.severityWeights[violation.severity] || 10;
-      
+
       // Attack vector weight
       const vectorWeight = this.config.attackVectorWeights[violation.type] || 20;
-      
+
       // Context multiplier
       const contextMultiplier = this.config.contextMultipliers[context.environment] || 1.0;
-      
+
       // Environmental factor
       const envFactor = this.config.environmentalFactors[`${context.userRole}-user`] || 1.0;
-      
+
       // Calculate risk factors impact
-      const riskFactorsImpact = violation.riskFactors.reduce((sum: number, factor: RiskFactor) => sum + factor.impact, 0);
-      
+      const riskFactorsImpact = violation.riskFactors.reduce(
+        (sum: number, factor: RiskFactor) => sum + factor.impact,
+        0
+      );
+
       // Calculate individual violation risk
       const individualRisk = Math.min(
         (severityWeight + vectorWeight + riskFactorsImpact) * contextMultiplier * envFactor,
         100
       );
-      
+
       totalRisk += individualRisk;
       maxIndividualRisk = Math.max(maxIndividualRisk, individualRisk);
     }
@@ -524,7 +532,7 @@ export class SecurityViolationDetector {
         context,
         compliance: this.mapCompliance(violation.type),
         riskFactors: this.calculateRiskFactors(violation, context),
-        remediation: this.generateRemediation(violation, input, context)
+        remediation: this.generateRemediation(violation, input, context),
       };
 
       // Apply severity escalation
@@ -545,38 +553,40 @@ export class SecurityViolationDetector {
         cwe: [22, 23, 36, 73],
         nist: ['PR.AC-4', 'DE.AE-2'],
         mitre: ['T1083', 'T1005'],
-        iso27001: ['A.9.1.2', 'A.9.4.1']
+        iso27001: ['A.9.1.2', 'A.9.4.1'],
       },
       'command-injection': {
         owasp: ['A03:2021-Injection'],
         cwe: [77, 78, 88],
         nist: ['PR.DS-2', 'DE.CM-1'],
         mitre: ['T1059'],
-        iso27001: ['A.14.2.1', 'A.14.2.5']
+        iso27001: ['A.14.2.1', 'A.14.2.5'],
       },
       'script-injection': {
         owasp: ['A03:2021-Injection'],
         cwe: [79, 89, 94],
         nist: ['PR.DS-2', 'DE.CM-1'],
         mitre: ['T1055', 'T1027'],
-        iso27001: ['A.14.2.1', 'A.14.2.5']
+        iso27001: ['A.14.2.1', 'A.14.2.5'],
       },
       'privilege-escalation': {
         owasp: ['A01:2021-Broken Access Control'],
         cwe: [269, 270, 272],
         nist: ['PR.AC-1', 'PR.AC-4'],
         mitre: ['T1068', 'T1078'],
-        iso27001: ['A.9.1.1', 'A.9.2.3']
-      }
+        iso27001: ['A.9.1.1', 'A.9.2.3'],
+      },
     };
 
-    return mappings[violationType] || {
-      owasp: [],
-      cwe: [],
-      nist: [],
-      mitre: [],
-      iso27001: []
-    };
+    return (
+      mappings[violationType] || {
+        owasp: [],
+        cwe: [],
+        nist: [],
+        mitre: [],
+        iso27001: [],
+      }
+    );
   }
 
   /**
@@ -594,7 +604,7 @@ export class SecurityViolationDetector {
         type: 'environmental',
         name: 'production-environment',
         impact: 20,
-        description: 'Higher impact in production environment'
+        description: 'Higher impact in production environment',
       });
     }
 
@@ -604,7 +614,7 @@ export class SecurityViolationDetector {
         type: 'contextual',
         name: 'administrative-privileges',
         impact: 15,
-        description: 'Administrative user context increases risk'
+        description: 'Administrative user context increases risk',
       });
     }
 
@@ -614,7 +624,7 @@ export class SecurityViolationDetector {
         type: 'technical',
         name: 'direct-command-execution',
         impact: 25,
-        description: 'Direct command execution capability'
+        description: 'Direct command execution capability',
       });
     }
 
@@ -638,27 +648,27 @@ export class SecurityViolationDetector {
           priority: 'high',
           description: 'Validate and sanitize file paths to prevent directory traversal',
           example: 'Use path.normalize() and check against allowed directories',
-          autoFixAvailable: true
+          autoFixAvailable: true,
         });
         break;
-        
+
       case 'command-injection':
         suggestions.push({
           type: 'sanitization',
           priority: 'critical',
           description: 'Remove or escape shell metacharacters',
           example: 'Use parameterized commands or shell escape functions',
-          autoFixAvailable: true
+          autoFixAvailable: true,
         });
         break;
-        
+
       case 'script-injection':
         suggestions.push({
           type: 'blocking',
           priority: 'critical',
           description: 'Block script execution patterns completely',
           example: 'Reject inputs containing eval(), Function(), or script tags',
-          autoFixAvailable: false
+          autoFixAvailable: false,
         });
         break;
 
@@ -668,7 +678,7 @@ export class SecurityViolationDetector {
           priority: 'critical',
           description: 'Block privilege escalation attempts',
           example: 'Validate user permissions and reject unauthorized access',
-          autoFixAvailable: false
+          autoFixAvailable: false,
         });
         break;
 
@@ -678,7 +688,7 @@ export class SecurityViolationDetector {
           priority: 'critical',
           description: 'Validate serialized data before deserialization',
           example: 'Use safe deserialization libraries with type checking',
-          autoFixAvailable: false
+          autoFixAvailable: false,
         });
         break;
 
@@ -688,7 +698,7 @@ export class SecurityViolationDetector {
           priority: 'high',
           description: 'Disable external entity processing in XML parsers',
           example: 'Configure XML parsers to reject external entities',
-          autoFixAvailable: true
+          autoFixAvailable: true,
         });
         break;
 
@@ -698,7 +708,7 @@ export class SecurityViolationDetector {
           priority: 'critical',
           description: 'Sanitize template inputs to prevent server-side injection',
           example: 'Use template sandboxing and input escaping',
-          autoFixAvailable: false
+          autoFixAvailable: false,
         });
         break;
 
@@ -708,7 +718,7 @@ export class SecurityViolationDetector {
           priority: 'high',
           description: 'Escape LDAP special characters in user input',
           example: 'Use LDAP escaping functions for filter inputs',
-          autoFixAvailable: true
+          autoFixAvailable: true,
         });
         break;
 
@@ -718,7 +728,7 @@ export class SecurityViolationDetector {
           priority: 'high',
           description: 'Use parameterized XPath queries',
           example: 'Avoid string concatenation in XPath expressions',
-          autoFixAvailable: true
+          autoFixAvailable: true,
         });
         break;
 
@@ -728,7 +738,7 @@ export class SecurityViolationDetector {
           priority: 'critical',
           description: 'Block expression language injection attempts',
           example: 'Validate and sanitize expression inputs, use safe evaluation',
-          autoFixAvailable: false
+          autoFixAvailable: false,
         });
         break;
 
@@ -738,7 +748,7 @@ export class SecurityViolationDetector {
           priority: 'medium',
           description: 'Escape CSV special characters and formulas',
           example: 'Prefix formula characters with apostrophe or quotes',
-          autoFixAvailable: true
+          autoFixAvailable: true,
         });
         break;
     }
@@ -750,7 +760,7 @@ export class SecurityViolationDetector {
         priority: 'high',
         description: 'Implement enhanced monitoring for production environment',
         example: 'Set up alerting and logging for security violations',
-        autoFixAvailable: false
+        autoFixAvailable: false,
       });
     }
 
@@ -762,11 +772,11 @@ export class SecurityViolationDetector {
    */
   private assessCompliance(violations: EnhancedSecurityViolation[]): ComplianceAssessment {
     const frameworkScores: Record<string, number> = {
-      'OWASP': 100,
-      'CWE': 100,
-      'NIST': 100,
-      'MITRE': 100,
-      'ISO27001': 100
+      OWASP: 100,
+      CWE: 100,
+      NIST: 100,
+      MITRE: 100,
+      ISO27001: 100,
     };
 
     const failedRequirements: string[] = [];
@@ -775,10 +785,10 @@ export class SecurityViolationDetector {
     for (const violation of violations) {
       if (violation.severity === 'critical' || violation.severity === 'high') {
         // Reduce scores for high/critical violations
-        frameworkScores['OWASP'] -= 20;
-        frameworkScores['CWE'] -= 15;
-        frameworkScores['NIST'] -= 10;
-        
+        frameworkScores.OWASP -= 20;
+        frameworkScores.CWE -= 15;
+        frameworkScores.NIST -= 10;
+
         // Add failed requirements
         if (violation.compliance.owasp) {
           failedRequirements.push(...violation.compliance.owasp);
@@ -787,17 +797,19 @@ export class SecurityViolationDetector {
     }
 
     // Ensure scores don't go below 0
-    Object.keys(frameworkScores).forEach(key => {
+    Object.keys(frameworkScores).forEach((key) => {
       frameworkScores[key] = Math.max(0, frameworkScores[key]);
     });
 
-    const overallScore = Object.values(frameworkScores).reduce((sum, score) => sum + score, 0) / Object.keys(frameworkScores).length;
+    const overallScore =
+      Object.values(frameworkScores).reduce((sum, score) => sum + score, 0) /
+      Object.keys(frameworkScores).length;
 
     return {
       overallScore,
       frameworkScores,
       failedRequirements: [...new Set(failedRequirements)],
-      gaps
+      gaps,
     };
   }
 
@@ -813,14 +825,14 @@ export class SecurityViolationDetector {
     const actions: RecommendedAction[] = [];
 
     // Critical violations need immediate action
-    const criticalViolations = violations.filter(v => v.severity === 'critical');
+    const criticalViolations = violations.filter((v) => v.severity === 'critical');
     if (criticalViolations.length > 0) {
       actions.push({
         type: 'immediate',
         description: `Address ${criticalViolations.length} critical security violations immediately`,
         priority: 'critical',
         effort: 'moderate',
-        impact: 'Prevents potential security breaches'
+        impact: 'Prevents potential security breaches',
       });
     }
 
@@ -831,7 +843,7 @@ export class SecurityViolationDetector {
         description: 'Investigate correlated attack patterns and implement monitoring',
         priority: 'high',
         effort: 'significant',
-        impact: 'Detects and prevents coordinated attacks'
+        impact: 'Detects and prevents coordinated attacks',
       });
     }
 
@@ -842,7 +854,7 @@ export class SecurityViolationDetector {
         description: 'Improve compliance posture to meet security standards',
         priority: 'medium',
         effort: 'extensive',
-        impact: 'Ensures regulatory compliance and reduces audit risk'
+        impact: 'Ensures regulatory compliance and reduces audit risk',
       });
     }
 
@@ -865,7 +877,7 @@ export class SecurityViolationDetector {
       'script-injection': 'Script Injection',
       'privilege-escalation': 'Privilege Escalation',
       'malformed-input': 'Input Validation',
-      'suspicious-pattern': 'Suspicious Patterns'
+      'suspicious-pattern': 'Suspicious Patterns',
     };
     return categories[violationType] || 'Unknown Threat';
   }
@@ -877,7 +889,7 @@ export class SecurityViolationDetector {
       'Script Injection': 'Injection of malicious scripts or code',
       'Privilege Escalation': 'Attempts to gain elevated system privileges',
       'Input Validation': 'Malformed or invalid input data',
-      'Suspicious Patterns': 'Patterns that may indicate malicious intent'
+      'Suspicious Patterns': 'Patterns that may indicate malicious intent',
     };
     return descriptions[categoryName] || 'Unknown threat category';
   }
@@ -887,24 +899,24 @@ export class SecurityViolationDetector {
       'Path Manipulation': [
         'Implement strict path validation',
         'Use allow-lists for permitted directories',
-        'Sanitize user input paths'
+        'Sanitize user input paths',
       ],
       'Command Injection': [
         'Use parameterized commands',
         'Implement command allow-lists',
-        'Escape shell metacharacters'
+        'Escape shell metacharacters',
       ],
       'Script Injection': [
         'Validate and sanitize all inputs',
         'Use Content Security Policy',
-        'Implement input encoding'
-      ]
+        'Implement input encoding',
+      ],
     };
     return mitigations[categoryName] || ['Implement appropriate security controls'];
   }
 
   private getSeverityLevel(severity: string): number {
-    const levels = { 'low': 1, 'medium': 2, 'high': 3, 'critical': 4 };
+    const levels = { low: 1, medium: 2, high: 3, critical: 4 };
     return levels[severity as keyof typeof levels] || 0;
   }
 
@@ -915,15 +927,17 @@ export class SecurityViolationDetector {
     }, 0);
 
     // Add bonus for multiple attack vectors
-    const multiVectorBonus = violations.length > 1 ? 
-      this.config.correlationBonuses['multi-vector'] || 0 : 0;
+    const multiVectorBonus =
+      violations.length > 1 ? this.config.correlationBonuses['multi-vector'] || 0 : 0;
 
     return Math.min(baseRisk + multiVectorBonus, 100);
   }
 
-  private assessSophistication(violations: EnhancedSecurityViolation[]): 'basic' | 'intermediate' | 'advanced' | 'expert' {
-    const criticalCount = violations.filter(v => v.severity === 'critical').length;
-    const vectorTypes = new Set(violations.map(v => v.type)).size;
+  private assessSophistication(
+    violations: EnhancedSecurityViolation[]
+  ): 'basic' | 'intermediate' | 'advanced' | 'expert' {
+    const criticalCount = violations.filter((v) => v.severity === 'critical').length;
+    const vectorTypes = new Set(violations.map((v) => v.type)).size;
 
     if (criticalCount >= 2 && vectorTypes >= 3) return 'expert';
     if (criticalCount >= 1 && vectorTypes >= 2) return 'advanced';
@@ -931,9 +945,11 @@ export class SecurityViolationDetector {
     return 'basic';
   }
 
-  private getRecommendedResponse(violations: EnhancedSecurityViolation[]): 'monitor' | 'warn' | 'block' | 'escalate' {
-    const hasCritical = violations.some(v => v.severity === 'critical');
-    const hasMultipleHigh = violations.filter(v => v.severity === 'high').length >= 2;
+  private getRecommendedResponse(
+    violations: EnhancedSecurityViolation[]
+  ): 'monitor' | 'warn' | 'block' | 'escalate' {
+    const hasCritical = violations.some((v) => v.severity === 'critical');
+    const hasMultipleHigh = violations.filter((v) => v.severity === 'high').length >= 2;
 
     if (hasCritical) return 'escalate';
     if (hasMultipleHigh) return 'block';
@@ -950,7 +966,7 @@ export class SecurityViolationDetector {
       if (!this.history.sessionCorrelations.has(context.sessionId)) {
         this.history.sessionCorrelations.set(context.sessionId, []);
       }
-      this.history.sessionCorrelations.get(context.sessionId)!.push(...violations);
+      this.history.sessionCorrelations.get(context.sessionId)?.push(...violations);
     }
 
     // Add to client correlation
@@ -958,7 +974,7 @@ export class SecurityViolationDetector {
       if (!this.history.clientCorrelations.has(context.clientId)) {
         this.history.clientCorrelations.set(context.clientId, []);
       }
-      this.history.clientCorrelations.get(context.clientId)!.push(...violations);
+      this.history.clientCorrelations.get(context.clientId)?.push(...violations);
     }
 
     // Clean old history (keep last 1000 violations)
@@ -968,7 +984,7 @@ export class SecurityViolationDetector {
   }
 
   private async findHistoricalCorrelations(
-    violations: EnhancedSecurityViolation[], 
+    violations: EnhancedSecurityViolation[],
     context: ViolationContext
   ): Promise<AttackCorrelation[]> {
     const correlations: AttackCorrelation[] = [];
@@ -983,18 +999,18 @@ export class SecurityViolationDetector {
           attackPattern: 'session-based-attack',
           combinedRiskScore: this.calculateCombinedRisk([...sessionViolations, ...violations]),
           sophisticationLevel: 'intermediate',
-          recommendedResponse: 'warn'
+          recommendedResponse: 'warn',
         });
       }
     }
 
-    // Check client-based correlations  
+    // Check client-based correlations
     if (context.clientId) {
       const clientViolations = this.history.clientCorrelations.get(context.clientId) || [];
       const recentClientViolations = clientViolations.filter(
-        v => Date.now() - v.timestamp.getTime() < this.correlationTimeWindow
+        (v) => Date.now() - v.timestamp.getTime() < this.correlationTimeWindow
       );
-      
+
       if (recentClientViolations.length > 0) {
         correlations.push({
           correlationId: this.generateCorrelationId(),
@@ -1002,7 +1018,7 @@ export class SecurityViolationDetector {
           attackPattern: 'persistent-client-attack',
           combinedRiskScore: this.calculateCombinedRisk([...recentClientViolations, ...violations]),
           sophisticationLevel: 'advanced',
-          recommendedResponse: 'block'
+          recommendedResponse: 'block',
         });
       }
     }

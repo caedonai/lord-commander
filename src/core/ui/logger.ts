@@ -1,23 +1,27 @@
 /**
  * Unified logging system with colors, spinners, and progress indicators
- * 
+ *
  * Provides centralized logging with @clack/prompts integration,
  * Picocolors theming, and comprehensive CLI output formatting.
  */
 
-import colors from 'picocolors';
-import figures from 'figures';
-import { 
+import {
   intro as clackIntro,
-  outro as clackOutro, 
   log as clackLog,
   note as clackNote,
-  spinner as clackSpinner
+  outro as clackOutro,
+  spinner as clackSpinner,
 } from '@clack/prompts';
+import figures from 'figures';
+import colors from 'picocolors';
 import { BRANDING } from '../foundation/core/constants.js';
 import { formatError } from '../foundation/errors/errors.js';
-import { sanitizeLogOutputAdvanced, analyzeLogSecurity, type LogInjectionConfig } from '../foundation/logging/security.js';
-import { IconProvider, IconSecurity, PlatformCapabilities, type ExtendedIcons } from './icons.js';
+import {
+  analyzeLogSecurity,
+  type LogInjectionConfig,
+  sanitizeLogOutputAdvanced,
+} from '../foundation/logging/security.js';
+import { type ExtendedIcons, IconProvider, IconSecurity, PlatformCapabilities } from './icons.js';
 
 // Define Spinner type based on @clack/prompts return type
 type Spinner = ReturnType<typeof clackSpinner>;
@@ -64,7 +68,7 @@ export interface LoggerOptions {
  * Default theme using picocolors and BRANDING colors
  */
 const DEFAULT_THEME: LoggerTheme = {
-  primary: colors.cyan,  // Use built-in colors for now
+  primary: colors.cyan, // Use built-in colors for now
   success: colors.green,
   warning: colors.yellow,
   error: colors.red,
@@ -100,12 +104,12 @@ export class Logger {
     this.prefix = options.prefix;
     this.showTimestamp = options.timestamp ?? false;
     this.showBrand = options.showBrand ?? false;
-    this.logInjectionConfig = options.logInjectionProtection ?? { 
+    this.logInjectionConfig = options.logInjectionProtection ?? {
       enableProtection: true,
-      protectionLevel: 'permissive',  // Allow legitimate ANSI colors
+      protectionLevel: 'permissive', // Allow legitimate ANSI colors
       detectTerminalManipulation: false, // Disable for legitimate color usage
-      preserveFormatting: true,     
-      allowControlChars: true      
+      preserveFormatting: true,
+      allowControlChars: true,
     };
   }
 
@@ -201,17 +205,17 @@ export class Logger {
    */
   error(message: string | Error): void {
     if (!this.shouldLog(LogLevel.ERROR)) return;
-    
+
     let errorMessage: string;
     if (message instanceof Error) {
-      errorMessage = formatError(message, { 
+      errorMessage = formatError(message, {
         showStack: this.level >= LogLevel.DEBUG,
-        colorize: true 
+        colorize: true,
       });
     } else {
       errorMessage = this.theme.error(`${figures.cross} ${message}`);
     }
-    
+
     this.writeError(this.formatMessage(errorMessage));
   }
 
@@ -220,12 +224,12 @@ export class Logger {
    */
   debug(message: string, data?: any): void {
     if (!this.shouldLog(LogLevel.DEBUG)) return;
-    
+
     let debugMessage = this.theme.dim(`${figures.bullet} ${message}`);
     if (data !== undefined) {
-      debugMessage += '\n' + this.theme.dim(JSON.stringify(data, null, 2));
+      debugMessage += `\n${this.theme.dim(JSON.stringify(data, null, 2))}`;
     }
-    
+
     this.write(this.formatMessage(debugMessage));
   }
 
@@ -234,12 +238,12 @@ export class Logger {
    */
   verbose(message: string, data?: any): void {
     if (!this.shouldLog(LogLevel.VERBOSE)) return;
-    
+
     let verboseMessage = this.theme.muted(`${figures.arrowRight} ${message}`);
     if (data !== undefined) {
-      verboseMessage += '\n' + this.theme.muted(JSON.stringify(data, null, 2));
+      verboseMessage += `\n${this.theme.muted(JSON.stringify(data, null, 2))}`;
     }
-    
+
     this.write(this.formatMessage(verboseMessage));
   }
 
@@ -271,10 +275,10 @@ export class Logger {
    */
   note(message: string, title?: string): void {
     if (!this.shouldLog(LogLevel.INFO)) return;
-    
+
     const noteMessage = this.theme.info(message);
     const noteTitle = title ? this.theme.highlight(title) : undefined;
-    
+
     clackNote(noteMessage, noteTitle);
   }
 
@@ -283,13 +287,13 @@ export class Logger {
    */
   step(message: string, stepNumber?: number, totalSteps?: number): void {
     if (!this.shouldLog(LogLevel.INFO)) return;
-    
+
     let stepMessage = message;
     if (stepNumber !== undefined && totalSteps !== undefined) {
       const stepInfo = this.theme.muted(`(${stepNumber}/${totalSteps})`);
       stepMessage = `${stepInfo} ${message}`;
     }
-    
+
     this.info(stepMessage);
   }
 
@@ -300,11 +304,11 @@ export class Logger {
     const spinner = clackSpinner();
     spinner.start(this.theme.primary(message));
     this.activeSpinners.add(spinner);
-    
+
     // Wrap spinner methods to maintain tracking
     const originalStop = spinner.stop.bind(spinner);
     const originalMessage = spinner.message.bind(spinner);
-    
+
     spinner.stop = (message?: string, code?: number) => {
       this.activeSpinners.delete(spinner);
       return originalStop(message, code);
@@ -359,9 +363,9 @@ export class Logger {
    */
   table(data: Record<string, string | number | boolean>): void {
     if (!this.shouldLog(LogLevel.INFO)) return;
-    
-    const maxKeyLength = Math.max(...Object.keys(data).map(k => k.length));
-    
+
+    const maxKeyLength = Math.max(...Object.keys(data).map((k) => k.length));
+
     for (const [key, value] of Object.entries(data)) {
       const paddedKey = key.padEnd(maxKeyLength);
       const keyColor = this.theme.highlight(paddedKey);
@@ -375,7 +379,7 @@ export class Logger {
    */
   list(items: string[], bullet = figures.bullet): void {
     if (!this.shouldLog(LogLevel.INFO)) return;
-    
+
     for (const item of items) {
       const bulletColor = this.theme.primary(bullet);
       const itemColor = this.theme.info(item);
@@ -388,28 +392,28 @@ export class Logger {
    */
   box(message: string, title?: string): void {
     if (!this.shouldLog(LogLevel.INFO)) return;
-    
+
     const lines = message.split('\n');
-    const maxLength = Math.max(...lines.map(line => line.length));
+    const maxLength = Math.max(...lines.map((line) => line.length));
     const width = Math.max(maxLength + 4, title ? title.length + 4 : 0);
-    
+
     const horizontal = '─'.repeat(width - 2);
     const top = `┌${horizontal}┐`;
     const bottom = `└${horizontal}┘`;
-    
+
     this.write(this.theme.primary(top));
-    
+
     if (title) {
       const paddedTitle = title.padStart((width + title.length) / 2).padEnd(width - 2);
       this.write(this.theme.primary(`│${this.theme.highlight(paddedTitle)}│`));
       this.write(this.theme.primary(`├${horizontal}┤`));
     }
-    
+
     for (const line of lines) {
       const paddedLine = line.padEnd(width - 4);
       this.write(this.theme.primary(`│ ${this.theme.info(paddedLine)} │`));
     }
-    
+
     this.write(this.theme.primary(bottom));
   }
 
@@ -418,7 +422,7 @@ export class Logger {
    */
   child(prefix: string, options: Partial<LoggerOptions> = {}): Logger {
     const childPrefix = this.prefix ? `${this.prefix}:${prefix}` : prefix;
-    
+
     return new Logger({
       level: this.level,
       theme: this.theme,
@@ -491,23 +495,30 @@ export class Logger {
     try {
       const icon = IconProvider.get(iconName);
       const safeIcon = IconSecurity.sanitizeIcon(icon);
-      
+
       if (!IconSecurity.isValidIcon(safeIcon)) {
         this.warn(`Invalid icon "${iconName}" - falling back to text`);
         this.log(message);
         return;
       }
 
-      const coloredMessage = level === LogLevel.ERROR ? this.theme.error(message) :
-                            level === LogLevel.WARN ? this.theme.warning(message) :
-                            level === LogLevel.INFO ? this.theme.info(message) :
-                            level === LogLevel.DEBUG ? this.theme.muted(message) :
-                            message;
+      const coloredMessage =
+        level === LogLevel.ERROR
+          ? this.theme.error(message)
+          : level === LogLevel.WARN
+            ? this.theme.warning(message)
+            : level === LogLevel.INFO
+              ? this.theme.info(message)
+              : level === LogLevel.DEBUG
+                ? this.theme.muted(message)
+                : message;
 
       clackLog.message(this.formatMessage(`${safeIcon} ${coloredMessage}`));
     } catch (error) {
       // Gracefully handle icon provider errors
-      this.warn(`Error getting icon "${iconName}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.warn(
+        `Error getting icon "${iconName}": ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
       this.log(message);
     }
   }
@@ -648,28 +659,28 @@ export class Logger {
   testIcons(): void {
     const icons = this.getIcons();
     const platformInfo = this.getPlatformInfo();
-    
+
     clackLog.message(this.formatMessage('Platform Icon Test'));
     clackLog.message(this.formatMessage(`Platform: ${platformInfo.platform}`));
     clackLog.message(this.formatMessage(`Terminal: ${platformInfo.termProgram || 'unknown'}`));
     clackLog.message(this.formatMessage(`Unicode Support: ${platformInfo.supportsUnicode}`));
     clackLog.message(this.formatMessage(`Emoji Support: ${platformInfo.supportsEmoji}`));
-    
+
     clackLog.message(this.formatMessage('\nAvailable Icons:'));
-    
+
     // Group icons by category for better display
     const categories = {
-      'Status': ['tick', 'cross', 'warning', 'info', 'success', 'failure', 'pending', 'skip'],
-      'Infrastructure': ['rocket', 'cloud', 'server', 'database', 'api', 'network', 'globe'],
-      'Files': ['box', 'folder', 'file', 'upload', 'download', 'sync'],
-      'Security': ['shield', 'key', 'lock', 'gear'],
-      'Process': ['build', 'deploy', 'lightning'],
-      'Decorative': ['sparkle', 'diamond', 'crown', 'trophy']
+      Status: ['tick', 'cross', 'warning', 'info', 'success', 'failure', 'pending', 'skip'],
+      Infrastructure: ['rocket', 'cloud', 'server', 'database', 'api', 'network', 'globe'],
+      Files: ['box', 'folder', 'file', 'upload', 'download', 'sync'],
+      Security: ['shield', 'key', 'lock', 'gear'],
+      Process: ['build', 'deploy', 'lightning'],
+      Decorative: ['sparkle', 'diamond', 'crown', 'trophy'],
     };
-    
+
     Object.entries(categories).forEach(([category, iconNames]) => {
       clackLog.message(this.formatMessage(`\n${category}:`));
-      iconNames.forEach(iconName => {
+      iconNames.forEach((iconName) => {
         const icon = icons[iconName as keyof ExtendedIcons];
         const security = IconSecurity.analyzeIconSecurity(icon);
         const status = security.isSecure ? '✓' : '⚠';

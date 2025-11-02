@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { promises as fs } from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
+import { promises as fs } from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,65 +29,65 @@ interface ModuleInfo {
 class SimpleDocGenerator {
   private sourceRoot: string;
   private outputDir: string;
-  
+
   constructor(sourceRoot: string, outputDir: string) {
     this.sourceRoot = sourceRoot;
     this.outputDir = outputDir;
   }
-  
+
   /**
    * Generate API documentation
    */
   async generateDocs(): Promise<void> {
     console.log('🚀 Generating API documentation...');
-    
+
     // Ensure output directory exists
     await fs.mkdir(path.join(this.outputDir, 'api'), { recursive: true });
     console.log(`📁 Output directory: ${path.join(this.outputDir, 'api')}`);
-    
+
     // Analyze modules
     console.log('📊 Analyzing modules...');
     const coreModule = await this.analyzeModule('src/core', 'Core API');
     console.log(`Core module: ${coreModule.exports.length} exports`);
-    
-    const pluginsModule = await this.analyzeModule('src/plugins', 'Plugins API'); 
+
+    const pluginsModule = await this.analyzeModule('src/plugins', 'Plugins API');
     console.log(`Plugins module: ${pluginsModule.exports.length} exports`);
-    
+
     const typesModule = await this.analyzeModule('src/types', 'Type Definitions');
     console.log(`Types module: ${typesModule.exports.length} exports`);
-    
+
     // Generate documentation files
     console.log('📝 Generating documentation files...');
     await this.generateApiIndex([coreModule, pluginsModule, typesModule]);
     console.log('✅ API index generated');
-    
+
     await this.generateModuleDocs(coreModule, 'api/core');
     console.log('✅ Core docs generated');
-    
+
     await this.generateModuleDocs(pluginsModule, 'api/plugins');
     console.log('✅ Plugins docs generated');
-    
+
     await this.generateModuleDocs(typesModule, 'api/types');
     console.log('✅ Types docs generated');
-    
+
     console.log('✅ API documentation generated successfully!');
     console.log(`📁 Output: ${path.join(this.outputDir, 'api')}`);
   }
-  
+
   /**
    * Analyze a module directory
    */
   private async analyzeModule(modulePath: string, displayName: string): Promise<ModuleInfo> {
     const fullPath = path.join(this.sourceRoot, modulePath);
     const files = await this.getAllTsFiles(fullPath);
-    
+
     const moduleInfo: ModuleInfo = {
       name: displayName,
       path: modulePath,
       description: await this.extractModuleDescription(fullPath),
-      exports: []
+      exports: [],
     };
-    
+
     // Analyze each TypeScript file
     for (const filePath of files) {
       try {
@@ -98,20 +98,20 @@ class SimpleDocGenerator {
         console.warn(`⚠️  Could not analyze ${filePath}: ${error}`);
       }
     }
-    
+
     // Sort exports by name
     moduleInfo.exports.sort((a, b) => a.name.localeCompare(b.name));
-    
+
     return moduleInfo;
   }
-  
+
   /**
    * Extract exports from TypeScript file content using regex patterns
    */
   private async extractExports(content: string, filePath: string): Promise<APIEntry[]> {
     const exports: APIEntry[] = [];
     const relativePath = path.relative(this.sourceRoot, filePath);
-    
+
     // Function exports
     const functionMatches = content.matchAll(/export\s+(async\s+)?function\s+(\w+)/g);
     for (const match of functionMatches) {
@@ -121,11 +121,11 @@ class SimpleDocGenerator {
         file: relativePath,
         description: this.extractJSDocDescription(content, match.index || 0),
         examples: this.extractJSDocExamples(content, match.index || 0),
-        signature: this.extractFunctionSignature(content, match.index || 0)
+        signature: this.extractFunctionSignature(content, match.index || 0),
       });
     }
-    
-    // Class exports  
+
+    // Class exports
     const classMatches = content.matchAll(/export\s+class\s+(\w+)/g);
     for (const match of classMatches) {
       exports.push({
@@ -133,10 +133,10 @@ class SimpleDocGenerator {
         type: 'class',
         file: relativePath,
         description: this.extractJSDocDescription(content, match.index || 0),
-        examples: this.extractJSDocExamples(content, match.index || 0)
+        examples: this.extractJSDocExamples(content, match.index || 0),
       });
     }
-    
+
     // Interface exports
     const interfaceMatches = content.matchAll(/export\s+interface\s+(\w+)/g);
     for (const match of interfaceMatches) {
@@ -145,10 +145,10 @@ class SimpleDocGenerator {
         type: 'interface',
         file: relativePath,
         description: this.extractJSDocDescription(content, match.index || 0),
-        examples: this.extractJSDocExamples(content, match.index || 0)
+        examples: this.extractJSDocExamples(content, match.index || 0),
       });
     }
-    
+
     // Type exports
     const typeMatches = content.matchAll(/export\s+type\s+(\w+)/g);
     for (const match of typeMatches) {
@@ -157,10 +157,10 @@ class SimpleDocGenerator {
         type: 'type',
         file: relativePath,
         description: this.extractJSDocDescription(content, match.index || 0),
-        examples: this.extractJSDocExamples(content, match.index || 0)
+        examples: this.extractJSDocExamples(content, match.index || 0),
       });
     }
-    
+
     // Constant exports
     const constMatches = content.matchAll(/export\s+const\s+(\w+)/g);
     for (const match of constMatches) {
@@ -169,13 +169,13 @@ class SimpleDocGenerator {
         type: 'constant',
         file: relativePath,
         description: this.extractJSDocDescription(content, match.index || 0),
-        examples: this.extractJSDocExamples(content, match.index || 0)
+        examples: this.extractJSDocExamples(content, match.index || 0),
       });
     }
-    
+
     return exports;
   }
-  
+
   /**
    * Extract JSDoc description for an export
    */
@@ -183,40 +183,40 @@ class SimpleDocGenerator {
     // Look backwards for JSDoc comment
     const beforeContent = content.substring(0, position);
     const jsDocMatch = beforeContent.match(/\/\*\*\s*\n([\s\S]*?)\*\/\s*$/);
-    
+
     if (!jsDocMatch) return undefined;
-    
+
     // Extract description (first line(s) before @tags)
     const comment = jsDocMatch[1];
     const lines = comment.split('\n');
     const descriptionLines = [];
-    
+
     for (const line of lines) {
       const cleanLine = line.replace(/^\s*\*\s?/, '').trim();
       if (cleanLine.startsWith('@')) break;
       if (cleanLine) descriptionLines.push(cleanLine);
     }
-    
+
     return descriptionLines.join(' ') || undefined;
   }
-  
+
   /**
    * Extract JSDoc examples
    */
   private extractJSDocExamples(content: string, position: number): string[] | undefined {
     const beforeContent = content.substring(0, position);
     const jsDocMatch = beforeContent.match(/\/\*\*\s*\n([\s\S]*?)\*\/\s*$/);
-    
+
     if (!jsDocMatch) return undefined;
-    
+
     const comment = jsDocMatch[1];
     const examples: string[] = [];
     let inExample = false;
     let currentExample = '';
-    
+
     for (const line of comment.split('\n')) {
       const cleanLine = line.replace(/^\s*\*\s?/, '');
-      
+
       if (cleanLine.trim().startsWith('@example')) {
         inExample = true;
         currentExample = '';
@@ -227,18 +227,18 @@ class SimpleDocGenerator {
         inExample = false;
         currentExample = '';
       } else if (inExample) {
-        currentExample += cleanLine + '\n';
+        currentExample += `${cleanLine}\n`;
       }
     }
-    
+
     // Don't forget the last example
     if (inExample && currentExample.trim()) {
       examples.push(currentExample.trim());
     }
-    
+
     return examples.length > 0 ? examples : undefined;
   }
-  
+
   /**
    * Extract function signature
    */
@@ -248,13 +248,13 @@ class SimpleDocGenerator {
     const functionMatch = afterContent.match(/export\s+(?:async\s+)?function\s+[^{]+/);
     return functionMatch?.[0].trim();
   }
-  
+
   /**
    * Generate main API index file
    */
   private async generateApiIndex(modules: ModuleInfo[]): Promise<void> {
     const totalExports = modules.reduce((sum, mod) => sum + mod.exports.length, 0);
-    
+
     const content = `# 📚 API Reference
 
 *Automatically generated from TypeScript source code*
@@ -280,7 +280,9 @@ await createCLI({
 
 ## 📦 Modules
 
-${modules.map(module => `### [${module.name}](${this.getModuleLink(module.name)})
+${modules
+  .map(
+    (module) => `### [${module.name}](${this.getModuleLink(module.name)})
 
 ${module.description || 'No description available'}
 
@@ -288,7 +290,9 @@ ${module.description || 'No description available'}
 - **Exports**: ${module.exports.length} items
 - **Types**: ${this.summarizeExports(module.exports)}
 
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 ## 🔍 Popular Functions
 
@@ -329,14 +333,14 @@ pnpm test
 
     await fs.writeFile(path.join(this.outputDir, 'api', 'README.md'), content);
   }
-  
+
   /**
    * Generate documentation for a specific module
    */
   private async generateModuleDocs(module: ModuleInfo, relativePath: string): Promise<void> {
     const outputPath = path.join(this.outputDir, relativePath);
     await fs.mkdir(outputPath, { recursive: true });
-    
+
     const content = `# ${module.name}
 
 ${module.description || 'No description available'}
@@ -350,7 +354,7 @@ ${this.generateExportsTable(module.exports)}
 
 ## 📖 Detailed Documentation
 
-${module.exports.map(exp => this.formatExportEntry(exp)).join('\n\n---\n\n')}
+${module.exports.map((exp) => this.formatExportEntry(exp)).join('\n\n---\n\n')}
 
 ## 📁 Source Files
 
@@ -363,21 +367,26 @@ ${this.generateSourceFilesList(module.exports)}
 
     await fs.writeFile(path.join(outputPath, 'README.md'), content);
   }
-  
+
   /**
    * Generate exports overview table
    */
   private generateExportsTable(exports: APIEntry[]): string {
     const byType = this.groupByType(exports);
-    
+
     return `| Type | Count | Examples |
 |------|-------|----------|
-${Object.entries(byType).map(([type, items]) => {
-  const examples = items.slice(0, 3).map(item => `\`${item.name}\``).join(', ');
-  return `| **${type}** | ${items.length} | ${examples}${items.length > 3 ? ', ...' : ''} |`;
-}).join('\n')}`;
+${Object.entries(byType)
+  .map(([type, items]) => {
+    const examples = items
+      .slice(0, 3)
+      .map((item) => `\`${item.name}\``)
+      .join(', ');
+    return `| **${type}** | ${items.length} | ${examples}${items.length > 3 ? ', ...' : ''} |`;
+  })
+  .join('\n')}`;
   }
-  
+
   /**
    * Format an export entry for documentation
    */
@@ -400,30 +409,35 @@ ${entry.signature}
     if (entry.description) {
       content += `${entry.description}\n\n`;
     }
-    
+
     if (entry.examples && entry.examples.length > 0) {
       content += `### Examples\n\n`;
-      content += entry.examples.map(example => `\`\`\`typescript\n${example}\n\`\`\``).join('\n\n');
+      content += entry.examples
+        .map((example) => `\`\`\`typescript\n${example}\n\`\`\``)
+        .join('\n\n');
       content += '\n\n';
     }
-    
+
     return content.trim();
   }
-  
+
   /**
    * Helper methods
    */
   private getModuleLink(moduleName: string): string {
-    return `./${moduleName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}/README.md`;
+    return `./${moduleName
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')}/README.md`;
   }
-  
+
   private summarizeExports(exports: APIEntry[]): string {
     const byType = this.groupByType(exports);
     return Object.entries(byType)
       .map(([type, items]) => `${items.length} ${type}${items.length !== 1 ? 's' : ''}`)
       .join(', ');
   }
-  
+
   private groupByType(exports: APIEntry[]): Record<string, APIEntry[]> {
     const grouped: Record<string, APIEntry[]> = {};
     for (const exp of exports) {
@@ -432,37 +446,45 @@ ${entry.signature}
     }
     return grouped;
   }
-  
+
   private generatePopularFunctions(modules: ModuleInfo[]): string {
-    const allExports = modules.flatMap(m => m.exports);
-    const withExamples = allExports.filter(exp => exp.examples && exp.examples.length > 0);
+    const allExports = modules.flatMap((m) => m.exports);
+    const withExamples = allExports.filter((exp) => exp.examples && exp.examples.length > 0);
     const popular = withExamples.slice(0, 8);
-    
-    return popular.map(func => 
-      `- [\`${func.name}\`](${this.getFunctionLink(func)}) - ${func.description?.split('.')[0] || 'No description'}`
-    ).join('\n') || '- No documented examples yet';
+
+    return (
+      popular
+        .map(
+          (func) =>
+            `- [\`${func.name}\`](${this.getFunctionLink(func)}) - ${func.description?.split('.')[0] || 'No description'}`
+        )
+        .join('\n') || '- No documented examples yet'
+    );
   }
-  
+
   private getFunctionLink(entry: APIEntry): string {
-    const module = entry.file.includes('/core/') ? 'core-api' : 
-                   entry.file.includes('/plugins/') ? 'plugins-api' : 'type-definitions';
+    const module = entry.file.includes('/core/')
+      ? 'core-api'
+      : entry.file.includes('/plugins/')
+        ? 'plugins-api'
+        : 'type-definitions';
     return `./${module}/README.md#${entry.name.toLowerCase()}`;
   }
-  
+
   private generateSourceFilesList(exports: APIEntry[]): string {
-    const files = [...new Set(exports.map(e => e.file))];
-    return files.map(file => `- [\`${file}\`](../../${file})`).join('\n');
+    const files = [...new Set(exports.map((e) => e.file))];
+    return files.map((file) => `- [\`${file}\`](../../${file})`).join('\n');
   }
-  
+
   private async getAllTsFiles(dir: string): Promise<string[]> {
     const files: string[] = [];
-    
+
     try {
       const entries = await fs.readdir(dir, { withFileTypes: true });
-      
+
       for (const entry of entries) {
         const fullPath = path.join(dir, entry.name);
-        
+
         if (entry.isDirectory() && !entry.name.startsWith('.')) {
           const subFiles = await this.getAllTsFiles(fullPath);
           files.push(...subFiles);
@@ -470,18 +492,18 @@ ${entry.signature}
           files.push(fullPath);
         }
       }
-    } catch (error) {
+    } catch (_error) {
       // Directory doesn't exist, return empty array
     }
-    
+
     return files;
   }
-  
+
   private async extractModuleDescription(modulePath: string): Promise<string | undefined> {
     try {
       const indexPath = path.join(modulePath, 'index.ts');
       const content = await fs.readFile(indexPath, 'utf-8');
-      
+
       // Extract JSDoc comment from module index
       const match = content.match(/\/\*\*\s*\n\s*\*\s*(.+?)\s*\n\s*\*\//);
       return match?.[1];
@@ -497,17 +519,20 @@ ${entry.signature}
 async function generateApiDocs(): Promise<void> {
   const projectRoot = path.resolve(__dirname, '..');
   const docsDir = path.join(projectRoot, 'docs');
-  
+
   const generator = new SimpleDocGenerator(projectRoot, docsDir);
   await generator.generateDocs();
-  
+
   console.log('\n🎉 API documentation generation complete!');
   console.log(`📂 View documentation: ${docsDir}/api/README.md`);
 }
 
 // Run if called directly
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1].endsWith('generate-api-docs-simple.ts')) {
-  generateApiDocs().catch(error => {
+if (
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1].endsWith('generate-api-docs-simple.ts')
+) {
+  generateApiDocs().catch((error) => {
     console.error('❌ Documentation generation failed:', error);
     process.exit(1);
   });

@@ -1,22 +1,22 @@
 /**
  * Comprehensive tests for Enhanced Error Sanitization (Task 1.3.1)
- * 
+ *
  * Tests the Information Disclosure Protection system including error message
  * sanitization, stack trace protection, and configuration management.
- * 
+ *
  * @see Task 1.3.1: Information Disclosure Protection
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  sanitizeErrorMessage,
-  sanitizeStackTrace,
-  sanitizeErrorForProduction,
-  shouldShowDetailedErrors,
-  isDebugMode,
   createEnvironmentConfig,
   DEFAULT_ERROR_SANITIZATION_CONFIG,
-  type ErrorSanitizationConfig
+  type ErrorSanitizationConfig,
+  isDebugMode,
+  sanitizeErrorForProduction,
+  sanitizeErrorMessage,
+  sanitizeStackTrace,
+  shouldShowDetailedErrors,
 } from '../../../core/foundation/errors/sanitization.js';
 
 describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
@@ -42,8 +42,14 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
           { input: 'Failed: api_key=abc123def456', expected: 'Failed: api_key=***' },
           { input: 'Auth error: access_key:xyz789', expected: 'Auth error: access_key=***' },
           { input: 'Token error: TOKEN=bearer-token-data', expected: 'Token error: TOKEN=***' },
-          { input: 'JWT: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9', expected: 'JWT: access_token=***' },
-          { input: 'AWS: aws_access_key=AKIA1234567890ABCDEF', expected: 'AWS: aws_access_key=***' },
+          {
+            input: 'JWT: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9',
+            expected: 'JWT: access_token=***',
+          },
+          {
+            input: 'AWS: aws_access_key=AKIA1234567890ABCDEF',
+            expected: 'AWS: aws_access_key=***',
+          },
         ];
 
         for (const { input, expected } of testCases) {
@@ -111,21 +117,21 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
     describe('Database Connection Sanitization', () => {
       it('should sanitize database connection strings', () => {
         const testCases = [
-          { 
-            input: 'Connect failed: mongodb://user:pass@localhost/db', 
-            expected: 'Connect failed: mongodb://***@***' 
+          {
+            input: 'Connect failed: mongodb://user:pass@localhost/db',
+            expected: 'Connect failed: mongodb://***@***',
           },
-          { 
-            input: 'Error: mysql://admin:secret@host:3306/mydb', 
-            expected: 'Error: mysql://***@***' 
+          {
+            input: 'Error: mysql://admin:secret@host:3306/mydb',
+            expected: 'Error: mysql://***@***',
           },
-          { 
-            input: 'PostgreSQL: postgres://user:password@server:5432/database', 
-            expected: 'PostgreSQL: postgres://***@***' 
+          {
+            input: 'PostgreSQL: postgres://user:password@server:5432/database',
+            expected: 'PostgreSQL: postgres://***@***',
           },
-          { 
-            input: 'Redis: redis://user:pass@redis-server:6379/0', 
-            expected: 'Redis: redis://***@***' 
+          {
+            input: 'Redis: redis://user:pass@redis-server:6379/0',
+            expected: 'Redis: redis://***@***',
           },
         ];
 
@@ -139,7 +145,10 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
         const testCases = [
           { input: 'DB error: db_password=secret', expected: 'DB error: db_password=***' },
           { input: 'Config: database_user=admin', expected: 'Config: database_user=***' },
-          { input: 'Connect: connection_string=server=host;uid=user;pwd=pass', expected: 'Connect: connection_string=***' },
+          {
+            input: 'Connect: connection_string=server=host;uid=user;pwd=pass',
+            expected: 'Connect: connection_string=***',
+          },
         ];
 
         for (const { input, expected } of testCases) {
@@ -152,17 +161,17 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
     describe('File Path Sanitization', () => {
       it('should sanitize sensitive user directory paths', () => {
         const testCases = [
-          { 
-            input: 'Error: /Users/john/Desktop/secret.txt not found', 
-            expected: 'Error: /Users/***/Desktop/secret.txt not found' 
+          {
+            input: 'Error: /Users/john/Desktop/secret.txt not found',
+            expected: 'Error: /Users/***/Desktop/secret.txt not found',
           },
-          { 
-            input: 'Failed: C:\\Users\\jane\\Documents\\config.json', 
-            expected: 'Failed: C:\\Users\\***\\Documents\\config.json' 
+          {
+            input: 'Failed: C:\\Users\\jane\\Documents\\config.json',
+            expected: 'Failed: C:\\Users\\***\\Documents\\config.json',
           },
-          { 
-            input: 'Path: /home/alice/.ssh/id_rsa missing', 
-            expected: 'Path: /home/***/.ssh/id_rsa missing' 
+          {
+            input: 'Path: /home/alice/.ssh/id_rsa missing',
+            expected: 'Path: /home/***/.ssh/id_rsa missing',
           },
         ];
 
@@ -182,8 +191,14 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
     describe('Network Information Sanitization', () => {
       it('should sanitize IP addresses', () => {
         const testCases = [
-          { input: 'Connect to 192.168.1.100 failed', expected: 'Connect to ***.***.***.*** failed' },
-          { input: 'Server 10.0.0.1:8080 unreachable', expected: 'Server ***.***.***.***:*** unreachable' },
+          {
+            input: 'Connect to 192.168.1.100 failed',
+            expected: 'Connect to ***.***.***.*** failed',
+          },
+          {
+            input: 'Server 10.0.0.1:8080 unreachable',
+            expected: 'Server ***.***.***.***:*** unreachable',
+          },
           { input: 'Timeout: 172.16.0.254', expected: 'Timeout: ***.***.***.***' },
         ];
 
@@ -223,8 +238,14 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
 
       it('should sanitize credit card numbers', () => {
         const testCases = [
-          { input: 'Card 4532-1234-5678-9012 declined', expected: 'Card ****-****-****-**** declined' },
-          { input: 'Payment 4532123456789012 failed', expected: 'Payment ****-****-****-**** failed' },
+          {
+            input: 'Card 4532-1234-5678-9012 declined',
+            expected: 'Card ****-****-****-**** declined',
+          },
+          {
+            input: 'Payment 4532123456789012 failed',
+            expected: 'Payment ****-****-****-**** failed',
+          },
         ];
 
         for (const { input, expected } of testCases) {
@@ -283,16 +304,16 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
     describe('Custom Patterns', () => {
       it('should apply custom regex patterns', () => {
         const config: Partial<ErrorSanitizationConfig> = {
-          customPatterns: [
-            /myapp-secret-\w+/gi,
-            /internal-token-[a-zA-Z0-9]+/gi
-          ]
+          customPatterns: [/myapp-secret-\w+/gi, /internal-token-[a-zA-Z0-9]+/gi],
         };
 
         const testCases = [
           { input: 'Error: myapp-secret-abc123', expected: 'Error: ***' },
           { input: 'Token: internal-token-xyz789', expected: 'Token: ***' },
-          { input: 'Mixed: myapp-secret-test and internal-token-data', expected: 'Mixed: *** and ***' },
+          {
+            input: 'Mixed: myapp-secret-test and internal-token-data',
+            expected: 'Mixed: *** and ***',
+          },
         ];
 
         for (const { input, expected } of testCases) {
@@ -305,19 +326,19 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
     describe('Configuration Options', () => {
       it('should respect individual sanitization flags', () => {
         const message = 'Error: password=secret, api_key=token, user@example.com, 192.168.1.1';
-        
+
         // Test with passwords disabled
         const noPasswords = sanitizeErrorMessage(message, { redactPasswords: false });
         expect(noPasswords).toContain('password=secret');
-        
-        // Test with API keys disabled  
+
+        // Test with API keys disabled
         const noApiKeys = sanitizeErrorMessage(message, { redactApiKeys: false });
         expect(noApiKeys).toContain('api_key=token');
-        
+
         // Test with personal info disabled
         const noPersonalInfo = sanitizeErrorMessage(message, { redactPersonalInfo: false });
         expect(noPersonalInfo).toContain('user@example.com');
-        
+
         // Test with network info disabled
         const noNetworkInfo = sanitizeErrorMessage(message, { redactNetworkInfo: false });
         expect(noNetworkInfo).toContain('192.168.1.1');
@@ -380,7 +401,7 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
 
         const result = sanitizeStackTrace(stack, { redactFilePaths: true });
         expect(result).toContain('node_modules/package/index.js');
-        expect(result).toContain('node_modules/app/');  // Updated to match new behavior
+        expect(result).toContain('node_modules/app/'); // Updated to match new behavior
         expect(result).not.toContain('/usr/local/lib/');
         expect(result).not.toContain('C:\\Program Files\\nodejs\\');
       });
@@ -388,8 +409,9 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
 
     describe('Stack Depth Limiting', () => {
       it('should limit stack trace depth', () => {
-        const longStack = Array.from({ length: 20 }, (_, i) => 
-          `    at Function.test${i} (/app/test${i}.js:${i}:${i})`
+        const longStack = Array.from(
+          { length: 20 },
+          (_, i) => `    at Function.test${i} (/app/test${i}.js:${i}:${i})`
         ).join('\n');
         const fullStack = `Error: Test error\n${longStack}`;
 
@@ -416,9 +438,9 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
         const stack = `Error: Test error
     at Object.test (/Users/john/app/test.js:10:15)`;
 
-        const result = sanitizeStackTrace(stack, { 
+        const result = sanitizeStackTrace(stack, {
           stackTraceLevel: 'sanitized',
-          redactFilePaths: true 
+          redactFilePaths: true,
         });
         expect(result).toContain('/Users/***/app/');
       });
@@ -448,7 +470,7 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
       (originalError as any).context = { user: 'admin@company.com', token: 'secret-token' };
 
       const sanitized = sanitizeErrorForProduction(originalError, {
-        preserveErrorCodes: true
+        preserveErrorCodes: true,
       });
 
       expect(sanitized.message).toBe('DB failed: password=***');
@@ -461,7 +483,7 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
     it('should handle null and undefined errors', () => {
       const result1 = sanitizeErrorForProduction(null as any);
       const result2 = sanitizeErrorForProduction(undefined as any);
-      
+
       expect(result1).toBeInstanceOf(Error);
       expect(result1.message).toBe('Unknown error occurred');
       expect(result2).toBeInstanceOf(Error);
@@ -545,7 +567,7 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
     it('should apply custom overrides', () => {
       const config = createEnvironmentConfig('production', {
         maxMessageLength: 500,
-        redactApiKeys: false
+        redactApiKeys: false,
       });
       expect(config.maxMessageLength).toBe(500);
       expect(config.redactApiKeys).toBe(false);
@@ -571,11 +593,11 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
 
   describe('Integration and Performance', () => {
     it('should handle large error messages efficiently', () => {
-      const largeMessage = 'Error: '.repeat(10000) + 'password=secret';
+      const largeMessage = `${'Error: '.repeat(10000)}password=secret`;
       const start = Date.now();
       const result = sanitizeErrorMessage(largeMessage);
       const duration = Date.now() - start;
-      
+
       expect(duration).toBeLessThan(100); // Should complete within 100ms - DoS protection ensures this
       // Large messages get pre-truncated for DoS protection, so pattern may not be found
       // This is the correct security behavior
@@ -583,14 +605,15 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
     });
 
     it('should maintain performance with multiple pattern matches', () => {
-      const complexMessage = Array.from({ length: 100 }, (_, i) => 
-        `password${i}=secret${i}, api_key${i}=token${i}, user${i}@domain${i}.com`
+      const complexMessage = Array.from(
+        { length: 100 },
+        (_, i) => `password${i}=secret${i}, api_key${i}=token${i}, user${i}@domain${i}.com`
       ).join(', ');
-      
+
       const start = Date.now();
       const result = sanitizeErrorMessage(complexMessage);
       const duration = Date.now() - start;
-      
+
       expect(duration).toBeLessThan(200); // Should complete within 200ms
       expect(result).not.toContain('secret');
       expect(result).not.toContain('token');
@@ -603,7 +626,7 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
     at async main (/Users/developer/projects/myapp/index.js:10:3)`;
 
       const sanitized = sanitizeErrorForProduction(error);
-      
+
       expect(sanitized.message).not.toContain('admin123');
       expect(sanitized.stack).not.toContain('developer');
       expect(sanitized.message).toContain('password=***');
@@ -612,16 +635,16 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
 
     it('should prevent DoS attacks through pre-truncation of extremely large messages', () => {
       // Create an extremely large message that would cause DoS without pre-truncation
-      const extremelyLargeMessage = 'A'.repeat(1000000) + 'password=secret'; // 1MB+ message
+      const extremelyLargeMessage = `${'A'.repeat(1000000)}password=secret`; // 1MB+ message
       const start = Date.now();
-      
+
       const result = sanitizeErrorMessage(extremelyLargeMessage, { maxMessageLength: 500 });
       const duration = Date.now() - start;
-      
+
       // Should complete very quickly due to pre-truncation DoS protection
       expect(duration).toBeLessThan(50); // Much faster due to pre-truncation
       expect(result.length).toBeLessThanOrEqual(500 + '... [truncated for security]'.length);
-      
+
       // Verify it was truncated for security (DoS protection working)
       expect(result).toMatch(/\.\.\. \[truncated for security\]$/);
     });

@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export interface ConfigType {
   [key: string]: any;
@@ -10,7 +10,7 @@ export interface ConfigType {
  */
 export function loadConfig(appName: string): ConfigType {
   const configPath = path.join(process.cwd(), `.${appName.toLowerCase()}rc`);
-  
+
   if (fs.existsSync(configPath)) {
     try {
       const content = fs.readFileSync(configPath, 'utf8');
@@ -19,50 +19,48 @@ export function loadConfig(appName: string): ConfigType {
       console.warn(`Failed to parse config file: ${error}`);
     }
   }
-  
+
   return {};
 }
 
-
 export interface PackageJson {
-    name?: string;
-    version?: string;
-    description?: string;
-    [key: string]: unknown;
+  name?: string;
+  version?: string;
+  description?: string;
+  [key: string]: unknown;
 }
 
 export function getPackageJSON(startDir: string): PackageJson {
-    const dir = path.resolve(startDir);
+  const dir = path.resolve(startDir);
 
-    const pathCandidate = path.join(dir, 'package.json');
-    if (fs.existsSync(pathCandidate)) {
-        const pkgJSON: PackageJson = JSON.parse(fs.readFileSync(pathCandidate, 'utf8'));
-        return pkgJSON;
-    }
+  const pathCandidate = path.join(dir, 'package.json');
+  if (fs.existsSync(pathCandidate)) {
+    const pkgJSON: PackageJson = JSON.parse(fs.readFileSync(pathCandidate, 'utf8'));
+    return pkgJSON;
+  }
 
-    return {};
+  return {};
 }
 
-import { CreateCliOptions } from '../types/cli';
 import { logger } from '../core/ui/logger.js';
-
+import type { CreateCliOptions } from '../types/cli';
 
 /**
  * Resolve CLI defaults by combining provided options, package.json and fallbacks.
  */
 export default function resolveCliDefaults(options: CreateCliOptions = {}) {
-    let pkgJSON: CreateCliOptions = {};
-    try {
-        pkgJSON = getPackageJSON(process.cwd());
-    } catch (error) {
-        if(error instanceof Error) {
-            logger.error(`Failed to read package.json: ${error.message}`);
-        }
+  let pkgJSON: CreateCliOptions = {};
+  try {
+    pkgJSON = getPackageJSON(process.cwd());
+  } catch (error) {
+    if (error instanceof Error) {
+      logger.error(`Failed to read package.json: ${error.message}`);
     }
+  }
 
-    return {
-        name: options.name || pkgJSON.name || 'CLI Tool',
-        version: options.version || pkgJSON.version || '0.1.0',
-        description: options.description || pkgJSON.description || '',
-    };
+  return {
+    name: options.name || pkgJSON.name || 'CLI Tool',
+    version: options.version || pkgJSON.version || '0.1.0',
+    description: options.description || pkgJSON.description || '',
+  };
 }

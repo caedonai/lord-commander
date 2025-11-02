@@ -1,6 +1,6 @@
 /**
  * Task 1.4.3 Tests: Audit Trail Integration - Comprehensive Test Suite
- * 
+ *
  * Tests all aspects of the audit trail system including:
  * - Basic audit entry creation and validation
  * - Security event tracking and classification
@@ -12,34 +12,32 @@
  * - Performance optimization and batch processing
  * - Compliance features and regulatory support
  * - Edge cases and attack vector protection
- * 
+ *
  * @security Validates comprehensive audit trail security features
  * @performance Tests memory limits, processing bounds, and batch operations
  * @architecture Tests clean integration with structured logging and violation detection
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  AuditTrailManager,
-  AuditEventBuilderImpl,
-  MemoryAuditStorage,
-  AuditHelpers,
-  AuditEventType,
-  AuditSeverity,
-  IntegrityStatus,
-  DEFAULT_AUDIT_TRAIL_CONFIG,
   type AuditEntry,
+  AuditEventBuilderImpl,
+  AuditEventType,
+  AuditHelpers,
+  AuditSeverity,
   type AuditTrailConfig,
+  AuditTrailManager,
   type AuditUserContext,
+  DEFAULT_AUDIT_TRAIL_CONFIG,
+  IntegrityStatus,
+  MemoryAuditStorage,
 } from '../../../core/foundation/logging/audit.js';
 import {
-  StructuredLogLevel,
   SecurityClassification,
   type StructuredLogEntry,
+  StructuredLogLevel,
 } from '../../../core/foundation/logging/structured.js';
-import {
-  type EnhancedSecurityViolation,
-} from '../../../core/foundation/security/violation-detector.js';
+import type { EnhancedSecurityViolation } from '../../../core/foundation/security/violation-detector.js';
 
 describe('Task 1.4.3: Audit Trail Integration', () => {
   let auditManager: AuditTrailManager;
@@ -65,7 +63,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
     it('should generate unique audit IDs', () => {
       const id1 = AuditHelpers.generateAuditId();
       const id2 = AuditHelpers.generateAuditId();
-      
+
       expect(id1).toMatch(/^audit_[a-z0-9]+_[a-f0-9]{16}$/);
       expect(id2).toMatch(/^audit_[a-z0-9]+_[a-f0-9]{16}$/);
       expect(id1).not.toBe(id2);
@@ -84,7 +82,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
 
       const checksum1 = AuditHelpers.generateChecksum(entry);
       const checksum2 = AuditHelpers.generateChecksum(entry);
-      
+
       expect(checksum1).toBe(checksum2);
       expect(checksum1).toMatch(/^[a-f0-9]{64}$/); // SHA-256 hex
     });
@@ -107,13 +105,13 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
 
       const checksum1 = AuditHelpers.generateChecksum(entry1);
       const checksum2 = AuditHelpers.generateChecksum(entry2);
-      
+
       expect(checksum1).not.toBe(checksum2);
     });
 
     it('should create valid ISO timestamps', () => {
       const timestamp = AuditHelpers.createTimestamp();
-      
+
       expect(() => new Date(timestamp)).not.toThrow();
       expect(timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     });
@@ -123,24 +121,32 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
       const expiration = AuditHelpers.calculateRetentionExpiration(days);
       const expirationDate = new Date(expiration);
       const now = new Date();
-      
-      const diffDays = Math.round((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+      const diffDays = Math.round(
+        (expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      );
       expect(diffDays).toBe(days);
     });
 
     it('should map log levels to audit severities correctly', () => {
-      expect(AuditHelpers.mapLogLevelToAuditSeverity(StructuredLogLevel.TRACE))
-        .toBe(AuditSeverity.INFORMATIONAL);
-      expect(AuditHelpers.mapLogLevelToAuditSeverity(StructuredLogLevel.DEBUG))
-        .toBe(AuditSeverity.INFORMATIONAL);
-      expect(AuditHelpers.mapLogLevelToAuditSeverity(StructuredLogLevel.INFO))
-        .toBe(AuditSeverity.LOW);
-      expect(AuditHelpers.mapLogLevelToAuditSeverity(StructuredLogLevel.WARN))
-        .toBe(AuditSeverity.MEDIUM);
-      expect(AuditHelpers.mapLogLevelToAuditSeverity(StructuredLogLevel.ERROR))
-        .toBe(AuditSeverity.HIGH);
-      expect(AuditHelpers.mapLogLevelToAuditSeverity(StructuredLogLevel.FATAL))
-        .toBe(AuditSeverity.CRITICAL);
+      expect(AuditHelpers.mapLogLevelToAuditSeverity(StructuredLogLevel.TRACE)).toBe(
+        AuditSeverity.INFORMATIONAL
+      );
+      expect(AuditHelpers.mapLogLevelToAuditSeverity(StructuredLogLevel.DEBUG)).toBe(
+        AuditSeverity.INFORMATIONAL
+      );
+      expect(AuditHelpers.mapLogLevelToAuditSeverity(StructuredLogLevel.INFO)).toBe(
+        AuditSeverity.LOW
+      );
+      expect(AuditHelpers.mapLogLevelToAuditSeverity(StructuredLogLevel.WARN)).toBe(
+        AuditSeverity.MEDIUM
+      );
+      expect(AuditHelpers.mapLogLevelToAuditSeverity(StructuredLogLevel.ERROR)).toBe(
+        AuditSeverity.HIGH
+      );
+      expect(AuditHelpers.mapLogLevelToAuditSeverity(StructuredLogLevel.FATAL)).toBe(
+        AuditSeverity.CRITICAL
+      );
     });
 
     it('should map security violations to event types correctly', () => {
@@ -152,7 +158,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
         description: 'Authentication failed',
         recommendation: 'Block further attempts',
         timestamp: new Date(),
-        context: { 
+        context: {
           inputType: 'command-arg',
           environment: 'test',
         },
@@ -161,25 +167,28 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
           cwe: [287],
           nist: ['PR.AC-1'],
           mitre: ['T1110'],
-          iso27001: ['A.9.1.1']
+          iso27001: ['A.9.1.1'],
         },
-        riskFactors: [{
-          type: 'behavioral',
-          name: 'failed-attempts',
-          impact: 80,
-          description: 'Multiple failed authentication attempts'
-        }],
-        remediation: [{
-          type: 'blocking',
-          priority: 'high',
-          autoFixAvailable: true,
-          description: 'Block further authentication attempts'
-        }],
+        riskFactors: [
+          {
+            type: 'behavioral',
+            name: 'failed-attempts',
+            impact: 80,
+            description: 'Multiple failed authentication attempts',
+          },
+        ],
+        remediation: [
+          {
+            type: 'blocking',
+            priority: 'high',
+            autoFixAvailable: true,
+            description: 'Block further authentication attempts',
+          },
+        ],
         correlationId: 'test',
       };
 
-      expect(AuditHelpers.mapViolationToEventType(authViolation))
-        .toBe(AuditEventType.AUTH_FAILURE);
+      expect(AuditHelpers.mapViolationToEventType(authViolation)).toBe(AuditEventType.AUTH_FAILURE);
 
       const injectionViolation: EnhancedSecurityViolation = {
         ...authViolation,
@@ -190,8 +199,9 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
         },
       };
 
-      expect(AuditHelpers.mapViolationToEventType(injectionViolation))
-        .toBe(AuditEventType.ATTACK_DETECTED);
+      expect(AuditHelpers.mapViolationToEventType(injectionViolation)).toBe(
+        AuditEventType.ATTACK_DETECTED
+      );
     });
   });
 
@@ -252,16 +262,16 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
 
     it('should validate required fields when building', () => {
       expect(() => builder.build()).toThrow('Event type is required');
-      
+
       builder.setEventType(AuditEventType.AUTH_SUCCESS);
       expect(() => builder.build()).toThrow('Severity is required');
-      
+
       builder.setSeverity(AuditSeverity.LOW);
       expect(() => builder.build()).toThrow('Message is required');
-      
+
       builder.setMessage('Test message');
       expect(() => builder.build()).toThrow('Outcome is required');
-      
+
       builder.setOutcome('success');
       expect(() => builder.build()).not.toThrow();
     });
@@ -291,7 +301,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
         description: 'Cross-site scripting attempt detected',
         recommendation: 'Sanitize HTML input',
         timestamp: new Date(),
-        context: { 
+        context: {
           inputType: 'command-arg',
           environment: 'test',
         },
@@ -300,20 +310,24 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
           cwe: [79],
           nist: ['PR.DS-5'],
           mitre: ['T1059'],
-          iso27001: ['A.12.6.1']
+          iso27001: ['A.12.6.1'],
         },
-        riskFactors: [{
-          type: 'technical',
-          name: 'script-injection',
-          impact: 85,
-          description: 'Script injection attempt detected'
-        }],
-        remediation: [{
-          type: 'sanitization',
-          priority: 'high',
-          autoFixAvailable: true,
-          description: 'Sanitize HTML input and escape special characters'
-        }],
+        riskFactors: [
+          {
+            type: 'technical',
+            name: 'script-injection',
+            impact: 85,
+            description: 'Script injection attempt detected',
+          },
+        ],
+        remediation: [
+          {
+            type: 'sanitization',
+            priority: 'high',
+            autoFixAvailable: true,
+            description: 'Sanitize HTML input and escape special characters',
+          },
+        ],
         correlationId: 'xss-attack-123',
       };
 
@@ -346,7 +360,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
 
     it('should initialize with empty state', async () => {
       const metadata = await storage.getMetadata();
-      
+
       expect(metadata.totalEntries).toBe(0);
       expect(metadata.sizeBytes).toBe(0);
       expect(metadata.integrityStatus).toBe(IntegrityStatus.VERIFIED);
@@ -365,7 +379,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
       };
 
       await storage.addEntry(entry);
-      
+
       const metadata = await storage.getMetadata();
       expect(metadata.totalEntries).toBe(1);
       expect(metadata.sizeBytes).toBeGreaterThan(0);
@@ -385,13 +399,15 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
       };
 
       await storage.addEntry(entry);
-      
+
       const retrieved = await storage.getEntry('test1');
-      expect(retrieved).toEqual(expect.objectContaining({
-        id: 'test1',
-        message: 'Test entry',
-      }));
-      
+      expect(retrieved).toEqual(
+        expect.objectContaining({
+          id: 'test1',
+          message: 'Test entry',
+        })
+      );
+
       const notFound = await storage.getEntry('nonexistent');
       expect(notFound).toBeNull();
     });
@@ -655,7 +671,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
       const removedCount = await storage.cleanup(cleanupDate);
 
       expect(removedCount).toBe(1);
-      
+
       const remaining = await storage.getEntries({});
       expect(remaining.entries).toHaveLength(1);
       expect(remaining.entries[0].id).toBe('new1');
@@ -666,14 +682,15 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
     it('should initialize and close correctly', async () => {
       await auditManager.init();
       expect(auditManager.getConfig()).toEqual(testConfig);
-      
+
       await auditManager.close();
     });
 
     it('should record events correctly', async () => {
       await auditManager.init();
 
-      const entry = auditManager.createEvent()
+      const entry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.AUTH_SUCCESS)
         .setSeverity(AuditSeverity.LOW)
         .setMessage('User logged in')
@@ -695,14 +712,16 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
         minimumSeverity: AuditSeverity.HIGH,
       });
 
-      const lowEntry = auditManager.createEvent()
+      const lowEntry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.AUTH_SUCCESS)
         .setSeverity(AuditSeverity.LOW)
         .setMessage('Low severity event')
         .setOutcome('success')
         .build();
 
-      const highEntry = auditManager.createEvent()
+      const highEntry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.SECURITY_VIOLATION)
         .setSeverity(AuditSeverity.HIGH)
         .setMessage('High severity event')
@@ -720,7 +739,8 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
     it('should enrich entries with system context', async () => {
       await auditManager.init();
 
-      const entry = auditManager.createEvent()
+      const entry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.SYSTEM_START)
         .setSeverity(AuditSeverity.INFORMATIONAL)
         .setMessage('System started')
@@ -731,7 +751,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
 
       const results = await auditManager.queryEntries({ limit: 1 });
       const recordedEntry = results.entries[0];
-      
+
       expect(recordedEntry.systemContext).toBeDefined();
       expect(recordedEntry.systemContext?.processId).toBe(process.pid);
       expect(recordedEntry.systemContext?.workingDirectory).toBe(process.cwd());
@@ -750,7 +770,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
         description: 'SQL injection attempt detected',
         recommendation: 'Use parameterized queries',
         timestamp: new Date(),
-        context: { 
+        context: {
           inputType: 'command-arg',
           environment: 'test',
         },
@@ -759,20 +779,24 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
           cwe: [89],
           nist: ['PR.DS-5'],
           mitre: ['T1190'],
-          iso27001: ['A.12.6.1']
+          iso27001: ['A.12.6.1'],
         },
-        riskFactors: [{
-          type: 'environmental',
-          name: 'test-environment',
-          impact: 50,
-          description: 'Running in test environment'
-        }],
-        remediation: [{
-          type: 'validation',
-          priority: 'critical',
-          autoFixAvailable: false,
-          description: 'Implement SQL input validation'
-        }],
+        riskFactors: [
+          {
+            type: 'environmental',
+            name: 'test-environment',
+            impact: 50,
+            description: 'Running in test environment',
+          },
+        ],
+        remediation: [
+          {
+            type: 'validation',
+            priority: 'critical',
+            autoFixAvailable: false,
+            description: 'Implement SQL input validation',
+          },
+        ],
         correlationId: 'corr123',
       };
 
@@ -785,7 +809,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
 
       const results = await auditManager.queryEntries({ limit: 1 });
       const recordedEntry = results.entries[0];
-      
+
       expect(recordedEntry.eventType).toBe(AuditEventType.ATTACK_DETECTED);
       expect(recordedEntry.severity).toBe(AuditSeverity.CRITICAL);
       expect(recordedEntry.securityViolations).toHaveLength(1);
@@ -823,7 +847,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
 
       const results = await auditManager.queryEntries({ limit: 1 });
       const recordedEntry = results.entries[0];
-      
+
       expect(recordedEntry.eventType).toBe(AuditEventType.SYSTEM_ERROR);
       expect(recordedEntry.severity).toBe(AuditSeverity.HIGH);
       expect(recordedEntry.outcome).toBe('failure');
@@ -850,7 +874,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
 
       const results = await auditManager.queryEntries({ limit: 1 });
       const recordedEntry = results.entries[0];
-      
+
       expect(recordedEntry.eventType).toBe(AuditEventType.COMMAND_EXECUTION);
       expect(recordedEntry.severity).toBe(AuditSeverity.LOW);
       expect(recordedEntry.message).toContain('deploy --environment production');
@@ -874,7 +898,8 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
       try {
         // Record multiple events
         for (let i = 1; i <= 5; i++) {
-          const entry = batchManager.createEvent()
+          const entry = batchManager
+            .createEvent()
             .setEventType(AuditEventType.SYSTEM_START)
             .setSeverity(AuditSeverity.INFORMATIONAL)
             .setMessage(`Batch event ${i}`)
@@ -885,7 +910,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
         }
 
         // Wait for flush
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         await batchManager.flush();
 
         const results = await batchManager.queryEntries({ limit: 10 });
@@ -904,7 +929,8 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
     it('should handle disabled audit trail', async () => {
       auditManager.updateConfig({ enabled: false });
 
-      const entry = auditManager.createEvent()
+      const entry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.AUTH_SUCCESS)
         .setSeverity(AuditSeverity.LOW)
         .setMessage('Should not be recorded')
@@ -919,12 +945,13 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
 
     it('should handle malformed entries gracefully', async () => {
       const builder = new AuditEventBuilderImpl();
-      
+
       // Missing required fields should throw
       expect(() => builder.build()).toThrow();
-      
+
       // But should not crash the system
-      const validEntry = auditManager.createEvent()
+      const validEntry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.SYSTEM_ERROR)
         .setSeverity(AuditSeverity.MEDIUM)
         .setMessage('Valid entry after error')
@@ -940,7 +967,8 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
         data: 'B'.repeat(50000), // 50KB context
       };
 
-      const entry = auditManager.createEvent()
+      const entry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.DATA_ACCESS)
         .setSeverity(AuditSeverity.MEDIUM)
         .setMessage(largeMessage)
@@ -948,13 +976,13 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
         .build();
 
       // Add large context
-      entry.resourceContext = { 
+      entry.resourceContext = {
         resourceType: 'file',
         beforeValue: largeContext,
       };
 
       await expect(auditManager.recordEvent(entry)).resolves.not.toThrow();
-      
+
       const results = await auditManager.queryEntries({ limit: 1 });
       expect(results.entries).toHaveLength(1);
       expect(results.entries[0].message).toBe(largeMessage);
@@ -966,7 +994,8 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
       // Create multiple concurrent audit operations
       for (let i = 1; i <= 20; i++) {
         const promise = (async () => {
-          const entry = auditManager.createEvent()
+          const entry = auditManager
+            .createEvent()
             .setEventType(AuditEventType.SYSTEM_START)
             .setSeverity(AuditSeverity.INFORMATIONAL)
             .setMessage(`Concurrent event ${i}`)
@@ -982,9 +1011,9 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
 
       const results = await auditManager.queryEntries({ limit: 25 });
       expect(results.entries).toHaveLength(20);
-      
+
       // Verify no duplicates
-      const ids = results.entries.map(e => e.id);
+      const ids = results.entries.map((e) => e.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(20);
     });
@@ -1003,7 +1032,8 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
       try {
         // Add multiple entries to create hash chain
         for (let i = 1; i <= 5; i++) {
-          const entry = integrityManager.createEvent()
+          const entry = integrityManager
+            .createEvent()
             .setEventType(AuditEventType.SYSTEM_START)
             .setSeverity(AuditSeverity.INFORMATIONAL)
             .setMessage(`Integrity test ${i}`)
@@ -1020,16 +1050,16 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
         expect(verification.corruptedEntries).toHaveLength(0);
 
         // Verify entries have checksums and hash chain
-        const results = await integrityManager.queryEntries({ 
+        const results = await integrityManager.queryEntries({
           limit: 10,
           sortBy: 'timestamp',
           sortOrder: 'asc',
         });
-        
+
         for (let i = 0; i < results.entries.length; i++) {
           const entry = results.entries[i];
           expect(entry.checksum).toBeDefined();
-          
+
           if (i > 0) {
             expect(entry.previousEntryHash).toBe(results.entries[i - 1].checksum);
           }
@@ -1042,13 +1072,15 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
     it('should handle export with various options', async () => {
       // Add test data
       const entries = [
-        auditManager.createEvent()
+        auditManager
+          .createEvent()
           .setEventType(AuditEventType.AUTH_SUCCESS)
           .setSeverity(AuditSeverity.LOW)
           .setMessage('Login success')
           .setOutcome('success')
           .build(),
-        auditManager.createEvent()
+        auditManager
+          .createEvent()
           .setEventType(AuditEventType.SECURITY_VIOLATION)
           .setSeverity(AuditSeverity.HIGH)
           .setMessage('Security violation')
@@ -1108,7 +1140,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
         description: 'Path traversal attempt',
         recommendation: 'Block path traversal attempts',
         timestamp: new Date(),
-        context: { 
+        context: {
           inputType: 'file-path',
           environment: 'test',
         },
@@ -1117,20 +1149,24 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
           cwe: [22],
           nist: ['PR.DS-1'],
           mitre: ['T1083'],
-          iso27001: ['A.12.6.1']
+          iso27001: ['A.12.6.1'],
         },
-        riskFactors: [{
-          type: 'environmental',
-          name: 'test-environment',
-          impact: 30,
-          description: 'Running in test environment'
-        }],
-        remediation: [{
-          type: 'validation',
-          priority: 'high',
-          autoFixAvailable: true,
-          description: 'Implement path validation'
-        }],
+        riskFactors: [
+          {
+            type: 'environmental',
+            name: 'test-environment',
+            impact: 30,
+            description: 'Running in test environment',
+          },
+        ],
+        remediation: [
+          {
+            type: 'validation',
+            priority: 'high',
+            autoFixAvailable: true,
+            description: 'Implement path validation',
+          },
+        ],
         correlationId: 'conv123',
       };
 
@@ -1140,7 +1176,8 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
       await testAuditManager.recordCommandExecution('ls', ['-la', '/home'], 'success');
 
       // Test event creation and recording
-      const customEvent = testAuditManager.createEvent()
+      const customEvent = testAuditManager
+        .createEvent()
         .setEventType(AuditEventType.DATA_ACCESS)
         .setSeverity(AuditSeverity.MEDIUM)
         .setMessage('Data accessed')
@@ -1166,7 +1203,7 @@ describe('Task 1.4.3: Audit Trail Integration', () => {
         encryptOutput: false,
         digitalSignature: false,
       });
-      
+
       const exported = JSON.parse(exportData.toString());
       expect(exported.entries).toHaveLength(3);
     });

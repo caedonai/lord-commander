@@ -1,6 +1,6 @@
 /**
  * Lord Commander SDK Demo CLI
- * 
+ *
  * This CLI demonstrates the capabilities of the Lord Commander SDK.
  * It shows how to build professional CLIs using the SDK's modular architecture.
  */
@@ -17,14 +17,14 @@ async function main() {
       builtinCommands: {
         completion: true,
         hello: true,
-        version: true
+        version: true,
       },
       autocomplete: {
         enabled: true,
         autoInstall: true,
         shells: ['bash', 'zsh', 'fish', 'powershell'],
-        enableFileCompletion: true
-      }
+        enableFileCompletion: true,
+      },
     });
   } catch (error) {
     console.error('Failed to start CLI:', error);

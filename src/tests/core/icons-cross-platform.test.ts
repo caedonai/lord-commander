@@ -1,12 +1,12 @@
 /**
  * Cross-Platform Compatibility Tests for Icon System
- * 
+ *
  * Tests platform detection accuracy, fallback mechanisms, and compatibility
  * across different operating systems, terminals, and environments.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { PlatformCapabilities, IconProvider, IconSecurity } from '../../core/ui/icons.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { IconProvider, IconSecurity, PlatformCapabilities } from '../../core/ui/icons.js';
 
 describe('Cross-Platform Icon Compatibility', () => {
   let originalProcess: any;
@@ -14,17 +14,17 @@ describe('Cross-Platform Icon Compatibility', () => {
   beforeEach(() => {
     // Store original process for restoration
     originalProcess = global.process;
-    
+
     // Reset cached detection
     PlatformCapabilities.reset();
     IconProvider.reset();
   });
 
   // Helper function to mock process and reset platform capabilities
-  function mockProcessAndReset(processConfig: any) {
+  function _mockProcessAndReset(processConfig: any) {
     vi.stubGlobal('process', {
       ...originalProcess,
-      ...processConfig
+      ...processConfig,
     });
     PlatformCapabilities.reset();
   }
@@ -43,10 +43,10 @@ describe('Cross-Platform Icon Compatibility', () => {
         stdout: { isTTY: true },
         env: {
           WT_SESSION: '123-456-789',
-          TERM_PROGRAM: 'Windows Terminal'
-        }
+          TERM_PROGRAM: 'Windows Terminal',
+        },
       });
-      
+
       PlatformCapabilities.reset(); // Reset after changing environment
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -61,10 +61,10 @@ describe('Cross-Platform Icon Compatibility', () => {
         env: {
           PSModulePath: 'C:\\Program Files\\PowerShell\\7\\Modules',
           PSVersionTable: 'Name=PowerShell;Version=7.2.0',
-          FORCE_UNICODE_DETECTION: 'true'
-        }
+          FORCE_UNICODE_DETECTION: 'true',
+        },
       });
-      
+
       PlatformCapabilities.reset(); // Reset after changing environment
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -77,8 +77,8 @@ describe('Cross-Platform Icon Compatibility', () => {
         stdout: { isTTY: true },
         env: {
           // No WT_SESSION, no ConEmuANSI, no TERM_PROGRAM
-          COMSPEC: 'C:\\Windows\\System32\\cmd.exe'
-        }
+          COMSPEC: 'C:\\Windows\\System32\\cmd.exe',
+        },
       });
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(false);
@@ -92,10 +92,10 @@ describe('Cross-Platform Icon Compatibility', () => {
         stdout: { isTTY: true },
         env: {
           ConEmuANSI: 'ON',
-          ConEmuPID: '12345'
-        }
+          ConEmuPID: '12345',
+        },
       });
-      
+
       PlatformCapabilities.reset(); // Reset after changing environment
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -107,14 +107,14 @@ describe('Cross-Platform Icon Compatibility', () => {
         ...originalProcess,
         platform: 'win32',
         stdout: { isTTY: true },
-        env: {}
+        env: {},
       });
 
       const icons = IconProvider.getIcons();
-      
-      expect(icons.rocket).toBe('^');   // ASCII fallback
-      expect(icons.cloud).toBe('O');    // ASCII fallback
-      expect(icons.box).toBe('#');      // ASCII fallback (assuming square uses #)
+
+      expect(icons.rocket).toBe('^'); // ASCII fallback
+      expect(icons.cloud).toBe('O'); // ASCII fallback
+      expect(icons.box).toBe('#'); // ASCII fallback (assuming square uses #)
     });
 
     it('should handle Windows-specific environment variables', () => {
@@ -125,8 +125,8 @@ describe('Cross-Platform Icon Compatibility', () => {
         env: {
           SESSIONNAME: 'Console',
           PROCESSOR_ARCHITECTURE: 'AMD64',
-          OS: 'Windows_NT'
-        }
+          OS: 'Windows_NT',
+        },
       });
 
       expect(() => PlatformCapabilities.getInfo()).not.toThrow();
@@ -141,8 +141,8 @@ describe('Cross-Platform Icon Compatibility', () => {
         stdout: { isTTY: true },
         env: {
           TERM_PROGRAM: 'Apple_Terminal',
-          TERM: 'xterm-256color'
-        }
+          TERM: 'xterm-256color',
+        },
       });
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -157,8 +157,8 @@ describe('Cross-Platform Icon Compatibility', () => {
         env: {
           TERM_PROGRAM: 'iTerm.app',
           ITERM_SESSION_ID: 'w0t0p0:12345',
-          TERM: 'xterm-256color'
-        }
+          TERM: 'xterm-256color',
+        },
       });
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -170,7 +170,7 @@ describe('Cross-Platform Icon Compatibility', () => {
         { TERM_PROGRAM: 'Apple_Terminal' },
         { TERM_PROGRAM: 'iTerm.app' },
         { TERM_PROGRAM: 'Hyper' },
-        { TERM_PROGRAM: 'Warp' }
+        { TERM_PROGRAM: 'Warp' },
       ];
 
       macTerminals.forEach((env) => {
@@ -181,10 +181,10 @@ describe('Cross-Platform Icon Compatibility', () => {
           env: {
             ...originalProcess.env, // Preserve test environment variables
             ...env,
-            FORCE_EMOJI_DETECTION: 'true' // Force emoji support for macOS terminals
-          }
+            FORCE_EMOJI_DETECTION: 'true', // Force emoji support for macOS terminals
+          },
         });
-        
+
         PlatformCapabilities.reset(); // Reset AFTER mocking environment
 
         expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -198,33 +198,33 @@ describe('Cross-Platform Icon Compatibility', () => {
       const linuxTerminals = [
         {
           env: { COLORTERM: 'truecolor', TERM: 'xterm-256color' },
-          description: 'Modern terminal with truecolor support'
+          description: 'Modern terminal with truecolor support',
         },
         {
           env: { TERM_PROGRAM: 'gnome-terminal', TERM: 'xterm-256color' },
-          description: 'GNOME Terminal'
+          description: 'GNOME Terminal',
         },
         {
           env: { KONSOLE_VERSION: '21.12.3', TERM: 'xterm-256color' },
-          description: 'KDE Konsole'
+          description: 'KDE Konsole',
         },
         {
           env: { TERM: 'alacritty', ALACRITTY_SOCKET: '/tmp/alacritty.sock' },
-          description: 'Alacritty terminal'
-        }
+          description: 'Alacritty terminal',
+        },
       ];
 
       linuxTerminals.forEach(({ env }) => {
         PlatformCapabilities.reset();
-        
+
         vi.stubGlobal('process', {
           ...originalProcess,
           platform: 'linux',
           stdout: { isTTY: true },
           env: {
             ...originalProcess.env, // Preserve test environment variables
-            ...env
-          }
+            ...env,
+          },
         });
 
         expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -241,8 +241,8 @@ describe('Cross-Platform Icon Compatibility', () => {
         stdout: { isTTY: true },
         env: {
           TERM: 'linux', // Console terminal
-          COLORTERM: undefined
-        }
+          COLORTERM: undefined,
+        },
       });
 
       // May or may not support Unicode depending on implementation
@@ -259,8 +259,8 @@ describe('Cross-Platform Icon Compatibility', () => {
           ...originalProcess.env, // Preserve test environment variables
           SSH_CLIENT: '192.168.1.100 12345 22',
           SSH_CONNECTION: '192.168.1.100 12345 192.168.1.1 22',
-          TERM: 'xterm'
-        }
+          TERM: 'xterm',
+        },
       });
 
       // SSH sessions should work but emoji support may be limited
@@ -278,10 +278,10 @@ describe('Cross-Platform Icon Compatibility', () => {
           ...originalProcess.env, // Preserve test environment variables
           CI: 'true',
           GITHUB_ACTIONS: 'true',
-          GITHUB_WORKFLOW: 'CI'
-        }
+          GITHUB_WORKFLOW: 'CI',
+        },
       });
-      
+
       PlatformCapabilities.reset(); // Reset after changing environment
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -296,8 +296,8 @@ describe('Cross-Platform Icon Compatibility', () => {
           ...originalProcess.env, // Preserve test environment variables
           CI: 'true',
           GITLAB_CI: 'true',
-          CI_SERVER_NAME: 'GitLab'
-        }
+          CI_SERVER_NAME: 'GitLab',
+        },
       });
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -312,8 +312,8 @@ describe('Cross-Platform Icon Compatibility', () => {
           ...originalProcess.env, // Preserve test environment variables
           CI: 'true',
           TF_BUILD: 'True',
-          AGENT_NAME: 'Azure Pipelines'
-        }
+          AGENT_NAME: 'Azure Pipelines',
+        },
       });
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -328,8 +328,8 @@ describe('Cross-Platform Icon Compatibility', () => {
           ...originalProcess.env, // Preserve test environment variables
           CI: 'true',
           JENKINS_URL: 'https://jenkins.example.com',
-          BUILD_NUMBER: '123'
-        }
+          BUILD_NUMBER: '123',
+        },
       });
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -344,8 +344,8 @@ describe('Cross-Platform Icon Compatibility', () => {
         stdout: { isTTY: true },
         env: {
           DOCKER_CONTAINER: '1',
-          HOSTNAME: 'docker-container-id'
-        }
+          HOSTNAME: 'docker-container-id',
+        },
       });
 
       // Docker containers may have limited terminal support
@@ -357,8 +357,8 @@ describe('Cross-Platform Icon Compatibility', () => {
         ...originalProcess,
         stdout: { isTTY: false },
         env: {
-          DOCKER_CONTAINER: '1'
-        }
+          DOCKER_CONTAINER: '1',
+        },
       });
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(false);
@@ -373,8 +373,8 @@ describe('Cross-Platform Icon Compatibility', () => {
         stdout: { isTTY: true },
         env: {
           TERM_PROGRAM: 'vscode',
-          VSCODE_INJECTION: '1'
-        }
+          VSCODE_INJECTION: '1',
+        },
       });
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -388,8 +388,8 @@ describe('Cross-Platform Icon Compatibility', () => {
         env: {
           TERM_PROGRAM: 'vscode',
           CODESPACES: 'true',
-          GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN: 'preview.app.github.dev'
-        }
+          GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN: 'preview.app.github.dev',
+        },
       });
 
       expect(PlatformCapabilities.supportsUnicode()).toBe(true);
@@ -406,7 +406,7 @@ describe('Cross-Platform Icon Compatibility', () => {
           env: {},
           expectedUnicode: false,
           expectedEmoji: false,
-          expectedRocket: '^'
+          expectedRocket: '^',
         },
         {
           name: 'Unicode only',
@@ -414,7 +414,7 @@ describe('Cross-Platform Icon Compatibility', () => {
           env: { CI: 'true', COLORTERM: 'truecolor' },
           expectedUnicode: true,
           expectedEmoji: false,
-          expectedRocket: '▲'
+          expectedRocket: '▲',
         },
         {
           name: 'Full support',
@@ -422,8 +422,8 @@ describe('Cross-Platform Icon Compatibility', () => {
           env: { TERM_PROGRAM: 'iTerm.app' },
           expectedUnicode: true,
           expectedEmoji: true,
-          expectedRocket: '🚀'
-        }
+          expectedRocket: '🚀',
+        },
       ];
 
       testScenarios.forEach(({ platform, env, expectedUnicode, expectedEmoji, expectedRocket }) => {
@@ -434,7 +434,7 @@ describe('Cross-Platform Icon Compatibility', () => {
           ...originalProcess,
           platform,
           stdout: { isTTY: true },
-          env
+          env,
         });
 
         expect(PlatformCapabilities.supportsUnicode()).toBe(expectedUnicode);
@@ -447,8 +447,8 @@ describe('Cross-Platform Icon Compatibility', () => {
 
     it('should maintain icon consistency across platforms', () => {
       const platforms = ['win32', 'darwin', 'linux'];
-      
-      platforms.forEach(platform => {
+
+      platforms.forEach((platform) => {
         PlatformCapabilities.reset();
         IconProvider.reset();
 
@@ -456,19 +456,19 @@ describe('Cross-Platform Icon Compatibility', () => {
           ...originalProcess,
           platform,
           stdout: { isTTY: true },
-          env: { TERM_PROGRAM: 'vscode' } // Ensure consistent high support
+          env: { TERM_PROGRAM: 'vscode' }, // Ensure consistent high support
         });
 
         const icons = IconProvider.getIcons();
-        
+
         // All required icons should exist
         expect(icons.rocket).toBeTruthy();
         expect(icons.cloud).toBeTruthy();
         expect(icons.box).toBeTruthy();
         expect(icons.shield).toBeTruthy();
-        
+
         // All icons should be secure
-        Object.values(icons).forEach(icon => {
+        Object.values(icons).forEach((icon) => {
           expect(IconSecurity.isValidIcon(icon)).toBe(true);
         });
       });
@@ -483,7 +483,7 @@ describe('Cross-Platform Icon Compatibility', () => {
         { env: { TERM: 'screen-256color' }, expected: true },
         { env: { TERM: 'xterm' }, expected: true },
         { env: { TERM: 'dumb' }, expected: false },
-        { env: { NO_COLOR: '1' }, expected: false }
+        { env: { NO_COLOR: '1' }, expected: false },
       ];
 
       colorTests.forEach(({ env }) => {
@@ -492,7 +492,7 @@ describe('Cross-Platform Icon Compatibility', () => {
         vi.stubGlobal('process', {
           ...originalProcess,
           stdout: { isTTY: true },
-          env
+          env,
         });
 
         const info = PlatformCapabilities.getInfo();
@@ -507,9 +507,9 @@ describe('Cross-Platform Icon Compatibility', () => {
         stdout: {
           isTTY: true,
           columns: 80,
-          rows: 24
+          rows: 24,
         },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       expect(() => PlatformCapabilities.getInfo()).not.toThrow();
@@ -521,9 +521,9 @@ describe('Cross-Platform Icon Compatibility', () => {
         stdout: {
           isTTY: true,
           columns: undefined,
-          rows: undefined
+          rows: undefined,
         },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       expect(() => PlatformCapabilities.getInfo()).not.toThrow();
@@ -537,16 +537,16 @@ describe('Cross-Platform Icon Compatibility', () => {
         { TERM_PROGRAM: null },
         { TERM_PROGRAM: undefined },
         { TERM: '\0corrupted' },
-        { COLORTERM: 'invalid\\x1b[31mcolor' }
+        { COLORTERM: 'invalid\\x1b[31mcolor' },
       ];
 
-      corruptedEnvs.forEach(env => {
+      corruptedEnvs.forEach((env) => {
         PlatformCapabilities.reset();
 
         vi.stubGlobal('process', {
           ...originalProcess,
           stdout: { isTTY: true },
-          env
+          env,
         });
 
         expect(() => PlatformCapabilities.supportsUnicode()).not.toThrow();
@@ -562,8 +562,8 @@ describe('Cross-Platform Icon Compatibility', () => {
         env: {
           term_program: 'vscode', // lowercase
           Term_Program: 'VSCode', // mixed case
-          TERM_PROGRAM: 'vscode'  // correct case
-        }
+          TERM_PROGRAM: 'vscode', // correct case
+        },
       });
 
       // Should prioritize the correct case but handle gracefully
@@ -574,25 +574,25 @@ describe('Cross-Platform Icon Compatibility', () => {
   describe('Performance Across Platforms', () => {
     it('should detect platform capabilities quickly', () => {
       const platforms = ['win32', 'darwin', 'linux'];
-      
-      platforms.forEach(platform => {
+
+      platforms.forEach((platform) => {
         PlatformCapabilities.reset();
 
         vi.stubGlobal('process', {
           ...originalProcess,
           platform,
           stdout: { isTTY: true },
-          env: { TERM_PROGRAM: 'vscode' }
+          env: { TERM_PROGRAM: 'vscode' },
         });
 
         const start = Date.now();
-        
+
         // Multiple calls should be fast (cached)
         for (let i = 0; i < 100; i++) {
           PlatformCapabilities.supportsUnicode();
           PlatformCapabilities.supportsEmoji();
         }
-        
+
         const elapsed = Date.now() - start;
         expect(elapsed).toBeLessThan(50); // Should be very fast
       });
@@ -600,8 +600,8 @@ describe('Cross-Platform Icon Compatibility', () => {
 
     it('should generate icons efficiently across platforms', () => {
       const platforms = ['win32', 'darwin', 'linux'];
-      
-      platforms.forEach(platform => {
+
+      platforms.forEach((platform) => {
         PlatformCapabilities.reset();
         IconProvider.reset();
 
@@ -609,16 +609,16 @@ describe('Cross-Platform Icon Compatibility', () => {
           ...originalProcess,
           platform,
           stdout: { isTTY: true },
-          env: { TERM_PROGRAM: 'vscode' }
+          env: { TERM_PROGRAM: 'vscode' },
         });
 
         const start = Date.now();
-        
+
         // Generate icons multiple times
         for (let i = 0; i < 10; i++) {
           IconProvider.getIcons();
         }
-        
+
         const elapsed = Date.now() - start;
         expect(elapsed).toBeLessThan(100); // Should be cached after first call
       });
@@ -631,18 +631,18 @@ describe('Cross-Platform Icon Compatibility', () => {
         {
           name: 'Local VS Code',
           platform: 'win32',
-          env: { TERM_PROGRAM: 'vscode', NODE_ENV: 'development' }
+          env: { TERM_PROGRAM: 'vscode', NODE_ENV: 'development' },
         },
         {
           name: 'macOS Terminal with Node',
           platform: 'darwin',
-          env: { TERM_PROGRAM: 'Apple_Terminal', NODE_ENV: 'development' }
+          env: { TERM_PROGRAM: 'Apple_Terminal', NODE_ENV: 'development' },
         },
         {
           name: 'Linux development server',
           platform: 'linux',
-          env: { COLORTERM: 'truecolor', SSH_CLIENT: '192.168.1.100' }
-        }
+          env: { COLORTERM: 'truecolor', SSH_CLIENT: '192.168.1.100' },
+        },
       ];
 
       devEnvironments.forEach(({ platform, env }) => {
@@ -653,11 +653,11 @@ describe('Cross-Platform Icon Compatibility', () => {
           ...originalProcess,
           platform,
           stdout: { isTTY: true },
-          env
+          env,
         });
 
         const icons = IconProvider.getIcons();
-        
+
         // Should provide usable icons in all dev environments
         expect(icons.rocket).toBeTruthy();
         expect(icons.rocket.length).toBeGreaterThan(0);
@@ -670,18 +670,18 @@ describe('Cross-Platform Icon Compatibility', () => {
         {
           name: 'Docker container',
           platform: 'linux',
-          env: { CI: 'true', DOCKER_CONTAINER: '1' }
+          env: { CI: 'true', DOCKER_CONTAINER: '1' },
         },
         {
           name: 'GitHub Actions',
           platform: 'linux',
-          env: { CI: 'true', GITHUB_ACTIONS: 'true' }
+          env: { CI: 'true', GITHUB_ACTIONS: 'true' },
         },
         {
           name: 'AWS Lambda (if TTY available)',
           platform: 'linux',
-          env: { AWS_LAMBDA_FUNCTION_NAME: 'my-function' }
-        }
+          env: { AWS_LAMBDA_FUNCTION_NAME: 'my-function' },
+        },
       ];
 
       prodEnvironments.forEach(({ platform, env }) => {
@@ -692,12 +692,12 @@ describe('Cross-Platform Icon Compatibility', () => {
           ...originalProcess,
           platform,
           stdout: { isTTY: false }, // Production usually non-TTY
-          env
+          env,
         });
 
         // Should still provide fallback icons safely
         expect(() => IconProvider.getIcons()).not.toThrow();
-        
+
         const icons = IconProvider.getIcons();
         expect(typeof icons.rocket).toBe('string');
       });

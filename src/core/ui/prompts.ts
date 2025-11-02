@@ -1,6 +1,6 @@
 import * as clack from '@clack/prompts';
-import colors from 'picocolors';
 import figures from 'figures';
+import colors from 'picocolors';
 import { CLIError } from '../foundation/errors/index.js';
 
 export type PromptTheme = {
@@ -99,13 +99,16 @@ export function setTheme(theme: Partial<PromptTheme>): void {
 }
 
 // Enhanced visual separator functions for better CLI readability
-export function printSeparator(title?: string, style: 'light' | 'heavy' | 'double' = 'light'): void {
+export function printSeparator(
+  title?: string,
+  style: 'light' | 'heavy' | 'double' = 'light'
+): void {
   const width = process.stdout.columns || 80;
   const maxTitleWidth = Math.max(width - 10, 20); // Leave space for decorations
-  
+
   let line: string;
   let titleColor: (text: string) => string;
-  
+
   switch (style) {
     case 'heavy':
       line = '━';
@@ -119,15 +122,19 @@ export function printSeparator(title?: string, style: 'light' | 'heavy' | 'doubl
       line = '─';
       titleColor = colors.dim;
   }
-  
+
   if (title && title.length > 0) {
-    const truncatedTitle = title.length > maxTitleWidth ? title.slice(0, maxTitleWidth - 3) + '...' : title;
+    const truncatedTitle =
+      title.length > maxTitleWidth ? `${title.slice(0, maxTitleWidth - 3)}...` : title;
     const leftPadding = Math.floor((width - truncatedTitle.length - 4) / 2);
     const rightPadding = width - truncatedTitle.length - 4 - leftPadding;
-    
-    const separator = line.repeat(Math.max(leftPadding, 2)) + 
-                     ' ' + titleColor(truncatedTitle) + ' ' + 
-                     line.repeat(Math.max(rightPadding, 2));
+
+    const separator =
+      line.repeat(Math.max(leftPadding, 2)) +
+      ' ' +
+      titleColor(truncatedTitle) +
+      ' ' +
+      line.repeat(Math.max(rightPadding, 2));
     console.log(colors.dim(separator));
   } else {
     console.log(colors.dim(line.repeat(width)));
@@ -183,27 +190,27 @@ export async function enhancedText(
   options: EnhancedPromptOptions & PromptOptions = {}
 ): Promise<string> {
   const { section, spacing = true, showProgress, ...promptOptions } = options;
-  
+
   // Add visual separation
   if (spacing) printSpacing();
-  
+
   // Show section header if provided
   if (section) {
     printSection(section);
   }
-  
+
   // Show progress if provided
   if (showProgress) {
     const progress = colors.dim(`[${showProgress.current}/${showProgress.total}]`);
     console.log(progress);
   }
-  
+
   // Call the original text function
   const result = await text(message, promptOptions);
-  
+
   // Add spacing after prompt
   if (spacing) printSpacing();
-  
+
   return result;
 }
 
@@ -212,47 +219,48 @@ export async function enhancedConfirm(
   options: EnhancedPromptOptions & Omit<ConfirmPromptOptions, keyof EnhancedPromptOptions> = {}
 ): Promise<boolean> {
   const { section, spacing = true, showProgress, ...promptOptions } = options;
-  
+
   if (spacing) printSpacing();
-  
+
   if (section) {
     printSection(section);
   }
-  
+
   if (showProgress) {
     const progress = colors.dim(`[${showProgress.current}/${showProgress.total}]`);
     console.log(progress);
   }
-  
+
   const result = await confirm(message, promptOptions);
-  
+
   if (spacing) printSpacing();
-  
+
   return result;
 }
 
 export async function enhancedSelect<T = string>(
   message: string,
   options: SelectOption<T>[],
-  promptOptions: EnhancedPromptOptions & Omit<SelectPromptOptions<T>, keyof EnhancedPromptOptions> = {}
+  promptOptions: EnhancedPromptOptions &
+    Omit<SelectPromptOptions<T>, keyof EnhancedPromptOptions> = {}
 ): Promise<T> {
   const { section, spacing = true, showProgress, ...selectOptions } = promptOptions;
-  
+
   if (spacing) printSpacing();
-  
+
   if (section) {
     printSection(section);
   }
-  
+
   if (showProgress) {
     const progress = colors.dim(`[${showProgress.current}/${showProgress.total}]`);
     console.log(progress);
   }
-  
+
   const result = await select(message, options, selectOptions);
-  
+
   if (spacing) printSpacing();
-  
+
   return result;
 }
 
@@ -261,46 +269,46 @@ export class PromptFlow {
   private currentStep = 0;
   private totalSteps: number;
   private title: string;
-  
+
   constructor(title: string, totalSteps: number) {
     this.title = title;
     this.totalSteps = totalSteps;
   }
-  
+
   start(): void {
     printPromptHeader(this.title);
   }
-  
+
   end(): void {
     printPromptFooter();
   }
-  
+
   nextStep(): void {
     this.currentStep++;
   }
-  
+
   async text(message: string, options: PromptOptions = {}): Promise<string> {
     return enhancedText(message, {
       ...options,
-      showProgress: { current: this.currentStep + 1, total: this.totalSteps }
+      showProgress: { current: this.currentStep + 1, total: this.totalSteps },
     });
   }
-  
+
   async confirm(message: string, options: ConfirmPromptOptions = {}): Promise<boolean> {
     return enhancedConfirm(message, {
       ...options,
-      showProgress: { current: this.currentStep + 1, total: this.totalSteps }
+      showProgress: { current: this.currentStep + 1, total: this.totalSteps },
     } as any);
   }
-  
+
   async select<T = string>(
-    message: string, 
-    options: SelectOption<T>[], 
+    message: string,
+    options: SelectOption<T>[],
     promptOptions: SelectPromptOptions<T> = {}
   ): Promise<T> {
     return enhancedSelect(message, options, {
       ...promptOptions,
-      showProgress: { current: this.currentStep + 1, total: this.totalSteps }
+      showProgress: { current: this.currentStep + 1, total: this.totalSteps },
     } as any);
   }
 }
@@ -314,7 +322,7 @@ export function getTheme(): PromptTheme {
  */
 export function intro(message: string, options?: { theme?: Partial<PromptTheme> }): void {
   const theme = options?.theme ? { ...currentTheme, ...options.theme } : currentTheme;
-  
+
   clack.intro(theme.style.info(`${theme.prefix} ${message}`));
 }
 
@@ -323,7 +331,7 @@ export function intro(message: string, options?: { theme?: Partial<PromptTheme> 
  */
 export function outro(message: string, options?: { theme?: Partial<PromptTheme> }): void {
   const theme = options?.theme ? { ...currentTheme, ...options.theme } : currentTheme;
-  
+
   clack.outro(theme.style.success(`${theme.symbol.success} ${message}`));
 }
 
@@ -333,18 +341,21 @@ export function outro(message: string, options?: { theme?: Partial<PromptTheme> 
 export function note(message: string, title?: string): void {
   const theme = currentTheme;
   const formattedTitle = title ? theme.style.info(title) : undefined;
-  
+
   clack.note(message, formattedTitle);
 }
 
 /**
  * Display a log message with styling
  */
-export function log(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info'): void {
+export function log(
+  message: string,
+  type: 'info' | 'success' | 'warning' | 'error' = 'info'
+): void {
   const theme = currentTheme;
   const symbol = theme.symbol[type] || theme.symbol.info;
   const style = theme.style[type] || theme.style.info;
-  
+
   clack.log.message(style(`${symbol} ${message}`));
 }
 
@@ -357,7 +368,7 @@ export function spinner(): {
   message: (message: string) => void;
 } {
   const s = clack.spinner();
-  
+
   return {
     start: (message?: string) => {
       const theme = currentTheme;
@@ -381,12 +392,9 @@ export function spinner(): {
 /**
  * Prompt for text input
  */
-export async function text(
-  message: string,
-  options: PromptOptions = {}
-): Promise<string> {
+export async function text(message: string, options: PromptOptions = {}): Promise<string> {
   const theme = options.theme ? { ...currentTheme, ...options.theme } : currentTheme;
-  
+
   const result = await clack.text({
     message: theme.style.question(message),
     placeholder: options.placeholder,
@@ -413,7 +421,7 @@ export async function password(
   options: Omit<PromptOptions, 'initialValue'> = {}
 ): Promise<string> {
   const theme = options.theme ? { ...currentTheme, ...options.theme } : currentTheme;
-  
+
   const result = await clack.password({
     message: theme.style.question(message),
     validate: options.validate,
@@ -438,7 +446,7 @@ export async function confirm(
   options: ConfirmPromptOptions = {}
 ): Promise<boolean> {
   const theme = options.theme ? { ...currentTheme, ...options.theme } : currentTheme;
-  
+
   const result = await clack.confirm({
     message: theme.style.question(message),
     active: options.active || 'Yes',
@@ -462,7 +470,7 @@ export async function select<T = string>(
   promptOptions: SelectPromptOptions<T> = {}
 ): Promise<T> {
   const theme = promptOptions.theme ? { ...currentTheme, ...promptOptions.theme } : currentTheme;
-  
+
   const selectOptions = options.map((option) => ({
     value: option.value,
     label: option.label || String(option.value),
@@ -497,7 +505,7 @@ export async function multiselect<T = string>(
   promptOptions: MultiSelectPromptOptions<T> = {}
 ): Promise<T[]> {
   const theme = promptOptions.theme ? { ...currentTheme, ...promptOptions.theme } : currentTheme;
-  
+
   const selectOptions = options.map((option) => ({
     value: option.value,
     label: option.label || String(option.value),
@@ -638,7 +646,7 @@ export const flows = {
     typescript: boolean;
     initGit: boolean;
   }> => {
-    intro('Let\'s create your project');
+    intro("Let's create your project");
 
     const result = await group({
       name: () => text('Project name:', patterns.projectName),
@@ -657,7 +665,7 @@ export const flows = {
    */
   envConfig: async (): Promise<Record<string, string>> => {
     intro('Environment Configuration');
-    
+
     const envVars: Record<string, string> = {};
     let addMore = true;
 
@@ -694,23 +702,26 @@ export const flows = {
     intro('Deployment Configuration');
 
     const result = await group({
-      provider: () => select('Deployment provider:', [
-        { value: 'vercel', label: 'Vercel', hint: 'Optimized for Next.js' },
-        { value: 'netlify', label: 'Netlify', hint: 'Great for static sites' },
-        { value: 'aws', label: 'AWS', hint: 'Full cloud platform' },
-        { value: 'railway', label: 'Railway', hint: 'Simple deployments' },
-      ]),
-      region: () => select('Deployment region:', [
-        { value: 'us-east-1', label: 'US East (N. Virginia)' },
-        { value: 'us-west-2', label: 'US West (Oregon)' },
-        { value: 'eu-west-1', label: 'Europe (Ireland)' },
-        { value: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' },
-      ]),
-      environment: () => select('Environment:', [
-        { value: 'production', label: 'Production' },
-        { value: 'staging', label: 'Staging' },
-        { value: 'development', label: 'Development' },
-      ]),
+      provider: () =>
+        select('Deployment provider:', [
+          { value: 'vercel', label: 'Vercel', hint: 'Optimized for Next.js' },
+          { value: 'netlify', label: 'Netlify', hint: 'Great for static sites' },
+          { value: 'aws', label: 'AWS', hint: 'Full cloud platform' },
+          { value: 'railway', label: 'Railway', hint: 'Simple deployments' },
+        ]),
+      region: () =>
+        select('Deployment region:', [
+          { value: 'us-east-1', label: 'US East (N. Virginia)' },
+          { value: 'us-west-2', label: 'US West (Oregon)' },
+          { value: 'eu-west-1', label: 'Europe (Ireland)' },
+          { value: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' },
+        ]),
+      environment: () =>
+        select('Environment:', [
+          { value: 'production', label: 'Production' },
+          { value: 'staging', label: 'Staging' },
+          { value: 'development', label: 'Development' },
+        ]),
     });
 
     outro('Deployment configuration complete!');

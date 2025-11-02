@@ -1,6 +1,6 @@
 /**
  * Task 1.4.2 Tests: Structured Logging with Security - Core Feature Tests
- * 
+ *
  * Focused test suite validating the main functionality of the structured logging system:
  * - Basic log entry creation and metadata
  * - Security integration with Task 1.4.1 (log injection protection)
@@ -8,20 +8,20 @@
  * - Message truncation and size management
  * - Multiple output formats
  * - Configuration presets and factory functions
- * 
+ *
  * @security Validates security features without complex mocking interference
  * @performance Tests key performance constraints and limits
  * @architecture Tests clean integration with existing logging infrastructure
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  createStructuredLogger,
+  DEFAULT_STRUCTURED_LOGGING_CONFIG,
+  SecurityClassification,
   StructuredLogger,
   StructuredLogLevel,
-  SecurityClassification,
-  createStructuredLogger,
   structuredLog,
-  DEFAULT_STRUCTURED_LOGGING_CONFIG,
 } from '../../../core/foundation/logging/structured.js';
 
 describe('Task 1.4.2: Structured Logging Core Features', () => {
@@ -165,7 +165,7 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
       expect((result.entry.context.user as any).id).toBe('user123');
       expect((result.entry.context.user as any).profile.name).toBe('John Doe');
       expect((result.entry.context.user as any).profile.email).toBe('john@example.com');
-      
+
       // Check nested sensitive fields are masked
       expect((result.entry.context.user as any).profile.password).toBe('[MASKED]');
       expect((result.entry.context.request as any).headers.authorization).toBe('[MASKED]');
@@ -195,7 +195,8 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
         sanitizeByDefault: false,
       });
 
-      const longMessage = 'This is a very long message that definitely exceeds the configured maximum length limit for testing purposes';
+      const longMessage =
+        'This is a very long message that definitely exceeds the configured maximum length limit for testing purposes';
       const result = loggerWithLimit.createLogEntry(longMessage);
 
       expect(result.entry.message).toHaveLength(50 + '...[truncated]'.length);
@@ -220,11 +221,9 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
       });
 
       expect(result.warnings).toEqual(
-        expect.arrayContaining([
-          expect.stringMatching(/Context truncated from \d+ to 200 bytes/),
-        ])
+        expect.arrayContaining([expect.stringMatching(/Context truncated from \d+ to 200 bytes/)])
       );
-      
+
       // Should have fewer fields than the original
       expect(Object.keys(result.entry.context)).not.toHaveLength(20);
     });
@@ -233,7 +232,7 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
       const result1 = logger.createLogEntry('Test with empty context', {
         context: {},
       });
-      
+
       const result2 = logger.createLogEntry('Test with undefined context', {
         context: undefined,
       });
@@ -249,7 +248,7 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
     it('should format log entry as JSON by default', () => {
       const entry = logger.createLogEntry('Test message').entry;
       const jsonOutput = logger.formatLogEntry(entry);
-      
+
       const parsed = JSON.parse(jsonOutput);
       expect(parsed.message).toBe('Test message');
       expect(parsed.level).toBe(StructuredLogLevel.INFO);
@@ -375,7 +374,7 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
 
     it('should create security log entries', () => {
       const result = structuredLog.security('Suspicious activity detected', {
-        context: { 
+        context: {
           pattern: 'multiple-failed-logins',
           sourceIp: '10.0.0.1',
         },
@@ -389,7 +388,7 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
     it('should create error log entries with error objects', () => {
       const testError = new Error('Database timeout');
       testError.name = 'DatabaseError';
-      
+
       const result = structuredLog.error('Database operation failed', testError, {
         component: 'database',
         operation: 'query',
@@ -408,8 +407,8 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
       const result = structuredLog.performance('API response time', 250, {
         component: 'api',
         operation: 'getUserProfile',
-        context: { 
-          userId: 'user123', 
+        context: {
+          userId: 'user123',
           endpoint: '/api/user/profile',
           method: 'GET',
         },
@@ -458,12 +457,14 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
     it('should handle concurrent log entry creation safely', () => {
       // Create multiple log entries simultaneously
       const promises = Array.from({ length: 10 }, (_, i) =>
-        Promise.resolve(logger.createLogEntry(`Concurrent message ${i}`, {
-          context: { index: i, timestamp: Date.now() + i },
-        }))
+        Promise.resolve(
+          logger.createLogEntry(`Concurrent message ${i}`, {
+            context: { index: i, timestamp: Date.now() + i },
+          })
+        )
       );
 
-      return Promise.all(promises).then(results => {
+      return Promise.all(promises).then((results) => {
         expect(results).toHaveLength(10);
         results.forEach((result, index) => {
           expect(result.entry.message).toBe(`Concurrent message ${index}`);
@@ -482,7 +483,7 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
       });
 
       const result = secureLogger.createLogEntry('Security event', {
-        context: { 
+        context: {
           password: 'secret123',
           userAgent: 'Mozilla/5.0...',
           action: 'login',
@@ -518,12 +519,10 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
       // Message should be truncated
       expect(result.entry.message).toHaveLength(100 + '...[truncated]'.length);
       expect(result.truncated).toBe(true);
-      
+
       // Context should be limited
       expect(result.warnings).toEqual(
-        expect.arrayContaining([
-          expect.stringMatching(/Context truncated from \d+ to 500 bytes/),
-        ])
+        expect.arrayContaining([expect.stringMatching(/Context truncated from \d+ to 500 bytes/)])
       );
     });
 

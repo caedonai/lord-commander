@@ -3,7 +3,7 @@
  * Tests security measures and production safety features
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createCLI } from '../../../core/createCLI.js';
 
 describe('Error Handling Security', () => {
@@ -33,7 +33,7 @@ describe('Error Handling Security', () => {
     it('should disable debug mode in production regardless of flags', async () => {
       // Set production environment
       process.env.NODE_ENV = 'production';
-      
+
       // Try to enable debug with various flags
       process.env.DEBUG = 'true';
       if (!process.argv.includes('--debug')) {
@@ -45,14 +45,16 @@ describe('Error Handling Security', () => {
       });
 
       try {
-        await expect(createCLI({
-          name: 'test-cli',
-          version: '1.0.0',
-          description: 'Production CLI test',
-          commandsPath: './non-existent',
-          autoStart: false,
-          errorHandler: mockErrorHandler
-        })).resolves.toBeDefined();
+        await expect(
+          createCLI({
+            name: 'test-cli',
+            version: '1.0.0',
+            description: 'Production CLI test',
+            commandsPath: './non-existent',
+            autoStart: false,
+            errorHandler: mockErrorHandler,
+          })
+        ).resolves.toBeDefined();
 
         // Test that debug flags are ignored in production
         // This is tested indirectly by ensuring the CLI creation succeeds
@@ -71,13 +73,15 @@ describe('Error Handling Security', () => {
     it('should hide context information in production', async () => {
       process.env.NODE_ENV = 'production';
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Production context test',
-        commandsPath: './non-existent',
-        autoStart: false
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Production context test',
+          commandsPath: './non-existent',
+          autoStart: false,
+        })
+      ).resolves.toBeDefined();
 
       // Context hiding is tested indirectly through formatErrorForDisplay
       // In production, showContext should be false
@@ -86,13 +90,15 @@ describe('Error Handling Security', () => {
     it('should enable debug features in development', async () => {
       process.env.NODE_ENV = 'development';
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Development CLI test',
-        commandsPath: './non-existent',
-        autoStart: false
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Development CLI test',
+          commandsPath: './non-existent',
+          autoStart: false,
+        })
+      ).resolves.toBeDefined();
 
       // Debug features should be available in development
     });
@@ -102,26 +108,30 @@ describe('Error Handling Security', () => {
     it('should sanitize sensitive information from error messages', async () => {
       // We can't easily test the sanitization without triggering actual errors
       // But we can test that the CLI creates successfully with various configurations
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Sanitization test CLI',
-        commandsPath: './non-existent',
-        autoStart: false
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Sanitization test CLI',
+          commandsPath: './non-existent',
+          autoStart: false,
+        })
+      ).resolves.toBeDefined();
     });
 
     it('should handle error messages with potential injection attempts', async () => {
       // Test CLI creation with potential malicious inputs
       const maliciousName = 'test-cli\x1b[31mMALICIOUS\x1b[0m';
-      
-      await expect(createCLI({
-        name: maliciousName,
-        version: '1.0.0',
-        description: 'Test CLI with potential injection',
-        commandsPath: './non-existent',
-        autoStart: false
-      })).resolves.toBeDefined();
+
+      await expect(
+        createCLI({
+          name: maliciousName,
+          version: '1.0.0',
+          description: 'Test CLI with potential injection',
+          commandsPath: './non-existent',
+          autoStart: false,
+        })
+      ).resolves.toBeDefined();
     });
   });
 
@@ -133,19 +143,21 @@ describe('Error Handling Security', () => {
         const sanitizedMessage = error.message
           .replace(/password[=:]\s*\S+/gi, 'password=***')
           .replace(/token[=:]\s*\S+/gi, 'token=***');
-        
+
         // Log safely (this would be handled by the application's logging system)
         console.error(`Sanitized error: ${sanitizedMessage}`);
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Secure error handler test',
-        commandsPath: './non-existent',
-        autoStart: false,
-        errorHandler: secureErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Secure error handler test',
+          commandsPath: './non-existent',
+          autoStart: false,
+          errorHandler: secureErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       expect(secureErrorHandler).not.toHaveBeenCalled(); // No actual errors
     });
@@ -157,14 +169,16 @@ describe('Error Handling Security', () => {
         throw new Error('Untrusted handler failed');
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Untrusted handler test',
-        commandsPath: './non-existent',
-        autoStart: false,
-        errorHandler: untrustedErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Untrusted handler test',
+          commandsPath: './non-existent',
+          autoStart: false,
+          errorHandler: untrustedErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       expect(untrustedErrorHandler).not.toHaveBeenCalled(); // No actual errors
     });
@@ -176,14 +190,16 @@ describe('Error Handling Security', () => {
         // Handler for large error objects
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Large error test',
-        commandsPath: './non-existent',
-        autoStart: false,
-        errorHandler: largeErrorHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Large error test',
+          commandsPath: './non-existent',
+          autoStart: false,
+          errorHandler: largeErrorHandler,
+        })
+      ).resolves.toBeDefined();
 
       // Test completes without memory exhaustion
       expect(largeErrorHandler).not.toHaveBeenCalled();
@@ -197,11 +213,11 @@ describe('Error Handling Security', () => {
           version: '1.0.0',
           description: `Resource test CLI ${i}`,
           commandsPath: './non-existent',
-          autoStart: false
+          autoStart: false,
         })
       );
 
-      await Promise.all(cliPromises.map(p => expect(p).resolves.toBeDefined()));
+      await Promise.all(cliPromises.map((p) => expect(p).resolves.toBeDefined()));
 
       // All CLIs should be created successfully without resource leaks
     });
@@ -214,13 +230,15 @@ describe('Error Handling Security', () => {
       process.env.DEBUG = '\x1b[31mMALICIOUS_DEBUG\x1b[0m';
 
       try {
-        await expect(createCLI({
-          name: 'test-cli',
-          version: '1.0.0',
-          description: 'Malicious env test',
-          commandsPath: './non-existent',
-          autoStart: false
-        })).resolves.toBeDefined();
+        await expect(
+          createCLI({
+            name: 'test-cli',
+            version: '1.0.0',
+            description: 'Malicious env test',
+            commandsPath: './non-existent',
+            autoStart: false,
+          })
+        ).resolves.toBeDefined();
 
         // CLI should handle malicious environment variables safely
       } finally {
@@ -240,7 +258,7 @@ describe('Error Handling Security', () => {
         { NODE_ENV: 'development' },
         { NODE_ENV: 'test' },
         { DEBUG: 'true' },
-        { DEBUG: 'false' }
+        { DEBUG: 'false' },
       ];
 
       for (const config of envConfigs) {
@@ -249,16 +267,18 @@ describe('Error Handling Security', () => {
           process.env[key] = value;
         });
 
-        await expect(createCLI({
-          name: 'test-cli',
-          version: '1.0.0',
-          description: 'Env config test',
-          commandsPath: './non-existent',
-          autoStart: false
-        })).resolves.toBeDefined();
+        await expect(
+          createCLI({
+            name: 'test-cli',
+            version: '1.0.0',
+            description: 'Env config test',
+            commandsPath: './non-existent',
+            autoStart: false,
+          })
+        ).resolves.toBeDefined();
 
         // Clean up environment
-        Object.keys(config).forEach(key => {
+        Object.keys(config).forEach((key) => {
           delete process.env[key];
         });
       }
@@ -272,14 +292,16 @@ describe('Error Handling Security', () => {
         process.exit(42); // This will be mocked
       });
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Process control test',
-        commandsPath: './non-existent',
-        autoStart: false,
-        errorHandler: processControlHandler
-      })).resolves.toBeDefined();
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Process control test',
+          commandsPath: './non-existent',
+          autoStart: false,
+          errorHandler: processControlHandler,
+        })
+      ).resolves.toBeDefined();
 
       expect(processControlHandler).not.toHaveBeenCalled(); // No actual errors
     });

@@ -1,145 +1,386 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 // Define expected exports in a maintainable data structure
 const EXPECTED_EXPORTS = {
   core: {
     // Foundation - Constants (from actual exports)
-    constants: ['BRANDING', 'CLI_CONFIG_PATHS', 'DEFAULT_IGNORE_PATTERNS', 'DEFAULT_PORTS', 'ERROR_MESSAGES', 'FILE_EXTENSIONS', 'FRAMEWORK_PATTERNS', 'GIT_PATTERNS', 'PACKAGE_MANAGER_COMMANDS', 'TELEMETRY_CONFIG', 'TEMP_DIR_PREFIX'],
-    
+    constants: [
+      'BRANDING',
+      'CLI_CONFIG_PATHS',
+      'DEFAULT_IGNORE_PATTERNS',
+      'DEFAULT_PORTS',
+      'ERROR_MESSAGES',
+      'FILE_EXTENSIONS',
+      'FRAMEWORK_PATTERNS',
+      'GIT_PATTERNS',
+      'PACKAGE_MANAGER_COMMANDS',
+      'TELEMETRY_CONFIG',
+      'TEMP_DIR_PREFIX',
+    ],
+
     // Foundation - Framework Security (new in Task 1.1.3)
-    frameworkSecurity: ['detectFrameworkSecurely', 'getFrameworkSecurityRecommendations', 'isFrameworkSafe', 'TRUSTED_FRAMEWORK_DEPENDENCIES', 'SUSPICIOUS_DEPENDENCY_PATTERNS', 'DANGEROUS_SCRIPT_PATTERNS'],
-    
+    frameworkSecurity: [
+      'detectFrameworkSecurely',
+      'getFrameworkSecurityRecommendations',
+      'isFrameworkSafe',
+      'TRUSTED_FRAMEWORK_DEPENDENCIES',
+      'SUSPICIOUS_DEPENDENCY_PATTERNS',
+      'DANGEROUS_SCRIPT_PATTERNS',
+    ],
+
     // Foundation - Errors (from actual exports)
-    errors: ['CLIError', 'ConfigurationError', 'ERROR_RECOVERY_SUGGESTIONS', 'FileSystemError', 'NetworkError', 'ProcessError', 'UserCancelledError', 'ValidationError', 'formatError', 'getRecoverySuggestion', 'gracefulExit', 'handleCancel', 'isCancel', 'setupGlobalErrorHandlers', 'withErrorHandling'],
-    
+    errors: [
+      'CLIError',
+      'ConfigurationError',
+      'ERROR_RECOVERY_SUGGESTIONS',
+      'FileSystemError',
+      'NetworkError',
+      'ProcessError',
+      'UserCancelledError',
+      'ValidationError',
+      'formatError',
+      'getRecoverySuggestion',
+      'gracefulExit',
+      'handleCancel',
+      'isCancel',
+      'setupGlobalErrorHandlers',
+      'withErrorHandling',
+    ],
+
     // Foundation - Security Patterns (from Task 1.1.2)
-    securityPatterns: ['PATH_TRAVERSAL_PATTERNS', 'COMMAND_INJECTION_PATTERNS', 'SCRIPT_INJECTION_PATTERNS', 'PRIVILEGE_ESCALATION_PATTERNS', 'FILE_SYSTEM_PATTERNS', 'NETWORK_PATTERNS', 'INPUT_VALIDATION_PATTERNS', 'analyzeInputSecurity', 'isPathSafe', 'isCommandSafe', 'isProjectNameSafe'],
-    
+    securityPatterns: [
+      'PATH_TRAVERSAL_PATTERNS',
+      'COMMAND_INJECTION_PATTERNS',
+      'SCRIPT_INJECTION_PATTERNS',
+      'PRIVILEGE_ESCALATION_PATTERNS',
+      'FILE_SYSTEM_PATTERNS',
+      'NETWORK_PATTERNS',
+      'INPUT_VALIDATION_PATTERNS',
+      'analyzeInputSecurity',
+      'isPathSafe',
+      'isCommandSafe',
+      'isProjectNameSafe',
+    ],
+
     // Foundation - Input Validation (new in Task 1.2.1)
-    inputValidation: ['validateProjectName', 'validatePackageManager', 'sanitizeCommandArgs', 'sanitizePath', 'validateInput', 'DEFAULT_VALIDATION_CONFIG', 'TRUSTED_PACKAGE_MANAGERS', 'PROJECT_NAME_PATTERNS', 'SHELL_METACHARACTERS'],
-    
+    inputValidation: [
+      'validateProjectName',
+      'validatePackageManager',
+      'sanitizeCommandArgs',
+      'sanitizePath',
+      'validateInput',
+      'DEFAULT_VALIDATION_CONFIG',
+      'TRUSTED_PACKAGE_MANAGERS',
+      'PROJECT_NAME_PATTERNS',
+      'SHELL_METACHARACTERS',
+    ],
+
     // Foundation - Error Sanitization (Task 1.3.1 + 1.3.3)
-    errorSanitization: ['sanitizeErrorMessage', 'sanitizeStackTrace', 'shouldShowDetailedErrors', 'isDebugMode', 'sanitizeErrorContext', 'createSafeErrorForForwarding', 'analyzeErrorContextSecurity'],
-    
+    errorSanitization: [
+      'sanitizeErrorMessage',
+      'sanitizeStackTrace',
+      'shouldShowDetailedErrors',
+      'isDebugMode',
+      'sanitizeErrorContext',
+      'createSafeErrorForForwarding',
+      'analyzeErrorContextSecurity',
+    ],
+
     // Foundation - Memory Protection (Task 1.5.1)
-    memoryProtection: ['MemoryProtectionManager', 'MemorySizeCalculator', 'MemoryViolationAnalyzer', 'MemoryProtectionError', 'createMemoryGuard', 'isMemorySafe', 'truncateForMemory', 'sanitizeErrorObjectWithMemoryProtection', 'truncateMessageWithMemoryProtection', 'processContextWithMemoryProtection', 'DEFAULT_MEMORY_CONFIG', 'MemoryConfigPresets'],
-    
+    memoryProtection: [
+      'MemoryProtectionManager',
+      'MemorySizeCalculator',
+      'MemoryViolationAnalyzer',
+      'MemoryProtectionError',
+      'createMemoryGuard',
+      'isMemorySafe',
+      'truncateForMemory',
+      'sanitizeErrorObjectWithMemoryProtection',
+      'truncateMessageWithMemoryProtection',
+      'processContextWithMemoryProtection',
+      'DEFAULT_MEMORY_CONFIG',
+      'MemoryConfigPresets',
+    ],
+
     // Foundation - Security Violation Detection (Task 1.2.2) - Note: Currently not bundled due to build issues
     // securityViolationDetection: ['SecurityViolationDetector', 'defaultSecurityViolationDetector', 'DEFAULT_RISK_SCORING_CONFIG'],
-    
+
     // CLI creation (from actual exports)
-    cli: ['Command', 'createCLI', 'registerBuiltinCommands', 'registerCommands', 'validateErrorHandler', 'executeErrorHandlerSafely', 'ErrorHandlerValidationError', 'sanitizeErrorObject', 'truncateErrorMessage', 'getObjectMemorySize', 'formatErrorForDisplay'],
-    
+    cli: [
+      'Command',
+      'createCLI',
+      'registerBuiltinCommands',
+      'registerCommands',
+      'validateErrorHandler',
+      'executeErrorHandlerSafely',
+      'ErrorHandlerValidationError',
+      'sanitizeErrorObject',
+      'truncateErrorMessage',
+      'getObjectMemorySize',
+      'formatErrorForDisplay',
+    ],
+
     // Autocomplete system (from actual exports)
-    autocomplete: ['analyzeProgram', 'checkCompletionStatus', 'detectShell', 'generateBashCompletion', 'generateCompletion', 'generateCompletionScript', 'generateFishCompletion', 'generatePowerShellCompletion', 'generateZshCompletion', 'installCompletion', 'uninstallCompletion'],
-    
+    autocomplete: [
+      'analyzeProgram',
+      'checkCompletionStatus',
+      'detectShell',
+      'generateBashCompletion',
+      'generateCompletion',
+      'generateCompletionScript',
+      'generateFishCompletion',
+      'generatePowerShellCompletion',
+      'generateZshCompletion',
+      'installCompletion',
+      'uninstallCompletion',
+    ],
+
     // Execution utilities (from actual exports)
     execution: ['execa', 'execaStream', 'execaSync'],
-    
+
     // File system utilities (from actual exports)
-    fileSystem: ['cleanDir', 'copy', 'copyDir', 'copyFile', 'ensureDir', 'exists', 'findFiles', 'getSize', 'move', 'readDir', 'readFile', 'readJSON', 'remove', 'stat', 'writeFile', 'writeJSON'],
-    
+    fileSystem: [
+      'cleanDir',
+      'copy',
+      'copyDir',
+      'copyFile',
+      'ensureDir',
+      'exists',
+      'findFiles',
+      'getSize',
+      'move',
+      'readDir',
+      'readFile',
+      'readJSON',
+      'remove',
+      'stat',
+      'writeFile',
+      'writeJSON',
+    ],
+
     // UI utilities (from actual exports + CLI readability enhancements)
-    ui: ['cancel', 'confirm', 'createLogger', 'intro', 'log', 'multiselect', 'note', 'outro', 'password', 'select', 'spinner', 'text', 'printSeparator', 'printSection', 'printTaskStart', 'printTaskComplete', 'printSpacing', 'printPromptHeader', 'printPromptFooter', 'PromptFlow', 'enhancedText', 'enhancedConfirm', 'enhancedSelect'],
-    
+    ui: [
+      'cancel',
+      'confirm',
+      'createLogger',
+      'intro',
+      'log',
+      'multiselect',
+      'note',
+      'outro',
+      'password',
+      'select',
+      'spinner',
+      'text',
+      'printSeparator',
+      'printSection',
+      'printTaskStart',
+      'printTaskComplete',
+      'printSpacing',
+      'printPromptHeader',
+      'printPromptFooter',
+      'PromptFlow',
+      'enhancedText',
+      'enhancedConfirm',
+      'enhancedSelect',
+    ],
+
     // Should NOT be present (plugin functionality)
-    excluded: ['isGitRepository', 'parseVersion', 'isWorkspace', 'detectWorkspaceType', 'gitInit', 'clone', 'commit', 'getCommits', 'createTag', 'compareVersions', 'getVersionDiff', 'createUpdatePlan', 'applyUpdate', 'discoverPackages', 'loadWorkspace', 'discoverWorkspace']
+    excluded: [
+      'isGitRepository',
+      'parseVersion',
+      'isWorkspace',
+      'detectWorkspaceType',
+      'gitInit',
+      'clone',
+      'commit',
+      'getCommits',
+      'createTag',
+      'compareVersions',
+      'getVersionDiff',
+      'createUpdatePlan',
+      'applyUpdate',
+      'discoverPackages',
+      'loadWorkspace',
+      'discoverWorkspace',
+    ],
   },
-  
+
   plugins: {
     // Git plugin (from actual exports)
-    git: ['add', 'checkout', 'clone', 'commit', 'createBranch', 'getBranches', 'getCommits', 'getCurrentCommit', 'getDiff', 'getRepositoryRoot', 'getStatus', 'gitInit', 'isClean', 'isGitAvailable', 'isGitRepository'],
-    
+    git: [
+      'add',
+      'checkout',
+      'clone',
+      'commit',
+      'createBranch',
+      'getBranches',
+      'getCommits',
+      'getCurrentCommit',
+      'getDiff',
+      'getRepositoryRoot',
+      'getStatus',
+      'gitInit',
+      'isClean',
+      'isGitAvailable',
+      'isGitRepository',
+    ],
+
     // Updater plugin (from actual exports)
-    updater: ['applyUpdate', 'compareVersions', 'createTag', 'createUpdatePlan', 'getAllTags', 'getChangeType', 'getLatestTag', 'getVersionDiff', 'parseVersion', 'satisfiesRange', 'tagExists'],
-    
+    updater: [
+      'applyUpdate',
+      'compareVersions',
+      'createTag',
+      'createUpdatePlan',
+      'getAllTags',
+      'getChangeType',
+      'getLatestTag',
+      'getVersionDiff',
+      'parseVersion',
+      'satisfiesRange',
+      'tagExists',
+    ],
+
     // Workspace plugin (from actual exports)
-    workspace: ['detectPackageManager', 'detectWorkspaceType', 'discoverPackages', 'filterPackages', 'getAffectedPackages', 'getWorkspaceSummary', 'installDependencies', 'isWorkspace', 'loadWorkspace', 'runScript', 'validateWorkspace'],
-    
+    workspace: [
+      'detectPackageManager',
+      'detectWorkspaceType',
+      'discoverPackages',
+      'filterPackages',
+      'getAffectedPackages',
+      'getWorkspaceSummary',
+      'installDependencies',
+      'isWorkspace',
+      'loadWorkspace',
+      'runScript',
+      'validateWorkspace',
+    ],
+
     // Should NOT be present (core functionality)
-    excluded: ['execa', 'readFile', 'createLogger', 'intro', 'outro', 'registerCommands', 'Command', 'generateCompletion', 'CLIError', 'PACKAGE_MANAGER_COMMANDS']
-  }
+    excluded: [
+      'execa',
+      'readFile',
+      'createLogger',
+      'intro',
+      'outro',
+      'registerCommands',
+      'Command',
+      'generateCompletion',
+      'CLIError',
+      'PACKAGE_MANAGER_COMMANDS',
+    ],
+  },
 };
 
 describe('Tree-shaking Tests', () => {
   describe('Core Module Exports', () => {
     it('should export all expected core functions', async () => {
-      const coreModule = await import('../../core/index') as any;
-      
+      const coreModule = (await import('../../core/index')) as any;
+
       // Test all expected exports are present
       Object.entries(EXPECTED_EXPORTS.core).forEach(([category, functions]) => {
         if (category === 'excluded') return; // Skip excluded check here
-        
-        functions.forEach(funcName => {
-          expect(coreModule[funcName], `${funcName} should be exported from core (${category})`).toBeDefined();
-          
+
+        functions.forEach((funcName) => {
+          expect(
+            coreModule[funcName],
+            `${funcName} should be exported from core (${category})`
+          ).toBeDefined();
+
           // Special handling for different types
           if (funcName === 'Command') {
-            expect(typeof coreModule[funcName], `${funcName} should be a class constructor`).toBe('function');
+            expect(typeof coreModule[funcName], `${funcName} should be a class constructor`).toBe(
+              'function'
+            );
           } else if (category === 'constants') {
             // Constants can be strings, arrays, objects - just check they're defined
             expect(coreModule[funcName], `${funcName} should be a defined constant`).toBeDefined();
-          } else if (funcName.startsWith('ERROR_') || funcName.endsWith('_PATTERNS') || funcName.endsWith('_COMMANDS') || funcName.endsWith('_CONFIG') || funcName === 'BRANDING' || funcName.includes('_DEPENDENCIES') || funcName.startsWith('TRUSTED_') || funcName.startsWith('SUSPICIOUS_') || funcName.startsWith('DANGEROUS_') || funcName.endsWith('_METACHARACTERS') || funcName === 'MemoryConfigPresets') {
+          } else if (
+            funcName.startsWith('ERROR_') ||
+            funcName.endsWith('_PATTERNS') ||
+            funcName.endsWith('_COMMANDS') ||
+            funcName.endsWith('_CONFIG') ||
+            funcName === 'BRANDING' ||
+            funcName.includes('_DEPENDENCIES') ||
+            funcName.startsWith('TRUSTED_') ||
+            funcName.startsWith('SUSPICIOUS_') ||
+            funcName.startsWith('DANGEROUS_') ||
+            funcName.endsWith('_METACHARACTERS') ||
+            funcName === 'MemoryConfigPresets'
+          ) {
             // Constants handling for backwards compatibility and new framework security constants
             expect(coreModule[funcName], `${funcName} should be a defined constant`).toBeDefined();
           } else {
-            expect(typeof coreModule[funcName], `${funcName} should be a function`).toBe('function');
+            expect(typeof coreModule[funcName], `${funcName} should be a function`).toBe(
+              'function'
+            );
           }
         });
       });
-      
+
       // Calculate count of non-excluded exports
       const nonExcludedCount = Object.entries(EXPECTED_EXPORTS.core)
         .filter(([category]) => category !== 'excluded')
         .reduce((total, [, functions]) => total + functions.length, 0);
       console.log(`✅ Verified ${nonExcludedCount} core exports`);
     });
-    
+
     it('should not export plugin functionality from core', async () => {
       const coreModule = await import('../../core/index');
-      
+
       // Test excluded functions are NOT present
-      EXPECTED_EXPORTS.core.excluded.forEach(funcName => {
+      EXPECTED_EXPORTS.core.excluded.forEach((funcName) => {
         expect(funcName in coreModule, `${funcName} should NOT be in core module`).toBe(false);
       });
-      
-      console.log(`✅ Verified ${EXPECTED_EXPORTS.core.excluded.length} plugin functions correctly excluded from core`);
+
+      console.log(
+        `✅ Verified ${EXPECTED_EXPORTS.core.excluded.length} plugin functions correctly excluded from core`
+      );
     });
   });
-  
+
   describe('Plugins Module Exports', () => {
     it('should export all expected plugin functions', async () => {
-      const pluginsModule = await import('../../plugins/index') as any;
-      
+      const pluginsModule = (await import('../../plugins/index')) as any;
+
       // Test all expected exports are present
       Object.entries(EXPECTED_EXPORTS.plugins).forEach(([category, functions]) => {
         if (category === 'excluded') return; // Skip excluded check here
-        
-        functions.forEach(funcName => {
-          expect(pluginsModule[funcName], `${funcName} should be exported from plugins (${category})`).toBeDefined();
-          expect(typeof pluginsModule[funcName], `${funcName} should be a function`).toBe('function');
+
+        functions.forEach((funcName) => {
+          expect(
+            pluginsModule[funcName],
+            `${funcName} should be exported from plugins (${category})`
+          ).toBeDefined();
+          expect(typeof pluginsModule[funcName], `${funcName} should be a function`).toBe(
+            'function'
+          );
         });
       });
-      
+
       // Calculate count of non-excluded exports
       const nonExcludedCount = Object.entries(EXPECTED_EXPORTS.plugins)
         .filter(([category]) => category !== 'excluded')
         .reduce((total, [, functions]) => total + functions.length, 0);
       console.log(`✅ Verified ${nonExcludedCount} plugin exports`);
     });
-    
+
     it('should not export core functionality from plugins', async () => {
-      const pluginsModule = await import('../../plugins/index') as any;
-      
+      const pluginsModule = (await import('../../plugins/index')) as any;
+
       // Test excluded functions are NOT present
-      EXPECTED_EXPORTS.plugins.excluded.forEach(funcName => {
-        expect(funcName in pluginsModule, `${funcName} should NOT be in plugins module`).toBe(false);
+      EXPECTED_EXPORTS.plugins.excluded.forEach((funcName) => {
+        expect(funcName in pluginsModule, `${funcName} should NOT be in plugins module`).toBe(
+          false
+        );
       });
-      
-      console.log(`✅ Verified ${EXPECTED_EXPORTS.plugins.excluded.length} core functions correctly excluded from plugins`);
+
+      console.log(
+        `✅ Verified ${EXPECTED_EXPORTS.plugins.excluded.length} core functions correctly excluded from plugins`
+      );
     });
   });
-  
+
   describe('Selective Imports', () => {
     it('should allow selective core imports', async () => {
       // Test dynamic selective imports with various function types
@@ -148,102 +389,106 @@ describe('Tree-shaking Tests', () => {
         { name: 'readFile', expectedType: 'function' },
         { name: 'createLogger', expectedType: 'function' },
         { name: 'Command', expectedType: 'function' },
-        { name: 'DEFAULT_IGNORE_PATTERNS', expectedType: 'object' }
+        { name: 'DEFAULT_IGNORE_PATTERNS', expectedType: 'object' },
       ];
-      
+
       for (const { name, expectedType } of testFunctions) {
-        const module = await import('../../core/index') as any;
+        const module = (await import('../../core/index')) as any;
         const importedItem = module[name];
         expect(importedItem, `${name} should be selectively importable`).toBeDefined();
         expect(typeof importedItem, `${name} should be a ${expectedType}`).toBe(expectedType);
       }
-      
+
       console.log(`✅ Verified selective imports work for ${testFunctions.length} core functions`);
     });
-    
+
     it('should allow selective plugin imports', async () => {
       // Test dynamic selective imports for plugins
       const testFunctions = ['parseVersion', 'isGitRepository', 'isWorkspace'];
-      
+
       for (const funcName of testFunctions) {
-        const module = await import('../../plugins/index') as any;
+        const module = (await import('../../plugins/index')) as any;
         const importedFunc = module[funcName];
         expect(importedFunc, `${funcName} should be selectively importable`).toBeDefined();
         expect(typeof importedFunc, `${funcName} should be a function`).toBe('function');
       }
-      
-      console.log(`✅ Verified selective imports work for ${testFunctions.length} plugin functions`);
+
+      console.log(
+        `✅ Verified selective imports work for ${testFunctions.length} plugin functions`
+      );
     });
-    
+
     it('should allow Command usage without external dependencies', async () => {
       const { Command } = await import('../../core/index');
-      
+
       expect(Command).toBeDefined();
       expect(typeof Command).toBe('function');
-      
+
       // Test Command functionality works correctly
       const program = new Command();
       program.name('test-cli').description('Test CLI built with SDK Command');
-      
+
       expect(program.name()).toBe('test-cli');
       expect(program.description()).toBe('Test CLI built with SDK Command');
       expect(typeof program.command).toBe('function');
       expect(typeof program.parse).toBe('function');
-      
+
       console.log('✅ Verified Command constructor and basic functionality');
     });
   });
-  
+
   describe('Module Boundaries', () => {
     it('should maintain clear separation between core and plugins', async () => {
       const [coreModule, pluginsModule] = await Promise.all([
         import('../../core/index'),
-        import('../../plugins/index')
+        import('../../plugins/index'),
       ]);
-      
+
       // Get all exports from both modules
       const coreExports = Object.keys(coreModule);
       const pluginExports = Object.keys(pluginsModule);
-      
+
       // Check for any overlap (there should be none)
-      const overlap = coreExports.filter(name => pluginExports.includes(name));
+      const overlap = coreExports.filter((name) => pluginExports.includes(name));
       expect(overlap, 'Core and plugins should not export the same functions').toEqual([]);
-      
+
       // Verify minimum export counts to ensure modules aren't empty
       expect(coreExports.length, 'Core should export multiple functions').toBeGreaterThan(30);
       expect(pluginExports.length, 'Plugins should export multiple functions').toBeGreaterThan(10);
-      
-      console.log(`✅ Verified module boundaries: Core(${coreExports.length}) vs Plugins(${pluginExports.length}), no overlap`);
+
+      console.log(
+        `✅ Verified module boundaries: Core(${coreExports.length}) vs Plugins(${pluginExports.length}), no overlap`
+      );
     });
-    
+
     it('should have consistent export patterns', async () => {
       const [coreModule, pluginsModule] = await Promise.all([
         import('../../core/index'),
-        import('../../plugins/index')
+        import('../../plugins/index'),
       ]);
-      
+
       // Verify that both modules export actual values (not undefined)
       const coreExports = Object.entries(coreModule);
       const pluginExports = Object.entries(pluginsModule);
-      
+
       const undefinedCoreExports = coreExports.filter(([_, value]) => value === undefined);
       const undefinedPluginExports = pluginExports.filter(([_, value]) => value === undefined);
-      
+
       expect(undefinedCoreExports, 'Core should not export undefined values').toEqual([]);
       expect(undefinedPluginExports, 'Plugins should not export undefined values').toEqual([]);
-      
+
       console.log('✅ Verified all exports have defined values');
     });
   });
-  
+
   describe('Type Exports', () => {
     it('should export TypeScript types for tree-shaking', async () => {
       // Import types - this validates they exist for TypeScript
       const typesModule = await import('../../types/index');
-      
+
       expect(typesModule).toBeDefined();
       // Types don't have runtime presence, but importing validates they exist
-      
+
       console.log('✅ Verified TypeScript types can be imported');
     });
   });

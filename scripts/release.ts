@@ -2,16 +2,16 @@
 
 /**
  * Release Automation Script
- * 
+ *
  * Automates the release process for the Lord Commander CLI SDK including
  * version bumping, changelog generation, build validation, and npm publishing.
  * Supports alpha versioning strategy for pre-1.0.0 and stable versioning for 1.x.x+
  */
 
+import { readFileSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execa } from 'execa';
-import { readFileSync, writeFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
 
 // Types for better release management
 interface PackageJson {
@@ -95,17 +95,17 @@ if (args.includes('--help') || args.includes('-h')) {
 
 async function runCommand(cmd: string, description: string): Promise<void> {
   console.log(`📋 ${description}...`);
-  
+
   if (dryRun) {
     console.log(`   Would run: ${cmd}`);
     return;
   }
-  
+
   try {
     const [command, ...args] = cmd.split(' ');
-    await execa(command, args, { 
-      cwd: rootPath, 
-      stdio: 'inherit'
+    await execa(command, args, {
+      cwd: rootPath,
+      stdio: 'inherit',
     });
     console.log(`   ✅ Completed`);
   } catch (error: any) {
@@ -117,36 +117,36 @@ async function runCommand(cmd: string, description: string): Promise<void> {
 function parseVersion(version: string): VersionInfo {
   const versionRegex = /^(\d+)\.(\d+)\.(\d+)(?:-(alpha|beta|rc)\.(\d+))?$/;
   const match = version.match(versionRegex);
-  
+
   if (!match) {
     throw new Error(`Invalid version format: ${version}`);
   }
-  
+
   const [, major, minor, patch, prerelease, prereleaseNumber] = match;
-  
+
   return {
-    major: parseInt(major),
-    minor: parseInt(minor),
-    patch: parseInt(patch),
+    major: parseInt(major, 10),
+    minor: parseInt(minor, 10),
+    patch: parseInt(patch, 10),
     prerelease: prerelease || undefined,
-    prereleaseNumber: prerelease ? parseInt(prereleaseNumber) : undefined
+    prereleaseNumber: prerelease ? parseInt(prereleaseNumber, 10) : undefined,
   };
 }
 
 async function bumpVersion(type: ReleaseType): Promise<string> {
   console.log(`📈 Bumping ${type} version...`);
-  
+
   const packagePath = resolve(rootPath, 'package.json');
   const pkg: PackageJson = JSON.parse(readFileSync(packagePath, 'utf-8'));
-  
+
   const currentVersion = pkg.version;
   const versionInfo = parseVersion(currentVersion);
   let newVersion: string;
-  
+
   // Check if we should use stable versioning (1.0.0+)
   const isCurrentlyStable = versionInfo.major >= 1 && !versionInfo.prerelease;
   const shouldUseStable = forceStable || isCurrentlyStable;
-  
+
   if (shouldUseStable) {
     // Stable versioning (1.0.0+)
     console.log(`   🎯 Using stable versioning (current: ${currentVersion})`);
@@ -156,26 +156,26 @@ async function bumpVersion(type: ReleaseType): Promise<string> {
     console.log(`   🧪 Using alpha versioning (current: ${currentVersion})`);
     newVersion = calculateAlphaVersion(versionInfo, type);
   }
-  
+
   console.log(`   Version: ${pkg.version} → ${newVersion}`);
-  
+
   // Show versioning strategy info
   if (!shouldUseStable && versionInfo.major === 0) {
     console.log(`   📋 Alpha Strategy: Use 'major' or 'stable' to release 1.0.0`);
     console.log(`   📋 Available: alpha, beta, rc, patch, minor, major, stable`);
   }
-  
+
   if (!dryRun) {
     pkg.version = newVersion;
-    writeFileSync(packagePath, JSON.stringify(pkg, null, 2) + '\n');
+    writeFileSync(packagePath, `${JSON.stringify(pkg, null, 2)}\n`);
   }
-  
+
   return newVersion;
 }
 
 function calculateStableVersion(versionInfo: VersionInfo, type: ReleaseType): string {
   const { major, minor, patch } = versionInfo;
-  
+
   switch (type) {
     case 'major':
       return `${major + 1}.0.0`;
@@ -195,7 +195,7 @@ function calculateStableVersion(versionInfo: VersionInfo, type: ReleaseType): st
 
 function calculateAlphaVersion(versionInfo: VersionInfo, type: ReleaseType): string {
   const { major, minor, patch, prerelease, prereleaseNumber = 0 } = versionInfo;
-  
+
   switch (type) {
     case 'alpha':
       if (prerelease === 'alpha') {
@@ -208,21 +208,21 @@ function calculateAlphaVersion(versionInfo: VersionInfo, type: ReleaseType): str
         // Add alpha to stable version
         return `${major}.${minor}.${patch}-alpha.0`;
       }
-      
+
     case 'beta':
       if (prerelease === 'beta') {
         return `${major}.${minor}.${patch}-beta.${prereleaseNumber + 1}`;
       } else {
         return `${major}.${minor}.${patch}-beta.0`;
       }
-      
+
     case 'rc':
       if (prerelease === 'rc') {
         return `${major}.${minor}.${patch}-rc.${prereleaseNumber + 1}`;
       } else {
         return `${major}.${minor}.${patch}-rc.0`;
       }
-      
+
     case 'patch':
       // Release current prerelease or increment patch
       if (prerelease) {
@@ -230,21 +230,21 @@ function calculateAlphaVersion(versionInfo: VersionInfo, type: ReleaseType): str
       } else {
         return `${major}.${minor}.${patch + 1}`;
       }
-      
+
     case 'minor':
       return `${major}.${minor + 1}.0`;
-      
+
     case 'major':
       // This would create 1.0.0 (stable release)
       console.log('   🎉 This will create the first stable release (1.0.0)!');
       return `${major + 1}.0.0`;
-      
+
     case 'stable':
     case '1.0.0':
       // Force 1.0.0 stable release
       console.log('   🎉 Creating stable 1.0.0 release!');
       return '1.0.0';
-      
+
     default:
       // Default to alpha increment
       if (prerelease === 'alpha') {
@@ -259,20 +259,20 @@ function determinePublishTag(version: string): string {
   if (!version.includes('-')) {
     return 'latest'; // Stable release
   }
-  
+
   if (version.includes('-alpha.')) return 'alpha';
   if (version.includes('-beta.')) return 'beta';
   if (version.includes('-rc.')) return 'next';
-  
+
   return 'latest';
 }
 
 function generateChangelogEntry(version: string): string {
   const isPrerelease = version.includes('-');
-  const isStable = !isPrerelease && version.startsWith('1.');
+  const _isStable = !isPrerelease && version.startsWith('1.');
   const isFirstStable = version === '1.0.0';
   const date = new Date().toISOString().split('T')[0];
-  
+
   if (isFirstStable) {
     // Special entry for 1.0.0 stable release
     return `
@@ -306,11 +306,14 @@ function generateChangelogEntry(version: string): string {
 - Professional logging with visual progress indicators
 `;
   }
-  
+
   if (isPrerelease) {
     // Prerelease changelog
-    const prereleaseType = version.includes('-alpha.') ? 'Alpha' : 
-                          version.includes('-beta.') ? 'Beta' : 'Release Candidate';
+    const prereleaseType = version.includes('-alpha.')
+      ? 'Alpha'
+      : version.includes('-beta.')
+        ? 'Beta'
+        : 'Release Candidate';
     return `
 ## [${version}] - ${date} 🧪
 
@@ -327,7 +330,7 @@ function generateChangelogEntry(version: string): string {
 > **Note**: This is a ${prereleaseType.toLowerCase()} release. Use \`npm install lord-commander-poc@${version.includes('-alpha.') ? 'alpha' : version.includes('-beta.') ? 'beta' : 'next'}\` for testing.
 `;
   }
-  
+
   // Regular stable release
   return `
 ## [${version}] - ${date}
@@ -348,18 +351,18 @@ function generateChangelogEntry(version: string): string {
 
 async function generateChangelog(version: string): Promise<void> {
   console.log('📝 Generating changelog...');
-  
+
   if (dryRun) {
     console.log('   Would generate changelog for version', version);
     return;
   }
-  
+
   const changelogEntry = generateChangelogEntry(version);
-  
+
   try {
     const changelogPath = resolve(rootPath, 'CHANGELOG.md');
     let changelog: string;
-    
+
     try {
       changelog = readFileSync(changelogPath, 'utf-8');
     } catch {
@@ -372,12 +375,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 `;
     }
-    
-    const newChangelog = changelog.replace(
-      /^(# Changelog.*?\n)/m,
-      `$1${changelogEntry}`
-    );
-    
+
+    const newChangelog = changelog.replace(/^(# Changelog.*?\n)/m, `$1${changelogEntry}`);
+
     writeFileSync(changelogPath, newChangelog);
     console.log('   ✅ Changelog updated');
   } catch (error: any) {
@@ -388,11 +388,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 function createReleaseConfig(newVersion: string): ReleaseConfig {
   const packagePath = resolve(rootPath, 'package.json');
   const pkg: PackageJson = JSON.parse(readFileSync(packagePath, 'utf-8'));
-  
+
   const isPrerelease = newVersion.includes('-');
   const isStable = !isPrerelease && newVersion.startsWith('1.');
   const publishTag = determinePublishTag(newVersion);
-  
+
   return {
     type: releaseType,
     dryRun,
@@ -401,7 +401,7 @@ function createReleaseConfig(newVersion: string): ReleaseConfig {
     newVersion,
     isPrerelease,
     isStable,
-    publishTag
+    publishTag,
   };
 }
 
@@ -411,7 +411,7 @@ function displayReleaseInfo(config: ReleaseConfig): void {
   console.log(`📦 Version: v${config.newVersion}`);
   console.log(`🏷️  Git Tag: v${config.newVersion}`);
   console.log(`🚀 Dist Tag: ${config.publishTag}`);
-  
+
   if (config.isPrerelease) {
     console.log(`\n🧪 Prerelease Information:`);
     console.log(`   Install: npm install lord-commander-poc@${config.publishTag}`);
@@ -430,52 +430,55 @@ async function main(): Promise<void> {
     // 1. Run all tests
     await runCommand('pnpm test', 'Running unit tests');
     await runCommand('pnpm test:cli-all', 'Running CLI tests');
-    
+
     // 2. Build the project
     await runCommand('pnpm build', 'Building project');
-    
+
     // 3. Bump version
     const newVersion = await bumpVersion(releaseType);
     const config = createReleaseConfig(newVersion);
-    
+
     // 4. Generate changelog
     await generateChangelog(newVersion);
-    
+
     // 5. Commit changes
     await runCommand(`git add .`, 'Staging changes');
     await runCommand(`git commit -m "chore: release v${newVersion}"`, 'Committing changes');
-    
+
     // 6. Create git tag
     await runCommand(`git tag -a v${newVersion} -m "Release v${newVersion}"`, 'Creating git tag');
-    
+
     // 7. Push changes
     await runCommand('git push origin main --tags', 'Pushing to repository');
-    
+
     // 8. Publish to npm with appropriate tag
     console.log('📦 Publishing to npm...');
-    
+
     const publishCmd = `npm publish --access public --tag ${config.publishTag}`;
-    
+
     if (dryRun) {
       console.log(`   Would run: ${publishCmd}`);
     } else {
       console.log(`   📋 Manual publish command:`);
       console.log(`   ${publishCmd}`);
       if (config.publishTag !== 'latest') {
-        console.log(`   📋 Installing prerelease: npm install lord-commander-poc@${config.publishTag}`);
+        console.log(
+          `   📋 Installing prerelease: npm install lord-commander-poc@${config.publishTag}`
+        );
       }
       console.log('   Or with 2FA: add --otp <code>');
     }
-    
+
     // Display release information
     displayReleaseInfo(config);
-    
+
     console.log(`\n📋 Manual Steps:`);
     console.log(`   1. ${publishCmd}`);
-    console.log(`   2. Create GitHub release: https://github.com/caedonai/lord-commander-poc/releases/new?tag=v${newVersion}`);
+    console.log(
+      `   2. Create GitHub release: https://github.com/caedonai/lord-commander-poc/releases/new?tag=v${newVersion}`
+    );
     console.log(`   3. Update documentation if needed`);
     console.log(`   4. Announce release to community`);
-    
   } catch (error: any) {
     console.error('\n💥 Release failed:', error.message);
     process.exit(1);

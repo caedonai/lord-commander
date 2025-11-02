@@ -1,17 +1,17 @@
 /**
  * @fileoverview Task 1.5.2: Advanced Object Sanitization Enhancement - Comprehensive Test Suite
- * 
+ *
  * This test suite provides complete coverage for the object sanitization enhancement,
  * including all scenarios, edge cases, and security risks as requested.
- * 
+ *
  * @module memory-sanitization-test
  * @version 1.5.2
  * @since 2025-10-26
  * @author Generated for lord-commander-poc
- * 
+ *
  * Test Coverage:
  * - Basic sanitization functionality ✓
- * - Security violations and attack vectors ✓ 
+ * - Security violations and attack vectors ✓
  * - Performance optimization and caching ✓
  * - Edge cases and error handling ✓
  * - Configuration options and presets ✓
@@ -22,13 +22,13 @@
  * - Advanced object types and circular references ✓
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AdvancedObjectSanitizer,
-  createObjectSanitizer,
-  quickSanitizeObject,
   batchSanitizeObjects,
-  ObjectSanitizationConfig
+  createObjectSanitizer,
+  type ObjectSanitizationConfig,
+  quickSanitizeObject,
 } from '../../core/foundation/memory/sanitization.js';
 
 describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
@@ -57,20 +57,20 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
         { input: null, expected: null },
         { input: undefined, expected: undefined },
         { input: testSymbol, expected: testSymbol },
-        { input: 123n, expected: 123n }
+        { input: 123n, expected: 123n },
       ];
 
       for (const { input, expected } of primitives) {
         const result = await sanitizer.sanitizeObject(input);
         expect(result.isValid).toBe(true);
-        
+
         // Handle Symbol comparison specially since .toEqual() doesn't work with symbols
         if (typeof expected === 'symbol') {
           expect(result.sanitized).toBe(expected);
         } else {
           expect(result.sanitized).toEqual(expected);
         }
-        
+
         expect(result.violations).toHaveLength(0);
       }
     });
@@ -82,8 +82,8 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
         active: true,
         metadata: {
           created: '2025-10-26',
-          updated: '2025-10-26'
-        }
+          updated: '2025-10-26',
+        },
       };
 
       const result = await sanitizer.sanitizeObject(input);
@@ -106,7 +106,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
     it('should handle special object types correctly', async () => {
       const date = new Date('2025-10-26');
       const regex = /test/gi;
-      
+
       const dateResult = await sanitizer.sanitizeObject(date);
       expect(dateResult.sanitized).toEqual(date);
       expect(dateResult.originalType).toBe('date');
@@ -124,7 +124,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       const maliciousObject = {
         name: 'test',
         __proto__: { polluted: true },
-        constructor: { prototype: { compromised: true } }
+        constructor: { prototype: { compromised: true } },
       };
 
       const result = await sanitizer.sanitizeObject(maliciousObject);
@@ -132,10 +132,10 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       expect(result.violations).toContainEqual(
         expect.objectContaining({
           type: 'prototype-pollution',
-          severity: 'critical'
+          severity: 'critical',
         })
       );
-      
+
       // Handle case where sanitized object is null due to critical violations
       if (result.sanitized && typeof result.sanitized === 'object') {
         expect(result.sanitized).not.toHaveProperty('__proto__');
@@ -149,15 +149,18 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
     it('should detect dangerous functions and code execution attempts', async () => {
       const dangerousObject = {
         name: 'test',
-        exploit: function() { return eval('alert("xss")'); },
-        malicious: function() { setTimeout(() => console.log('executed'), 0); }
+        // biome-ignore lint/security/noGlobalEval: Testing security detection
+        exploit: () => eval('alert("xss")'),
+        malicious: () => {
+          setTimeout(() => console.log('executed'), 0);
+        },
       };
 
       const result = await sanitizer.sanitizeObject(dangerousObject);
       expect(result.violations).toContainEqual(
         expect.objectContaining({
           type: 'dangerous-function',
-          severity: 'high'
+          severity: 'high',
         })
       );
     });
@@ -165,11 +168,11 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
     it('should detect and handle oversized objects (DoS protection)', async () => {
       const oversizedConfig: Partial<ObjectSanitizationConfig> = {
         maxObjectSize: 100, // Very small limit for testing
-        maxProperties: 5   // Only allow 5 properties, we have 7
+        maxProperties: 5, // Only allow 5 properties, we have 7
       };
-      
+
       const testSanitizer = new AdvancedObjectSanitizer(oversizedConfig);
-      
+
       const oversizedObject = {
         prop1: 'a'.repeat(50),
         prop2: 'b'.repeat(50),
@@ -177,27 +180,32 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
         prop4: 'd'.repeat(50),
         prop5: 'e'.repeat(50),
         prop6: 'f'.repeat(50), // Should be truncated due to maxProperties: 5
-        prop7: 'g'.repeat(50)  // Should be truncated due to maxProperties: 5
+        prop7: 'g'.repeat(50), // Should be truncated due to maxProperties: 5
       };
 
       const result = await testSanitizer.sanitizeObject(oversizedObject);
       // Should detect oversized properties OR property truncation
-      const hasOversizedViolation = result.violations.some(v => v.type === 'oversized-property');
-      const hasPropertyTruncationWarning = result.warnings.some(w => w.includes('properties truncated'));
-      
+      const hasOversizedViolation = result.violations.some((v) => v.type === 'oversized-property');
+      const hasPropertyTruncationWarning = result.warnings.some((w) =>
+        w.includes('properties truncated')
+      );
+
       expect(hasOversizedViolation || hasPropertyTruncationWarning).toBe(true);
-      
+
       // Debug output - remove after test passes
       if (!hasOversizedViolation && !hasPropertyTruncationWarning) {
         console.log('Warnings:', result.warnings);
-        console.log('Violations:', result.violations.map(v => ({ type: v.type, description: v.description })));
+        console.log(
+          'Violations:',
+          result.violations.map((v) => ({ type: v.type, description: v.description }))
+        );
       }
     });
 
     it('should detect excessive nesting depth', async () => {
       const deepObject: any = {};
       let current = deepObject;
-      
+
       // Create deep nesting beyond default limit (10)
       for (let i = 0; i < 15; i++) {
         current.nested = {};
@@ -208,7 +216,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       const result = await sanitizer.sanitizeObject(deepObject);
       expect(result.violations).toContainEqual(
         expect.objectContaining({
-          type: 'deep-nesting'
+          type: 'deep-nesting',
         })
       );
     });
@@ -220,12 +228,12 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       const result = await sanitizer.sanitizeObject(circularObject);
       expect(result.originalType).toBe('circular');
       // Should have circular reference warning or related message
-      const hasCircularWarning = result.warnings.some(w => 
-        w.includes('Circular reference detected') || w.includes('circular')
+      const hasCircularWarning = result.warnings.some(
+        (w) => w.includes('Circular reference detected') || w.includes('circular')
       );
-      
+
       expect(hasCircularWarning).toBe(true);
-      
+
       // Debug output - remove after test passes
       if (!hasCircularWarning) {
         console.log('Circular ref warnings:', result.warnings);
@@ -237,11 +245,11 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
         command: 'rm -rf /',
         script: '<script>alert("xss")</script>',
         sql: "'; DROP TABLE users; --",
-        path: '../../../etc/passwd'
+        path: '../../../etc/passwd',
       };
 
       const injectionSanitizer = new AdvancedObjectSanitizer({
-        enableInjectionProtection: true
+        enableInjectionProtection: true,
       });
 
       const result = await injectionSanitizer.sanitizeObject(injectionObject);
@@ -254,10 +262,10 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
   describe('Performance Optimization', () => {
     it('should use caching for repeated sanitization operations', async () => {
       const testObject = { name: 'test', value: 123 };
-      
+
       const result1 = await sanitizer.sanitizeObject(testObject);
       const result2 = await sanitizer.sanitizeObject(testObject);
-      
+
       const stats = sanitizer.getProcessingStats();
       expect(stats.cacheHits).toBeGreaterThan(0);
       expect(result1.sanitized).toEqual(result2.sanitized);
@@ -267,12 +275,12 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       const objects = Array.from({ length: 50 }, (_, i) => ({
         id: i,
         name: `test-${i}`,
-        value: Math.random()
+        value: Math.random(),
       }));
 
       const batchSanitizer = new AdvancedObjectSanitizer({
         enableBatchProcessing: true,
-        batchSize: 10
+        batchSize: 10,
       });
 
       const results = await batchSanitizer.sanitizeBatch(objects);
@@ -286,14 +294,14 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
           id: i,
           nested: {
             deep: {
-              value: `test-${i}`.repeat(10)
-            }
-          }
-        }))
+              value: `test-${i}`.repeat(10),
+            },
+          },
+        })),
       };
 
       const timeoutSanitizer = new AdvancedObjectSanitizer({
-        maxProcessingTime: 100 // 100ms limit
+        maxProcessingTime: 100, // 100ms limit
       });
 
       const start = performance.now();
@@ -311,7 +319,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       const cacheSanitizer = new AdvancedObjectSanitizer({
         enableCache: true,
         maxCacheSize: 3,
-        cacheTTL: 100 // 100ms TTL
+        cacheTTL: 100, // 100ms TTL
       });
 
       // Fill cache beyond limit
@@ -320,7 +328,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       }
 
       // Wait for TTL to expire
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       // Cache should be cleaned up
       const stats = cacheSanitizer.getProcessingStats();
@@ -356,7 +364,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       Object.defineProperty(objectWithHidden, 'hidden', {
         value: 'secret',
         enumerable: false,
-        writable: true
+        writable: true,
       });
 
       const result = await sanitizer.sanitizeObject(objectWithHidden);
@@ -367,18 +375,23 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
     it('should handle objects that throw on property access', async () => {
       const throwingObject = { safe: 'value' };
       Object.defineProperty(throwingObject, 'problematic', {
-        get() { throw new Error('Access denied'); },
-        enumerable: true
+        get() {
+          throw new Error('Access denied');
+        },
+        enumerable: true,
       });
 
       const result = await sanitizer.sanitizeObject(throwingObject);
       expect(result.isValid).toBe(true);
-      
+
       // Should generate warning for property access failure
-      const hasPropertyError = result.warnings.some((w: any) => 
-        w.includes('Property sanitization failed') || w.includes('Access denied') || w.includes('problematic')
+      const hasPropertyError = result.warnings.some(
+        (w: any) =>
+          w.includes('Property sanitization failed') ||
+          w.includes('Access denied') ||
+          w.includes('problematic')
       );
-      
+
       expect(hasPropertyError).toBe(true);
     });
 
@@ -389,24 +402,24 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       // Use a sanitizer with smaller string limit to ensure truncation
       const stringSanitizer = new AdvancedObjectSanitizer({
         maxStringLength: 1000, // Force truncation
-        maxObjectSize: 100000   // Allow large object so string truncation logic runs
+        maxObjectSize: 100000, // Allow large object so string truncation logic runs
       });
 
       const result = await stringSanitizer.sanitizeObject(objectWithLargeString);
-      
+
       // Check if object was sanitized successfully
-      if (result.sanitized && result.sanitized.content) {
+      if (result.sanitized?.content) {
         expect(result.sanitized.content.length).toBeLessThan(largeString.length);
       } else {
         // If the object was deemed invalid due to oversized content, that's also acceptable
         expect(result.isValid).toBe(false);
       }
-      
+
       // Should generate string truncation warning
-      const hasStringWarning = result.warnings.some(w => 
-        w.includes('String truncated') || w.includes('truncated')
+      const hasStringWarning = result.warnings.some(
+        (w) => w.includes('String truncated') || w.includes('truncated')
       );
-      
+
       expect(hasStringWarning).toBe(true);
     });
 
@@ -425,25 +438,31 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
 
     it('should handle Buffer objects securely', async () => {
       const buffer = Buffer.from('sensitive data', 'utf8');
-      
+
       const result = await sanitizer.sanitizeObject(buffer);
       expect(result.originalType).toBe('buffer');
-      
+
       // Buffer should be converted to a safe string representation OR removed based on strategy
       // The important thing is that it's handled securely and generates appropriate warnings
       expect(result.sanitized).toBeDefined();
-      
+
       // Buffer should be handled in some way - sanitized, redacted, or generate warnings
-      const hasBufferWarning = result.warnings.some(w => w.toLowerCase().includes('buffer'));
-      const hasBufferViolation = result.violations.some(v => v.description.toLowerCase().includes('buffer'));
-      const isBufferSanitized = typeof result.sanitized === 'string' && result.sanitized.includes('[Buffer:');
-      
+      const hasBufferWarning = result.warnings.some((w) => w.toLowerCase().includes('buffer'));
+      const hasBufferViolation = result.violations.some((v) =>
+        v.description.toLowerCase().includes('buffer')
+      );
+      const isBufferSanitized =
+        typeof result.sanitized === 'string' && result.sanitized.includes('[Buffer:');
+
       expect(hasBufferWarning || hasBufferViolation || isBufferSanitized).toBe(true);
-      
+
       // Debug output - remove after test passes
       if (!hasBufferWarning && !hasBufferViolation && !isBufferSanitized) {
         console.log('Buffer test - Warnings:', result.warnings);
-        console.log('Buffer test - Violations:', result.violations.map(v => v.description));
+        console.log(
+          'Buffer test - Violations:',
+          result.violations.map((v) => v.description)
+        );
         console.log('Buffer test - Sanitized:', result.sanitized);
       }
     });
@@ -451,7 +470,9 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
     it('should handle class instances appropriately', async () => {
       class TestClass {
         constructor(public value: string) {}
-        method() { return this.value; }
+        method() {
+          return this.value;
+        }
       }
 
       const instance = new TestClass('test');
@@ -465,10 +486,10 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
   describe('Configuration Options and Presets', () => {
     it('should apply minimal sanitization level correctly', async () => {
       const minimalSanitizer = createObjectSanitizer('minimal');
-      
+
       const testObject = {
-        func: function() { return 'test'; },
-        data: 'normal string'
+        func: () => 'test',
+        data: 'normal string',
       };
 
       const result = await minimalSanitizer.sanitizeObject(testObject);
@@ -478,11 +499,11 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
 
     it('should apply strict sanitization level correctly', async () => {
       const strictSanitizer = createObjectSanitizer('strict');
-      
+
       const testObject = {
-        func: function() { return 'test'; },
+        func: () => 'test',
         buffer: Buffer.from('data'),
-        data: 'normal string'
+        data: 'normal string',
       };
 
       const result = await strictSanitizer.sanitizeObject(testObject);
@@ -492,15 +513,15 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
 
     it('should apply paranoid sanitization level correctly', async () => {
       const paranoidSanitizer = createObjectSanitizer('paranoid');
-      
+
       const testObject = {
-        func: function() { return 'test'; },
+        func: () => 'test',
         instance: new Date(),
-        data: 'normal string'
+        data: 'normal string',
       };
 
       const result = await paranoidSanitizer.sanitizeObject(testObject);
-      
+
       // In paranoid mode, dangerous objects may be completely removed
       if (result.sanitized) {
         expect(result.sanitized).not.toHaveProperty('func'); // Should be removed
@@ -514,13 +535,13 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
 
     it('should respect custom redaction patterns', async () => {
       const customSanitizer = new AdvancedObjectSanitizer({
-        customRedactionPatterns: [/secret/gi, /password/gi]
+        customRedactionPatterns: [/secret/gi, /password/gi],
       });
 
       const testObject = {
         username: 'user123',
         secretKey: 'very-secret-key',
-        userPassword: 'mypassword123'
+        userPassword: 'mypassword123',
       };
 
       const result = await customSanitizer.sanitizeObject(testObject);
@@ -536,39 +557,44 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
 
       const customSanitizer = new AdvancedObjectSanitizer({
         customStrategies,
-        sanitizeFunctions: false // Ensure functions aren't sanitized by default settings
+        sanitizeFunctions: false, // Ensure functions aren't sanitized by default settings
       });
 
       const testObject = {
         name: 'test',
-        func: function() { return 'test'; },
-        buff: Buffer.from('data')
+        func: () => 'test',
+        buff: Buffer.from('data'),
       };
 
       const result = await customSanitizer.sanitizeObject(testObject);
-      
-      // The object should be sanitized successfully 
+
+      // The object should be sanitized successfully
       expect(result.isValid).toBe(true);
       expect(result.sanitized).toBeDefined();
-      
+
       if (result.sanitized) {
         // Name should be preserved
         expect(result.sanitized.name).toBe('test');
-        
+
         // Function should be preserved due to custom strategy 'preserve'
-        expect(typeof result.sanitized.func).toBe('function'); 
-        
+        expect(typeof result.sanitized.func).toBe('function');
+
         // Buffer should be flattened per custom strategy (or at least handled by flatten strategy)
         if (result.sanitized.buff) {
           // Flatten strategy should return an object with type and length OR other flattened representation
-          if (typeof result.sanitized.buff === 'object' && result.sanitized.buff.type === 'Buffer') {
+          if (
+            typeof result.sanitized.buff === 'object' &&
+            result.sanitized.buff.type === 'Buffer'
+          ) {
             expect(result.sanitized.buff).toMatchObject({
               type: 'Buffer',
-              length: expect.any(Number)
+              length: expect.any(Number),
             });
           } else {
             // Alternative flattened representations are also acceptable
-            expect(typeof result.sanitized.buff === 'string' || typeof result.sanitized.buff === 'object').toBe(true);
+            expect(
+              typeof result.sanitized.buff === 'string' || typeof result.sanitized.buff === 'object'
+            ).toBe(true);
           }
         }
       }
@@ -580,12 +606,12 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
   describe('Integration with Existing Security Systems', () => {
     it('should integrate with log security sanitization', async () => {
       const integrationSanitizer = new AdvancedObjectSanitizer({
-        enableInjectionProtection: true
+        enableInjectionProtection: true,
       });
 
       const testObject = {
         logMessage: 'Normal log message',
-        suspiciousLog: '\u001b[31mRed text\u001b]0;Terminal title\u0007'
+        suspiciousLog: '\u001b[31mRed text\u001b]0;Terminal title\u0007',
       };
 
       const result = await integrationSanitizer.sanitizeObject(testObject);
@@ -597,7 +623,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       // Test that sanitization works within memory limits
       const result = await sanitizer.sanitizeObject({
         data: 'test',
-        metadata: { created: new Date() }
+        metadata: { created: new Date() },
       });
 
       expect(result.metrics.memoryUsage).toBeDefined();
@@ -607,12 +633,15 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
     it('should provide comprehensive violation reporting', async () => {
       const maliciousObject = {
         __proto__: { polluted: true },
-        exploit: function() { eval('alert("xss")'); },
-        path: '../../../etc/passwd'
+        exploit: () => {
+          // biome-ignore lint/security/noGlobalEval: Testing security detection
+          eval('alert("xss")');
+        },
+        path: '../../../etc/passwd',
       };
 
       const result = await sanitizer.sanitizeObject(maliciousObject);
-      
+
       for (const violation of result.violations) {
         expect(violation).toMatchObject({
           id: expect.stringMatching(/^[A-Z_]+_\d+_[a-z0-9]{9}$/),
@@ -620,7 +649,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
           severity: expect.stringMatching(/^(low|medium|high|critical)$/),
           path: expect.any(String),
           description: expect.any(String),
-          recommendation: expect.any(String)
+          recommendation: expect.any(String),
         });
       }
     });
@@ -633,20 +662,20 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       const hugeSanitizer = new AdvancedObjectSanitizer({
         maxObjectSize: 1000, // 1KB limit
         maxProperties: 10,
-        maxDepth: 5
+        maxDepth: 5,
       });
 
       const hugeObject = {
         data: 'x'.repeat(10000), // 10KB string
         moreProps: Object.fromEntries(
           Array.from({ length: 50 }, (_, i) => [`prop${i}`, `value${i}`])
-        )
+        ),
       };
 
       const result = await hugeSanitizer.sanitizeObject(hugeObject);
       expect(result.violations).toContainEqual(
         expect.objectContaining({
-          type: 'oversized-property'
+          type: 'oversized-property',
         })
       );
     });
@@ -660,17 +689,17 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       const deepObject = createDeepObject(20); // Very deep structure
 
       const result = await sanitizer.sanitizeObject(deepObject);
-      
+
       // Should either generate depth warning or detect as violation
-      const hasDepthWarning = result.warnings.some(w => w.includes('Maximum depth reached'));
-      const hasDepthViolation = result.violations.some(v => v.type === 'deep-nesting');
-      
+      const hasDepthWarning = result.warnings.some((w) => w.includes('Maximum depth reached'));
+      const hasDepthViolation = result.violations.some((v) => v.type === 'deep-nesting');
+
       expect(hasDepthWarning || hasDepthViolation).toBe(true);
     });
 
     it('should implement rate limiting for processing', async () => {
       const objects = Array.from({ length: 100 }, (_, i) => ({ id: i }));
-      
+
       const start = performance.now();
       const results = await sanitizer.sanitizeBatch(objects);
       const duration = performance.now() - start;
@@ -685,13 +714,13 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
   describe('Utility Functions', () => {
     it('should provide quick sanitization for simple use cases', async () => {
       const simpleObject = { name: 'test', value: 42 };
-      
+
       const result = await quickSanitizeObject(simpleObject);
       expect(result).toEqual(simpleObject);
-      
+
       const maliciousObject = { __proto__: { polluted: true } };
       const maliciousResult = await quickSanitizeObject(maliciousObject, 'strict');
-      
+
       // Should return null for objects with critical violations like prototype pollution
       // If it's not null, debug what's happening
       if (maliciousResult !== null) {
@@ -708,7 +737,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
         { type: 'user', name: 'Alice' },
         { type: 'product', price: 99.99 },
         { __proto__: { polluted: true } }, // Malicious
-        { type: 'order', items: [1, 2, 3] }
+        { type: 'order', items: [1, 2, 3] },
       ];
 
       const results = await batchSanitizeObjects(mixedObjects, 'standard');
@@ -732,30 +761,30 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
   describe('Report Generation', () => {
     it('should generate comprehensive sanitization reports', async () => {
       const reportSanitizer = new AdvancedObjectSanitizer({
-        generateReport: true
+        generateReport: true,
       });
 
       const testObject = {
         name: 'test',
-        func: function() { return 'test'; },
-        __proto__: { polluted: true }
+        func: () => 'test',
+        __proto__: { polluted: true },
       };
 
       const result = await reportSanitizer.sanitizeObject(testObject);
-      
+
       expect(result.report).toBeDefined();
-      expect(result.report!.summary).toMatchObject({
+      expect(result.report?.summary).toMatchObject({
         originalSize: expect.any(Number),
         finalSize: expect.any(Number),
         compressionRatio: expect.any(Number),
-        securityImprovements: expect.any(Number)
+        securityImprovements: expect.any(Number),
       });
 
-      expect(result.report!.securityAnalysis).toMatchObject({
+      expect(result.report?.securityAnalysis).toMatchObject({
         riskScore: expect.any(Number),
         threatsMitigated: expect.any(Array),
         remainingRisks: expect.any(Array),
-        complianceLevel: expect.stringMatching(/^(basic|standard|enhanced|enterprise)$/)
+        complianceLevel: expect.stringMatching(/^(basic|standard|enhanced|enterprise)$/),
       });
     });
   });
@@ -769,13 +798,13 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
         data: `item-${i}`,
         metadata: {
           created: new Date(),
-          tags: [`tag1-${i}`, `tag2-${i}`]
-        }
+          tags: [`tag1-${i}`, `tag2-${i}`],
+        },
       }));
 
       const performanceSanitizer = new AdvancedObjectSanitizer({
         enableCache: true,
-        enableBatchProcessing: true
+        enableBatchProcessing: true,
       });
 
       const start = performance.now();
@@ -784,7 +813,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
 
       expect(results).toHaveLength(1000);
       expect(duration).toBeLessThan(5000); // Should complete within 5 seconds
-      
+
       const stats = performanceSanitizer.getProcessingStats();
       expect(stats.totalOperations).toBe(1000);
       expect(stats.averageProcessingTime).toBeGreaterThan(0);
@@ -794,12 +823,12 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       // Perform some operations to generate stats
       await sanitizer.sanitizeObject({ test: 'data' });
       await sanitizer.sanitizeObject({ another: 'test' });
-      
+
       const stats1 = sanitizer.getProcessingStats();
       expect(stats1.totalOperations).toBeGreaterThan(0); // From operations above
 
       sanitizer.reset();
-      
+
       const stats2 = sanitizer.getProcessingStats();
       expect(stats2.totalOperations).toBe(0);
       expect(stats2.cacheHits).toBe(0);
@@ -814,7 +843,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       const invalidConfig = {
         maxDepth: -5,
         maxProperties: 'invalid' as any,
-        sanitizationLevel: 'unknown' as any
+        sanitizationLevel: 'unknown' as any,
       };
 
       // Should not throw, but use defaults
@@ -825,7 +854,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
     it('should handle missing configuration gracefully', () => {
       const emptySanitizer = new AdvancedObjectSanitizer({});
       expect(emptySanitizer).toBeDefined();
-      
+
       const undefinedSanitizer = new AdvancedObjectSanitizer(undefined as any);
       expect(undefinedSanitizer).toBeDefined();
     });
@@ -838,7 +867,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       const testObject = {
         windows: 'line1\r\nline2',
         unix: 'line1\nline2',
-        mac: 'line1\rline2'
+        mac: 'line1\rline2',
       };
 
       const result = await sanitizer.sanitizeObject(testObject);
@@ -851,7 +880,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
         emoji: '👨‍💻🚀',
         chinese: '你好世界',
         arabic: 'مرحبا بالعالم',
-        mixed: 'Hello 世界 🌍'
+        mixed: 'Hello 世界 🌍',
       };
 
       const result = await sanitizer.sanitizeObject(unicodeObject);
@@ -871,28 +900,28 @@ describe('Integration Scenarios', () => {
         email: 'john@example.com',
         preferences: {
           theme: 'dark',
-          notifications: true
-        }
+          notifications: true,
+        },
       },
       session: {
         token: 'abc123',
-        expires: new Date('2025-12-31')
+        expires: new Date('2025-12-31'),
       },
       metadata: {
         userAgent: 'Mozilla/5.0...',
-        ip: '192.168.1.1'
-      }
+        ip: '192.168.1.1',
+      },
     };
 
     const sanitizer = createObjectSanitizer('standard');
     const result = await sanitizer.sanitizeObject(userData);
-    
+
     expect(result.isValid).toBe(true);
     expect(result.sanitized).toMatchObject({
       profile: expect.objectContaining({
         name: 'John Doe',
-        email: 'john@example.com'
-      })
+        email: 'john@example.com',
+      }),
     });
   });
 
@@ -900,21 +929,21 @@ describe('Integration Scenarios', () => {
     const apiResponse = {
       data: [
         { id: 1, name: 'Product 1', price: 99.99 },
-        { id: 2, name: 'Product 2', price: 149.99 }
+        { id: 2, name: 'Product 2', price: 149.99 },
       ],
       meta: {
         total: 2,
         page: 1,
-        limit: 10
+        limit: 10,
       },
       debug: {
         query: 'SELECT * FROM products',
-        executionTime: '15ms'
-      }
+        executionTime: '15ms',
+      },
     };
 
     const apiSanitizer = createObjectSanitizer('standard', {
-      customRedactionPatterns: [/SELECT|INSERT|UPDATE|DELETE/gi]
+      customRedactionPatterns: [/SELECT|INSERT|UPDATE|DELETE/gi],
     });
 
     const result = await apiSanitizer.sanitizeObject(apiResponse);
@@ -931,33 +960,33 @@ describe('Stress Testing', () => {
       if (depth <= 0) {
         return {
           value: Math.random(),
-          array: Array.from({ length: 5 }, (_, i) => ({ id: i }))
+          array: Array.from({ length: 5 }, (_, i) => ({ id: i })),
         };
       }
-      
+
       return {
         level: depth,
         children: Array.from({ length: 3 }, () => createComplexStructure(depth - 1)),
         metadata: {
           created: new Date(),
-          hash: Math.random().toString(36)
-        }
+          hash: Math.random().toString(36),
+        },
       };
     }
 
     const complexStructure = createComplexStructure(5);
     const stressSanitizer = createObjectSanitizer('standard', {
       maxDepth: 10,
-      maxProperties: 200
+      maxProperties: 200,
     });
 
     const result = await stressSanitizer.sanitizeObject(complexStructure);
-    
+
     // Complex structures may trigger depth or size violations, which is acceptable
     // The important thing is that processing completes without crashing
     expect(result).toBeDefined();
     expect(result.processingTime).toBeLessThan(5000); // Should complete within 5 seconds
-    
+
     // If the structure is deemed invalid due to complexity, that's acceptable behavior
     if (!result.isValid) {
       // Should have specific violations explaining why
@@ -971,11 +1000,11 @@ describe('Stress Testing', () => {
     const concurrentObjects = Array.from({ length: 50 }, (_, i) => ({
       id: i,
       data: `test-${i}`,
-      timestamp: new Date()
+      timestamp: new Date(),
     }));
 
     const concurrentSanitizer = new AdvancedObjectSanitizer();
-    const sanitizationPromises = concurrentObjects.map(obj => 
+    const sanitizationPromises = concurrentObjects.map((obj) =>
       concurrentSanitizer.sanitizeObject(obj)
     );
 

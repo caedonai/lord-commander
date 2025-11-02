@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { promises as fs } from 'node:fs';
+import os from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createCLI } from '../../core/createCLI.js';
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import os from 'os';
 
 describe('createCLI run() Method', () => {
   let tempDir: string;
@@ -10,7 +10,7 @@ describe('createCLI run() Method', () => {
   beforeEach(async () => {
     // Create temporary directory for testing
     tempDir = await fs.mkdtemp(join(os.tmpdir(), 'createcli-run-test-'));
-    
+
     // Mock process.exit to prevent actual exit during tests
     vi.spyOn(process, 'exit').mockImplementation((code?: string | number | null | undefined) => {
       // Only throw for non-zero exit codes (errors), allow version to exit normally
@@ -19,7 +19,7 @@ describe('createCLI run() Method', () => {
       }
       return undefined as never;
     });
-    
+
     // Mock console.error to capture error output
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
@@ -29,7 +29,7 @@ describe('createCLI run() Method', () => {
     vi.restoreAllMocks();
     try {
       await fs.rm(tempDir, { recursive: true });
-    } catch (error) {
+    } catch (_error) {
       // Ignore cleanup errors
     }
   });
@@ -41,7 +41,7 @@ describe('createCLI run() Method', () => {
         version: '1.0.0',
         description: 'Test CLI',
         commandsPath: './non-existent-path',
-        autoStart: false
+        autoStart: false,
       });
 
       // Should not have executed automatically
@@ -54,7 +54,7 @@ describe('createCLI run() Method', () => {
         version: '1.0.0',
         description: 'Test CLI',
         commandsPath: './non-existent-path',
-        autoStart: false
+        autoStart: false,
       });
 
       // Before execution
@@ -64,7 +64,7 @@ describe('createCLI run() Method', () => {
       // We'll catch the help exit and verify state was updated
       try {
         await program.run(['node', 'test-cli']);
-      } catch (error) {
+      } catch (_error) {
         // Ignore help exit
       }
 
@@ -82,24 +82,24 @@ describe('createCLI run() Method', () => {
         version: '1.0.0',
         description: 'Test CLI',
         commandsPath: './non-existent-path',
-        autoStart: false
+        autoStart: false,
       });
 
       // First call should work
       try {
         await program.run(['node', 'test-cli']);
-      } catch (error) {
+      } catch (_error) {
         // Ignore help exit
       }
       expect(program._cliState?.hasBeenExecuted).toBe(true);
 
       // Second call should be prevented with warning
       await program.run(['node', 'test-cli']);
-      
+
       expect(mockWarn).toHaveBeenCalledWith(
         'CLI has already been executed. Multiple calls to run() are not supported.'
       );
-      
+
       mockWarn.mockRestore();
     });
   });
@@ -114,7 +114,7 @@ describe('createCLI run() Method', () => {
       const originalArgv = process.argv;
       process.argv = ['node', 'test-cli']; // No arguments to avoid help/version exit
 
-      let program;
+      let program: any;
       try {
         // This will auto-execute (default behavior)
         program = await createCLI({
@@ -122,7 +122,7 @@ describe('createCLI run() Method', () => {
           version: '1.0.0',
           description: 'Test CLI',
           commandsPath: './non-existent-path',
-          autoStart: false // Disable autoStart to test the logic without actual execution
+          autoStart: false, // Disable autoStart to test the logic without actual execution
         });
 
         // Manually set the flags to simulate autoStart behavior
@@ -134,10 +134,10 @@ describe('createCLI run() Method', () => {
             version: '1.0.0',
             description: 'Test CLI',
             commandsPath: './non-existent-path',
-            autoStart: false
-          }
+            autoStart: false,
+          },
         };
-      } catch (error) {
+      } catch (_error) {
         // Expected: autoStart triggers parseAsync which may exit for help/version
       } finally {
         // Restore original argv
@@ -152,13 +152,13 @@ describe('createCLI run() Method', () => {
 
         // Attempting to run manually should show warning
         await program.run(['node', 'test-cli', '--version']);
-        
+
         expect(mockWarn).toHaveBeenCalledWith(
-          'CLI has already been executed automatically (autoStart: true). ' + 
-          'Set autoStart: false if you want manual control via run().'
+          'CLI has already been executed automatically (autoStart: true). ' +
+            'Set autoStart: false if you want manual control via run().'
         );
       }
-      
+
       mockWarn.mockRestore();
     });
   });
@@ -166,7 +166,7 @@ describe('createCLI run() Method', () => {
   describe('Error Handling in run() Method', () => {
     it('should handle errors with custom error handler', async () => {
       let capturedError: Error | null = null;
-      
+
       const customErrorHandler = vi.fn((error: Error) => {
         capturedError = error;
       });
@@ -177,7 +177,7 @@ describe('createCLI run() Method', () => {
         description: 'Test CLI',
         commandsPath: './non-existent-path',
         autoStart: false,
-        errorHandler: customErrorHandler
+        errorHandler: customErrorHandler,
       });
 
       // Trigger an error by running an invalid command
@@ -194,14 +194,14 @@ describe('createCLI run() Method', () => {
         version: '1.0.0',
         description: 'Test CLI',
         commandsPath: './non-existent-path',
-        autoStart: false
+        autoStart: false,
         // No custom error handler
       });
 
       // Running invalid command should trigger default error handling
-      await expect(() => 
-        program.run(['node', 'test-cli', 'invalid-command'])
-      ).rejects.toThrow('process.exit(1) called');
+      await expect(() => program.run(['node', 'test-cli', 'invalid-command'])).rejects.toThrow(
+        'process.exit(1) called'
+      );
     });
   });
 
@@ -211,12 +211,12 @@ describe('createCLI run() Method', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
-        autoStart: false
+        autoStart: false,
       });
 
       // Should have the run method
       expect(typeof program.run).toBe('function');
-      
+
       // Should have CLI state
       expect(program._cliState).toBeDefined();
       expect(program._cliState?.hasBeenExecuted).toBe(false);
@@ -229,13 +229,13 @@ describe('createCLI run() Method', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
-        autoStart: false
+        autoStart: false,
       });
 
       // Should accept custom argv
       try {
         await program.run(['node', 'test-cli']);
-      } catch (error) {
+      } catch (_error) {
         // Ignore help exit
       }
       expect(program._cliState?.hasBeenExecuted).toBe(true);
@@ -246,7 +246,7 @@ describe('createCLI run() Method', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI',
-        autoStart: false
+        autoStart: false,
       });
 
       // Mock process.argv to include basic args
@@ -255,12 +255,12 @@ describe('createCLI run() Method', () => {
 
       try {
         await program.run(); // No argv provided, should use process.argv
-      } catch (error) {
+      } catch (_error) {
         // Ignore help exit
       } finally {
         process.argv = originalArgv;
       }
-      
+
       expect(program._cliState?.hasBeenExecuted).toBe(true);
     });
   });
@@ -276,15 +276,15 @@ describe('createCLI run() Method', () => {
         builtinCommands: {
           completion: true,
           hello: false,
-          version: false
-        }
+          version: false,
+        },
       });
 
       // Should still be a Commander.js program
       expect(program.name()).toBe('test-cli');
       expect(program.version()).toBe('1.0.0');
       expect(program.description()).toBe('Test CLI');
-      
+
       // Should have enhanced functionality
       expect(typeof program.run).toBe('function');
       expect(program._cliState).toBeDefined();

@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { Command } from 'commander';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createCLI } from '../../core/createCLI.js';
 import { ERROR_MESSAGES } from '../../core/index.js';
 
@@ -14,11 +14,11 @@ async function createTestCLI(options: Parameters<typeof createCLI>[0]) {
     version: '1.0.0',
     description: 'Test CLI',
     commandsPath: './non-existent-path', // Prevent auto-discovery for isolated testing (safe relative path)
-    ...options // Override defaults with provided options
+    ...options, // Override defaults with provided options
   });
-  
-  const commandNames = cli.commands.map(cmd => cmd.name());
-  
+
+  const commandNames = cli.commands.map((cmd) => cmd.name());
+
   return { cli, commandNames };
 }
 
@@ -26,7 +26,7 @@ describe('createCLI Built-in Commands Integration', () => {
   beforeEach(() => {
     // Mock process.argv to prevent actual argument parsing
     process.argv = ['node', 'test-cli'];
-    
+
     // Mock process.exit to prevent test termination
     process.exit = vi.fn() as any;
   });
@@ -40,12 +40,12 @@ describe('createCLI Built-in Commands Integration', () => {
   describe('Default Built-in Configuration', () => {
     it('should create CLI with default built-in commands (completion: true)', async () => {
       const { cli, commandNames } = await createTestCLI({
-        description: 'Test CLI with default configuration'
+        description: 'Test CLI with default configuration',
       });
 
       expect(cli).toBeInstanceOf(Command);
       expect(cli.name()).toBe('test-cli');
-      
+
       expect(commandNames).toContain('completion');
       expect(commandNames).not.toContain('hello');
       expect(commandNames).not.toContain('version');
@@ -58,8 +58,8 @@ describe('createCLI Built-in Commands Integration', () => {
         builtinCommands: {
           completion: true,
           hello: true,
-          version: false
-        }
+          version: false,
+        },
       });
 
       expect(commandNames).toContain('completion');
@@ -72,8 +72,8 @@ describe('createCLI Built-in Commands Integration', () => {
         builtinCommands: {
           completion: true,
           hello: true,
-          version: true
-        }
+          version: true,
+        },
       });
 
       expect(commandNames).toContain('completion');
@@ -86,8 +86,8 @@ describe('createCLI Built-in Commands Integration', () => {
         builtinCommands: {
           completion: false,
           hello: false,
-          version: false
-        }
+          version: false,
+        },
       });
 
       expect(commandNames).not.toContain('completion');
@@ -100,8 +100,8 @@ describe('createCLI Built-in Commands Integration', () => {
         builtinCommands: {
           completion: false,
           hello: false,
-          version: true
-        }
+          version: true,
+        },
       });
 
       expect(commandNames).not.toContain('completion');
@@ -116,8 +116,8 @@ describe('createCLI Built-in Commands Integration', () => {
         builtinCommands: {
           // completion not specified - should default to true
           hello: false,
-          version: false
-        }
+          version: false,
+        },
       });
 
       expect(commandNames).toContain('completion');
@@ -128,8 +128,8 @@ describe('createCLI Built-in Commands Integration', () => {
         builtinCommands: {
           completion: true,
           // hello not specified - should default to false
-          version: false
-        }
+          version: false,
+        },
       });
 
       expect(commandNames).not.toContain('hello');
@@ -139,9 +139,9 @@ describe('createCLI Built-in Commands Integration', () => {
       const { commandNames } = await createTestCLI({
         builtinCommands: {
           completion: true,
-          hello: false
+          hello: false,
           // version not specified - should default to false
-        }
+        },
       });
 
       expect(commandNames).not.toContain('version');
@@ -152,8 +152,8 @@ describe('createCLI Built-in Commands Integration', () => {
         // builtinCommands not specified - should use defaults
       });
 
-      expect(commandNames).toContain('completion');  // default: true
-      expect(commandNames).not.toContain('hello');   // default: false
+      expect(commandNames).toContain('completion'); // default: true
+      expect(commandNames).not.toContain('hello'); // default: false
       expect(commandNames).not.toContain('version'); // default: false
     });
   });
@@ -167,8 +167,8 @@ describe('createCLI Built-in Commands Integration', () => {
         builtinCommands: {
           completion: true,
           hello: true,
-          version: true
-        }
+          version: true,
+        },
       });
 
       expect(cli.name()).toBe('my-custom-cli');
@@ -181,10 +181,10 @@ describe('createCLI Built-in Commands Integration', () => {
 
       // Verify we can add custom commands to the returned instance
       cli.command('custom').description('Custom command');
-      
-      const commandNames = cli.commands.map(cmd => cmd.name());
+
+      const commandNames = cli.commands.map((cmd) => cmd.name());
       expect(commandNames).toContain('completion'); // Built-in
-      expect(commandNames).toContain('custom');     // Added after
+      expect(commandNames).toContain('custom'); // Added after
     });
   });
 
@@ -195,8 +195,8 @@ describe('createCLI Built-in Commands Integration', () => {
         builtinCommands: {
           completion: true,
           hello: false,
-          version: true
-        }
+          version: true,
+        },
       });
 
       expect(cli).toBeDefined();
@@ -206,13 +206,13 @@ describe('createCLI Built-in Commands Integration', () => {
       // Test that partial configuration is type-safe
       const { commandNames } = await createTestCLI({
         builtinCommands: {
-          hello: true
+          hello: true,
           // completion and version should use defaults
-        }
+        },
       });
 
       expect(commandNames).toContain('completion'); // default: true
-      expect(commandNames).toContain('hello');      // explicit: true
+      expect(commandNames).toContain('hello'); // explicit: true
       expect(commandNames).not.toContain('version'); // default: false
     });
   });
@@ -223,14 +223,14 @@ describe('createCLI Built-in Commands Integration', () => {
         builtinCommands: {
           completion: true,
           hello: true,
-          version: false
-        }
+          version: false,
+        },
       });
-      
+
       // Built-in commands should be present
       expect(commandNames).toContain('completion');
       expect(commandNames).toContain('hello');
-      
+
       // The order might vary, but both should be registered
       expect(commandNames.length).toBeGreaterThanOrEqual(2);
     });
@@ -239,17 +239,19 @@ describe('createCLI Built-in Commands Integration', () => {
   describe('Error Scenarios', () => {
     it('should handle invalid CLI options gracefully', async () => {
       // Test that the CLI throws an error for unsafe paths as expected
-      await expect(createCLI({
-        name: '',
-        version: '1.0.0',
-        description: 'Test CLI',
-        commandsPath: '/non/existent/path', // This should now trigger security validation error
-        builtinCommands: {
-          completion: true,
-          hello: false,
-          version: false
-        }
-      })).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('/non/existent/path'));
+      await expect(
+        createCLI({
+          name: '',
+          version: '1.0.0',
+          description: 'Test CLI',
+          commandsPath: '/non/existent/path', // This should now trigger security validation error
+          builtinCommands: {
+            completion: true,
+            hello: false,
+            version: false,
+          },
+        })
+      ).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('/non/existent/path'));
     });
 
     it('should handle missing required options with defaults', async () => {
@@ -269,10 +271,10 @@ describe('createCLI Built-in Commands Integration', () => {
       const { cli } = await createTestCLI({
         description: 'Test CLI with custom commands',
         builtinCommands: {
-          completion: false,  // Disable built-in completion
-          hello: false,      // Disable built-in hello  
-          version: false     // Disable built-in version
-        }
+          completion: false, // Disable built-in completion
+          hello: false, // Disable built-in hello
+          version: false, // Disable built-in version
+        },
       });
 
       expect(cli).toBeInstanceOf(Command);
@@ -285,14 +287,14 @@ describe('createCLI Built-in Commands Integration', () => {
       const { cli, commandNames } = await createTestCLI({
         description: 'Test CLI with built-ins enabled',
         builtinCommands: {
-          completion: true,   // Enable built-in completion (skip user completion.ts)
-          hello: true,       // Enable built-in hello (skip user hello.ts)
-          version: true      // Enable built-in version (skip user version.ts)
-        }
+          completion: true, // Enable built-in completion (skip user completion.ts)
+          hello: true, // Enable built-in hello (skip user hello.ts)
+          version: true, // Enable built-in version (skip user version.ts)
+        },
       });
 
       expect(cli).toBeInstanceOf(Command);
-      
+
       // Should have built-in commands, not user overrides
       expect(commandNames).toContain('completion');
       expect(commandNames).toContain('hello');
@@ -305,7 +307,7 @@ describe('createCLI Built-in Commands Integration', () => {
       const mockErrorHandler = vi.fn((error: Error) => {
         console.error(`Mock handler: ${error.message}`);
       });
-      
+
       // Create CLI with custom error handler
       const cli = await createCLI({
         name: 'test-cli',
@@ -314,7 +316,7 @@ describe('createCLI Built-in Commands Integration', () => {
         commandsPath: './non-existent-path',
         builtinCommands: { completion: false, hello: false, version: false },
         errorHandler: mockErrorHandler,
-        autoStart: false // Don't actually parse argv for this test
+        autoStart: false, // Don't actually parse argv for this test
       });
 
       expect(cli).toBeInstanceOf(Command);
@@ -325,7 +327,7 @@ describe('createCLI Built-in Commands Integration', () => {
       const mockAsyncErrorHandler = vi.fn(async (error: Error) => {
         console.error(`Async mock handler: ${error.message}`);
       });
-      
+
       const cli = await createCLI({
         name: 'test-cli',
         version: '1.0.0',
@@ -333,7 +335,7 @@ describe('createCLI Built-in Commands Integration', () => {
         commandsPath: './non-existent-path',
         builtinCommands: { completion: false, hello: false, version: false },
         errorHandler: mockAsyncErrorHandler,
-        autoStart: false
+        autoStart: false,
       });
 
       expect(cli).toBeInstanceOf(Command);
@@ -343,11 +345,11 @@ describe('createCLI Built-in Commands Integration', () => {
     it('should fall back to default error handling if custom handler throws', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
-      
+
       const throwingErrorHandler = vi.fn((_error: Error) => {
         throw new Error('Handler error');
       });
-      
+
       const cli = await createCLI({
         name: 'test-cli',
         version: '1.0.0',
@@ -355,11 +357,11 @@ describe('createCLI Built-in Commands Integration', () => {
         commandsPath: './non-existent-path',
         builtinCommands: { completion: false, hello: false, version: false },
         errorHandler: throwingErrorHandler,
-        autoStart: false
+        autoStart: false,
       });
 
       expect(cli).toBeInstanceOf(Command);
-      
+
       // Cleanup mocks
       consoleSpy.mockRestore();
       processExitSpy.mockRestore();

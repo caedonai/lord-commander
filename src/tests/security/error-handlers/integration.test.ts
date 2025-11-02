@@ -1,20 +1,23 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { createCLI, ErrorHandlerValidationError } from '../../../core/createCLI.js';
 
 describe('Error Handler Security Integration', () => {
   describe('CLI Creation with Error Handler Validation', () => {
     it('should validate error handlers during CLI creation', async () => {
       const dangerousHandler = (_error: Error) => {
+        // biome-ignore lint/security/noGlobalEval: Testing security detection
         eval('malicious code');
       };
 
-      await expect(createCLI({
-        name: 'test-cli',
-        version: '1.0.0',
-        description: 'Test CLI with dangerous handler',
-        autoStart: false,
-        errorHandler: dangerousHandler
-      })).rejects.toThrow(ErrorHandlerValidationError);
+      await expect(
+        createCLI({
+          name: 'test-cli',
+          version: '1.0.0',
+          description: 'Test CLI with dangerous handler',
+          autoStart: false,
+          errorHandler: dangerousHandler,
+        })
+      ).rejects.toThrow(ErrorHandlerValidationError);
     });
 
     it('should allow safe error handlers during CLI creation', async () => {
@@ -27,7 +30,7 @@ describe('Error Handler Security Integration', () => {
         version: '1.0.0',
         description: 'Test CLI with safe handler',
         autoStart: false,
-        errorHandler: safeHandler
+        errorHandler: safeHandler,
       });
 
       expect(program).toBeDefined();
@@ -39,7 +42,7 @@ describe('Error Handler Security Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI without handler',
-        autoStart: false
+        autoStart: false,
       });
 
       expect(program).toBeDefined();
@@ -48,8 +51,9 @@ describe('Error Handler Security Integration', () => {
 
     it('should provide detailed validation error messages', async () => {
       const complexDangerousHandler = (_error: Error) => {
+        // biome-ignore lint/security/noGlobalEval: Testing security detection
         eval('malicious code');
-        require('fs').writeFileSync('/tmp/bad', 'data');
+        require('node:fs').writeFileSync('/tmp/bad', 'data');
         process.exit(1);
       };
 
@@ -59,7 +63,7 @@ describe('Error Handler Security Integration', () => {
           version: '1.0.0',
           description: 'Test CLI',
           autoStart: false,
-          errorHandler: complexDangerousHandler
+          errorHandler: complexDangerousHandler,
         });
       } catch (error: any) {
         expect(error).toBeInstanceOf(ErrorHandlerValidationError);

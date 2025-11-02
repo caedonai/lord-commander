@@ -1,17 +1,17 @@
 /**
  * Comprehensive test suite for Error Context Sanitization (Task 1.3.3)
- * 
+ *
  * This test suite validates the error context sanitization functionality
  * including selective redaction, secure ID generation, and safe forwarding.
- * 
+ *
  * @see Task 1.3.3: Error Context Sanitization
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
-  sanitizeErrorContext,
+  analyzeErrorContextSecurity,
   createSafeErrorForForwarding,
-  analyzeErrorContextSecurity
+  sanitizeErrorContext,
 } from '../../../core/foundation/errors/sanitization.js';
 
 describe('Error Context Sanitization (Task 1.3.3)', () => {
@@ -30,62 +30,76 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
       user: {
         email: 'user@example.com',
         password: 'secret123',
-        apiKey: 'sk-1234567890abcdef'
+        apiKey: 'sk-1234567890abcdef',
       },
       database: {
         host: '192.168.1.100',
-        connectionString: 'mongodb://admin:secret@cluster.example.com:27017/mydb'
+        connectionString: 'mongodb://admin:secret@cluster.example.com:27017/mydb',
       },
       filePath: '/home/user/.env',
-      internalId: 'internal-id-12345'
+      internalId: 'internal-id-12345',
     };
 
     safeContext = {
       operation: 'user-login',
       timestamp: '2024-10-18T10:00:00Z',
       component: 'auth-service',
-      requestId: 'req-123456'
+      requestId: 'req-123456',
     };
   });
 
   describe('sanitizeErrorContext()', () => {
     it('should generate secure error IDs', () => {
       const result = sanitizeErrorContext(testError, {});
-      
+
       expect(result.errorId).toMatch(/^ERR_\d{4}_[A-F0-9]{8}$/);
       expect(result.errorId).toContain('2025'); // Current year
     });
 
     it('should preserve error codes when enabled', () => {
-      const result = sanitizeErrorContext(testError, {}, {
-        preserveErrorCodes: true
-      });
-      
+      const result = sanitizeErrorContext(
+        testError,
+        {},
+        {
+          preserveErrorCodes: true,
+        }
+      );
+
       expect(result.code).toBe('TEST_001');
     });
 
     it('should not preserve error codes when disabled', () => {
-      const result = sanitizeErrorContext(testError, {}, {
-        preserveErrorCodes: false
-      });
-      
+      const result = sanitizeErrorContext(
+        testError,
+        {},
+        {
+          preserveErrorCodes: false,
+        }
+      );
+
       expect(result.code).toBeUndefined();
     });
 
     it('should preserve timestamps when enabled', () => {
-      const result = sanitizeErrorContext(testError, {}, {
-        preserveTimestamps: true
-      });
-      
+      const result = sanitizeErrorContext(
+        testError,
+        {},
+        {
+          preserveTimestamps: true,
+        }
+      );
+
       expect(result.timestamp).toBeDefined();
-      expect(new Date(result.timestamp!).getTime()).toBeGreaterThan(Date.now() - 1000);
+      if (result.timestamp) {
+        expect(new Date(result.timestamp).getTime()).toBeGreaterThan(Date.now() - 1000);
+      }
     });
 
     it('should apply "none" redaction level correctly', () => {
       const result = sanitizeErrorContext(testError, sensitiveContext, {
-        redactionLevel: 'none'
+        redactionLevel: 'none',
       });
-      
+
       expect(result.context.user).toEqual(sensitiveContext.user);
       expect(result.context.database).toEqual(sensitiveContext.database);
       expect(result.redactedProperties).toHaveLength(0);
@@ -93,18 +107,18 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
 
     it('should apply "partial" redaction level correctly', () => {
       const result = sanitizeErrorContext(testError, sensitiveContext, {
-        redactionLevel: 'partial'
+        redactionLevel: 'partial',
       });
-      
+
       // Should remove detected sensitive properties
       expect(result.context.user).toBeUndefined();
       expect(result.context.database).toBeUndefined();
       expect(result.context.filePath).toBeUndefined();
-      
+
       // Should preserve non-sensitive properties
       expect(result.context.operation).toBe('user-login');
       expect(result.context.timestamp).toBe('2024-10-18T10:00:00Z');
-      
+
       expect(result.redactedProperties.length).toBeGreaterThan(0);
       expect(result.hadSensitiveData).toBe(true);
     });
@@ -112,28 +126,28 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
     it('should apply "full" redaction level correctly', () => {
       const result = sanitizeErrorContext(testError, sensitiveContext, {
         redactionLevel: 'full',
-        allowedProperties: ['operation', 'timestamp']
+        allowedProperties: ['operation', 'timestamp'],
       });
-      
+
       // Should only preserve explicitly allowed properties
       expect(result.context.operation).toBe('user-login');
       expect(result.context.timestamp).toBe('2024-10-18T10:00:00Z');
-      
+
       // Should remove everything else
       expect(result.context.user).toBeUndefined();
       expect(result.context.database).toBeUndefined();
       expect(result.context.filePath).toBeUndefined();
       expect(result.context.internalId).toBeUndefined();
-      
+
       expect(result.redactedProperties.length).toBeGreaterThan(2);
     });
 
     it('should provide redaction hints when enabled', () => {
       const result = sanitizeErrorContext(testError, sensitiveContext, {
         redactionLevel: 'partial',
-        includeContextHints: true
+        includeContextHints: true,
       });
-      
+
       expect(Object.keys(result.redactionHints).length).toBeGreaterThan(0);
       expect(result.redactionHints).toHaveProperty('user');
       expect(result.redactionHints).toHaveProperty('database');
@@ -142,9 +156,9 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
     it('should not provide redaction hints when disabled', () => {
       const result = sanitizeErrorContext(testError, sensitiveContext, {
         redactionLevel: 'partial',
-        includeContextHints: false
+        includeContextHints: false,
       });
-      
+
       expect(Object.keys(result.redactionHints)).toHaveLength(0);
     });
 
@@ -154,20 +168,20 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
           profile: {
             email: 'user@example.com',
             settings: {
-              apiKey: 'sk-secret'
-            }
-          }
+              apiKey: 'sk-secret',
+            },
+          },
         },
         metadata: {
-          safe: 'value'
-        }
+          safe: 'value',
+        },
       };
 
       const result = sanitizeErrorContext(testError, nestedContext, {
         redactionLevel: 'partial',
-        sanitizeNestedObjects: true
+        sanitizeNestedObjects: true,
       });
-      
+
       // Should remove the entire user object due to sensitive nested content
       expect(result.context.user).toBeUndefined();
       // Should preserve safe nested content
@@ -178,16 +192,16 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
       const arrayContext = {
         users: [
           { name: 'John', email: 'john@example.com' },
-          { name: 'Jane', email: 'jane@example.com' }
+          { name: 'Jane', email: 'jane@example.com' },
         ],
-        operations: ['login', 'logout']
+        operations: ['login', 'logout'],
       };
 
       const result = sanitizeErrorContext(testError, arrayContext, {
         redactionLevel: 'partial',
-        sanitizeNestedObjects: true
+        sanitizeNestedObjects: true,
       });
-      
+
       // Should remove sensitive arrays
       expect(result.context.users).toBeUndefined();
       // Should preserve non-sensitive arrays
@@ -199,19 +213,21 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
       const largeContext = {
         data1: largeValue,
         data2: largeValue,
-        data3: largeValue
+        data3: largeValue,
       };
 
       const result = sanitizeErrorContext(testError, largeContext, {
-        maxContextLength: 1000
+        maxContextLength: 1000,
       });
-      
-      expect(result.securityWarnings.some(warning => 
-        warning.toLowerCase().includes('large context detected')
-      )).toBe(true);
-      
+
+      expect(
+        result.securityWarnings.some((warning) =>
+          warning.toLowerCase().includes('large context detected')
+        )
+      ).toBe(true);
+
       // Should truncate large values
-      Object.values(result.context).forEach(value => {
+      Object.values(result.context).forEach((value) => {
         if (typeof value === 'string') {
           expect(value.length).toBeLessThan(500);
         }
@@ -226,16 +242,16 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
           nested: {
             deeply: {
               value: `test-value-${i}`,
-              email: `user${i}@example.com`
-            }
-          }
+              email: `user${i}@example.com`,
+            },
+          },
         };
       }
 
       const result = sanitizeErrorContext(testError, complexContext, {
-        redactionLevel: 'partial'
+        redactionLevel: 'partial',
       });
-      
+
       // Should complete without hanging and may include performance warnings
       expect(result.errorId).toBeDefined();
       expect(result.context).toBeDefined();
@@ -245,14 +261,14 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
       const customContext = {
         customSecret: 'custom-secret-123',
         internalToken: 'internal-tok-456',
-        normalData: 'safe-value'
+        normalData: 'safe-value',
       };
 
       const result = sanitizeErrorContext(testError, customContext, {
         redactionLevel: 'partial',
-        customContextPatterns: [/custom-secret-\w+/gi, /internal-tok-\w+/gi]
+        customContextPatterns: [/custom-secret-\w+/gi, /internal-tok-\w+/gi],
       });
-      
+
       expect(result.context.customSecret).toBeUndefined();
       expect(result.context.internalToken).toBeUndefined();
       expect(result.context.normalData).toBe('safe-value');
@@ -262,13 +278,13 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
   describe('createSafeErrorForForwarding()', () => {
     it('should create safe error objects for external systems', () => {
       const safeError = createSafeErrorForForwarding(testError, sensitiveContext);
-      
+
       expect(safeError.errorId).toMatch(/^ERR_\d{4}_[A-F0-9]{8}$/);
       expect(safeError.message).toBe('Test error message');
       expect(safeError.type).toBe('TestError');
       expect(safeError.timestamp).toBeDefined();
       expect(safeError.severity).toBeOneOf(['low', 'medium', 'high']);
-      
+
       // Metadata should be included
       expect(safeError.metadata.hadSensitiveData).toBe(true);
       expect(safeError.metadata.redactedCount).toBeGreaterThan(0);
@@ -277,7 +293,7 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
 
     it('should apply restrictive defaults for external forwarding', () => {
       const safeError = createSafeErrorForForwarding(testError, sensitiveContext);
-      
+
       // Should have more aggressive sanitization for external systems
       expect(safeError.context.user).toBeUndefined();
       expect(safeError.context.database).toBeUndefined();
@@ -287,17 +303,19 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
     it('should detect high severity for security errors', () => {
       const securityError = new Error('Security violation detected');
       securityError.name = 'SecurityError';
-      
+
       const safeError = createSafeErrorForForwarding(securityError, {});
-      
+
       expect(safeError.severity).toBe('high');
     });
 
     it('should sanitize error messages for external forwarding', () => {
-      const errorWithSensitiveMessage = new Error('Database error: password=secret123 at user@example.com');
-      
+      const errorWithSensitiveMessage = new Error(
+        'Database error: password=secret123 at user@example.com'
+      );
+
       const safeError = createSafeErrorForForwarding(errorWithSensitiveMessage, {});
-      
+
       expect(safeError.message).not.toContain('secret123');
       expect(safeError.message).not.toContain('user@example.com');
     });
@@ -306,9 +324,9 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
       const safeError = createSafeErrorForForwarding(testError, sensitiveContext, {
         redactionLevel: 'full',
         allowedProperties: ['operation'],
-        maxContextLength: 200
+        maxContextLength: 200,
       });
-      
+
       expect(safeError.context.operation).toBe('user-login');
       expect(Object.keys(safeError.context)).toHaveLength(1);
     });
@@ -317,7 +335,7 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
   describe('analyzeErrorContextSecurity()', () => {
     it('should analyze context security without modification', () => {
       const analysis = analyzeErrorContextSecurity(sensitiveContext);
-      
+
       expect(analysis.riskLevel).toBeOneOf(['low', 'medium', 'high', 'critical']);
       expect(Array.isArray(analysis.sensitiveDetections)).toBe(true);
       expect(Array.isArray(analysis.recommendations)).toBe(true);
@@ -326,7 +344,7 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
 
     it('should detect critical security risks', () => {
       const analysis = analyzeErrorContextSecurity(sensitiveContext);
-      
+
       expect(analysis.riskLevel).toBeOneOf(['high', 'critical']);
       expect(analysis.sensitiveDetections.length).toBeGreaterThan(0);
       expect(analysis.recommendations.length).toBeGreaterThan(0);
@@ -334,24 +352,26 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
 
     it('should provide accurate redaction percentage estimates', () => {
       const analysis = analyzeErrorContextSecurity(sensitiveContext);
-      
+
       expect(analysis.estimatedRedactionPercentage).toBeGreaterThan(0);
       expect(analysis.estimatedRedactionPercentage).toBeLessThanOrEqual(100);
     });
 
     it('should categorize detection severity correctly', () => {
       const analysis = analyzeErrorContextSecurity(sensitiveContext);
-      
-      const criticalDetections = analysis.sensitiveDetections.filter(d => d.severity === 'critical');
-      const highDetections = analysis.sensitiveDetections.filter(d => d.severity === 'high');
-      
+
+      const criticalDetections = analysis.sensitiveDetections.filter(
+        (d) => d.severity === 'critical'
+      );
+      const highDetections = analysis.sensitiveDetections.filter((d) => d.severity === 'high');
+
       expect(criticalDetections.length).toBeGreaterThan(0); // Should detect passwords, API keys
       expect(highDetections.length).toBeGreaterThan(0); // Should detect emails
     });
 
     it('should generate relevant security recommendations', () => {
       const analysis = analyzeErrorContextSecurity(sensitiveContext);
-      
+
       const recommendations = analysis.recommendations.join(' ').toLowerCase();
       expect(recommendations).toContain('password');
       expect(recommendations).toContain('api');
@@ -360,7 +380,7 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
 
     it('should handle safe contexts correctly', () => {
       const analysis = analyzeErrorContextSecurity(safeContext);
-      
+
       expect(analysis.riskLevel).toBe('low');
       expect(analysis.sensitiveDetections).toHaveLength(0);
       expect(analysis.estimatedRedactionPercentage).toBe(0);
@@ -368,7 +388,7 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
 
     it('should handle empty contexts', () => {
       const analysis = analyzeErrorContextSecurity({});
-      
+
       expect(analysis.riskLevel).toBe('low');
       expect(analysis.sensitiveDetections).toHaveLength(0);
       expect(analysis.estimatedRedactionPercentage).toBe(0);
@@ -383,21 +403,19 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
         undefinedValue: undefined,
         emptyString: '',
         zeroNumber: 0,
-        falseBoolean: false
+        falseBoolean: false,
       };
 
       const result = sanitizeErrorContext(testError, contextWithNulls);
-      
+
       expect(result.errorId).toBeDefined();
       expect(result.context).toBeDefined();
-      expect(result.securityWarnings).not.toContain(
-        expect.stringMatching(/error|crash|fail/i)
-      );
+      expect(result.securityWarnings).not.toContain(expect.stringMatching(/error|crash|fail/i));
     });
 
     it('should handle circular references safely', () => {
       const circularContext: any = {
-        name: 'test'
+        name: 'test',
       };
       circularContext.self = circularContext;
 
@@ -409,14 +427,14 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
     it('should prevent context injection attacks', () => {
       const maliciousContext = {
         normal: 'value',
-        '__proto__': { malicious: 'value' },
-        'constructor': { prototype: { evil: 'value' } }
+        __proto__: { malicious: 'value' },
+        constructor: { prototype: { evil: 'value' } },
       };
 
       const result = sanitizeErrorContext(testError, maliciousContext, {
-        redactionLevel: 'partial'
+        redactionLevel: 'partial',
       });
-      
+
       expect(result.context).not.toHaveProperty('__proto__');
       expect(result.context).not.toHaveProperty('constructor');
       expect(result.context.normal).toBe('value');
@@ -431,11 +449,15 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
       }
       deep.email = 'user@example.com'; // Add sensitive data at the end
 
-      const result = sanitizeErrorContext(testError, { deepObject: deep }, {
-        redactionLevel: 'partial',
-        sanitizeNestedObjects: true
-      });
-      
+      const result = sanitizeErrorContext(
+        testError,
+        { deepObject: deep },
+        {
+          redactionLevel: 'partial',
+          sanitizeNestedObjects: true,
+        }
+      );
+
       expect(result.errorId).toBeDefined();
       expect(result.context).toBeDefined();
     });
@@ -446,11 +468,11 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
         nullByte: 'test\0hidden',
         controlChars: 'test\x00\x01\x02\x03\x04',
         unicodeAttack: '\u202e\u202d\u202c', // Bidirectional override attack
-        normalText: 'regular text'
+        normalText: 'regular text',
       };
 
       const result = sanitizeErrorContext(testError, encodingContext);
-      
+
       expect(result.errorId).toBeDefined();
       expect(result.context.normalText).toBe('regular text');
       // Should handle special characters without crashing
@@ -464,15 +486,15 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
           data: 'x'.repeat(100),
           nested: {
             email: `user${i}@example.com`,
-            secret: `secret-${i}`
-          }
+            secret: `secret-${i}`,
+          },
         };
       }
 
       const startTime = Date.now();
       const result = sanitizeErrorContext(testError, performanceContext);
       const processingTime = Date.now() - startTime;
-      
+
       // Should complete in reasonable time (less than 5 seconds)
       expect(processingTime).toBeLessThan(5000);
       expect(result.errorId).toBeDefined();
@@ -481,22 +503,22 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
     it('should generate unique error IDs for different errors', () => {
       const error1 = new Error('First error');
       const error2 = new Error('Second error');
-      
+
       const result1 = sanitizeErrorContext(error1, {});
       const result2 = sanitizeErrorContext(error2, {});
-      
+
       expect(result1.errorId).not.toBe(result2.errorId);
     });
 
     it('should maintain consistent behavior across multiple calls', () => {
       const context = { operation: 'test', apiKey: 'sk-123' };
-      
+
       const result1 = sanitizeErrorContext(testError, context, { redactionLevel: 'partial' });
       const result2 = sanitizeErrorContext(testError, context, { redactionLevel: 'partial' });
-      
+
       // IDs should be different (they include timestamp)
       expect(result1.errorId).not.toBe(result2.errorId);
-      
+
       // But sanitization behavior should be consistent
       expect(result1.hadSensitiveData).toBe(result2.hadSensitiveData);
       expect(result1.redactedProperties.sort()).toEqual(result2.redactedProperties.sort());
@@ -506,7 +528,7 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
   describe('Integration with Logging and Telemetry', () => {
     it('should create telemetry-ready error objects', () => {
       const telemetryError = createSafeErrorForForwarding(testError, sensitiveContext);
-      
+
       // Should have all required fields for telemetry systems
       expect(telemetryError).toHaveProperty('errorId');
       expect(telemetryError).toHaveProperty('message');
@@ -515,7 +537,7 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
       expect(telemetryError).toHaveProperty('context');
       expect(telemetryError).toHaveProperty('severity');
       expect(telemetryError).toHaveProperty('metadata');
-      
+
       // Should not expose sensitive data in the context or metadata descriptions
       const safeString = JSON.stringify(telemetryError);
       expect(safeString).not.toMatch(/secret123|sk-1234567890abcdef/); // Actual sensitive values
@@ -524,10 +546,10 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
 
     it('should provide correlation IDs for distributed tracing', () => {
       const result = sanitizeErrorContext(testError, { traceId: 'trace-123' });
-      
+
       expect(result.errorId).toBeDefined();
       expect(result.context.traceId).toBe('trace-123');
-      
+
       // Error ID should be suitable for correlation
       expect(result.errorId).toMatch(/^ERR_\d{4}_[A-F0-9]{8}$/);
     });
@@ -535,15 +557,15 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
     it('should handle high-frequency error scenarios efficiently', () => {
       const errors = Array.from({ length: 100 }, (_, i) => new Error(`Error ${i}`));
       const contexts = errors.map((_, i) => ({ operation: `op-${i}`, data: `data-${i}` }));
-      
+
       const startTime = Date.now();
-      const results = errors.map((error, i) => 
+      const results = errors.map((error, i) =>
         sanitizeErrorContext(error, contexts[i], { redactionLevel: 'partial' })
       );
       const totalTime = Date.now() - startTime;
-      
+
       expect(results).toHaveLength(100);
-      expect(results.every(r => r.errorId)).toBe(true);
+      expect(results.every((r) => r.errorId)).toBe(true);
       expect(totalTime).toBeLessThan(2000); // Should handle 100 errors in under 2 seconds
     });
   });
@@ -551,17 +573,21 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
   describe('Configuration Validation', () => {
     it('should use default configuration when none provided', () => {
       const result = sanitizeErrorContext(testError, {});
-      
+
       expect(result.errorId).toBeDefined();
       expect(result.timestamp).toBeDefined(); // preserveTimestamps: true by default
     });
 
     it('should merge partial configurations with defaults', () => {
-      const result = sanitizeErrorContext(testError, {}, {
-        redactionLevel: 'full',
-        // Other values should use defaults
-      });
-      
+      const result = sanitizeErrorContext(
+        testError,
+        {},
+        {
+          redactionLevel: 'full',
+          // Other values should use defaults
+        }
+      );
+
       expect(result.errorId).toBeDefined();
       expect(result.timestamp).toBeDefined(); // Should still preserve timestamps
     });
@@ -571,9 +597,9 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
       const result = sanitizeErrorContext(testError, sensitiveContext, {
         maxContextLength: 1, // Very small limit
         allowedProperties: [], // No allowed properties
-        redactionLevel: 'full'
+        redactionLevel: 'full',
       });
-      
+
       expect(result.errorId).toBeDefined();
       expect(Object.keys(result.context)).toHaveLength(0);
     });

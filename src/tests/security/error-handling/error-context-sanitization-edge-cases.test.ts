@@ -1,14 +1,14 @@
 /**
  * Additional Edge Case Tests for Error Context Sanitization (Task 1.3.3)
- * 
+ *
  * This test file covers advanced edge cases and security scenarios that extend
  * the core test suite with more comprehensive validation.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  createSafeErrorForForwarding,
   sanitizeErrorContext,
-  createSafeErrorForForwarding
 } from '../../../core/foundation/errors/sanitization.js';
 
 describe('Error Context Sanitization - Advanced Edge Cases', () => {
@@ -26,20 +26,20 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
       const context = {
         operation: 'test',
         largeData: largeString,
-        normal: 'value'
+        normal: 'value',
       };
 
       const startTime = Date.now();
       const result = sanitizeErrorContext(testError, context, {
         redactionLevel: 'partial',
-        maxContextLength: 1000 // Force truncation
+        maxContextLength: 1000, // Force truncation
       });
       const endTime = Date.now();
 
       expect(result.errorId).toBeDefined();
       expect(endTime - startTime).toBeLessThan(1000); // Should complete quickly
       // Check that security warnings contain a message about size limits
-      const hasSizeLimitsWarning = result.securityWarnings.some(warning => 
+      const hasSizeLimitsWarning = result.securityWarnings.some((warning) =>
         /size limits/i.test(warning)
       );
       expect(hasSizeLimitsWarning).toBe(true);
@@ -57,7 +57,7 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
 
       const startTime = Date.now();
       const result = sanitizeErrorContext(testError, manyPropsContext, {
-        redactionLevel: 'partial'
+        redactionLevel: 'partial',
       });
       const endTime = Date.now();
 
@@ -69,29 +69,33 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
     it('should handle recursive object structures safely', () => {
       const recursiveObj: any = {
         level: 0,
-        data: 'test data'
+        data: 'test data',
       };
-      
+
       // Create a complex recursive structure
       let current = recursiveObj;
       for (let i = 1; i < 100; i++) {
         current.child = {
           level: i,
           data: `data-${i}`,
-          parent: current // Back reference
+          parent: current, // Back reference
         };
         current = current.child;
       }
-      
+
       // Add sensitive data at various levels
       recursiveObj.apiKey = 'sk-123456789';
       recursiveObj.child.email = 'user@example.com';
 
       expect(() => {
-        const result = sanitizeErrorContext(testError, { recursive: recursiveObj }, {
-          redactionLevel: 'partial',
-          sanitizeNestedObjects: true
-        });
+        const result = sanitizeErrorContext(
+          testError,
+          { recursive: recursiveObj },
+          {
+            redactionLevel: 'partial',
+            sanitizeNestedObjects: true,
+          }
+        );
         expect(result.errorId).toBeDefined();
       }).not.toThrow();
     });
@@ -111,7 +115,7 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
       };
 
       const result = sanitizeErrorContext(testError, primitiveContext);
-      
+
       expect(result.errorId).toBeDefined();
       expect(result.context.string).toBe('test string');
       expect(result.context.number).toBe(42);
@@ -125,11 +129,11 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
         timestamp: Date.now(),
         isoString: new Date().toISOString(),
         invalidDate: new Date('invalid'),
-        timestampString: '2024-10-18T10:00:00Z'
+        timestampString: '2024-10-18T10:00:00Z',
       };
 
       const result = sanitizeErrorContext(testError, dateContext);
-      
+
       expect(result.errorId).toBeDefined();
       expect(result.context).toBeDefined();
       // Should handle without throwing errors
@@ -139,11 +143,11 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
       const regexContext = {
         pattern: /test.*pattern/gi,
         sensitivePattern: /password=([^&]+)/gi, // Potentially sensitive regex
-        normalData: 'regular text'
+        normalData: 'regular text',
       };
 
       const result = sanitizeErrorContext(testError, regexContext);
-      
+
       expect(result.errorId).toBeDefined();
       expect(result.context.normalData).toBe('regular text');
     });
@@ -154,13 +158,13 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
         uint8Array: new Uint8Array([72, 101, 108, 108, 111]),
         arrayBuffer: new ArrayBuffer(16),
         sensitiveBuffer: Buffer.from('password=secret123', 'utf8'),
-        normalText: 'normal data'
+        normalText: 'normal data',
       };
 
       const result = sanitizeErrorContext(testError, binaryContext, {
-        redactionLevel: 'partial'
+        redactionLevel: 'partial',
       });
-      
+
       expect(result.errorId).toBeDefined();
       expect(result.context.normalText).toBe('normal data');
       // Should handle binary data without crashing
@@ -176,23 +180,33 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
       customError.stack = 'CustomError: Custom error\n    at test.js:1:1';
       customError.cause = new Error('Root cause');
 
-      const result = sanitizeErrorContext(customError, {}, {
-        preserveErrorCodes: true,
-        redactionLevel: 'partial'
-      });
-      
+      const result = sanitizeErrorContext(
+        customError,
+        {},
+        {
+          preserveErrorCodes: true,
+          redactionLevel: 'partial',
+        }
+      );
+
       expect(result.errorId).toBeDefined();
       expect(result.context.code).toBe('CUSTOM_CODE');
       expect(result.context.message).toBe('Custom error');
     });
 
     it('should handle errors with sensitive messages', () => {
-      const sensitiveError = new Error('Database connection failed: postgresql://admin:password123@db.example.com:5432/mydb');
-      
-      const result = sanitizeErrorContext(sensitiveError, {}, {
-        redactionLevel: 'partial'
-      });
-      
+      const sensitiveError = new Error(
+        'Database connection failed: postgresql://admin:password123@db.example.com:5432/mydb'
+      );
+
+      const result = sanitizeErrorContext(
+        sensitiveError,
+        {},
+        {
+          redactionLevel: 'partial',
+        }
+      );
+
       expect(result.errorId).toBeDefined();
       expect(result.context.message).not.toContain('password123');
       expect(result.hadSensitiveData).toBe(true);
@@ -203,7 +217,7 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
       Object.defineProperty(problematicError, 'problematic', {
         get() {
           throw new Error('Property access failed');
-        }
+        },
       });
       problematicError.safe = 'safe value';
 
@@ -221,7 +235,7 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
         redactionLevel: 'invalid' as any,
         maxContextLength: -1,
         allowedProperties: null as any,
-        customContextPatterns: 'not-an-array' as any
+        customContextPatterns: 'not-an-array' as any,
       };
 
       expect(() => {
@@ -234,14 +248,18 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
       const extremeConfig = {
         maxContextLength: 0,
         allowedProperties: [],
-        redactionLevel: 'full' as const
+        redactionLevel: 'full' as const,
       };
 
-      const result = sanitizeErrorContext(testError, { 
-        operation: 'test',
-        secret: 'hidden' 
-      }, extremeConfig);
-      
+      const result = sanitizeErrorContext(
+        testError,
+        {
+          operation: 'test',
+          secret: 'hidden',
+        },
+        extremeConfig
+      );
+
       expect(result.errorId).toBeDefined();
       expect(Object.keys(result.context)).toHaveLength(0);
     });
@@ -249,7 +267,7 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
     it('should handle configuration with circular references', () => {
       const circularConfig: any = {
         redactionLevel: 'partial' as const,
-        maxContextLength: 1000
+        maxContextLength: 1000,
       };
       circularConfig.self = circularConfig;
 
@@ -262,10 +280,12 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
 
   describe('Security Attack Simulation', () => {
     it('should resist prototype pollution attempts', () => {
-      const pollutionAttempt = JSON.parse('{"__proto__": {"polluted": true}, "constructor": {"prototype": {"evil": "value"}}}');
-      
+      const pollutionAttempt = JSON.parse(
+        '{"__proto__": {"polluted": true}, "constructor": {"prototype": {"evil": "value"}}}'
+      );
+
       const result = sanitizeErrorContext(testError, pollutionAttempt);
-      
+
       expect(result.errorId).toBeDefined();
       expect((Object.prototype as any).polluted).toBeUndefined();
       expect((Object.prototype as any).evil).toBeUndefined();
@@ -276,13 +296,13 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
         jsonLike: '{"incomplete": "object"',
         validJson: '{"valid": "object"}',
         notJson: 'plain text',
-        sensitiveJsonString: '{"password": "secret123", "api_key": "sk-abcdef"}'
+        sensitiveJsonString: '{"password": "secret123", "api_key": "sk-abcdef"}',
       };
 
       const result = sanitizeErrorContext(testError, malformedContext, {
-        redactionLevel: 'partial'
+        redactionLevel: 'partial',
       });
-      
+
       expect(result.errorId).toBeDefined();
       expect(result.context.notJson).toBe('plain text');
       expect(result.hadSensitiveData).toBe(true);
@@ -296,11 +316,11 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
         nullByte: 'test\0hidden\0more',
         formFeed: 'test\x0Chidden',
         backspace: 'test\x08\x08\x08hidden',
-        normalText: 'regular content'
+        normalText: 'regular content',
       };
 
       const result = sanitizeErrorContext(testError, unicodeAttacks);
-      
+
       expect(result.errorId).toBeDefined();
       expect(result.context.normalText).toBe('regular content');
     });
@@ -313,10 +333,14 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
       deepNest.secret = 'hidden-deep';
 
       expect(() => {
-        const result = sanitizeErrorContext(testError, { deep: deepNest }, {
-          redactionLevel: 'partial',
-          sanitizeNestedObjects: true
-        });
+        const result = sanitizeErrorContext(
+          testError,
+          { deep: deepNest },
+          {
+            redactionLevel: 'partial',
+            sanitizeNestedObjects: true,
+          }
+        );
         expect(result.errorId).toBeDefined();
       }).not.toThrow();
     });
@@ -326,15 +350,15 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
     it('should handle errors that occur during safe forwarding creation', () => {
       // Create an object that will cause JSON.stringify to fail
       const problematicContext: any = {
-        normal: 'value'
+        normal: 'value',
       };
       problematicContext.circular = problematicContext;
-      
+
       // Add a property that throws during access
       Object.defineProperty(problematicContext, 'throwing', {
         get() {
           throw new Error('Property access failed');
-        }
+        },
       });
 
       expect(() => {
@@ -350,17 +374,17 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
         largeTelemetryContext[`metric${i}`] = {
           value: Math.random(),
           timestamp: new Date().toISOString(),
-          metadata: 'x'.repeat(1000) // 1KB per metric
+          metadata: 'x'.repeat(1000), // 1KB per metric
         };
       }
 
       const safeError = createSafeErrorForForwarding(testError, largeTelemetryContext, {
-        maxContextLength: 500 // Force aggressive truncation
+        maxContextLength: 500, // Force aggressive truncation
       });
-      
+
       expect(safeError.errorId).toBeDefined();
       expect(safeError.metadata.redactedCount).toBeGreaterThan(0);
-      
+
       // Should be serializable for telemetry systems
       const serialized = JSON.stringify(safeError);
       expect(serialized.length).toBeLessThan(10000); // Reasonable size for telemetry
@@ -369,28 +393,28 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
 
   describe('Concurrent Access Edge Cases', () => {
     it('should handle concurrent sanitization requests safely', async () => {
-      const promises = Array.from({ length: 50 }, (_, i) => 
+      const promises = Array.from({ length: 50 }, (_, i) =>
         Promise.resolve().then(() => {
           const error = new Error(`Concurrent error ${i}`);
           const context = {
             operation: `operation-${i}`,
             sensitive: `secret-${i}`,
-            timestamp: Date.now()
+            timestamp: Date.now(),
           };
-          
+
           return sanitizeErrorContext(error, context, {
-            redactionLevel: 'partial'
+            redactionLevel: 'partial',
           });
         })
       );
 
       const results = await Promise.all(promises);
-      
+
       expect(results).toHaveLength(50);
-      expect(results.every(r => r.errorId)).toBe(true);
-      
+      expect(results.every((r) => r.errorId)).toBe(true);
+
       // All error IDs should be unique
-      const errorIds = results.map(r => r.errorId);
+      const errorIds = results.map((r) => r.errorId);
       const uniqueIds = new Set(errorIds);
       expect(uniqueIds.size).toBe(50);
     });

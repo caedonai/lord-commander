@@ -1,14 +1,14 @@
 /**
  * Integration Tests for Icon System
- * 
+ *
  * Tests for CLI framework integration, export validation,
  * tree-shaking compatibility, and module loading.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createCLI } from '../../core/createCLI.js';
+import { IconProvider, PlatformCapabilities } from '../../core/ui/icons.js';
 import { createLogger } from '../../core/ui/logger.js';
-import { PlatformCapabilities, IconProvider } from '../../core/ui/icons.js';
 
 // Mock @clack/prompts to avoid stdout.write issues
 vi.mock('@clack/prompts', () => ({
@@ -18,7 +18,7 @@ vi.mock('@clack/prompts', () => ({
     warning: vi.fn(),
     error: vi.fn(),
     success: vi.fn(),
-    step: vi.fn()
+    step: vi.fn(),
   },
   intro: vi.fn(),
   outro: vi.fn(),
@@ -29,8 +29,8 @@ vi.mock('@clack/prompts', () => ({
   spinner: vi.fn(() => ({
     start: vi.fn(),
     stop: vi.fn(),
-    message: vi.fn()
-  }))
+    message: vi.fn(),
+  })),
 }));
 
 // Mock figures to avoid external dependency issues in CI
@@ -49,7 +49,7 @@ vi.mock('figures', () => ({
     square: '◼',
     squareSmall: '◻',
     circle: '●',
-    circleSmall: '◯'
+    circleSmall: '◯',
   },
   mainSymbols: {
     tick: '✓',
@@ -65,7 +65,7 @@ vi.mock('figures', () => ({
     square: '◼',
     squareSmall: '◻',
     circle: '●',
-    circleSmall: '◯'
+    circleSmall: '◯',
   },
   fallbackSymbols: {
     tick: 'v',
@@ -81,8 +81,8 @@ vi.mock('figures', () => ({
     square: '#',
     squareSmall: '.',
     circle: 'O',
-    circleSmall: 'o'
-  }
+    circleSmall: 'o',
+  },
 }));
 
 describe('Icon System Integration', () => {
@@ -102,7 +102,7 @@ describe('Icon System Integration', () => {
         ...process,
         stdout: { isTTY: true },
         env: { TERM_PROGRAM: 'vscode' },
-        argv: ['node', 'test-cli', '--help']
+        argv: ['node', 'test-cli', '--help'],
       });
 
       // Mock console to capture output
@@ -113,7 +113,7 @@ describe('Icon System Integration', () => {
         name: 'test-cli',
         version: '1.0.0',
         description: 'Test CLI with icons',
-        autoStart: false
+        autoStart: false,
       });
 
       // Should not throw and should have icon capabilities
@@ -133,7 +133,7 @@ describe('Icon System Integration', () => {
       const configurations = [
         { autoStart: false, name: 'minimal-cli' },
         { autoStart: false, name: 'full-cli', builtinCommands: { completion: true, hello: true } },
-        { autoStart: false, name: 'custom-cli', commandsPath: './custom-commands' }
+        { autoStart: false, name: 'custom-cli', commandsPath: './custom-commands' },
       ];
 
       for (const config of configurations) {
@@ -141,13 +141,13 @@ describe('Icon System Integration', () => {
           ...process,
           stdout: { isTTY: true },
           env: { TERM_PROGRAM: 'vscode' },
-          argv: ['node', config.name, '--version']
+          argv: ['node', config.name, '--version'],
         });
 
         const program = await createCLI({
           ...config,
           version: '1.0.0',
-          description: 'Test CLI configuration'
+          description: 'Test CLI configuration',
         });
 
         expect(program).toBeDefined();
@@ -155,7 +155,7 @@ describe('Icon System Integration', () => {
         // Icon system should be available regardless of CLI configuration
         const logger = createLogger();
         logger.rocket('Test message'); // Should not throw
-        
+
         const icons = IconProvider.getIcons();
         expect(icons.rocket).toBeTruthy();
       }
@@ -166,7 +166,7 @@ describe('Icon System Integration', () => {
         ...process,
         stdout: { isTTY: false }, // No TTY
         env: {}, // Minimal environment
-        argv: ['node', 'error-cli']
+        argv: ['node', 'error-cli'],
       });
 
       // Should work even in constrained environments
@@ -174,7 +174,7 @@ describe('Icon System Integration', () => {
         name: 'error-cli',
         version: '1.0.0',
         description: 'CLI in constrained environment',
-        autoStart: false
+        autoStart: false,
       });
 
       expect(program).toBeDefined();
@@ -191,8 +191,12 @@ describe('Icon System Integration', () => {
   describe('Module Export Validation', () => {
     it('should export all icon classes correctly', async () => {
       // Test direct imports
-      const { PlatformCapabilities: PC, IconProvider: IP, IconSecurity: IS } = await import('../../core/ui/icons.js');
-      
+      const {
+        PlatformCapabilities: PC,
+        IconProvider: IP,
+        IconSecurity: IS,
+      } = await import('../../core/ui/icons.js');
+
       expect(PC).toBeDefined();
       expect(IP).toBeDefined();
       expect(IS).toBeDefined();
@@ -214,18 +218,34 @@ describe('Icon System Integration', () => {
 
     it('should export icon methods through logger', async () => {
       const { createLogger } = await import('../../core/ui/logger.js');
-      
+
       const logger = createLogger();
-      
+
       // Test all semantic icon methods
       const iconMethods = [
-        'rocket', 'cloud', 'package', 'lightning', 'shield',
-        'deploy', 'build', 'folder', 'file', 'network',
-        'database', 'server', 'api', 'globe', 'upload',
-        'download', 'sync', 'key', 'lock', 'gear'
+        'rocket',
+        'cloud',
+        'package',
+        'lightning',
+        'shield',
+        'deploy',
+        'build',
+        'folder',
+        'file',
+        'network',
+        'database',
+        'server',
+        'api',
+        'globe',
+        'upload',
+        'download',
+        'sync',
+        'key',
+        'lock',
+        'gear',
       ];
 
-      iconMethods.forEach(method => {
+      iconMethods.forEach((method) => {
         expect(typeof (logger as any)[method]).toBe('function');
       });
 
@@ -237,7 +257,7 @@ describe('Icon System Integration', () => {
     it('should export through core index', async () => {
       // Test that icons are available through main core export
       const coreExports = await import('../../core/index.js');
-      
+
       expect(coreExports.PlatformCapabilities).toBeDefined();
       expect(coreExports.IconProvider).toBeDefined();
       expect(coreExports.IconSecurity).toBeDefined();
@@ -253,11 +273,11 @@ describe('Icon System Integration', () => {
     it('should support selective icon imports', async () => {
       // Test that individual classes can be imported
       const { IconProvider } = await import('../../core/ui/icons.js');
-      
+
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       const icons = IconProvider.getIcons();
@@ -267,20 +287,20 @@ describe('Icon System Integration', () => {
     it('should support selective logger method imports', async () => {
       // Test that logger can be imported independently
       const { createLogger } = await import('../../core/ui/logger.js');
-      
+
       const logger = createLogger();
       logger.rocket('Selective import test');
-      
+
       expect(typeof logger.rocket).toBe('function');
     });
 
     it('should not bundle unnecessary dependencies', async () => {
       // This test verifies that importing icons doesn't pull in heavy dependencies
       // In a real tree-shaking scenario, only the used parts should be included
-      
+
       // Import specific functions
       const { IconSecurity } = await import('../../core/ui/icons.js');
-      
+
       // Should be able to use without importing entire icon system
       const result = IconSecurity.sanitizeIcon('🚀');
       expect(result).toBe('🚀');
@@ -289,16 +309,11 @@ describe('Icon System Integration', () => {
     it('should validate icon exports in tree-shaking test suite', () => {
       // This would be validated by the existing tree-shaking.test.ts
       // We're ensuring our icon exports are included in the expected exports
-      
-      const iconExports = [
-        'PlatformCapabilities',
-        'IconProvider', 
-        'IconSecurity',
-        'createLogger'
-      ];
+
+      const iconExports = ['PlatformCapabilities', 'IconProvider', 'IconSecurity', 'createLogger'];
 
       // These should be part of the core exports
-      iconExports.forEach(exportName => {
+      iconExports.forEach((exportName) => {
         expect(exportName).toBeTruthy(); // Placeholder - actual validation in tree-shaking.test.ts
       });
     });
@@ -319,7 +334,7 @@ describe('Icon System Integration', () => {
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       // Should fall back to Unicode/ASCII even without figures
@@ -338,7 +353,7 @@ describe('Icon System Integration', () => {
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       const icons = esmImport.IconProvider.getIcons();
@@ -362,7 +377,7 @@ describe('Icon System Integration', () => {
       const nodeVersions = [
         { version: '18.0.0', features: ['emoji', 'unicode'] },
         { version: '16.0.0', features: ['unicode'] },
-        { version: '14.0.0', features: ['basic'] }
+        { version: '14.0.0', features: ['basic'] },
       ];
 
       nodeVersions.forEach(({ features }) => {
@@ -373,7 +388,7 @@ describe('Icon System Integration', () => {
         vi.stubGlobal('process', {
           ...process,
           stdout: { isTTY: true },
-          env: features.includes('emoji') ? { TERM_PROGRAM: 'vscode' } : {}
+          env: features.includes('emoji') ? { TERM_PROGRAM: 'vscode' } : {},
         });
 
         // Should work regardless of Node.js version
@@ -391,17 +406,17 @@ describe('Icon System Integration', () => {
         { CI: 'true', GITHUB_ACTIONS: 'true' },
         { CI: 'true', GITLAB_CI: 'true' },
         { CI: 'true', AZURE_PIPELINES: 'true' },
-        { CI: 'true', JENKINS_URL: 'http://jenkins.example.com' }
+        { CI: 'true', JENKINS_URL: 'http://jenkins.example.com' },
       ];
 
-      ciEnvironments.forEach(env => {
+      ciEnvironments.forEach((env) => {
         PlatformCapabilities.reset();
         IconProvider.reset();
 
         vi.stubGlobal('process', {
           ...process,
           stdout: { isTTY: false },
-          env
+          env,
         });
 
         // Should provide appropriate fallbacks in CI
@@ -411,7 +426,7 @@ describe('Icon System Integration', () => {
 
         const icons = IconProvider.getIcons();
         expect(icons.rocket).toBeTruthy();
-        
+
         // In CI, should use ASCII fallbacks
         expect(typeof icons.rocket).toBe('string');
       });
@@ -428,8 +443,8 @@ describe('Icon System Integration', () => {
           // Typical Docker environment
           HOME: '/root',
           PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
-          PWD: '/app'
-        }
+          PWD: '/app',
+        },
       });
 
       // Should work in containerized environment
@@ -451,8 +466,8 @@ describe('Icon System Integration', () => {
         env: {
           TERM_PROGRAM: 'vscode',
           VSCODE_PID: '12345',
-          COLORTERM: 'truecolor'
-        }
+          COLORTERM: 'truecolor',
+        },
       });
 
       // Should use full emoji support in VS Code
@@ -476,8 +491,8 @@ describe('Icon System Integration', () => {
           // Server environment
           NODE_ENV: 'production',
           PM2_HOME: '/root/.pm2',
-          SSH_CONNECTION: '192.168.1.1 22 192.168.1.100 54321'
-        }
+          SSH_CONNECTION: '192.168.1.1 22 192.168.1.100 54321',
+        },
       });
 
       // Should work in production server environment
@@ -503,8 +518,8 @@ describe('Icon System Integration', () => {
           NODE_ENV: 'development',
           TERM_PROGRAM: 'iTerm.app', // macOS development
           COLORTERM: 'truecolor',
-          FORCE_EMOJI_DETECTION: 'true' // Force emoji support for development test
-        }
+          FORCE_EMOJI_DETECTION: 'true', // Force emoji support for development test
+        },
       });
 
       // Should use rich icons in development
@@ -528,10 +543,10 @@ describe('Icon System Integration', () => {
     it('should recover from platform detection failures', () => {
       // Mock a scenario where platform detection fails
       const originalProcess = global.process;
-      
+
       vi.stubGlobal('process', {
         stdout: null, // Invalid stdout
-        env: null // Invalid env
+        env: null, // Invalid env
       } as any);
 
       PlatformCapabilities.reset();
@@ -551,17 +566,17 @@ describe('Icon System Integration', () => {
       const malformedEnvs = [
         { TERM_PROGRAM: '\x00invalid' },
         { COLORTERM: 'invalid\x1b[31m' },
-        { WT_SESSION: '../../malicious' }
+        { WT_SESSION: '../../malicious' },
       ];
 
-      malformedEnvs.forEach(env => {
+      malformedEnvs.forEach((env) => {
         PlatformCapabilities.reset();
         IconProvider.reset();
 
         vi.stubGlobal('process', {
           ...process,
           stdout: { isTTY: true },
-          env
+          env,
         });
 
         // Should sanitize and handle gracefully
@@ -580,7 +595,7 @@ describe('Icon System Integration', () => {
       vi.stubGlobal('process', {
         ...process,
         stdout: { isTTY: true },
-        env: { TERM_PROGRAM: 'vscode' }
+        env: { TERM_PROGRAM: 'vscode' },
       });
 
       // Force an error scenario (if possible)

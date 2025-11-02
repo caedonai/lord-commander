@@ -1,13 +1,13 @@
 /**
  * CLI Build Validation Test Suite
- * 
+ *
  * Validates that the CLI was built correctly and all entry points work.
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
-import { readFileSync, existsSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { execa } from '../../core/execution/execa.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -23,7 +23,7 @@ describe('CLI Build Validation', () => {
 
   describe('Build Files', () => {
     const requiredFiles = ['cli.js', 'index.js', 'core/index.js', 'plugins/index.js'];
-    
+
     it.each(requiredFiles)('should have built file: %s', (file) => {
       const filePath = resolve(distPath, file);
       expect(existsSync(filePath)).toBe(true);
@@ -37,38 +37,38 @@ describe('CLI Build Validation', () => {
     });
 
     it('should execute help command successfully', async () => {
-      const result = await execa('node', ['dist/cli.js', '--help'], { 
+      const result = await execa('node', ['dist/cli.js', '--help'], {
         cwd: rootPath,
-        sandbox: { enabled: true }
+        sandbox: { enabled: true },
       });
-      
+
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Usage:');
     });
 
     it('should execute version command successfully', async () => {
-      const result = await execa('node', ['dist/cli.js', '--version'], { 
+      const result = await execa('node', ['dist/cli.js', '--version'], {
         cwd: rootPath,
-        sandbox: { enabled: true }
+        sandbox: { enabled: true },
       });
-      
+
       expect(result.exitCode).toBe(0);
-      
+
       // Extract version from output that may contain completion setup messages
       const lines = result.stdout.split('\n');
       const versionLine = lines.find((line: string) => /^\d+\.\d+\.\d+/.test(line.trim()));
-      
+
       expect(versionLine).toBeDefined();
       expect(versionLine).toMatch(/^\d+\.\d+\.\d+/); // Should match semantic version
       expect(result.stdout).not.toContain('undefined');
     });
 
     it('should execute hello command successfully', async () => {
-      const result = await execa('node', ['dist/cli.js', 'hello'], { 
+      const result = await execa('node', ['dist/cli.js', 'hello'], {
         cwd: rootPath,
-        sandbox: { enabled: true }
+        sandbox: { enabled: true },
       });
-      
+
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toContain('Hello');
     });

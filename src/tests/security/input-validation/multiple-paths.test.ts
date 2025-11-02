@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdir, writeFile, rm } from 'fs/promises';
-import { join } from 'path';
-import { createCLI } from '../../../core/createCLI.js';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { resetCommandTracking } from '../../../core/commands/registerCommands.js';
+import { createCLI } from '../../../core/createCLI.js';
 import { ERROR_MESSAGES } from '../../../core/index.js';
 
 /**
@@ -18,7 +18,7 @@ function expectInvalidPathError(path?: string) {
 
 describe('Security Edge Cases - Multiple Command Paths', () => {
   const tempDir = join(process.cwd(), 'temp-security-test');
-  
+
   beforeEach(async () => {
     resetCommandTracking();
     await mkdir(tempDir, { recursive: true });
@@ -38,7 +38,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
           description: 'Test CLI',
           commandsPath: ['../../../..'],
           builtinCommands: { completion: false, hello: false, version: false },
-          autoStart: false
+          autoStart: false,
         });
       }).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('../../../..'));
     });
@@ -49,7 +49,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
         '../../../Windows/System32',
         '..\\..\\..\\..\\',
         '../../../../Program Files',
-        '../../../Users'
+        '../../../Users',
       ];
 
       for (const maliciousPath of maliciousPaths) {
@@ -60,7 +60,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             description: 'Test CLI',
             commandsPath: [maliciousPath],
             builtinCommands: { completion: false, hello: false, version: false },
-            autoStart: false
+            autoStart: false,
           });
         }).rejects.toThrow(expectInvalidPathError());
       }
@@ -72,7 +72,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
         '/etc/passwd',
         'C:\\',
         '/bin',
-        'C:\\Program Files'
+        'C:\\Program Files',
       ];
 
       for (const absolutePath of absolutePaths) {
@@ -83,7 +83,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             description: 'Test CLI',
             commandsPath: [absolutePath],
             builtinCommands: { completion: false, hello: false, version: false },
-            autoStart: false
+            autoStart: false,
           });
         }).rejects.toThrow(expectInvalidPathError());
       }
@@ -98,7 +98,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
           description: 'Test CLI',
           commandsPath: ['./safe-path', '../../../unsafe'],
           builtinCommands: { completion: false, hello: false, version: false },
-          autoStart: false
+          autoStart: false,
         });
       }).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('../../../unsafe'));
     });
@@ -106,12 +106,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
 
   describe('Valid Path Acceptance', () => {
     it('should allow valid relative paths', async () => {
-      const validPaths = [
-        './commands',
-        'src/commands',
-        './src/nested/commands',
-        'commands/admin'
-      ];
+      const validPaths = ['./commands', 'src/commands', './src/nested/commands', 'commands/admin'];
 
       for (const validPath of validPaths) {
         // Should not throw an error (even if directory doesn't exist, it just warns)
@@ -122,7 +117,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             description: 'Test CLI',
             commandsPath: [validPath],
             builtinCommands: { completion: false, hello: false, version: false },
-            autoStart: false
+            autoStart: false,
           })
         ).resolves.not.toThrow();
       }
@@ -132,12 +127,15 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
       // Create a clean test directory to avoid node_modules conflicts
       const cleanDir = join(tempDir, 'clean-commands');
       await mkdir(cleanDir, { recursive: true });
-      
-      await writeFile(join(cleanDir, 'test.mjs'), `
+
+      await writeFile(
+        join(cleanDir, 'test.mjs'),
+        `
         export default function(program, context) {
           program.command('clean-test').description('Clean test command');
         }
-      `);
+      `
+      );
 
       const program = await createCLI({
         name: 'test-cli',
@@ -145,10 +143,10 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
         description: 'Test CLI',
         commandsPath: [cleanDir],
         builtinCommands: { completion: false, hello: false, version: false },
-        autoStart: false
+        autoStart: false,
       });
 
-      const commandNames = program.commands.map(cmd => cmd.name());
+      const commandNames = program.commands.map((cmd) => cmd.name());
       expect(commandNames).toContain('clean-test');
     });
   });
@@ -161,7 +159,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
         description: 'Test CLI',
         commandsPath: [],
         builtinCommands: { completion: false, hello: false, version: false },
-        autoStart: false
+        autoStart: false,
       });
 
       expect(program.commands).toHaveLength(0);
@@ -175,7 +173,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
           description: 'Test CLI',
           commandsPath: [null, './safe', undefined, '../unsafe'] as string[],
           builtinCommands: { completion: false, hello: false, version: false },
-          autoStart: false
+          autoStart: false,
         });
       }).rejects.toThrow(ERROR_MESSAGES.INVALID_COMMAND_PATH('../unsafe'));
     });
@@ -184,13 +182,16 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
       // Create directory with special chars
       const specialDir = join(tempDir, 'commands-with-spaces and (symbols)');
       await mkdir(specialDir, { recursive: true });
-      
+
       // Create a valid command file
-      await writeFile(join(specialDir, 'test.mjs'), `
+      await writeFile(
+        join(specialDir, 'test.mjs'),
+        `
         export default function(program, context) {
           program.command('test').description('Test command');
         }
-      `);
+      `
+      );
 
       const program = await createCLI({
         name: 'test-cli',
@@ -198,10 +199,10 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
         description: 'Test CLI',
         commandsPath: [specialDir],
         builtinCommands: { completion: false, hello: false, version: false },
-        autoStart: false
+        autoStart: false,
       });
 
-      const commandNames = program.commands.map(cmd => cmd.name());
+      const commandNames = program.commands.map((cmd) => cmd.name());
       expect(commandNames).toContain('test');
     });
 
@@ -217,7 +218,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
           description: 'Test CLI',
           commandsPath: [deepPath],
           builtinCommands: { completion: false, hello: false, version: false },
-          autoStart: false
+          autoStart: false,
         })
       ).resolves.not.toThrow();
     });
@@ -225,11 +226,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
 
   describe('Windows-specific Security Tests', () => {
     it('should block UNC path attempts', async () => {
-      const uncPaths = [
-        '\\\\server\\share',
-        '\\\\localhost\\c$',
-        '\\\\?\\C:\\Windows'
-      ];
+      const uncPaths = ['\\\\server\\share', '\\\\localhost\\c$', '\\\\?\\C:\\Windows'];
 
       for (const uncPath of uncPaths) {
         await expect(async () => {
@@ -239,7 +236,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             description: 'Test CLI',
             commandsPath: [uncPath],
             builtinCommands: { completion: false, hello: false, version: false },
-            autoStart: false
+            autoStart: false,
           });
         }).rejects.toThrow(expectInvalidPathError());
       }
@@ -256,7 +253,7 @@ describe('Security Edge Cases - Multiple Command Paths', () => {
             description: 'Test CLI',
             commandsPath: [driveRoot],
             builtinCommands: { completion: false, hello: false, version: false },
-            autoStart: false
+            autoStart: false,
           });
         }).rejects.toThrow(expectInvalidPathError());
       }
