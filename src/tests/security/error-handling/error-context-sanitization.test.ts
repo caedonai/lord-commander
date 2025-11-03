@@ -15,14 +15,17 @@ import {
 } from '../../../core/foundation/errors/sanitization.js';
 
 describe('Error Context Sanitization (Task 1.3.3)', () => {
-  let testError: Error;
+  interface CustomError extends Error {
+    code: string;
+  }
+  let testError: CustomError;
   let sensitiveContext: Record<string, unknown>;
   let safeContext: Record<string, unknown>;
 
   beforeEach(() => {
-    testError = new Error('Test error message');
+    testError = new Error('Test error message') as CustomError;
     testError.name = 'TestError';
-    (testError as any).code = 'TEST_001';
+    testError.code = 'TEST_001';
 
     sensitiveContext = {
       operation: 'user-login',
@@ -414,7 +417,11 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
     });
 
     it('should handle circular references safely', () => {
-      const circularContext: any = {
+      interface CircularReference {
+        [key: string]: string | CircularReference;
+      }
+
+      const circularContext: CircularReference = {
         name: 'test',
       };
       circularContext.self = circularContext;
@@ -441,8 +448,14 @@ describe('Error Context Sanitization (Task 1.3.3)', () => {
     });
 
     it('should handle very deep nesting without stack overflow', () => {
+      interface DeeplyNested {
+        level: number;
+        next?: DeeplyNested;
+        email?: string;
+      }
+
       // Create deeply nested object
-      let deep: any = { level: 0 };
+      let deep: DeeplyNested = { level: 0 };
       for (let i = 1; i < 50; i++) {
         deep.next = { level: i };
         deep = deep.next;

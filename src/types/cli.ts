@@ -37,7 +37,7 @@ export interface CreateCliOptions {
 export interface CommandContext {
   // Core utilities
   fs?: unknown; // File system operations (implemented)
-  execa?: unknown; // Process execution (implemented)  
+  execa?: unknown; // Process execution (implemented)
   logger: unknown; // Logging and spinners (implemented)
   prompts: unknown; // Interactive user input (implemented)
   temp?: unknown; // Temporary workspace management (to be implemented)

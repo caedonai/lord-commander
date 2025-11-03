@@ -275,7 +275,7 @@ const EXPECTED_EXPORTS = {
 describe('Tree-shaking Tests', () => {
   describe('Core Module Exports', () => {
     it('should export all expected core functions', async () => {
-      const coreModule = (await import('../../core/index')) as any;
+      const coreModule = (await import('../../core/index')) as Record<string, unknown>;
 
       // Test all expected exports are present
       Object.entries(EXPECTED_EXPORTS.core).forEach(([category, functions]) => {
@@ -341,7 +341,7 @@ describe('Tree-shaking Tests', () => {
 
   describe('Plugins Module Exports', () => {
     it('should export all expected plugin functions', async () => {
-      const pluginsModule = (await import('../../plugins/index')) as any;
+      const pluginsModule = (await import('../../plugins/index')) as Record<string, unknown>;
 
       // Test all expected exports are present
       Object.entries(EXPECTED_EXPORTS.plugins).forEach(([category, functions]) => {
@@ -366,7 +366,7 @@ describe('Tree-shaking Tests', () => {
     });
 
     it('should not export core functionality from plugins', async () => {
-      const pluginsModule = (await import('../../plugins/index')) as any;
+      const pluginsModule = (await import('../../plugins/index')) as Record<string, unknown>;
 
       // Test excluded functions are NOT present
       EXPECTED_EXPORTS.plugins.excluded.forEach((funcName) => {
@@ -393,7 +393,7 @@ describe('Tree-shaking Tests', () => {
       ];
 
       for (const { name, expectedType } of testFunctions) {
-        const module = (await import('../../core/index')) as any;
+        const module = (await import('../../core/index')) as Record<string, unknown>;
         const importedItem = module[name];
         expect(importedItem, `${name} should be selectively importable`).toBeDefined();
         expect(typeof importedItem, `${name} should be a ${expectedType}`).toBe(expectedType);
@@ -407,7 +407,7 @@ describe('Tree-shaking Tests', () => {
       const testFunctions = ['parseVersion', 'isGitRepository', 'isWorkspace'];
 
       for (const funcName of testFunctions) {
-        const module = (await import('../../plugins/index')) as any;
+        const module = (await import('../../plugins/index')) as Record<string, unknown>;
         const importedFunc = module[funcName];
         expect(importedFunc, `${funcName} should be selectively importable`).toBeDefined();
         expect(typeof importedFunc, `${funcName} should be a function`).toBe('function');

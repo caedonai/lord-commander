@@ -395,7 +395,11 @@ describe('Task 1.4.1: Enhanced Log Injection Protection (Fixed)', () => {
         ];
 
         // Directly call handleViolations to test the alerting mechanism
-        (monitor as any).handleViolations(testViolations, 'attacker-ip');
+        (
+          monitor as unknown as {
+            handleViolations: (violations: LogSecurityViolation[], source: string) => void;
+          }
+        ).handleViolations(testViolations, 'attacker-ip');
 
         expect(alertSpy).toHaveBeenCalledOnce();
         const alert: SecurityAlert = alertSpy.mock.calls[0][0];
@@ -429,15 +433,15 @@ describe('Task 1.4.1: Enhanced Log Injection Protection (Fixed)', () => {
 
   describe('Edge Cases and Error Handling', () => {
     it('should handle null and undefined inputs safely', () => {
-      expect(sanitizeLogOutput(null as any)).toBe('');
-      expect(sanitizeLogOutput(undefined as any)).toBe('');
+      expect(sanitizeLogOutput(null as never)).toBe('');
+      expect(sanitizeLogOutput(undefined as never)).toBe('');
       expect(sanitizeLogOutput('')).toBe('');
     });
 
     it('should handle non-string inputs safely', () => {
-      expect(sanitizeLogOutput(123 as any)).toBe('');
-      expect(sanitizeLogOutput({} as any)).toBe('');
-      expect(sanitizeLogOutput([] as any)).toBe('');
+      expect(sanitizeLogOutput(123 as never)).toBe('');
+      expect(sanitizeLogOutput({} as never)).toBe('');
+      expect(sanitizeLogOutput([] as never)).toBe('');
     });
 
     it('should handle extremely long messages', () => {

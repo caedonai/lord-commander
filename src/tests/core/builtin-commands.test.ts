@@ -4,19 +4,36 @@ import { registerBuiltinCommands } from '../../core/createCLI.js';
 
 describe('Built-in Commands Configuration', () => {
   let program: Command;
-  let mockContext: any;
+  let mockContext: {
+    logger: {
+      debug: ReturnType<typeof vi.fn>;
+      info: ReturnType<typeof vi.fn>;
+      warn: ReturnType<typeof vi.fn>;
+      error: ReturnType<typeof vi.fn>;
+    };
+    prompts: {
+      text: ReturnType<typeof vi.fn>;
+      confirm: ReturnType<typeof vi.fn>;
+      select: ReturnType<typeof vi.fn>;
+    };
+  };
 
   beforeEach(() => {
     program = new Command();
     program.name('test-cli').version('1.0.0');
 
-    // Mock context with logger
+    // Mock context with logger and prompts (required by CommandContext)
     mockContext = {
       logger: {
         debug: vi.fn(),
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
+      },
+      prompts: {
+        text: vi.fn(),
+        confirm: vi.fn(),
+        select: vi.fn(),
       },
     };
   });
@@ -185,7 +202,7 @@ describe('Built-in Commands Configuration', () => {
 
     it('should handle invalid configurations gracefully', async () => {
       // Test with undefined config values
-      const config = { completion: true, hello: undefined as any, version: false };
+      const config = { completion: true, hello: undefined as unknown as boolean, version: false };
 
       await expect(registerBuiltinCommands(program, mockContext, config)).resolves.not.toThrow();
 

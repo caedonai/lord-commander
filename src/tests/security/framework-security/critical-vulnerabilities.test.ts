@@ -197,11 +197,11 @@ describe('Task 1.1.3 Critical Security Vulnerability Resolution', () => {
 
       // Attempt to add malicious dependencies should throw errors
       expect(() => {
-        (TRUSTED_FRAMEWORK_DEPENDENCIES as any).add('evil-malware');
+        (TRUSTED_FRAMEWORK_DEPENDENCIES as unknown as Set<string>).add('evil-malware');
       }).toThrow(/Cannot add dependency.*immutable for security/);
 
       expect(() => {
-        (TRUSTED_FRAMEWORK_DEPENDENCIES as any).add('../../../etc/passwd');
+        (TRUSTED_FRAMEWORK_DEPENDENCIES as unknown as Set<string>).add('../../../etc/passwd');
       }).toThrow(/Cannot add dependency.*immutable for security/);
 
       // Size should remain unchanged
@@ -217,11 +217,11 @@ describe('Task 1.1.3 Critical Security Vulnerability Resolution', () => {
 
       // Attempt to remove legitimate dependencies should throw errors
       expect(() => {
-        (TRUSTED_FRAMEWORK_DEPENDENCIES as any).delete('react');
+        (TRUSTED_FRAMEWORK_DEPENDENCIES as unknown as Set<string>).delete('react');
       }).toThrow(/Cannot delete dependency.*immutable for security/);
 
       expect(() => {
-        (TRUSTED_FRAMEWORK_DEPENDENCIES as any).delete('next');
+        (TRUSTED_FRAMEWORK_DEPENDENCIES as unknown as Set<string>).delete('next');
       }).toThrow(/Cannot delete dependency.*immutable for security/);
 
       // Dependencies should still be trusted
@@ -235,7 +235,7 @@ describe('Task 1.1.3 Critical Security Vulnerability Resolution', () => {
 
       // Attempt to clear all trusted dependencies should throw error
       expect(() => {
-        (TRUSTED_FRAMEWORK_DEPENDENCIES as any).clear();
+        (TRUSTED_FRAMEWORK_DEPENDENCIES as unknown as Set<string>).clear();
       }).toThrow(/Cannot clear trusted dependencies.*immutable for security/);
 
       // Set should remain intact

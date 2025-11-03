@@ -350,13 +350,13 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
       });
 
       const originalMemoryUsage = process.memoryUsage;
-      (process as any).memoryUsage = vi.fn(() => ({
+      (process as NodeJS.Process & Record<string, unknown>).memoryUsage = vi.fn(() => ({
         rss: 1000000,
         heapTotal: 500000,
         heapUsed: 300000,
         external: 100000,
         arrayBuffers: 50000,
-      }));
+      })) as unknown as NodeJS.MemoryUsageFn;
 
       const result = loggerWithMemory.createLogEntry('Memory test');
 
@@ -373,9 +373,9 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
       });
 
       const originalMemoryUsage = process.memoryUsage;
-      (process as any).memoryUsage = vi.fn(() => {
+      (process as NodeJS.Process & Record<string, unknown>).memoryUsage = vi.fn(() => {
         throw new Error('Memory usage unavailable');
-      });
+      }) as unknown as NodeJS.MemoryUsageFn;
 
       const result = loggerWithMemory.createLogEntry('Memory test');
 
@@ -407,9 +407,15 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
       });
 
       expect(result.entry.context.user).toBeDefined();
-      expect((result.entry.context.user as any).profile.password).toBe('[MASKED]');
-      expect((result.entry.context.user as any).profile.name).toBe('John Doe');
-      expect((result.entry.context.request as any).path).toBe('/api/users');
+      expect(
+        ((result.entry.context.user as Record<string, unknown>).profile as Record<string, unknown>)
+          .password
+      ).toBe('[MASKED]');
+      expect(
+        ((result.entry.context.user as Record<string, unknown>).profile as Record<string, unknown>)
+          .name
+      ).toBe('John Doe');
+      expect((result.entry.context.request as Record<string, unknown>).path).toBe('/api/users');
     });
 
     it('should handle array values in context', () => {
@@ -431,7 +437,7 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
     });
 
     it('should handle context processing errors gracefully', () => {
-      const circularContext: any = {};
+      const circularContext: Record<string, unknown> = {};
       circularContext.circular = circularContext;
 
       const result = logger.createLogEntry('Circular context test', {
@@ -542,7 +548,7 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
     });
 
     it('should handle formatting errors gracefully', () => {
-      const entry: any = {
+      const entry: Partial<StructuredLogEntry> & Record<string, unknown> = {
         // Create circular reference to cause JSON.stringify to fail
         timestamp: '2025-01-01T12:00:00.000Z',
         level: StructuredLogLevel.INFO,
@@ -550,7 +556,7 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
       };
       entry.circular = entry;
 
-      const output = logger.formatLogEntry(entry);
+      const output = logger.formatLogEntry(entry as StructuredLogEntry);
       const parsed = JSON.parse(output);
 
       expect(parsed.message).toBe('Failed to format log entry');
@@ -762,9 +768,9 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
     it('should handle error chains with cause property', () => {
       const rootCause = new Error('Root cause error');
       const intermediateError = new Error('Intermediate error');
-      (intermediateError as any).cause = rootCause;
+      (intermediateError as Error & Record<string, Error>).cause = rootCause;
       const topLevelError = new Error('Top level error');
-      (topLevelError as any).cause = intermediateError;
+      (topLevelError as Error & Record<string, Error>).cause = intermediateError;
 
       const result = logger.createLogEntry('Chained error test', {
         error: topLevelError,
@@ -1008,7 +1014,7 @@ describe('Task 1.4.2: Structured Logging with Security', () => {
 
       // All entries should be created successfully
       expect(results).toHaveLength(10);
-      results.forEach((result: any, index: number) => {
+      results.forEach((result, index: number) => {
         expect(result.entry.message).toBe(`Concurrent message ${index}`);
         expect(result.entry.context.index).toBe(index);
       });

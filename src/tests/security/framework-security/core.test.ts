@@ -15,6 +15,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   DANGEROUS_SCRIPT_PATTERNS,
   detectFrameworkSecurely,
+  type FrameworkSecurityViolation,
   getFrameworkSecurityRecommendations,
   isFrameworkSafe,
   type SecureFrameworkInfo,
@@ -125,9 +126,11 @@ describe('Framework Security Detection', () => {
       expect(result).toBeDefined();
       expect(result?.dependencies.suspicious.length).toBeGreaterThan(0);
       expect(result?.dependencies.suspicious).toContain('evil-package');
-      expect(result?.security.violations.some((v: any) => v.type === 'suspicious-dependency')).toBe(
-        true
-      );
+      expect(
+        result?.security.violations.some(
+          (v: FrameworkSecurityViolation) => v.type === 'suspicious-dependency'
+        )
+      ).toBe(true);
     });
 
     it('should detect dangerous build scripts', async () => {
@@ -159,9 +162,11 @@ describe('Framework Security Detection', () => {
       expect(result).toBeDefined();
       expect(result?.buildConfig.security.hasSafeCommands).toBe(false);
       expect(result?.buildConfig.security.suspiciousScripts.length).toBeGreaterThan(0);
-      expect(result?.security.violations.some((v: any) => v.type === 'unsafe-build-command')).toBe(
-        true
-      );
+      expect(
+        result?.security.violations.some(
+          (v: FrameworkSecurityViolation) => v.type === 'unsafe-build-command'
+        )
+      ).toBe(true);
     });
 
     it('should handle non-existent directory gracefully', async () => {
@@ -246,9 +251,11 @@ describe('Framework Security Detection', () => {
       const result = await detectFrameworkSecurely(testDir);
 
       expect(result).toBeDefined();
-      expect(result?.security.violations.some((v: any) => v.type === 'script-injection')).toBe(
-        true
-      );
+      expect(
+        result?.security.violations.some(
+          (v: FrameworkSecurityViolation) => v.type === 'script-injection'
+        )
+      ).toBe(true);
       expect(result?.isValid).toBe(false);
     });
 
@@ -391,9 +398,11 @@ describe('Framework Security Detection', () => {
       expect(result).toBeDefined();
       expect(result?.buildConfig.security.privilegeEscalation).toContain('deploy');
       expect(result?.buildConfig.security.privilegeEscalation).toContain('setup');
-      expect(result?.security.violations.some((v: any) => v.type === 'privilege-escalation')).toBe(
-        true
-      );
+      expect(
+        result?.security.violations.some(
+          (v: FrameworkSecurityViolation) => v.type === 'privilege-escalation'
+        )
+      ).toBe(true);
     });
 
     it('should extract safe build commands', async () => {

@@ -65,7 +65,13 @@ function checkCommandConflict(
   if (existing) {
     // Check if it's from the same directory path (duplicate registration)
     if (existing.source === sourcePath) {
-      (context.logger as any).debug(
+      (
+        context.logger as unknown as {
+          debug: (msg: string) => void;
+          error: (msg: string) => void;
+          warn: (msg: string) => void;
+        }
+      ).debug(
         `Skipping duplicate registration of command '${commandName}' from same path: ${sourcePath}`
       );
       return true; // Skip silently
@@ -80,7 +86,13 @@ function checkCommandConflict(
           sourcePath
         )
       );
-      (context.logger as any).error(error.message);
+      (
+        context.logger as unknown as {
+          debug: (msg: string) => void;
+          error: (msg: string) => void;
+          warn: (msg: string) => void;
+        }
+      ).error(error.message);
       throw error;
     }
   }
@@ -161,33 +173,61 @@ export async function registerCommands(
     // Validate path security before processing
     if (!validateCommandPath(commandsPath, workingDir)) {
       const error = new Error(ERROR_MESSAGES.INVALID_COMMAND_PATH(commandsPath));
-      (context.logger as any).error(error.message);
+      (
+        context.logger as unknown as {
+          debug: (msg: string) => void;
+          error: (msg: string) => void;
+          warn: (msg: string) => void;
+        }
+      ).error(error.message);
       throw error;
     }
 
     // Use provided path
     absolutePath = path.resolve(workingDir, commandsPath);
     if (!fs.existsSync(absolutePath)) {
-      (context.logger as any).warn(`Specified commands directory not found: ${commandsPath}`);
+      (
+        context.logger as unknown as {
+          debug: (msg: string) => void;
+          error: (msg: string) => void;
+          warn: (msg: string) => void;
+        }
+      ).warn(`Specified commands directory not found: ${commandsPath}`);
       return;
     }
   } else {
     // Auto-discover commands directory
     const discoveredPath = discoverCommandsDirectory();
     if (!discoveredPath) {
-      (context.logger as any).debug('No commands directory found in common locations');
+      (
+        context.logger as unknown as {
+          debug: (msg: string) => void;
+          error: (msg: string) => void;
+          warn: (msg: string) => void;
+        }
+      ).debug('No commands directory found in common locations');
       return; // Silently return - this is normal for libraries that don't have commands
     }
     absolutePath = discoveredPath;
-    (context.logger as any).debug(
-      `Auto-discovered commands directory: ${path.relative(workingDir, absolutePath)}`
-    );
+    (
+      context.logger as unknown as {
+        debug: (msg: string) => void;
+        error: (msg: string) => void;
+        warn: (msg: string) => void;
+      }
+    ).debug(`Auto-discovered commands directory: ${path.relative(workingDir, absolutePath)}`);
   }
 
   // Check if we've already processed this path
   const normalizedPath = path.normalize(absolutePath);
   if (processedPaths.has(normalizedPath)) {
-    (context.logger as any).debug(
+    (
+      context.logger as unknown as {
+        debug: (msg: string) => void;
+        error: (msg: string) => void;
+        warn: (msg: string) => void;
+      }
+    ).debug(
       `Skipping already processed commands directory: ${path.relative(process.cwd(), absolutePath)}`
     );
     return;
@@ -221,9 +261,13 @@ export async function registerCommands(
       // Skip built-in commands only if they are enabled in registerBuiltinCommands
       const fileName = entry.name.replace(/\.(ts|js|mjs)$/, '');
       if (builtinConfig && shouldSkipBuiltinCommand(fileName, builtinConfig)) {
-        (context.logger as any).debug(
-          `Skipping built-in command: ${fileName} (handled by registerBuiltinCommands)`
-        );
+        (
+          context.logger as unknown as {
+            debug: (msg: string) => void;
+            error: (msg: string) => void;
+            warn: (msg: string) => void;
+          }
+        ).debug(`Skipping built-in command: ${fileName} (handled by registerBuiltinCommands)`);
         continue;
       }
 
@@ -242,13 +286,23 @@ export async function registerCommands(
           // Try to register the command and catch Commander.js duplicate errors
           try {
             commandModule.default(program, context);
-            (context.logger as any).debug(`Successfully registered command: ${fileName}`);
+            (
+              context.logger as unknown as {
+                debug: (msg: string) => void;
+                error: (msg: string) => void;
+                warn: (msg: string) => void;
+              }
+            ).debug(`Successfully registered command: ${fileName}`);
           } catch (cmdError) {
             // Handle Commander.js duplicate command errors gracefully
             if (cmdError instanceof Error && cmdError.message.includes('already have command')) {
-              (context.logger as any).warn(
-                `Command '${fileName}' already registered, skipping: ${cmdError.message}`
-              );
+              (
+                context.logger as unknown as {
+                  debug: (msg: string) => void;
+                  error: (msg: string) => void;
+                  warn: (msg: string) => void;
+                }
+              ).warn(`Command '${fileName}' already registered, skipping: ${cmdError.message}`);
               // Remove from our tracking since it wasn't actually registered
               registeredCommands.delete(fileName);
             } else {
@@ -256,7 +310,13 @@ export async function registerCommands(
             }
           }
         } else {
-          (context.logger as any).warn(`Command module ${entry.name} does not export a default function`);
+          (
+            context.logger as unknown as {
+              debug: (msg: string) => void;
+              error: (msg: string) => void;
+              warn: (msg: string) => void;
+            }
+          ).warn(`Command module ${entry.name} does not export a default function`);
           // Remove from tracking since it wasn't registered
           registeredCommands.delete(fileName);
         }
@@ -268,7 +328,13 @@ export async function registerCommands(
         } else {
           // Log other errors but continue processing
           const message = error instanceof Error ? error.message : String(error);
-          (context.logger as any).error(`Failed to load command from ${entry.name}: ${message}`);
+          (
+            context.logger as unknown as {
+              debug: (msg: string) => void;
+              error: (msg: string) => void;
+              warn: (msg: string) => void;
+            }
+          ).error(`Failed to load command from ${entry.name}: ${message}`);
           // Remove from tracking since registration failed
           registeredCommands.delete(fileName);
         }
@@ -280,7 +346,13 @@ export async function registerCommands(
       throw error;
     } else {
       // Log other directory-level errors but don't crash
-      (context.logger as any).error(`Failed to read commands directory: ${error}`);
+      (
+        context.logger as unknown as {
+          debug: (msg: string) => void;
+          error: (msg: string) => void;
+          warn: (msg: string) => void;
+        }
+      ).error(`Failed to read commands directory: ${error}`);
     }
   }
 }

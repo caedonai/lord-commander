@@ -13,10 +13,29 @@ import type { CommandContext } from '../types/cli.js';
 /**
  * Version management command using the updater plugin
  */
+interface CLILogger {
+  intro: (msg: string) => void;
+  outro: (msg: string) => void;
+  info: (msg: string) => void;
+  success: (msg: string) => void;
+  error: (msg: string | Error) => void;
+  warn: (msg: string) => void;
+  step: (msg: string, step?: number, total?: number) => void;
+}
+
+interface CLIPrompts {
+  text: (options: { message: string; placeholder?: string }) => Promise<string>;
+  confirm: (options: { message: string }) => Promise<boolean>;
+  select: (options: {
+    message: string;
+    options: Array<{ value: string; label: string }>;
+  }) => Promise<string>;
+}
+
 export default function (program: Command, context: CommandContext) {
   const { logger, prompts } = context;
-  const log = logger as any;
-  const prompt = prompts as any;
+  const log = logger as unknown as CLILogger;
+  const prompt = prompts as unknown as CLIPrompts;
 
   program
     .command('version')
@@ -35,9 +54,7 @@ export default function (program: Command, context: CommandContext) {
           try {
             const version = parseVersion(options.validate);
             log.success(`✓ Valid semantic version: ${version.raw}`);
-            log.info(
-              `  Major: ${version.major}, Minor: ${version.minor}, Patch: ${version.patch}`
-            );
+            log.info(`  Major: ${version.major}, Minor: ${version.minor}, Patch: ${version.patch}`);
             if (version.prerelease) log.info(`  Prerelease: ${version.prerelease}`);
             if (version.build) log.info(`  Build: ${version.build}`);
           } catch (error) {

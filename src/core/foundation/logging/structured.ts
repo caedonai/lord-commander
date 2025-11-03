@@ -231,7 +231,7 @@ export class StructuredLogger {
     const maxTotalToJSONCalls = 5;
 
     // Recursively neutralize toJSON methods before JSON.stringify
-    const neutralizeToJSON = (value: any, depth = 0): any => {
+    const neutralizeToJSON = (value: unknown, depth = 0): unknown => {
       if (depth > 10 || totalToJSONCalls > maxTotalToJSONCalls) {
         warnings?.push(`Maximum processing depth or toJSON calls exceeded`);
         return '[PROCESSING_STOPPED]';
@@ -270,7 +270,7 @@ export class StructuredLogger {
 
       // For objects, create a copy and process recursively
       if (typeof value === 'object') {
-        const result: any = {};
+        const result: Record<string, unknown> = {};
         for (const [key, val] of Object.entries(value)) {
           result[key] = neutralizeToJSON(val, depth + 1);
         }
@@ -502,7 +502,7 @@ export class StructuredLogger {
   /**
    * Calculate approximate memory size of an object
    */
-  private getObjectMemorySize(obj: any, visited = new WeakSet()): number {
+  private getObjectMemorySize(obj: unknown, visited = new WeakSet()): number {
     if (obj === null || obj === undefined) {
       return 0;
     }
@@ -665,18 +665,18 @@ export class StructuredLogger {
 
     // Handle Error objects with cause chain protection
     if (value instanceof Error) {
-      const errorObj: any = {
+      const errorObj: Record<string, unknown> = {
         name: value.name,
         message: value.message,
         stack: value.stack,
       };
 
       // Handle error causes with circular reference protection (ES2022+ feature)
-      const errorAny = value as any;
-      if (errorAny.cause && depth < this.config.maxRecursionDepth - 1) {
+      const errorWithCause = value as Error & { cause?: unknown };
+      if (errorWithCause.cause && depth < this.config.maxRecursionDepth - 1) {
         errorObj.cause = this.processContextValueWithDepth(
           `${key}.cause`,
-          errorAny.cause,
+          errorWithCause.cause,
           warnings,
           depth + 1
         );
@@ -840,7 +840,7 @@ export class StructuredLogger {
 
     // Remove excluded fields
     for (const field of this.config.excludeFields) {
-      delete (filtered as any)[field];
+      delete (filtered as Record<string, unknown>)[field];
     }
 
     // Apply additional metadata filtering based on configuration

@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import {
   sanitizeCommandArgs,
   sanitizePath,
+  type ValidationConfig,
   validateInput,
   validatePackageManager,
   validateProjectName,
@@ -51,32 +52,43 @@ describe('Input Validation Security Vulnerabilities', () => {
         maxLength: 50,
         __proto__: { isAdmin: true },
         constructor: { prototype: { isAdmin: true } },
-      } as any;
+      };
 
       // Test with project name validation
       // Ensure it doesn't crash and handles malicious config gracefully
       validateProjectName('test-project', maliciousConfig);
 
       // Should not have polluted the prototype
-      expect(({} as any).isAdmin).toBeUndefined();
+      expect(({} as Record<string, unknown>).isAdmin).toBeUndefined();
       expect(Object.hasOwn({}, 'isAdmin')).toBe(false);
     });
 
     it('should sanitize nested configuration objects', () => {
+      // Create a malicious config that attempts prototype pollution through nested objects
       const nestedMaliciousConfig = {
-        nested: {
+        maxLength: 50,
+        strictMode: true,
+        // Attempt to inject prototype pollution through a valid config property
+        customPatterns: {
           __proto__: { polluted: true },
-          deep: {
+          nested: {
             __proto__: { deepPolluted: true },
           },
         },
       };
 
-      validateProjectName('test', nestedMaliciousConfig as any);
+      const validationResult = validateProjectName(
+        'test',
+        nestedMaliciousConfig as unknown as Partial<ValidationConfig>
+      );
 
-      // Prototype should remain clean
-      expect(({} as any).polluted).toBeUndefined();
-      expect(({} as any).deepPolluted).toBeUndefined();
+      // The validation should work without crashing
+      expect(validationResult.isValid).toBe(true);
+      expect(validationResult.sanitized).toBe('test');
+
+      // Prototype should remain clean - no global pollution
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+      expect(({} as Record<string, unknown>).deepPolluted).toBeUndefined();
     });
   });
 
@@ -242,8 +254,8 @@ describe('Input Validation Security Vulnerabilities', () => {
     it('should handle null and undefined inputs safely', () => {
       // Test functions that should return results instead of throwing
       const nonThrowingTests = [
-        () => validateProjectName(null as any),
-        () => validatePackageManager(undefined as any),
+        () => validateProjectName(null as unknown as string),
+        () => validatePackageManager(undefined as unknown as string),
       ];
 
       nonThrowingTests.forEach((test) => {
@@ -258,16 +270,20 @@ describe('Input Validation Security Vulnerabilities', () => {
 
       // Test functions that should handle null/undefined gracefully
       expect(() => {
-        sanitizeCommandArgs(null as any);
+        sanitizeCommandArgs(null as unknown as string[]);
       }).not.toThrow(); // Should return empty array
 
       expect(() => {
-        sanitizePath(null as any);
+        sanitizePath(null as unknown as string);
       }).toThrow(/null\/undefined/); // Should throw meaningful error for paths
     });
 
     it('should handle circular references in validation config', () => {
-      const circularConfig: any = { maxLength: 50 };
+      interface CircularReference {
+        self?: CircularReference;
+        maxLength: number;
+      }
+      const circularConfig: CircularReference = { maxLength: 50 };
       circularConfig.self = circularConfig;
 
       expect(() => {
@@ -279,7 +295,7 @@ describe('Input Validation Security Vulnerabilities', () => {
       const nonStringInputs = [123, true, {}, [], Symbol('test'), BigInt(42)];
 
       nonStringInputs.forEach((input) => {
-        const result = validateProjectName(input as any);
+        const result = validateProjectName(input as unknown as string);
         expect(result.isValid).toBe(false);
         expect(result.violations).toContainEqual(
           expect.objectContaining({

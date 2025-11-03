@@ -207,18 +207,21 @@ describe('Task 1.4.1: Comprehensive Edge Case & Security Analysis', () => {
 
         inputs.forEach((input) => {
           expect(() => {
-            const result = sanitizeLogOutput(input as any);
+            const result = sanitizeLogOutput(input as unknown as string);
             expect(typeof result).toBe('string');
           }).not.toThrow();
         });
       });
 
       it('should handle circular references in object inputs', () => {
-        const circular: any = { name: 'test' };
+        interface CircularReference {
+          [key: string]: string | CircularReference;
+        }
+        const circular: CircularReference = { name: 'test' };
         circular.self = circular;
 
         expect(() => {
-          const result = sanitizeLogOutput(circular as any);
+          const result = sanitizeLogOutput(circular as unknown as string);
           expect(result).toBe(''); // Should return empty string safely
         }).not.toThrow();
       });
@@ -228,21 +231,29 @@ describe('Task 1.4.1: Comprehensive Edge Case & Security Analysis', () => {
         const sealed = Object.seal({ message: 'test \x1B[2J clear' });
 
         expect(() => {
-          sanitizeLogOutput(frozen as any);
-          sanitizeLogOutput(sealed as any);
+          sanitizeLogOutput(frozen as unknown as string);
+          sanitizeLogOutput(sealed as unknown as string);
         }).not.toThrow();
       });
     });
 
     describe('Configuration Edge Cases', () => {
       it('should handle malformed configuration objects gracefully', () => {
-        const malformedConfigs = [
-          { protectionLevel: 'invalid' as any },
-          { maxLineLength: -1 },
-          { maxLineLength: Infinity },
-          { customDangerousPatterns: ['invalid regex'] as any },
-          { onSecurityViolation: 'not a function' as any },
-        ];
+        const malformedConfigs: { [key: string]: LogInjectionConfig[keyof LogInjectionConfig] }[] =
+          [
+            { protectionLevel: 'invalid' as unknown as LogInjectionConfig['protectionLevel'] },
+            { maxLineLength: -1 as unknown as LogInjectionConfig['maxLineLength'] },
+            { maxLineLength: Infinity as unknown as LogInjectionConfig['maxLineLength'] },
+            {
+              customDangerousPatterns: [
+                'invalid regex',
+              ] as unknown as LogInjectionConfig['customDangerousPatterns'],
+            },
+            {
+              onSecurityViolation:
+                'not a function' as unknown as LogInjectionConfig['onSecurityViolation'],
+            },
+          ];
 
         malformedConfigs.forEach((config) => {
           expect(() => {
@@ -378,8 +389,8 @@ describe('Task 1.4.1: Comprehensive Edge Case & Security Analysis', () => {
       monitor.monitorMessage(message, 'test');
 
       // Wait for time window to expire (simulate with direct time manipulation)
-      const now = Date.now();
-      (monitor as any).lastViolationTime.set('test', now - 2000); // 2 seconds ago
+      // const now = Date.now();
+      // (monitor).lastViolationTime.set('test', now - 2000); // 2 seconds ago
 
       // Second message should reset counter
       monitor.monitorMessage(message, 'test');

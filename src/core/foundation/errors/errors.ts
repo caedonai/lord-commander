@@ -15,7 +15,7 @@ export class CLIError extends Error {
   public readonly code: string;
   public readonly suggestion?: string;
   public readonly recoverable: boolean;
-  public readonly context?: Record<string, any>;
+  public readonly context?: Record<string, unknown>;
   public readonly cause?: Error;
 
   constructor(
@@ -24,7 +24,7 @@ export class CLIError extends Error {
       code?: string;
       suggestion?: string;
       recoverable?: boolean;
-      context?: Record<string, any>;
+      context?: Record<string, unknown>;
       cause?: Error;
     } = {}
   ) {
@@ -100,7 +100,7 @@ export class ConfigurationError extends CLIError {
 }
 
 export class ValidationError extends CLIError {
-  constructor(message: string, field?: string, value?: any) {
+  constructor(message: string, field?: string, value?: unknown) {
     super(message, {
       code: 'VALIDATION_ERROR',
       suggestion: field
@@ -276,7 +276,7 @@ export function getRecoverySuggestion(error: Error): string | undefined {
 /**
  * Create a standardized error handler for async operations
  */
-export function withErrorHandling<T extends any[], R>(
+export function withErrorHandling<T extends unknown[], R>(
   fn: (...args: T) => Promise<R>,
   operation?: string
 ): (...args: T) => Promise<R> {

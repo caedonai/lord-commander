@@ -47,7 +47,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       });
 
       // Should not pollute Object.prototype
-      expect((Object.prototype as any).isAdmin).toBeUndefined();
+      expect((Object.prototype as Record<string, unknown>).isAdmin).toBeUndefined();
       // Should not include __proto__ in processed context
       expect(result.entry.context).not.toHaveProperty('__proto__');
       expect(result.entry.context).toHaveProperty('normalField', 'value');
@@ -66,7 +66,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       });
 
       // Should not pollute constructor prototype
-      expect((Object.prototype as any).isHacked).toBeUndefined();
+      expect((Object.prototype as Record<string, unknown>).isHacked).toBeUndefined();
       // Should handle constructor field safely (if at all)
       expect(result.entry.context).toHaveProperty('data', 'legitimate');
     });
@@ -89,11 +89,11 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
   describe('2. Recursive Depth Explosion (DoS Vulnerability)', () => {
     it('should handle deeply nested objects without stack overflow', () => {
       // Create deeply nested object (100 levels to test recursion limits)
-      const deepObject: any = {};
-      let current = deepObject;
+      const deepObject: Record<string, unknown> = {};
+      let current: Record<string, unknown> = deepObject;
       for (let i = 0; i < 100; i++) {
         current.nested = { level: i };
-        current = current.nested;
+        current = current.nested as Record<string, unknown>;
       }
 
       // Should not crash or hang
@@ -107,11 +107,11 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
     it('should handle extremely deep nesting gracefully', () => {
       // Create very deep structure that could cause stack overflow
-      const veryDeep: any = { value: 'start' };
-      let current = veryDeep;
+      const veryDeep: Record<string, unknown> = { value: 'start' };
+      let current: Record<string, unknown> = veryDeep;
       for (let i = 0; i < 1000; i++) {
         current.child = { level: i };
-        current = current.child;
+        current = current.child as Record<string, unknown>;
       }
 
       const startTime = Date.now();
@@ -128,20 +128,29 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
     it('should limit recursion depth to prevent DoS', () => {
       // Create structure with alternating array/object nesting
-      const mixed: any = { start: true };
-      let current = mixed;
+      interface DeepNesting {
+        array?: { nested: DeepNesting }[];
+        start?: boolean;
+        object?: DeepNesting;
+        data?: number;
+      }
+
+      const mixed: DeepNesting = { start: true };
+      let current: DeepNesting = mixed;
+
       for (let i = 0; i < 50; i++) {
         if (i % 2 === 0) {
           current.array = [{ nested: {} }];
           current = current.array[0].nested;
         } else {
-          current.object = { data: i };
-          current = current.object;
+          const newObject: DeepNesting = { data: i };
+          current.object = newObject;
+          current = newObject;
         }
       }
 
       const result = logger.createLogEntry('Mixed nesting test', {
-        context: mixed,
+        context: mixed as unknown as Record<string, unknown>,
       });
 
       // Should complete successfully with warnings about depth
@@ -153,7 +162,10 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
 
   describe('3. Circular Reference Memory Exhaustion', () => {
     it('should handle simple circular references', () => {
-      const circular: any = { name: 'test' };
+      interface CircularReference {
+        [key: string]: string | CircularReference;
+      }
+      const circular: CircularReference = { name: 'test' };
       circular.self = circular;
 
       // Should not hang or crash
@@ -166,9 +178,12 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
     });
 
     it('should handle complex circular reference chains', () => {
-      const objA: any = { name: 'A' };
-      const objB: any = { name: 'B' };
-      const objC: any = { name: 'C' };
+      interface CircularReference {
+        [key: string]: string | CircularReference;
+      }
+      const objA: CircularReference = { name: 'A' };
+      const objB: CircularReference = { name: 'B' };
+      const objC: CircularReference = { name: 'C' };
 
       objA.ref = objB;
       objB.ref = objC;
@@ -184,7 +199,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
     });
 
     it('should handle circular references in arrays', () => {
-      const arr: any[] = [1, 2, 3];
+      const arr: (number | unknown[])[] = [1, 2, 3];
       arr.push(arr); // Self-referential array
 
       const result = logger.createLogEntry('Circular array test', {
@@ -229,7 +244,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       expect(result).toBeDefined();
 
       // Should not pollute prototype
-      expect((Object.prototype as any).compromised).toBeUndefined();
+      expect((Object.prototype as Record<string, unknown>).compromised).toBeUndefined();
     });
 
     it('should validate negative and invalid numeric configurations', () => {
@@ -294,7 +309,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       const result = logger.createLogEntry('Symbol pollution test', { context });
 
       expect(result.entry.context).toHaveProperty('legitimate', 'value');
-      expect((Object.prototype as any).admin).toBeUndefined();
+      expect((Object.prototype as Record<string, unknown>).admin).toBeUndefined();
     });
   });
 
@@ -348,7 +363,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
   describe('7. Array Index Injection', () => {
     it('should handle extremely large arrays safely', () => {
       // Create sparse array with large indices
-      const sparseArray: any[] = [];
+      const sparseArray: (string | undefined)[] = [];
       sparseArray[0] = 'start';
       sparseArray[999999] = 'end';
 
@@ -362,7 +377,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
     });
 
     it('should handle arrays with negative indices', () => {
-      const arr: any = ['normal'];
+      const arr = ['normal'] as string[] & Record<string, string>;
       arr[-1] = 'negative_index';
       arr[-999] = 'very_negative';
 
@@ -375,7 +390,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
     });
 
     it('should handle arrays with non-numeric properties', () => {
-      const arr: any = [1, 2, 3];
+      const arr = [1, 2, 3] as number[] & Record<string, string>;
       arr.customProp = 'should_be_handled';
       arr.string_index = 'also_handled';
 
@@ -505,8 +520,8 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
     });
 
     it('should handle error objects with large properties', () => {
-      const error = new Error('Test error');
-      (error as any).hugeProperty = 'x'.repeat(500000); // Large property
+      const error = new Error('Test error') as Error & Record<string, string>;
+      error.hugeProperty = 'x'.repeat(500000); // Large property
 
       // Force error in processing
       const originalJSON = JSON.stringify;
@@ -593,7 +608,7 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
     it('should handle NaN values in options', () => {
       const result = logger.createLogEntry('NaN test', {
         duration: NaN,
-        level: NaN as any,
+        level: NaN as never,
       });
 
       expect(result.entry).toBeDefined();
@@ -663,9 +678,9 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       const originalMemoryUsage = process.memoryUsage;
 
       try {
-        (process as any).memoryUsage = () => {
+        (process as NodeJS.Process & Record<string, unknown>).memoryUsage = (() => {
           throw new Error('Memory access denied');
-        };
+        }) as unknown as NodeJS.MemoryUsageFn;
 
         const memoryLogger = new StructuredLogger({
           enablePerformanceMetrics: true,
@@ -720,8 +735,8 @@ describe('Task 1.4.2: Critical Security Vulnerabilities', () => {
       const errorA = new Error('Error A');
       const errorB = new Error('Error B');
 
-      (errorA as any).cause = errorB;
-      (errorB as any).cause = errorA; // Circular cause chain
+      (errorA as Error & Record<string, Error>).cause = errorB;
+      (errorB as Error & Record<string, Error>).cause = errorA; // Circular cause chain
 
       const result = logger.createLogEntry('Circular error test', {
         error: errorA,

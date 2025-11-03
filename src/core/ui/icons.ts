@@ -162,18 +162,18 @@ export class PlatformCapabilities {
     // If any platform-specific indicators are set, assume we have a mocked environment
     return Boolean(
       indicators.isVSCode ||
-      indicators.isWindowsTerminal ||
-      indicators.isConEmu ||
-      indicators.isPowerShell7 ||
-      indicators.isModernMacTerminal ||
-      indicators.isModernLinuxTerminal ||
-      indicators.isCI ||
-      // Also check if platform is explicitly set (indicates mocked test)
-      (process.platform === 'darwin' && safeEnv.TERM_PROGRAM) ||
-      (process.platform === 'linux' && (safeEnv.COLORTERM || safeEnv.TERM)) ||
-      // Or if SSH environment variables are set
-      safeEnv.SSH_CLIENT !== undefined ||
-      safeEnv.SSH_CONNECTION !== undefined
+        indicators.isWindowsTerminal ||
+        indicators.isConEmu ||
+        indicators.isPowerShell7 ||
+        indicators.isModernMacTerminal ||
+        indicators.isModernLinuxTerminal ||
+        indicators.isCI ||
+        // Also check if platform is explicitly set (indicates mocked test)
+        (process.platform === 'darwin' && safeEnv.TERM_PROGRAM) ||
+        (process.platform === 'linux' && (safeEnv.COLORTERM || safeEnv.TERM)) ||
+        // Or if SSH environment variables are set
+        safeEnv.SSH_CLIENT !== undefined ||
+        safeEnv.SSH_CONNECTION !== undefined
     );
   }
 

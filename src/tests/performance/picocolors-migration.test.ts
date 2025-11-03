@@ -189,7 +189,7 @@ describe('Picocolors Migration Tests', () => {
     it('should not have hex() function (chalk difference)', () => {
       // Document that picocolors doesn't have hex() function
       // Our migration replaced hex() calls with built-in colors
-      expect((colors as any).hex).toBeUndefined();
+      expect(Object.hasOwn(colors, 'hex')).toBe(false);
     });
 
     it('should have all functions used in logger.ts', () => {
@@ -207,7 +207,7 @@ describe('Picocolors Migration Tests', () => {
       ];
 
       requiredFunctions.forEach((funcName) => {
-        expect(typeof (colors as any)[funcName]).toBe('function');
+        expect(typeof (colors as Record<string, unknown>)[funcName]).toBe('function');
       });
     });
 

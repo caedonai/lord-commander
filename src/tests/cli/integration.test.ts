@@ -64,7 +64,7 @@ describe('CLI Integration Tests', () => {
       'should execute $name successfully',
       async ({ command, shouldContain, shouldNotContain, expectSuccess = true }) => {
         let output: string;
-        let error: any;
+        let error: (Error & { stdout?: Buffer | string; stderr?: Buffer | string }) | undefined;
 
         try {
           const result = await execa('node', [cliPath, ...command], {
@@ -73,11 +73,11 @@ describe('CLI Integration Tests', () => {
           });
           output = result.stdout;
         } catch (e) {
-          error = e;
+          error = e as Error & { stdout?: Buffer | string; stderr?: Buffer | string };
           if (expectSuccess) {
             throw new Error(`Command failed unexpectedly: ${e}`);
           }
-          output = (e as any).stdout?.toString() || '';
+          output = error.stdout?.toString() || '';
         }
 
         // Check required content

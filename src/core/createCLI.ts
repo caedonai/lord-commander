@@ -395,16 +395,17 @@ function sanitizeErrorObject(error: Error, securityConfig = DEFAULT_SECURITY_CON
       0,
       securityConfig.maxContextProperties
     );
-    (sanitizedError as any).context = Object.fromEntries(
-      contextEntries.map(([key, value]) => [
-        key,
-        typeof value === 'string'
-          ? truncateErrorMessage(value, 100)
-          : typeof value === 'object'
-            ? '[Object - truncated]'
-            : value,
-      ])
-    );
+    (sanitizedError as unknown as { context: Record<string, unknown> }).context =
+      Object.fromEntries(
+        contextEntries.map(([key, value]) => [
+          key,
+          typeof value === 'string'
+            ? truncateErrorMessage(value, 100)
+            : typeof value === 'object'
+              ? '[Object - truncated]'
+              : value,
+        ])
+      );
   }
 
   return sanitizedError;
@@ -558,7 +559,7 @@ export async function createCLI(options: CreateCliOptions): Promise<EnhancedComm
         try {
           // Dynamic import based on plugin name - only imports requested plugins
           const pluginModule = await import(`../plugins/${pluginName}.js`);
-          (context as any)[pluginName] = pluginModule;
+          (context as unknown as Record<string, unknown>)[pluginName] = pluginModule;
           logger.debug(`Dynamically loaded plugin: ${pluginName}`);
         } catch (error) {
           logger.warn(
@@ -750,7 +751,8 @@ async function handleAutocompleteSetup(program: Command, options: CreateCliOptio
   }
 
   // Add completion context to program for command access
-  (program as any)._autocompleteContext = analyzeProgram(program);
+  (program as unknown as { _autocompleteContext: unknown })._autocompleteContext =
+    analyzeProgram(program);
 }
 
 // Export memory protection and display functions

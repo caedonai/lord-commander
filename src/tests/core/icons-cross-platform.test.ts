@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { IconProvider, IconSecurity, PlatformCapabilities } from '../../core/ui/icons.js';
 
 describe('Cross-Platform Icon Compatibility', () => {
-  let originalProcess: any;
+  let originalProcess: typeof process;
 
   beforeEach(() => {
     // Store original process for restoration
@@ -21,7 +21,7 @@ describe('Cross-Platform Icon Compatibility', () => {
   });
 
   // Helper function to mock process and reset platform capabilities
-  function _mockProcessAndReset(processConfig: any) {
+  function _mockProcessAndReset(processConfig: Partial<typeof process>) {
     vi.stubGlobal('process', {
       ...originalProcess,
       ...processConfig,

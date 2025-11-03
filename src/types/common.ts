@@ -22,16 +22,16 @@ export type FileSystemData = JsonValue;
 export type PackageJsonExports = Record<string, string | { [key: string]: string }>;
 
 // Memory sanitization types
-export type SanitizableValue = 
-  | string 
-  | number 
-  | boolean 
-  | null 
-  | undefined 
-  | SanitizableObject 
-  | SanitizableArray 
-  | Date 
-  | RegExp 
+export type SanitizableValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | SanitizableObject
+  | SanitizableArray
+  | Date
+  | RegExp
   | Buffer
   | Error;
 
@@ -54,7 +54,9 @@ export type TestSpy = {
   [key: string]: unknown;
 };
 
-export type MockFunction<T extends (...args: unknown[]) => unknown = (...args: unknown[]) => unknown> = {
+export type MockFunction<
+  T extends (...args: unknown[]) => unknown = (...args: unknown[]) => unknown,
+> = {
   (...args: Parameters<T>): ReturnType<T>;
   mockImplementation: (fn: T) => void;
   mockReturnValue: (value: ReturnType<T>) => void;
@@ -63,7 +65,10 @@ export type MockFunction<T extends (...args: unknown[]) => unknown = (...args: u
 
 // UI/Logger types
 export type LoggerMethod = (...args: (string | number | boolean)[]) => void;
-export type PromptMethod = (options: { message: string; [key: string]: ConfigValue }) => Promise<unknown>;
+export type PromptMethod = (options: {
+  message: string;
+  [key: string]: ConfigValue;
+}) => Promise<unknown>;
 
 // Command types
 export type CommandOptions = Record<string, ConfigValue>;
@@ -162,7 +167,11 @@ export interface ProcessExecution {
   withOutput: (command: string, args?: string[], options?: unknown) => Promise<unknown>;
   commandExists: (command: string) => Promise<boolean>;
   detectPackageManager: (cwd?: string) => Promise<unknown>;
-  runPackageManager: (action: string, packageOrScript?: string, options?: unknown) => Promise<unknown>;
+  runPackageManager: (
+    action: string,
+    packageOrScript?: string,
+    options?: unknown
+  ) => Promise<unknown>;
   git: (subcommand: string, args?: string[], options?: unknown) => Promise<unknown>;
   createCancellable: () => unknown;
   sequence: (commands: unknown[], options?: unknown) => Promise<unknown[]>;
@@ -233,7 +242,12 @@ export interface GitOperations {
 
 // Type guards
 export function isJsonValue(value: unknown): value is JsonValue {
-  if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
     return true;
   }
   if (Array.isArray(value)) {
@@ -251,7 +265,12 @@ export function isConfigValue(value: unknown): value is ConfigValue {
 
 export function isSanitizableValue(value: unknown): value is SanitizableValue {
   if (isJsonValue(value)) return true;
-  if (value instanceof Date || value instanceof RegExp || Buffer.isBuffer(value) || value instanceof Error) {
+  if (
+    value instanceof Date ||
+    value instanceof RegExp ||
+    Buffer.isBuffer(value) ||
+    value instanceof Error
+  ) {
     return true;
   }
   return false;

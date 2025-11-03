@@ -114,7 +114,7 @@ describe('createCLI run() Method', () => {
       const originalArgv = process.argv;
       process.argv = ['node', 'test-cli']; // No arguments to avoid help/version exit
 
-      let program: any;
+      let program: Awaited<ReturnType<typeof createCLI>>;
       try {
         // This will auto-execute (default behavior)
         program = await createCLI({

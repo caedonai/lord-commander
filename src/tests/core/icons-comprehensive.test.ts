@@ -528,8 +528,8 @@ describe('IconSecurity', () => {
 
     it('should handle empty and null inputs', () => {
       expect(IconSecurity.sanitizeIcon('')).toBe('');
-      expect(IconSecurity.sanitizeIcon(null as any)).toBe('');
-      expect(IconSecurity.sanitizeIcon(undefined as any)).toBe('');
+      expect(IconSecurity.sanitizeIcon(null as never)).toBe('');
+      expect(IconSecurity.sanitizeIcon(undefined as never)).toBe('');
     });
 
     it('should preserve legitimate Unicode ranges', () => {
@@ -593,8 +593,8 @@ describe('IconSecurity', () => {
 
     it('should reject empty icons', () => {
       expect(IconSecurity.isValidIcon('')).toBe(false);
-      expect(IconSecurity.isValidIcon(null as any)).toBe(false);
-      expect(IconSecurity.isValidIcon(undefined as any)).toBe(false);
+      expect(IconSecurity.isValidIcon(null as never)).toBe(false);
+      expect(IconSecurity.isValidIcon(undefined as never)).toBe(false);
     });
   });
 

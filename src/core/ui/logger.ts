@@ -97,7 +97,7 @@ export class Logger {
     if (options.theme) {
       Object.entries(options.theme).forEach(([key, value]) => {
         if (value !== undefined) {
-          (this.theme as any)[key] = value;
+          (this.theme as unknown as Record<string, unknown>)[key] = value;
         }
       });
     }
@@ -222,7 +222,7 @@ export class Logger {
   /**
    * Log a debug message
    */
-  debug(message: string, data?: any): void {
+  debug(message: string, data?: unknown): void {
     if (!this.shouldLog(LogLevel.DEBUG)) return;
 
     let debugMessage = this.theme.dim(`${figures.bullet} ${message}`);
@@ -236,7 +236,7 @@ export class Logger {
   /**
    * Log a verbose message
    */
-  verbose(message: string, data?: any): void {
+  verbose(message: string, data?: unknown): void {
     if (!this.shouldLog(LogLevel.VERBOSE)) return;
 
     let verboseMessage = this.theme.muted(`${figures.arrowRight} ${message}`);
@@ -322,17 +322,22 @@ export class Logger {
     };
 
     // Add convenience methods
-    (spinner as any).success = (message: string) => {
+    interface EnhancedSpinner {
+      success: (message: string) => void;
+      fail: (message: string) => void;
+      warn: (message: string) => void;
+    }
+    (spinner as unknown as EnhancedSpinner).success = (message: string) => {
       this.activeSpinners.delete(spinner);
       spinner.stop(this.theme.success(`${figures.tick} ${message}`));
     };
 
-    (spinner as any).fail = (message: string) => {
+    (spinner as unknown as EnhancedSpinner).fail = (message: string) => {
       this.activeSpinners.delete(spinner);
       spinner.stop(this.theme.error(`${figures.cross} ${message}`), 1);
     };
 
-    (spinner as any).warn = (message: string) => {
+    (spinner as unknown as EnhancedSpinner).warn = (message: string) => {
       this.activeSpinners.delete(spinner);
       spinner.stop(this.theme.warning(`${figures.warning} ${message}`));
     };

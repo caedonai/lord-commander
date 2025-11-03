@@ -15,11 +15,13 @@ import {
   DEFAULT_MEMORY_CONFIG,
   isMemorySafe,
   MemoryConfigPresets,
+  type MemoryProtectionConfig,
   MemoryProtectionError,
   MemoryProtectionManager,
   MemorySizeCalculator,
   type MemoryViolation,
   MemoryViolationAnalyzer,
+  type ProtectedOperationResult,
   processContextWithMemoryProtection,
   sanitizeErrorObjectWithMemoryProtection,
   truncateForMemory,
@@ -91,7 +93,10 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
     });
 
     it('should handle circular references safely', () => {
-      const obj: any = { name: 'test' };
+      interface CircularReference {
+        [key: string]: string | CircularReference;
+      }
+      const obj: CircularReference = { name: 'test' };
       obj.self = obj;
 
       expect(() => calculator.calculateSize(obj)).not.toThrow();
@@ -140,7 +145,7 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
     });
 
     it('should prevent property count attacks', () => {
-      const largeObject: any = {};
+      const largeObject: Record<string, unknown> = {};
       for (let i = 0; i < 20; i++) {
         largeObject[`prop${i}`] = i;
       }
@@ -156,8 +161,12 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
     });
 
     it('should prevent deep nesting attacks', () => {
-      const deepObject: any = {};
-      let current = deepObject;
+      interface DeepNested {
+        [key: string]: DeepNested;
+      }
+
+      const deepObject: DeepNested = {};
+      let current: DeepNested = deepObject;
 
       // Create deeply nested object (depth > 3)
       for (let i = 0; i < 10; i++) {
@@ -480,7 +489,7 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
       const truncatedSafe = truncateForMemory(safeObject);
       expect(truncatedSafe).toEqual(safeObject); // Should be unchanged
 
-      const largeObject: any = {};
+      const largeObject: Record<string, string> = {};
       for (let i = 0; i < 100; i++) {
         largeObject[`prop${i}`] = `value${i}`.repeat(100);
       }
@@ -522,8 +531,11 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
     });
 
     it('should handle oversized error objects', () => {
-      const largeError = new Error('x'.repeat(20000)); // Very large message
-      (largeError as any).largeProperty = 'y'.repeat(50000);
+      interface CustomError extends Error {
+        largeProperty?: string;
+      }
+      const largeError: CustomError = new Error('x'.repeat(20000)); // Very large message
+      largeError.largeProperty = 'y'.repeat(50000);
 
       const sanitized = sanitizeErrorObjectWithMemoryProtection(largeError, {
         ...DEFAULT_MEMORY_CONFIG,
@@ -559,7 +571,7 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
       expect(processedSmall).toEqual(smallContext);
       expect(smallWarnings.length).toBe(0);
 
-      const largeContext: any = {};
+      const largeContext: Record<string, unknown> = {};
       for (let i = 0; i < 1000; i++) {
         largeContext[`key${i}`] = 'x'.repeat(1000);
       }
@@ -601,9 +613,13 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
     });
 
     it('should handle complex circular references', () => {
-      const obj1: any = { name: 'obj1' };
-      const obj2: any = { name: 'obj2' };
-      const obj3: any = { name: 'obj3' };
+      interface CircularObject {
+        [key: string]: string | CircularObject;
+      }
+
+      const obj1: CircularObject = { name: 'obj1' };
+      const obj2: CircularObject = { name: 'obj2' };
+      const obj3: CircularObject = { name: 'obj3' };
 
       obj1.ref2 = obj2;
       obj2.ref3 = obj3;
@@ -624,7 +640,7 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
       expect(() => calculator.calculateSize(maliciousObject)).not.toThrow();
 
       // Should not pollute Object.prototype
-      expect((Object.prototype as any).polluted).toBeUndefined();
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
     });
 
     it('should handle buffer overflow simulation', () => {
@@ -671,8 +687,10 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
       const results = await Promise.all(operations);
 
       expect(results.length).toBe(50);
-      expect(results.every((r: any) => r.success)).toBe(true);
-      expect(results.every((r: any) => typeof r.result === 'string')).toBe(true);
+      expect(results.every((r: ProtectedOperationResult<string>) => r.success)).toBe(true);
+      expect(
+        results.every((r: ProtectedOperationResult<string>) => typeof r.result === 'string')
+      ).toBe(true);
     });
 
     it('should handle process.memoryUsage() failures gracefully', async () => {
@@ -680,9 +698,12 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
 
       try {
         // Mock process.memoryUsage to throw
-        (process as any).memoryUsage = () => {
-          throw new Error('Memory access denied');
-        };
+        process.memoryUsage = {
+          rss: () => 0,
+          heapTotal: () => {
+            throw new Error('Memory access denied');
+          },
+        } as unknown as NodeJS.MemoryUsageFn;
 
         const manager = new MemoryProtectionManager();
         const result = await manager.protectOperation(() => 'test');
@@ -696,12 +717,13 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
     });
 
     it('should handle garbage collection triggers safely', async () => {
-      const originalGc = global.gc;
       let gcCalled = false;
+      const originalGc = global.gc;
 
       try {
-        (global as any).gc = () => {
+        global.gc = (): Promise<void> => {
           gcCalled = true;
+          return Promise.resolve();
         };
 
         const manager = new MemoryProtectionManager({
@@ -757,11 +779,13 @@ describe('Memory Protection Framework Integration (Task 1.5.1)', () => {
       const invalidConfig = {
         maxObjectSize: -1,
         maxMessageLength: 0,
-        protectionLevel: 'invalid' as any,
+        protectionLevel: 'invalid',
       };
 
       // Should not throw when creating manager with invalid config
-      expect(() => new MemoryProtectionManager(invalidConfig as any)).not.toThrow();
+      expect(
+        () => new MemoryProtectionManager(invalidConfig as unknown as MemoryProtectionConfig)
+      ).not.toThrow();
     });
   });
 

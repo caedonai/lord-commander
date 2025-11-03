@@ -75,7 +75,15 @@ describe('CLI Build Validation', () => {
   });
 
   describe('Package Configuration', () => {
-    let packageJson: any;
+    let packageJson: {
+      bin?: Record<string, string>;
+      main?: string;
+      type?: string;
+      exports?: Record<string, unknown>;
+      name?: string;
+      version?: string;
+      [key: string]: unknown;
+    };
 
     beforeAll(() => {
       packageJson = JSON.parse(readFileSync(resolve(rootPath, 'package.json'), 'utf-8'));

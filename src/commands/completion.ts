@@ -89,9 +89,23 @@ import type { CommandContext } from '../types/cli.js';
  * @param program - Commander.js program instance
  * @param context - CLI context with logger and other utilities
  */
+interface CLILogger {
+  intro: (msg: string) => void;
+  outro: (msg: string) => void;
+  info: (msg: string) => void;
+  success: (msg: string) => void;
+  warn: (msg: string) => void;
+  error: (msg: string) => void;
+  note: (msg: string, title?: string) => void;
+  spinner: (msg: string) => {
+    success: (msg: string) => void;
+    fail: (msg: string) => void;
+  };
+}
+
 export default function (program: Command, context: CommandContext) {
   const { logger } = context;
-  const log = logger as any; // Type assertion for CLI methods
+  const log = logger as unknown as CLILogger;
 
   const completionCmd = program
     .command('completion')
@@ -204,7 +218,7 @@ export default function (program: Command, context: CommandContext) {
         const detectedShell = await detectShell();
         const targetShell = options.shell || detectedShell;
 
-        const status = await checkCompletionStatus(program, targetShell as any);
+        const status = await checkCompletionStatus(program, targetShell as string);
 
         // Display basic information
         log.info(`CLI Name: ${status.cliName}`);

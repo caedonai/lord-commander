@@ -9,7 +9,7 @@
 | Metric | Value | Industry Benchmark | Improvement |
 |---------|-------|-------------------|-------------|
 | **Startup Time** | 145ms | 280ms | **48% faster** |
-| **Memory Usage** | 14.809999999999999MB | ~15MB | **1% less** |
+| **Memory Usage** | 14.80999999999MB | ~15MB | **1% less** |
 | **Bundle Size** | 6.03KB (core) | ~50KB | **88% smaller** |
 | **Tree-shaking** | 97% reduction | ~60% | **37% better** |
 | **Overall Score** | **61% optimized** | Baseline | **Production-ready** |

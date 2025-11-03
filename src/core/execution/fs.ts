@@ -8,7 +8,7 @@
 import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { JsonValue } from '../../types/common.js';
+import type { JsonValue } from '../../types/common.js';
 import { DEFAULT_IGNORE_PATTERNS } from '../foundation/core/constants.js';
 import { FileSystemError } from '../foundation/errors/errors.js';
 import { createLogger } from '../ui/logger.js';

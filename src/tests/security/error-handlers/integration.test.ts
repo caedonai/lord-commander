@@ -65,12 +65,13 @@ describe('Error Handler Security Integration', () => {
           autoStart: false,
           errorHandler: complexDangerousHandler,
         });
-      } catch (error: any) {
-        expect(error).toBeInstanceOf(ErrorHandlerValidationError);
-        expect(error.message).toContain('eval');
-        expect(error.message).toContain('fs');
-        expect(error.message).toContain('process');
-        expect(error.violations).toHaveLength(3);
+      } catch (error: unknown) {
+        const errorObj = error as Error & { violations: unknown[] };
+        expect(errorObj).toBeInstanceOf(ErrorHandlerValidationError);
+        expect(errorObj.message).toContain('eval');
+        expect(errorObj.message).toContain('fs');
+        expect(errorObj.message).toContain('process');
+        expect(errorObj.violations).toHaveLength(3);
       }
     });
   });

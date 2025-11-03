@@ -1,11 +1,28 @@
 import type { Command } from 'commander';
 import type { CommandContext } from '../types/cli';
 
+interface CLILogger {
+  intro: (msg: string) => void;
+  outro: (msg: string) => void;
+  info: (msg: string) => void;
+  success: (msg: string) => void;
+  error: (msg: string | Error) => void;
+  enableVerbose: () => void;
+  debug: (msg: string) => void;
+}
+
+type CLIExeca = (command: string, args: string[]) => Promise<{ stdout: string }>;
+
+interface CLIFileSystem {
+  exists: (path: string) => Promise<boolean>;
+  readFile: (path: string, encoding: string) => Promise<string>;
+}
+
 export default function (program: Command, context: CommandContext) {
   const { logger, execa, fs } = context;
-  const log = logger as any;
-  const exec = execa as any;
-  const fileSystem = fs as any;
+  const log = logger as unknown as CLILogger;
+  const exec = execa as unknown as CLIExeca;
+  const fileSystem = fs as unknown as CLIFileSystem;
 
   program
     .command('hello')
@@ -73,9 +90,7 @@ export default function (program: Command, context: CommandContext) {
           log.info(`Platform: ${process.platform}`);
           log.info(`Architecture: ${process.arch}`);
         } catch (error) {
-          log.error(
-            `System info error: ${error instanceof Error ? error.message : String(error)}`
-          );
+          log.error(`System info error: ${error instanceof Error ? error.message : String(error)}`);
         }
       }
 

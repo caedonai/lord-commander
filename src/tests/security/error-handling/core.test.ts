@@ -13,7 +13,7 @@ describe('Error Handling Security', () => {
     vi.clearAllMocks();
     originalNodeEnv = process.env.NODE_ENV;
     // Prevent actual process.exit during tests
-    vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+    vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
     // Mock console to capture output
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});

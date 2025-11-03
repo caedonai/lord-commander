@@ -33,7 +33,7 @@ import {
 
 describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
   let sanitizer: AdvancedObjectSanitizer;
-  let consoleSpy: any;
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     sanitizer = new AdvancedObjectSanitizer();
@@ -203,8 +203,8 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
     });
 
     it('should detect excessive nesting depth', async () => {
-      const deepObject: any = {};
-      let current = deepObject;
+      const deepObject: Record<string, unknown> = {};
+      let current: Record<string, unknown> = deepObject;
 
       // Create deep nesting beyond default limit (10)
       for (let i = 0; i < 15; i++) {
@@ -222,7 +222,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
     });
 
     it('should detect and prevent circular references', async () => {
-      const circularObject: any = { name: 'test' };
+      const circularObject: Record<string, unknown> = { name: 'test' };
       circularObject.self = circularObject;
 
       const result = await sanitizer.sanitizeObject(circularObject);
@@ -253,7 +253,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       });
 
       const result = await injectionSanitizer.sanitizeObject(injectionObject);
-      expect(result.violations.some((v: any) => v.type === 'injection-attempt')).toBe(true);
+      expect(result.violations.some((v) => v.type === 'injection-attempt')).toBe(true);
     });
   });
 
@@ -285,7 +285,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
 
       const results = await batchSanitizer.sanitizeBatch(objects);
       expect(results).toHaveLength(50);
-      expect(results.every((r: any) => r.isValid)).toBe(true);
+      expect(results.every((r) => r.isValid)).toBe(true);
     });
 
     it('should respect processing time limits', async () => {
@@ -386,7 +386,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
 
       // Should generate warning for property access failure
       const hasPropertyError = result.warnings.some(
-        (w: any) =>
+        (w: string) =>
           w.includes('Property sanitization failed') ||
           w.includes('Access denied') ||
           w.includes('problematic')
@@ -681,7 +681,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
     });
 
     it('should handle recursive object structures safely', async () => {
-      function createDeepObject(depth: number): any {
+      function createDeepObject(depth: number): Record<string, unknown> {
         if (depth <= 0) return { value: 'leaf' };
         return { child: createDeepObject(depth - 1) };
       }
@@ -842,8 +842,8 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
     it('should validate and correct invalid configurations', () => {
       const invalidConfig = {
         maxDepth: -5,
-        maxProperties: 'invalid' as any,
-        sanitizationLevel: 'unknown' as any,
+        maxProperties: 'invalid' as unknown as number,
+        sanitizationLevel: 'unknown' as never,
       };
 
       // Should not throw, but use defaults
@@ -855,7 +855,7 @@ describe('Task 1.5.2: Advanced Object Sanitization Enhancement', () => {
       const emptySanitizer = new AdvancedObjectSanitizer({});
       expect(emptySanitizer).toBeDefined();
 
-      const undefinedSanitizer = new AdvancedObjectSanitizer(undefined as any);
+      const undefinedSanitizer = new AdvancedObjectSanitizer(undefined as never);
       expect(undefinedSanitizer).toBeDefined();
     });
   });
@@ -956,7 +956,7 @@ describe('Integration Scenarios', () => {
 
 describe('Stress Testing', () => {
   it('should handle extremely complex nested structures', async () => {
-    function createComplexStructure(depth: number): any {
+    function createComplexStructure(depth: number): Record<string, unknown> {
       if (depth <= 0) {
         return {
           value: Math.random(),
@@ -1010,6 +1010,6 @@ describe('Stress Testing', () => {
 
     const results = await Promise.all(sanitizationPromises);
     expect(results).toHaveLength(50);
-    expect(results.every((r: any) => r.isValid)).toBe(true);
+    expect(results.every((r) => r.isValid)).toBe(true);
   });
 });

@@ -1170,28 +1170,39 @@ export function sanitizeErrorForProduction(
   // Handle custom error properties while preserving error codes
   if (fullConfig.preserveErrorCodes) {
     // Preserve common error code properties
-    if ('code' in error && error.code) {
-      (sanitizedError as any).code = error.code;
+    const errorWithCode = sanitizedError as Error & { code?: string | number };
+    const errorWithErrno = sanitizedError as Error & { errno?: number };
+    const errorWithSyscall = sanitizedError as Error & { syscall?: string };
+
+    const sourceError = error as Error & {
+      code?: string | number;
+      errno?: number;
+      syscall?: string;
+    };
+
+    if ('code' in error && sourceError.code) {
+      errorWithCode.code = sourceError.code;
     }
-    if ('errno' in error && error.errno) {
-      (sanitizedError as any).errno = error.errno;
+    if ('errno' in error && sourceError.errno) {
+      errorWithErrno.errno = sourceError.errno;
     }
-    if ('syscall' in error && error.syscall) {
-      (sanitizedError as any).syscall = error.syscall;
+    if ('syscall' in error && sourceError.syscall) {
+      errorWithSyscall.syscall = sourceError.syscall;
     }
   }
 
   // Sanitize any custom properties that might contain sensitive data
+  const sanitizedErrorRecord = sanitizedError as Error & Record<string, unknown>;
   for (const [key, value] of Object.entries(error)) {
     if (key !== 'message' && key !== 'stack' && key !== 'name') {
       if (typeof value === 'string') {
-        (sanitizedError as any)[key] = sanitizeErrorMessage(value, fullConfig);
+        sanitizedErrorRecord[key] = sanitizeErrorMessage(value, fullConfig);
       } else if (value && typeof value === 'object') {
         // For objects, convert to string and sanitize
-        (sanitizedError as any)[key] = sanitizeErrorMessage(JSON.stringify(value), fullConfig);
+        sanitizedErrorRecord[key] = sanitizeErrorMessage(JSON.stringify(value), fullConfig);
       } else {
         // For primitive values, preserve as-is
-        (sanitizedError as any)[key] = value;
+        sanitizedErrorRecord[key] = value;
       }
     }
   }
@@ -1654,10 +1665,11 @@ export function sanitizeErrorContext(
 
   // Safely extract all enumerable properties from the error object
   try {
+    const errorRecord = error as Error & Record<string, unknown>;
     for (const key in error) {
       if (key !== 'message' && key !== 'name' && key !== 'stack') {
         try {
-          const value = (error as any)[key];
+          const value = errorRecord[key];
           if (value !== undefined) {
             rawContext[key] = value;
           }

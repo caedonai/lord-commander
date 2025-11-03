@@ -11,7 +11,7 @@ describe('Error Handling Edge Cases', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Prevent actual process.exit during tests
-    vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+    vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
     // Mock console to capture debug output
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -23,11 +23,15 @@ describe('Error Handling Edge Cases', () => {
 
   describe('Circular Reference Handling', () => {
     it('should handle errors with circular references safely', async () => {
-      const circularError = new Error('Circular reference error');
-      const obj1: any = { error: circularError };
-      const obj2: any = { parent: obj1 };
+      interface CircularError extends Error {
+        context?: Record<string, unknown>;
+      }
+
+      const circularError: CircularError = new Error('Circular reference error');
+      const obj1 = { error: circularError, child: {} as unknown };
+      const obj2 = { parent: obj1 };
       obj1.child = obj2; // Create circular reference
-      (circularError as any).context = obj1;
+      circularError.context = obj1;
 
       const mockErrorHandler = vi.fn((_error: Error) => {
         throw circularError;
@@ -49,7 +53,7 @@ describe('Error Handling Edge Cases', () => {
     });
 
     it('should handle CLIError with circular context gracefully', async () => {
-      const circular: any = {};
+      const circular: Record<string, unknown> = {};
       circular.self = circular;
       circular.nested = { parent: circular };
 

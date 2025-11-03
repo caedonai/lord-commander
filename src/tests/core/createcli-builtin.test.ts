@@ -28,7 +28,7 @@ describe('createCLI Built-in Commands Integration', () => {
     process.argv = ['node', 'test-cli'];
 
     // Mock process.exit to prevent test termination
-    process.exit = vi.fn() as any;
+    process.exit = vi.fn() as typeof process.exit;
   });
 
   afterEach(() => {

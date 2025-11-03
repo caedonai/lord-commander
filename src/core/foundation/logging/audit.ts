@@ -20,7 +20,7 @@
  */
 
 import { createHash, randomBytes } from 'node:crypto';
-import type { SanitizableValue, SanitizableObject } from '../../../types/common.js';
+import type { SanitizableObject, SanitizableValue } from '../../../types/common.js';
 import type {
   EnhancedSecurityViolation,
   ViolationAnalysisResult,
@@ -2269,8 +2269,12 @@ export const auditTrail = {
   /**
    * Record a command execution
    */
-  recordCommand: (command: string, args: string[], outcome: 'success' | 'failure', context?: SanitizableValue) =>
-    defaultAuditTrailManager.recordCommandExecution(command, args, outcome, context),
+  recordCommand: (
+    command: string,
+    args: string[],
+    outcome: 'success' | 'failure',
+    context?: SanitizableValue
+  ) => defaultAuditTrailManager.recordCommandExecution(command, args, outcome, context),
 
   /**
    * Create an audit event

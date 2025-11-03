@@ -216,7 +216,7 @@ const _immutableProxy = new Proxy(_trustedDependenciesSet, {
 
     // Prevent mutation methods
     if (property === 'add') {
-      return (value: any) => {
+      return (value: string) => {
         throw new TypeError(
           `Cannot add dependency '${value}' to trusted dependencies: set is immutable for security`
         );
@@ -224,7 +224,7 @@ const _immutableProxy = new Proxy(_trustedDependenciesSet, {
     }
 
     if (property === 'delete') {
-      return (value: any) => {
+      return (value: string) => {
         throw new TypeError(
           `Cannot delete dependency '${value}' from trusted dependencies: set is immutable for security`
         );

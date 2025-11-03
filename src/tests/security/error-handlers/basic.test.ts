@@ -26,7 +26,7 @@ describe('Basic Error Handler Security Validation', () => {
 
     it('should reject functions with wrong parameter count', () => {
       const noParams = () => {};
-      const tooManyParams = (_error: Error, _extra1: any, _extra2: any) => {};
+      const tooManyParams = (_error: Error, _extra1: unknown, _extra2: unknown) => {};
 
       expect(() => validateErrorHandler(noParams)).toThrow(ErrorHandlerValidationError);
       expect(() => validateErrorHandler(tooManyParams)).toThrow(ErrorHandlerValidationError);

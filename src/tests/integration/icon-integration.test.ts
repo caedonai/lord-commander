@@ -246,7 +246,7 @@ describe('Icon System Integration', () => {
       ];
 
       iconMethods.forEach((method) => {
-        expect(typeof (logger as any)[method]).toBe('function');
+        expect(typeof (logger as unknown as Record<string, unknown>)[method]).toBe('function');
       });
 
       // Test core icon method
@@ -547,7 +547,7 @@ describe('Icon System Integration', () => {
       vi.stubGlobal('process', {
         stdout: null, // Invalid stdout
         env: null, // Invalid env
-      } as any);
+      } as Partial<typeof process>);
 
       PlatformCapabilities.reset();
       IconProvider.reset();

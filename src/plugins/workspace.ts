@@ -13,7 +13,7 @@ import path from 'node:path';
 import { exists, readDir, readFile } from '../core/execution/fs.js';
 import { CLIError } from '../core/foundation/errors/errors.js';
 import { createLogger } from '../core/ui/logger.js';
-import { ConfigValue } from '../types/common.js';
+import type { ConfigValue } from '../types/common.js';
 
 const workspaceLogger = createLogger({ prefix: 'workspace' });
 
@@ -491,7 +491,8 @@ async function discoverNxPackages(cwd: string): Promise<string[]> {
       if (workspaceConfig.projects) {
         for (const [, projectConfig] of Object.entries(workspaceConfig.projects)) {
           if (projectConfig && typeof projectConfig === 'object' && 'root' in projectConfig) {
-            paths.push(path.join(cwd, (projectConfig as any).root));
+            const config = projectConfig as { root: string };
+            paths.push(path.join(cwd, config.root));
           }
         }
       }

@@ -32,7 +32,7 @@
  * ```
  */
 
-import type { SanitizableValue, SanitizableObject, TODO_REPLACE_ANY } from '../../../types/common.js';
+import type { SanitizableObject, SanitizableValue } from '../../../types/common.js';
 
 import { sanitizeErrorMessage } from '../errors/sanitization.js';
 import { analyzeLogSecurity, sanitizeLogOutputAdvanced } from '../logging/security.js';
@@ -348,7 +348,10 @@ export class AdvancedObjectSanitizer {
    * @param path - Current object path for violation reporting
    * @returns Sanitization result with metadata
    */
-  public async sanitizeObject(obj: SanitizableValue, path: string = 'root'): Promise<ObjectSanitizationResult> {
+  public async sanitizeObject(
+    obj: SanitizableValue,
+    path: string = 'root'
+  ): Promise<ObjectSanitizationResult> {
     const startTime = performance.now();
     const violations: ObjectSanitizationViolation[] = [];
     const warnings: string[] = [];

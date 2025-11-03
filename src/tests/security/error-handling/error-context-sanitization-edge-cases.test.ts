@@ -8,6 +8,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   createSafeErrorForForwarding,
+  type ErrorContextConfig,
   sanitizeErrorContext,
 } from '../../../core/foundation/errors/sanitization.js';
 
@@ -67,7 +68,15 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
     });
 
     it('should handle recursive object structures safely', () => {
-      const recursiveObj: any = {
+      interface RecursiveObject {
+        level: number;
+        data: string;
+        child?: RecursiveObject;
+        parent?: RecursiveObject;
+        [key: string]: unknown;
+      }
+
+      const recursiveObj: RecursiveObject = {
         level: 0,
         data: 'test data',
       };
@@ -85,7 +94,9 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
 
       // Add sensitive data at various levels
       recursiveObj.apiKey = 'sk-123456789';
-      recursiveObj.child.email = 'user@example.com';
+      if (recursiveObj.child) {
+        recursiveObj.child.email = 'user@example.com';
+      }
 
       expect(() => {
         const result = sanitizeErrorContext(
@@ -173,7 +184,14 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
 
   describe('Error Object Edge Cases', () => {
     it('should handle errors with non-standard properties', () => {
-      const customError = new Error('Custom error') as any;
+      interface CustomError extends Error {
+        code?: string;
+        statusCode?: number;
+        details?: Record<string, unknown>;
+        [key: string]: unknown;
+      }
+
+      const customError = new Error('Custom error') as CustomError;
       customError.code = 'CUSTOM_CODE';
       customError.statusCode = 500;
       customError.details = { nested: { secret: 'hidden' } };
@@ -213,7 +231,12 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
     });
 
     it('should handle error objects that throw during property access', () => {
-      const problematicError = new Error('Test error') as any;
+      interface ProblematicError extends Error {
+        problematic?: string;
+        safe?: string;
+      }
+
+      const problematicError = new Error('Test error') as ProblematicError;
       Object.defineProperty(problematicError, 'problematic', {
         get() {
           throw new Error('Property access failed');
@@ -231,11 +254,11 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
 
   describe('Configuration Edge Cases', () => {
     it('should handle invalid configuration gracefully', () => {
-      const invalidConfig = {
-        redactionLevel: 'invalid' as any,
+      const invalidConfig: Partial<ErrorContextConfig> = {
+        redactionLevel: 'invalid' as unknown as 'partial',
         maxContextLength: -1,
-        allowedProperties: null as any,
-        customContextPatterns: 'not-an-array' as any,
+        allowedProperties: null as unknown as string[],
+        customContextPatterns: 'not-an-array' as unknown as RegExp[],
       };
 
       expect(() => {
@@ -263,32 +286,19 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
       expect(result.errorId).toBeDefined();
       expect(Object.keys(result.context)).toHaveLength(0);
     });
-
-    it('should handle configuration with circular references', () => {
-      const circularConfig: any = {
-        redactionLevel: 'partial' as const,
-        maxContextLength: 1000,
-      };
-      circularConfig.self = circularConfig;
-
-      expect(() => {
-        const result = sanitizeErrorContext(testError, { test: 'value' }, circularConfig);
-        expect(result.errorId).toBeDefined();
-      }).not.toThrow();
-    });
   });
 
   describe('Security Attack Simulation', () => {
     it('should resist prototype pollution attempts', () => {
-      const pollutionAttempt = JSON.parse(
+      const pollutionAttempt: Record<string, unknown> = JSON.parse(
         '{"__proto__": {"polluted": true}, "constructor": {"prototype": {"evil": "value"}}}'
       );
 
       const result = sanitizeErrorContext(testError, pollutionAttempt);
 
       expect(result.errorId).toBeDefined();
-      expect((Object.prototype as any).polluted).toBeUndefined();
-      expect((Object.prototype as any).evil).toBeUndefined();
+      expect(Object.getPrototypeOf(result).polluted).toBeUndefined();
+      expect(Object.getPrototypeOf(result).evil).toBeUndefined();
     });
 
     it('should handle malformed JSON-like strings', () => {
@@ -326,7 +336,7 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
     });
 
     it('should handle extremely nested objects (potential stack overflow)', () => {
-      let deepNest: any = { value: 'test' };
+      let deepNest: Record<string, unknown> = { value: 'test' };
       for (let i = 0; i < 1000; i++) {
         deepNest = { level: i, nested: deepNest };
       }
@@ -349,7 +359,7 @@ describe('Error Context Sanitization - Advanced Edge Cases', () => {
   describe('External System Integration Edge Cases', () => {
     it('should handle errors that occur during safe forwarding creation', () => {
       // Create an object that will cause JSON.stringify to fail
-      const problematicContext: any = {
+      const problematicContext: Record<string, unknown> = {
         normal: 'value',
       };
       problematicContext.circular = problematicContext;

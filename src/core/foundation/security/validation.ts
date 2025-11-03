@@ -1124,7 +1124,7 @@ export function sanitizeCommandArgs(
   // Validate that critical Array methods haven't been overridden
   const criticalMethods = ['push', 'pop', 'slice', 'map', 'filter', 'forEach', 'join'];
   for (const method of criticalMethods) {
-    const methodFunc = (Array.prototype as any)[method];
+    const methodFunc = (Array.prototype as unknown as Record<string, unknown>)[method];
     if (typeof methodFunc !== 'function') {
       throw new Error(
         `Critical Array method '${method}' has been compromised - prototype pollution detected`

@@ -355,8 +355,8 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
     describe('Edge Cases', () => {
       it('should handle null and undefined messages', () => {
         expect(sanitizeErrorMessage('')).toBe('');
-        expect(sanitizeErrorMessage(null as any)).toBe('');
-        expect(sanitizeErrorMessage(undefined as any)).toBe('');
+        expect(sanitizeErrorMessage(null as unknown as string)).toBe('');
+        expect(sanitizeErrorMessage(undefined as unknown as string)).toBe('');
       });
 
       it('should handle messages with multiple sensitive patterns', () => {
@@ -449,8 +449,8 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
     describe('Edge Cases', () => {
       it('should handle empty and null stack traces', () => {
         expect(sanitizeStackTrace('')).toBe('');
-        expect(sanitizeStackTrace(null as any)).toBe(null);
-        expect(sanitizeStackTrace(undefined as any)).toBe(undefined);
+        expect(sanitizeStackTrace(null as unknown as string)).toBe(null);
+        expect(sanitizeStackTrace(undefined as unknown as string)).toBe(undefined);
       });
 
       it('should handle malformed stack traces', () => {
@@ -463,26 +463,31 @@ describe('Enhanced Error Sanitization (Task 1.3.1)', () => {
 
   describe('sanitizeErrorForProduction', () => {
     it('should create sanitized error object with all properties cleaned', () => {
-      const originalError = new Error('DB failed: password=secret123');
+      interface CustomError extends Error {
+        code?: string;
+        context?: Record<string, unknown>;
+      }
+
+      const originalError: CustomError = new Error('DB failed: password=secret123');
       originalError.stack = `Error: DB failed: password=secret123
     at Object.connect (/Users/john/.config/app/db.js:15:20)`;
-      (originalError as any).code = 'ECONNREFUSED';
-      (originalError as any).context = { user: 'admin@company.com', token: 'secret-token' };
+      originalError.code = 'ECONNREFUSED';
+      originalError.context = { user: 'admin@company.com', token: 'secret-token' };
 
-      const sanitized = sanitizeErrorForProduction(originalError, {
+      const sanitized: CustomError = sanitizeErrorForProduction(originalError, {
         preserveErrorCodes: true,
       });
 
       expect(sanitized.message).toBe('DB failed: password=***');
       expect(sanitized.stack).toContain('/Users/***/');
-      expect((sanitized as any).code).toBe('ECONNREFUSED');
-      expect((sanitized as any).context).not.toContain('admin@company.com');
-      expect((sanitized as any).context).not.toContain('secret-token');
+      expect(sanitized.code).toBe('ECONNREFUSED');
+      expect(sanitized.context).not.toContain('admin@company.com');
+      expect(sanitized.context).not.toContain('secret-token');
     });
 
     it('should handle null and undefined errors', () => {
-      const result1 = sanitizeErrorForProduction(null as any);
-      const result2 = sanitizeErrorForProduction(undefined as any);
+      const result1 = sanitizeErrorForProduction(null as unknown as Error);
+      const result2 = sanitizeErrorForProduction(undefined as unknown as Error);
 
       expect(result1).toBeInstanceOf(Error);
       expect(result1.message).toBe('Unknown error occurred');

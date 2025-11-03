@@ -18,7 +18,7 @@ describe('Memory Exhaustion Protection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Prevent actual process.exit during tests
-    vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+    vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
     // Mock console to capture debug output
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -47,8 +47,8 @@ describe('Memory Exhaustion Protection', () => {
 
     it('should handle empty and null messages safely', () => {
       expect(truncateErrorMessage('', 100)).toBe('');
-      expect(truncateErrorMessage(null as any, 100)).toBe(null);
-      expect(truncateErrorMessage(undefined as any, 100)).toBe(undefined);
+      expect(truncateErrorMessage(null as unknown as string, 100)).toBe(null);
+      expect(truncateErrorMessage(undefined as unknown as string, 100)).toBe(undefined);
     });
 
     it('should use default length when not specified', () => {
@@ -78,7 +78,10 @@ describe('Memory Exhaustion Protection', () => {
     });
 
     it('should handle circular references safely', () => {
-      const circular: any = { name: 'test' };
+      interface CircularReference {
+        [key: string]: string | CircularReference;
+      }
+      const circular: CircularReference = { name: 'test' };
       circular.self = circular;
 
       // Should not crash or infinite loop
@@ -154,12 +157,20 @@ describe('Memory Exhaustion Protection', () => {
         },
       });
 
-      const sanitized = sanitizeErrorObject(cliError);
+      interface CustomError extends Error {
+        context?: {
+          details: {
+            length: number;
+          };
+        };
+      }
+
+      const sanitized: CustomError = sanitizeErrorObject(cliError);
 
       expect(sanitized.message).toBe('CLI error');
       // Context should be limited and truncated
-      if ((sanitized as any).context) {
-        expect((sanitized as any).context.details.length).toBeLessThanOrEqual(100);
+      if (sanitized.context) {
+        expect(sanitized.context.details.length).toBeLessThanOrEqual(100);
       }
     });
 
@@ -328,7 +339,11 @@ describe('Memory Exhaustion Protection', () => {
     });
 
     it('should handle extremely nested objects', () => {
-      let nested: any = { value: 'base' };
+      interface DeeplyNested {
+        [key: string]: DeeplyNested | string | number;
+      }
+
+      let nested: DeeplyNested = { value: 'base' };
       for (let i = 0; i < 100; i++) {
         nested = { next: nested, level: i };
       }

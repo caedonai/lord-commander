@@ -372,7 +372,11 @@ describe('Icon System Security Vulnerabilities', () => {
 
     it('should handle circular references safely', () => {
       // Create circular reference (if input was an object)
-      const circular: any = { name: 'test' };
+      interface CircularReference {
+        [key: string]: string | CircularReference;
+      }
+
+      const circular: CircularReference = { name: 'test' };
       circular.self = circular;
 
       const stringified = '[Circular Reference]';
@@ -458,9 +462,9 @@ describe('Icon System Security Vulnerabilities', () => {
 
       invalidInputs.forEach((input) => {
         expect(() => {
-          IconSecurity.sanitizeIcon(input as any);
-          IconSecurity.isValidIcon(input as any);
-          IconSecurity.analyzeIconSecurity(input as any);
+          IconSecurity.sanitizeIcon(input as unknown as string);
+          IconSecurity.isValidIcon(input as unknown as string);
+          IconSecurity.analyzeIconSecurity(input as unknown as string);
         }).not.toThrow();
       });
     });

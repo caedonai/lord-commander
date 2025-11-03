@@ -98,7 +98,11 @@ describe('Task 1.1.3 Framework Security Vulnerability Analysis', () => {
 
     it('should handle deeply nested config objects', async () => {
       // Create deeply nested configuration that could cause stack overflow
-      let deepObject: any = { value: 'end' };
+      interface DeepNested {
+        [key: string]: string | DeepNested;
+      }
+
+      let deepObject: DeepNested = { value: 'end' };
       for (let i = 0; i < 1000; i++) {
         deepObject = { nested: deepObject };
       }

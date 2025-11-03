@@ -19,10 +19,10 @@ describe('registerCommands Duplicate Detection', () => {
     program = new Command('test-cli');
     context = {
       logger: createLogger(),
-      prompts: {} as any,
-      fs: {} as any,
-      execa: {} as any,
-      git: {} as any,
+      prompts: {} as unknown,
+      fs: {} as unknown,
+      execa: {} as unknown,
+      git: {} as unknown,
       config: {},
       cwd: process.cwd(),
     };

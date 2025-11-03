@@ -55,7 +55,7 @@ describe('Error Handler Security Validation', () => {
 
       it('should reject functions with wrong parameter count', () => {
         const noParams = () => {};
-        const tooManyParams = (_error: Error, _extra1: any, _extra2: any) => {};
+        const tooManyParams = (_error: Error, _extra1: unknown, _extra2: unknown) => {};
 
         expect(() => validateErrorHandler(noParams)).toThrow(ErrorHandlerValidationError);
         expect(() => validateErrorHandler(tooManyParams)).toThrow(ErrorHandlerValidationError);
@@ -277,9 +277,10 @@ describe('Error Handler Security Validation', () => {
 
         try {
           await executeErrorHandlerSafely(throwingHandler, originalError);
-        } catch (wrappedError: any) {
-          expect(wrappedError.message).toContain('Handler error');
-          expect(wrappedError.message).toContain('Original error: Original error');
+        } catch (wrappedError: unknown) {
+          const error = wrappedError as Error;
+          expect(error.message).toContain('Handler error');
+          expect(error.message).toContain('Original error: Original error');
         }
       });
     });
@@ -398,10 +399,11 @@ describe('Error Handler Security Validation', () => {
 
       try {
         validateErrorHandler(complexDangerousHandler);
-      } catch (error: any) {
-        expect(error.message).toContain('eval');
-        expect(error.message).toContain('fs');
-        expect(error.message).toContain('process');
+      } catch (error: unknown) {
+        const errorObj = error as Error;
+        expect(errorObj.message).toContain('eval');
+        expect(errorObj.message).toContain('fs');
+        expect(errorObj.message).toContain('process');
         // Allow for varying number of violations as validation patterns may change
         expect(error.violations.length).toBeGreaterThanOrEqual(3);
       }

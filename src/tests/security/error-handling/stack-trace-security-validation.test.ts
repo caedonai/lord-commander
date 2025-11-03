@@ -134,20 +134,20 @@ describe('Stack Trace Security Validation', () => {
 
       consoleWarnSpy.mockRestore();
     });
+  });
 
-    it('should handle malformed configuration objects', () => {
-      const malformedConfig = {
-        stackTraceLevel: 'invalid' as any,
-        maxStackDepth: 'not-a-number' as any,
-        redactFilePaths: 'maybe' as any,
-      };
+  it('should handle malformed configuration objects', () => {
+    const malformedConfig = {
+      stackTraceLevel: 'invalid' as unknown as 'minimal',
+      maxStackDepth: 'not-a-number' as unknown as number,
+      redactFilePaths: 'maybe' as unknown as boolean,
+    };
 
-      const result = sanitizeStackTrace('Error: Test\n    at func():10', malformedConfig);
+    const result = sanitizeStackTrace('Error: Test\n    at func():10', malformedConfig);
 
-      // Should use defaults and not crash
-      expect(result).toBeDefined();
-      expect(result).toContain('Error: Test');
-    });
+    // Should use defaults and not crash
+    expect(result).toBeDefined();
+    expect(result).toContain('Error: Test');
   });
 
   describe('Memory Protection', () => {

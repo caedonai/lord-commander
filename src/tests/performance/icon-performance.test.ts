@@ -150,7 +150,7 @@ describe('Icon System Performance and Memory', () => {
       });
 
       // Create many icon instances
-      const iconSets: any[] = [];
+      const iconSets: unknown[] = [];
 
       for (let i = 0; i < 100; i++) {
         // Each call should return the same cached object
@@ -377,7 +377,7 @@ describe('Icon System Performance and Memory', () => {
         // Access all icon types
         const iconKeys = Object.keys(icons);
         iconKeys.forEach((key) => {
-          IconProvider.get(key as any);
+          IconProvider.get(key as keyof ReturnType<typeof IconProvider.getIcons>);
         });
 
         const elapsed = Date.now() - start;
@@ -470,7 +470,7 @@ describe('Icon System Performance and Memory', () => {
 
         // Access all icons
         Object.keys(icons).forEach((key) => {
-          IconProvider.get(key as any);
+          IconProvider.get(key as keyof ReturnType<typeof IconProvider.getIcons>);
         });
       }
 
@@ -535,7 +535,7 @@ describe('Icon System Performance and Memory', () => {
       // Access all icons multiple times
       for (let i = 0; i < 10; i++) {
         Object.keys(icons).forEach((key) => {
-          const icon = IconProvider.get(key as any);
+          const icon = IconProvider.get(key as keyof ReturnType<typeof IconProvider.getIcons>);
           expect(icon).toBeTruthy();
         });
       }

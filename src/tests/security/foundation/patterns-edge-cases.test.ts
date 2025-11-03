@@ -351,11 +351,11 @@ describe('Security Patterns - Edge Cases & Advanced Security Analysis', () => {
 
       nonStringInputs.forEach((input) => {
         expect(() => {
-          analyzeInputSecurity(input as any);
-          sanitizeInput(input as any);
-          isPathSafe(input as any);
-          isCommandSafe(input as any);
-          isProjectNameSafe(input as any);
+          analyzeInputSecurity(input as unknown as string);
+          sanitizeInput(input as unknown as string);
+          isPathSafe(input as unknown as string);
+          isCommandSafe(input as unknown as string);
+          isProjectNameSafe(input as unknown as string);
         }).not.toThrow();
       });
     });

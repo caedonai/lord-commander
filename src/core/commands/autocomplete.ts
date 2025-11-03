@@ -87,15 +87,32 @@ export interface CompletionContext {
 /**
  * Extract all commands, options, and arguments from a Commander program
  */
+interface CommandInfo {
+  name: string;
+  aliases: string[];
+  description: string;
+  options: {
+    flags: string;
+    description: string;
+    required: boolean;
+  }[];
+  arguments: {
+    name: string;
+    required: boolean;
+    variadic: boolean;
+  }[];
+}
+
 export function analyzeProgram(program: Command, cliName?: string): CompletionContext {
-  const commands: any[] = [];
-  const globalOptions: any[] = [];
+  const commands: CommandInfo[] = [];
+  const globalOptions: { flags: string; description: string; required: boolean }[] = [];
 
   // Extract global options
   program.options.forEach((option) => {
     globalOptions.push({
       flags: option.flags,
       description: option.description || '',
+      required: option.required || false,
     });
   });
 
@@ -106,10 +123,10 @@ export function analyzeProgram(program: Command, cliName?: string): CompletionCo
 
       const cmdInfo = {
         name: fullName,
-        aliases: (subCmd as any)._aliases || [],
+        aliases: (subCmd as unknown as { _aliases?: string[] })._aliases || [],
         description: subCmd.description() || '',
-        options: [] as any[],
-        arguments: [] as any[],
+        options: [] as { flags: string; description: string; required: boolean }[],
+        arguments: [] as { name: string; required: boolean; variadic: boolean }[],
       };
 
       // Extract command options

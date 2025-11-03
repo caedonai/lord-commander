@@ -21,7 +21,7 @@ describe('Stack Trace Leakage Security', () => {
     originalDebug = process.env.DEBUG;
 
     // Prevent actual process.exit during tests
-    vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+    vi.spyOn(process, 'exit').mockImplementation((() => {}) as never);
     // Mock console to capture output
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -635,7 +635,7 @@ describe('Stack Trace Leakage Security', () => {
         sensitivePatterns: [],
       });
 
-      expect(analyzeStackTraceSecurity(null as any)).toEqual({
+      expect(analyzeStackTraceSecurity(null as unknown as string)).toEqual({
         riskLevel: 'low',
         risks: [],
         recommendations: [],

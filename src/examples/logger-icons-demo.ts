@@ -40,7 +40,7 @@ interface PlatformTestCase {
 
 // Enhanced logger type with icon methods
 type EnhancedLogger = ReturnType<typeof createLogger> & {
-  [key: string]: any; // Allow dynamic icon methods
+  [key: string]: Function | unknown; // Allow dynamic icon methods
 };
 
 /**
@@ -78,7 +78,7 @@ async function demonstrateIconSystem(): Promise<void> {
   };
 
   // Use available methods or fallback to basic logging
-  const logPlatformInfo = (icon: keyof ExtendedIcons, key: keyof PlatformInfo, value: any) => {
+  const logPlatformInfo = (icon: keyof ExtendedIcons, key: keyof PlatformInfo, value: unknown) => {
     const message = `${key}: ${value}`;
     if (logger.withIcon) {
       logger.withIcon(icon, message);

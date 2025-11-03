@@ -298,7 +298,7 @@ export class PromptFlow {
     return enhancedConfirm(message, {
       ...options,
       showProgress: { current: this.currentStep + 1, total: this.totalSteps },
-    } as any);
+    } as ConfirmPromptOptions & { showProgress: { current: number; total: number } });
   }
 
   async select<T = string>(
@@ -309,7 +309,7 @@ export class PromptFlow {
     return enhancedSelect(message, options, {
       ...promptOptions,
       showProgress: { current: this.currentStep + 1, total: this.totalSteps },
-    } as any);
+    } as SelectPromptOptions<T> & { showProgress: { current: number; total: number } });
   }
 }
 
@@ -478,7 +478,7 @@ export async function select<T = string>(
 
   const result = await clack.select({
     message: theme.style.question(message),
-    options: selectOptions as any,
+    options: selectOptions as unknown as Parameters<typeof clack.select>[0]['options'],
     maxItems: promptOptions.maxItems,
   });
 
@@ -513,7 +513,7 @@ export async function multiselect<T = string>(
 
   const result = await clack.multiselect({
     message: theme.style.question(message),
-    options: selectOptions as any,
+    options: selectOptions as unknown as Parameters<typeof clack.multiselect>[0]['options'],
     required: promptOptions.required !== false,
     maxItems: promptOptions.maxItems,
   });
@@ -539,7 +539,7 @@ export async function multiselect<T = string>(
 /**
  * Group related prompts together
  */
-export async function group<T extends Record<string, any>>(
+export async function group<T extends Record<string, unknown>>(
   prompts: {
     [K in keyof T]: () => Promise<T[K]>;
   },

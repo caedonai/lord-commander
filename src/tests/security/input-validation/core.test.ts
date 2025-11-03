@@ -9,6 +9,7 @@
 
 import { describe, expect, it } from 'vitest';
 import {
+  type InputValidationViolation,
   PROJECT_NAME_PATTERNS,
   sanitizeCommandArgs,
   sanitizePath,
@@ -69,7 +70,7 @@ describe('Input Validation Framework', () => {
         const invalidInputs = ['', null, undefined, ' ', '\t', '\n'];
 
         invalidInputs.forEach((input) => {
-          const result = validateProjectName(input as any);
+          const result = validateProjectName(input as string);
           expect(result.isValid).toBe(false);
           expect(result.violations).toContainEqual(
             expect.objectContaining({
@@ -199,7 +200,8 @@ describe('Input Validation Framework', () => {
           expect(result.isValid).toBe(false);
           expect(
             result.violations.some(
-              (v: any) => v.type.includes('traversal') || v.type.includes('suspicious')
+              (v: InputValidationViolation) =>
+                v.type.includes('traversal') || v.type.includes('suspicious')
             )
           ).toBe(true);
           expect(result.riskScore).toBeGreaterThan(30);
@@ -222,7 +224,8 @@ describe('Input Validation Framework', () => {
           expect(result.isValid).toBe(false);
           expect(
             result.violations.some(
-              (v: any) => v.type.includes('injection') || v.type.includes('suspicious')
+              (v: InputValidationViolation) =>
+                v.type.includes('injection') || v.type.includes('suspicious')
             )
           ).toBe(true);
           expect(result.riskScore).toBeGreaterThan(30);
@@ -360,7 +363,7 @@ describe('Input Validation Framework', () => {
         const invalidInputs = ['', null, undefined, ' ', '\t'];
 
         invalidInputs.forEach((input) => {
-          const result = validatePackageManager(input as any);
+          const result = validatePackageManager(input as string);
           expect(result.isValid).toBe(false);
           expect(result.violations).toContainEqual(
             expect.objectContaining({
@@ -429,10 +432,10 @@ describe('Input Validation Framework', () => {
 
         // But severity should be different
         const strictViolation = strictResult.violations.find(
-          (v: any) => v.type === 'suspicious-pattern'
+          (v: InputValidationViolation) => v.type === 'suspicious-pattern'
         );
         const lenientViolation = lenientResult.violations.find(
-          (v: any) => v.type === 'suspicious-pattern'
+          (v: InputValidationViolation) => v.type === 'suspicious-pattern'
         );
 
         expect(strictViolation?.severity).toBe('high');
@@ -563,20 +566,20 @@ describe('Input Validation Framework', () => {
     describe('Input validation', () => {
       it('should reject non-array inputs', () => {
         expect(() => {
-          sanitizeCommandArgs('not-an-array' as any);
+          sanitizeCommandArgs('not-an-array' as never);
         }).toThrow(/Invalid arguments array/);
       });
 
       it('should reject non-string arguments', () => {
         expect(() => {
-          sanitizeCommandArgs([123, true, null] as any);
+          sanitizeCommandArgs([123, true, null] as never);
         }).toThrow(/Arguments must be valid strings/);
       });
 
       it('should filter out empty arguments', () => {
-        const argsWithEmpties = ['build', '', '  ', 'test', null, undefined] as any;
+        const argsWithEmpties = ['build', '', '  ', 'test', null, undefined] as unknown[];
         const result = sanitizeCommandArgs(
-          argsWithEmpties.filter((arg: any) => typeof arg === 'string')
+          argsWithEmpties.filter((arg: unknown) => typeof arg === 'string') as string[]
         );
         expect(result).toEqual(['build', 'test']);
       });
@@ -675,7 +678,7 @@ describe('Input Validation Framework', () => {
 
         invalidInputs.forEach((input) => {
           expect(() => {
-            sanitizePath(input as any);
+            sanitizePath(input as never);
           }).toThrow(/Arguments must be valid strings/);
         });
       });
@@ -728,7 +731,7 @@ describe('Input Validation Framework', () => {
 
     it('should reject invalid validation types', () => {
       expect(() => {
-        validateInput('test', 'invalid-type' as any);
+        validateInput('test', 'invalid-type' as never);
       }).toThrow(/Unknown validation type/);
     });
 
@@ -755,7 +758,7 @@ describe('Input Validation Framework', () => {
         expect(result.isValid).toBe(false);
         expect(
           result.violations.some(
-            (v: any) =>
+            (v: InputValidationViolation) =>
               v.type === 'suspicious-pattern' || v.description.includes('invalid characters')
           )
         ).toBe(true);
@@ -796,7 +799,7 @@ describe('Input Validation Framework', () => {
       const results = await Promise.all(promises);
 
       // All should be valid and consistent
-      results.forEach((result: any, index: number) => {
+      results.forEach((result, index: number) => {
         expect(result.isValid).toBe(true);
         expect(result.sanitized).toBe(`project-${index}`);
       });
@@ -941,7 +944,12 @@ describe('Input Validation Framework', () => {
       });
 
       it('should handle circular references in validation config', () => {
-        const circularConfig: any = { strict: true };
+        const circularConfig: ValidationConfig & Record<string, unknown> = {
+          strictMode: true,
+          maxLength: 100,
+          autoSanitize: false,
+          provideSuggestions: true,
+        };
         circularConfig.self = circularConfig;
 
         expect(() => {
@@ -1181,7 +1189,7 @@ describe('Input Validation Framework', () => {
 
         malformedConfigs.forEach((config) => {
           expect(() => {
-            const result = validateProjectName('test-project', config as any);
+            const result = validateProjectName('test-project', config as Partial<ValidationConfig>);
             expect(result).toHaveProperty('isValid');
           }).not.toThrow();
         });
@@ -1208,7 +1216,7 @@ describe('Input Validation Framework', () => {
     describe('Concurrency and Race Condition Tests', () => {
       it('should handle high-concurrency validation safely', async () => {
         const concurrentOperations = 1000;
-        const promises: Promise<any>[] = [];
+        const promises: Promise<unknown>[] = [];
 
         for (let i = 0; i < concurrentOperations; i++) {
           promises.push(

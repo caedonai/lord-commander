@@ -3,10 +3,11 @@ import { join } from 'node:path';
 import { Command } from 'commander';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { registerCommands, resetCommandTracking } from '../../core/commands/registerCommands.js';
+import type { CommandContext } from '../../types/cli.js';
 
 describe('registerCommands Built-in Exclusion', () => {
   let program: Command;
-  let mockContext: any;
+  let mockContext: CommandContext;
   let tempDir: string;
 
   beforeEach(async () => {
@@ -22,7 +23,8 @@ describe('registerCommands Built-in Exclusion', () => {
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
-      },
+      } as unknown,
+      prompts: {} as unknown,
     };
 
     // Create a temporary directory for test commands within src/tests to pass security validation

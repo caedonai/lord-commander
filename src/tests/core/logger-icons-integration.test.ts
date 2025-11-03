@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock @clack/prompts before importing logger
 vi.mock('@clack/prompts', async () => {
-  const actual = (await vi.importActual('@clack/prompts')) as any;
+  const actual = (await vi.importActual('@clack/prompts')) as Record<string, unknown>;
   return {
     ...actual,
     log: {
@@ -97,7 +97,7 @@ describe('Enhanced Logger with Icons', () => {
 
     it('should handle invalid icon names gracefully', () => {
       // Should not throw when using invalid icon names
-      expect(() => logger.withIcon('nonexistent' as any, 'Test message')).not.toThrow();
+      expect(() => logger.withIcon('nonexistent' as never, 'Test message')).not.toThrow();
 
       // Should warn about invalid icon (warnings go to console.log, not console.warn)
       expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -548,22 +548,22 @@ describe('Enhanced Logger with Icons', () => {
       const malformedNames = [null, undefined, '', 123, {}, []];
 
       malformedNames.forEach((name) => {
-        expect(() => logger.withIcon(name as any, 'Test')).not.toThrow();
+        expect(() => logger.withIcon(name as never, 'Test')).not.toThrow();
       });
     });
 
     it('should handle empty messages', () => {
       expect(() => logger.rocket('')).not.toThrow();
-      expect(() => logger.rocket(null as any)).not.toThrow();
-      expect(() => logger.rocket(undefined as any)).not.toThrow();
+      expect(() => logger.rocket(null as never)).not.toThrow();
+      expect(() => logger.rocket(undefined as never)).not.toThrow();
     });
 
     it('should handle logger configuration errors gracefully', () => {
       // Create logger with invalid configuration
       expect(() => {
         const invalidLogger = createLogger({
-          theme: null as any,
-          level: -1 as any,
+          theme: null as never,
+          level: -1 as never,
         });
         invalidLogger.rocket('Test');
       }).not.toThrow();

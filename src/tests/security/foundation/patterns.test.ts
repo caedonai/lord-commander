@@ -345,8 +345,8 @@ describe('Security Patterns', () => {
     });
 
     it('should handle null and undefined inputs gracefully', () => {
-      expect(() => analyzeInputSecurity(null as any)).not.toThrow();
-      expect(() => sanitizeInput(undefined as any)).not.toThrow();
+      expect(() => analyzeInputSecurity(null as unknown as string)).not.toThrow();
+      expect(() => sanitizeInput(undefined as unknown as string)).not.toThrow();
     });
 
     it('should handle very long inputs', () => {

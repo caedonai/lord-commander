@@ -162,13 +162,29 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
 
       // Check nested structure is preserved
       expect(result.entry.context.user).toBeDefined();
-      expect((result.entry.context.user as any).id).toBe('user123');
-      expect((result.entry.context.user as any).profile.name).toBe('John Doe');
-      expect((result.entry.context.user as any).profile.email).toBe('john@example.com');
+      expect((result.entry.context.user as Record<string, unknown>).id).toBe('user123');
+      expect(
+        ((result.entry.context.user as Record<string, unknown>).profile as Record<string, unknown>)
+          .name
+      ).toBe('John Doe');
+      expect(
+        ((result.entry.context.user as Record<string, unknown>).profile as Record<string, unknown>)
+          .email
+      ).toBe('john@example.com');
 
       // Check nested sensitive fields are masked
-      expect((result.entry.context.user as any).profile.password).toBe('[MASKED]');
-      expect((result.entry.context.request as any).headers.authorization).toBe('[MASKED]');
+      expect(
+        ((result.entry.context.user as Record<string, unknown>).profile as Record<string, unknown>)
+          .password
+      ).toBe('[MASKED]');
+      expect(
+        (
+          (result.entry.context.request as Record<string, unknown>).headers as Record<
+            string,
+            unknown
+          >
+        ).authorization
+      ).toBe('[MASKED]');
     });
 
     it('should handle array values in context', () => {
@@ -441,9 +457,9 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
     it('should handle error chains with cause property', () => {
       const rootCause = new Error('Network timeout');
       const intermediateError = new Error('Connection failed');
-      (intermediateError as any).cause = rootCause;
+      (intermediateError as Error & Record<string, Error>).cause = rootCause;
       const topLevelError = new Error('Operation failed');
-      (topLevelError as any).cause = intermediateError;
+      (topLevelError as Error & Record<string, Error>).cause = intermediateError;
 
       const result = logger.createLogEntry('Chained error test', {
         error: topLevelError,
@@ -550,7 +566,16 @@ describe('Task 1.4.2: Structured Logging Core Features', () => {
       expect(result.entry.context.timestamp).toBe('2025-01-01T12:00:00.000Z');
       expect(result.entry.context.numbers).toEqual([1, 2, 3, 4, 5]);
       expect(result.entry.context.boolean).toBe(true);
-      expect((result.entry.context.nested as any).level1.level2.value).toBe('deep-value');
+      expect(
+        (
+          (
+            (result.entry.context.nested as Record<string, unknown>).level1 as Record<
+              string,
+              unknown
+            >
+          ).level2 as Record<string, unknown>
+        ).value
+      ).toBe('deep-value');
     });
   });
 });

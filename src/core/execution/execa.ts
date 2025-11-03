@@ -8,7 +8,7 @@
 import { mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa';
+import type { ExecaError, ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa';
 // Note: execa package needs to be installed as a dependency
 // npm install execa@^8.0.1
 import { execa as execaLib, execaSync as execaSyncLib } from 'execa';
@@ -268,7 +268,15 @@ export async function execa(
     return result;
   } catch (error: unknown) {
     const duration = Date.now() - startTime;
-    const execError = error as any; // Type assertion for error properties
+    interface ExecaError {
+      exitCode?: number;
+      stdout?: string;
+      stderr?: string;
+      signal?: string;
+      killed?: boolean;
+      timedOut?: boolean;
+    }
+    const execError = error as unknown as ExecaError;
 
     // Handle execa-specific errors
     if (execError.exitCode !== undefined) {
@@ -289,10 +297,10 @@ export async function execa(
 
       if (options.reject !== false) {
         throw new ProcessError(
-          execError.message || `Command failed: ${fullCommand}`,
+          (execError as Error).message || `Command failed: ${fullCommand}`,
           fullCommand,
           execError.exitCode,
-          execError
+          execError as Error
         );
       }
 
@@ -356,7 +364,7 @@ export function execaSync(
       timeout: timeout || undefined,
       reject,
       shell: false, // Force secure default
-      encoding: encoding as any, // Type assertion for encoding compatibility
+      encoding: encoding === 'utf8' ? encoding : 'utf8',
       ...syncOptions,
     });
 
@@ -383,7 +391,7 @@ export function execaSync(
     return result;
   } catch (error: unknown) {
     const duration = Date.now() - startTime;
-    const execError = error as any; // Type assertion for error properties
+    const execError = error as unknown as ExecaError;
 
     if (execError.exitCode !== undefined) {
       const result: ExecResult = {
@@ -507,13 +515,13 @@ export async function execaStream(
 
     return result;
   } catch (error: unknown) {
-    const execError = error as any; // Type assertion for error properties
+    const execError = error as unknown as ExecaError;
     if (execError.exitCode !== undefined) {
       throw new ProcessError(
-        execError.message || `Streaming command failed: ${fullCommand}`,
+        (execError as Error).message || `Streaming command failed: ${fullCommand}`,
         fullCommand,
         execError.exitCode,
-        execError
+        execError as Error
       );
     }
 

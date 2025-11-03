@@ -132,7 +132,7 @@ describe('Shell Autocomplete', () => {
 
     it('should throw error for unsupported shell', () => {
       expect(() => {
-        generateCompletion(testProgram, 'unsupported-shell' as any);
+        generateCompletion(testProgram, 'unsupported-shell' as 'bash');
       }).toThrow('Unsupported shell: unsupported-shell');
     });
   });
@@ -199,7 +199,7 @@ describe('Shell Autocomplete', () => {
     });
 
     it('should handle unsupported shell', async () => {
-      const result = await installCompletion(testProgram, { shell: 'unsupported' as any });
+      const result = await installCompletion(testProgram, { shell: 'unsupported' as 'bash' });
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Unsupported shell: unsupported');
@@ -232,7 +232,7 @@ describe('Shell Autocomplete', () => {
     });
 
     it('should handle unsupported shell', async () => {
-      const result = await uninstallCompletion(testProgram, { shell: 'unsupported' as any });
+      const result = await uninstallCompletion(testProgram, { shell: 'unsupported' as 'bash' });
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Unsupported shell: unsupported');

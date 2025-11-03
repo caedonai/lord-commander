@@ -464,7 +464,11 @@ export class MemorySizeCalculator {
     for (const key of keys) {
       size += key.length * 2; // Key string size
       try {
-        size += this.calculateSizeInternal((obj as any)[key], visited, depth + 1);
+        size += this.calculateSizeInternal(
+          (obj as unknown as Record<string, unknown>)[key],
+          visited,
+          depth + 1
+        );
       } catch (error) {
         // Re-throw MemoryProtectionError to propagate security violations
         if (error instanceof MemoryProtectionError) {
@@ -1068,12 +1072,12 @@ export function truncateForMemory<T>(obj: T, maxSize = DEFAULT_MEMORY_CONFIG.max
 
   // For objects, reduce properties
   if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
-    const truncated = {} as any;
+    const truncated = {} as Record<string, unknown>;
     const keys = Object.keys(obj);
     const maxProperties = Math.floor(DEFAULT_MEMORY_CONFIG.maxPropertyCount / 2);
 
     for (let i = 0; i < Math.min(keys.length, maxProperties); i++) {
-      truncated[keys[i]] = (obj as any)[keys[i]];
+      truncated[keys[i]] = (obj as Record<string, unknown>)[keys[i]];
       if (!isMemorySafe(truncated, maxSize)) {
         delete truncated[keys[i]];
         break;
