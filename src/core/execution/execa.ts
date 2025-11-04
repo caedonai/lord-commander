@@ -811,3 +811,49 @@ export async function execaParallel(
   await Promise.all(executing);
   return results;
 }
+
+/**
+ * Execa module interface for CommandContext
+ */
+export interface ExecaModule {
+  // Core execution functions
+  execa: typeof execa;
+  execaSync: typeof execaSync;
+  execaStream: typeof execaStream;
+  execaWithOutput: typeof execaWithOutput;
+
+  // Utility functions
+  commandExists: typeof commandExists;
+  detectPackageManager: typeof detectPackageManager;
+  runPackageManagerExeca: typeof runPackageManagerExeca;
+  gitExeca: typeof gitExeca;
+
+  // Advanced execution
+  createCancellableExecution: typeof createCancellableExecution;
+  execaSequence: typeof execaSequence;
+  execaParallel: typeof execaParallel;
+}
+
+/**
+ * Default export object implementing ExecaModule interface
+ */
+const execaModule: ExecaModule = {
+  // Core execution functions
+  execa,
+  execaSync,
+  execaStream,
+  execaWithOutput,
+
+  // Utility functions
+  commandExists,
+  detectPackageManager,
+  runPackageManagerExeca,
+  gitExeca,
+
+  // Advanced execution
+  createCancellableExecution,
+  execaSequence,
+  execaParallel,
+};
+
+export default execaModule;

@@ -733,3 +733,85 @@ export const flows = {
 export { clack };
 
 // Note: isCancel is already exported from errors.js, so we don't re-export it here to avoid conflicts
+
+/**
+ * Prompts module interface for CommandContext
+ */
+export interface PromptsModule {
+  // Theme management
+  DEFAULT_THEME: typeof DEFAULT_THEME;
+  setTheme: typeof setTheme;
+  getTheme: typeof getTheme;
+
+  // Visual helpers
+  printSeparator: typeof printSeparator;
+  printPromptHeader: typeof printPromptHeader;
+  printPromptFooter: typeof printPromptFooter;
+  printSection: typeof printSection;
+  printTaskStart: typeof printTaskStart;
+  printTaskComplete: typeof printTaskComplete;
+  printSpacing: typeof printSpacing;
+
+  // Enhanced prompts
+  enhancedText: typeof enhancedText;
+  enhancedConfirm: typeof enhancedConfirm;
+  enhancedSelect: typeof enhancedSelect;
+  PromptFlow: typeof PromptFlow;
+
+  // Basic prompts
+  intro: typeof intro;
+  outro: typeof outro;
+  note: typeof note;
+  log: typeof log;
+  spinner: typeof spinner;
+  text: typeof text;
+  password: typeof password;
+  confirm: typeof confirm;
+  select: typeof select;
+  multiselect: typeof multiselect;
+
+  // Advanced utilities
+  clack: typeof clack;
+}
+
+/**
+ * Default export object implementing PromptsModule interface
+ */
+const prompts: PromptsModule = {
+  // Theme management
+  DEFAULT_THEME,
+  setTheme,
+  getTheme,
+
+  // Visual helpers
+  printSeparator,
+  printPromptHeader,
+  printPromptFooter,
+  printSection,
+  printTaskStart,
+  printTaskComplete,
+  printSpacing,
+
+  // Enhanced prompts
+  enhancedText,
+  enhancedConfirm,
+  enhancedSelect,
+  PromptFlow,
+
+  // Basic prompts
+  intro,
+  outro,
+  note,
+  log,
+  spinner,
+  text,
+  password,
+  confirm,
+  select,
+  multiselect,
+
+  // Advanced utilities
+  clack,
+};
+
+export default prompts;

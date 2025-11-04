@@ -6,7 +6,7 @@
  */
 
 import { existsSync } from 'node:fs';
-import fs from 'node:fs/promises';
+import fsPromises from 'node:fs/promises';
 import path from 'node:path';
 import type { JsonValue } from '../../types/common.js';
 import { DEFAULT_IGNORE_PATTERNS } from '../foundation/core/constants.js';
@@ -75,7 +75,7 @@ export function exists(filePath: string): boolean {
  */
 export async function stat(filePath: string): Promise<FileStats> {
   try {
-    const stats = await fs.stat(filePath);
+    const stats = await fsPromises.stat(filePath);
     return {
       isFile: stats.isFile(),
       isDirectory: stats.isDirectory(),
@@ -94,7 +94,7 @@ export async function stat(filePath: string): Promise<FileStats> {
  */
 export async function ensureDir(dirPath: string): Promise<void> {
   try {
-    await fs.mkdir(dirPath, { recursive: true });
+    await fsPromises.mkdir(dirPath, { recursive: true });
     fsLogger.debug(`Ensured directory exists: ${dirPath}`);
   } catch (error) {
     throw new FileSystemError(`Failed to create directory: ${dirPath}`, dirPath, error as Error);
@@ -117,10 +117,10 @@ export async function remove(
     const stats = await stat(targetPath);
 
     if (stats.isDirectory) {
-      await fs.rmdir(targetPath, { recursive: options.recursive ?? true });
+      await fsPromises.rmdir(targetPath, { recursive: options.recursive ?? true });
       fsLogger.debug(`Removed directory: ${targetPath}`);
     } else {
-      await fs.unlink(targetPath);
+      await fsPromises.unlink(targetPath);
       fsLogger.debug(`Removed file: ${targetPath}`);
     }
   } catch (error) {
@@ -136,7 +136,7 @@ export async function readFile(
   encoding: BufferEncoding = 'utf8'
 ): Promise<string> {
   try {
-    const content = await fs.readFile(filePath, encoding);
+    const content = await fsPromises.readFile(filePath, encoding);
     fsLogger.debug(`Read file: ${filePath} (${content.length} chars)`);
     return content;
   } catch (error) {
@@ -169,7 +169,7 @@ export async function writeFile(
       await ensureDir(parentDir);
     }
 
-    await fs.writeFile(filePath, content, 'utf8');
+    await fsPromises.writeFile(filePath, content, 'utf8');
     fsLogger.debug(`Wrote file: ${filePath} (${content.length} chars)`);
   } catch (error) {
     if (error instanceof FileSystemError) throw error;
@@ -243,12 +243,12 @@ export async function copyFile(
     }
 
     // Copy the file
-    await fs.copyFile(srcPath, destPath);
+    await fsPromises.copyFile(srcPath, destPath);
 
     // Preserve timestamps if requested
     if (preserveTimestamps) {
       const srcStats = await stat(srcPath);
-      await fs.utimes(destPath, srcStats.modified, srcStats.modified);
+      await fsPromises.utimes(destPath, srcStats.modified, srcStats.modified);
     }
 
     fsLogger.debug(`Copied file: ${srcPath} -> ${destPath}`);
@@ -292,7 +292,7 @@ export async function readDir(
     const { recursive = false, includeStats = false } = options;
     const entries: DirectoryEntry[] = [];
 
-    const items = await fs.readdir(dirPath);
+    const items = await fsPromises.readdir(dirPath);
 
     for (const item of items) {
       const itemPath = path.join(dirPath, item);
@@ -301,7 +301,7 @@ export async function readDir(
       if (includeStats) {
         stats = await stat(itemPath);
       } else {
-        const fsStats = await fs.stat(itemPath);
+        const fsStats = await fsPromises.stat(itemPath);
         stats = {
           isFile: fsStats.isFile(),
           isDirectory: fsStats.isDirectory(),
@@ -553,10 +553,70 @@ export async function move(
       await ensureDir(destDir);
     }
 
-    await fs.rename(src, dest);
+    await fsPromises.rename(src, dest);
     fsLogger.debug(`Moved: ${src} -> ${dest}`);
   } catch (error) {
     if (error instanceof FileSystemError) throw error;
     throw new FileSystemError(`Failed to move: ${src} -> ${dest}`, src, error as Error);
   }
 }
+
+/**
+ * File system module interface for CommandContext
+ */
+export interface FSModule {
+  // Core file operations
+  exists: typeof exists;
+  ensureDir: typeof ensureDir;
+  readFile: typeof readFile;
+  writeFile: typeof writeFile;
+  readJSON: typeof readJSON;
+  writeJSON: typeof writeJSON;
+
+  // Directory operations
+  readDir: typeof readDir;
+  remove: typeof remove;
+  cleanDir: typeof cleanDir;
+
+  // Advanced operations
+  copy: typeof copy;
+  copyFile: typeof copyFile;
+  copyDir: typeof copyDir;
+  move: typeof move;
+  stat: typeof stat;
+  getSize: typeof getSize;
+
+  // Utility functions
+  findFiles: typeof findFiles;
+}
+
+/**
+ * Default export object implementing FSModule interface
+ */
+const fs: FSModule = {
+  // Core file operations
+  exists,
+  ensureDir,
+  readFile,
+  writeFile,
+  readJSON,
+  writeJSON,
+
+  // Directory operations
+  readDir,
+  remove,
+  cleanDir,
+
+  // Advanced operations
+  copy,
+  copyFile,
+  copyDir,
+  move,
+  stat,
+  getSize,
+
+  // Utility functions
+  findFiles,
+};
+
+export default fs;

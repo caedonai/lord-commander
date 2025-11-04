@@ -1,28 +1,8 @@
 import type { Command } from 'commander';
 import type { CommandContext } from '../types/cli';
 
-interface CLILogger {
-  intro: (msg: string) => void;
-  outro: (msg: string) => void;
-  info: (msg: string) => void;
-  success: (msg: string) => void;
-  error: (msg: string | Error) => void;
-  enableVerbose: () => void;
-  debug: (msg: string) => void;
-}
-
-type CLIExeca = (command: string, args: string[]) => Promise<{ stdout: string }>;
-
-interface CLIFileSystem {
-  exists: (path: string) => Promise<boolean>;
-  readFile: (path: string, encoding: string) => Promise<string>;
-}
-
 export default function (program: Command, context: CommandContext) {
   const { logger, execa, fs } = context;
-  const log = logger as unknown as CLILogger;
-  const exec = execa as unknown as CLIExeca;
-  const fileSystem = fs as unknown as CLIFileSystem;
 
   program
     .command('hello')
@@ -34,66 +14,68 @@ export default function (program: Command, context: CommandContext) {
     .action(async (name = 'World', options) => {
       // Enable verbose logging if requested
       if (options.verbose) {
-        log.enableVerbose();
+        logger.enableVerbose();
       }
 
-      log.intro('Hello Command');
-      log.info(`Greeting ${name}...`);
+      logger.intro('Hello Command');
+      logger.info(`Greeting ${name}...`);
 
       let message = `Hello, ${name}!`;
 
       if (options.uppercase) {
         message = message.toUpperCase();
-        log.debug('Message converted to uppercase');
+        logger.debug('Message converted to uppercase');
       }
 
-      log.success(message);
+      logger.success(message);
 
       // Show basic system and project info if requested
-      if (options.info) {
+      if (options.info && execa && fs) {
         try {
-          log.info('Gathering system information...');
+          logger.info('Gathering system information...');
 
           // Show Node.js version using execa
-          const nodeResult = await exec('node', ['--version']);
-          log.info(`Node.js version: ${nodeResult.stdout}`);
+          const nodeResult = await execa.execa('node', ['--version']);
+          logger.info(`Node.js version: ${nodeResult.stdout}`);
 
           // Show npm version
-          const npmResult = await exec('npm', ['--version']);
-          log.info(`npm version: ${npmResult.stdout}`);
+          const npmResult = await execa.execa('npm', ['--version']);
+          logger.info(`npm version: ${npmResult.stdout}`);
 
-          // Show current working directory using fs
+          // Show current working directory
           const cwd = process.cwd();
-          log.info(`Current directory: ${cwd}`);
+          logger.info(`Current directory: ${cwd}`);
 
           // Check if package.json exists
-          const packageJsonExists = await fileSystem.exists('package.json');
-          log.info(`Has package.json: ${packageJsonExists ? '✅' : '❌'}`);
+          const packageJsonExists = fs.exists('package.json');
+          logger.info(`Has package.json: ${packageJsonExists ? '✅' : '❌'}`);
 
           if (packageJsonExists) {
-            const packageJson = JSON.parse(await fileSystem.readFile('package.json', 'utf8'));
-            log.info(`Project: ${packageJson.name || 'unnamed'}`);
-            log.info(`Version: ${packageJson.version || 'unknown'}`);
+            const packageJson = JSON.parse(await fs.readFile('package.json'));
+            logger.info(`Project: ${packageJson.name || 'unnamed'}`);
+            logger.info(`Version: ${packageJson.version || 'unknown'}`);
 
             if (packageJson.dependencies) {
               const depCount = Object.keys(packageJson.dependencies).length;
-              log.info(`Dependencies: ${depCount}`);
+              logger.info(`Dependencies: ${depCount}`);
             }
 
             if (packageJson.scripts) {
               const scriptNames = Object.keys(packageJson.scripts);
-              log.info(`Available scripts: ${scriptNames.join(', ')}`);
+              logger.info(`Available scripts: ${scriptNames.join(', ')}`);
             }
           }
 
           // Show environment info
-          log.info(`Platform: ${process.platform}`);
-          log.info(`Architecture: ${process.arch}`);
+          logger.info(`Platform: ${process.platform}`);
+          logger.info(`Architecture: ${process.arch}`);
         } catch (error) {
-          log.error(`System info error: ${error instanceof Error ? error.message : String(error)}`);
+          logger.error(
+            `System info error: ${error instanceof Error ? error.message : String(error)}`
+          );
         }
       }
 
-      log.outro('Command completed!');
+      logger.outro('Command completed!');
     });
 }

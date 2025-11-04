@@ -1,4 +1,10 @@
-// CLI interface types - using unknown for compatibility with type assertions in commands
+// CLI interface types - using concrete types for better type safety
+
+import type { ExecaModule } from '../core/execution/execa.js';
+import type { FSModule } from '../core/execution/fs.js';
+import type { Logger } from '../core/ui/logger.js';
+import type { PromptsModule } from '../core/ui/prompts.js';
+import type { GitModule } from '../plugins/git.js';
 
 export interface CreateCliOptions {
   name?: string;
@@ -36,14 +42,14 @@ export interface CreateCliOptions {
  */
 export interface CommandContext {
   // Core utilities
-  fs?: unknown; // File system operations (implemented)
-  execa?: unknown; // Process execution (implemented)
-  logger: unknown; // Logging and spinners (implemented)
-  prompts: unknown; // Interactive user input (implemented)
+  fs?: FSModule; // File system operations (implemented)
+  execa?: ExecaModule; // Process execution (implemented)
+  logger: Logger; // Logging and spinners (implemented)
+  prompts: PromptsModule; // Interactive user input (implemented)
   temp?: unknown; // Temporary workspace management (to be implemented)
 
   // Plugin utilities (all optional - only available when explicitly enabled)
-  git?: unknown; // Git operations (implemented, plugin)
+  git?: GitModule; // Git operations (implemented, plugin)
   config?: unknown; // Configuration management (to be implemented)
   telemetry?: unknown; // Analytics and tracking (to be implemented)
 

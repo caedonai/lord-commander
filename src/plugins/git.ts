@@ -469,3 +469,53 @@ export async function isClean(cwd: string = process.cwd()): Promise<boolean> {
     });
   }
 }
+
+/**
+ * Git module interface for CommandContext
+ */
+export interface GitModule {
+  // Core git operations
+  isGitRepository: typeof isGitRepository;
+  isGitAvailable: typeof isGitAvailable;
+  getRepositoryRoot: typeof getRepositoryRoot;
+  init: typeof init;
+  clone: typeof clone;
+  getStatus: typeof getStatus;
+  add: typeof add;
+  commit: typeof commit;
+
+  // Advanced operations
+  getCommits: typeof getCommits;
+  getDiff: typeof getDiff;
+  getBranches: typeof getBranches;
+  createBranch: typeof createBranch;
+  checkout: typeof checkout;
+  getCurrentCommit: typeof getCurrentCommit;
+  isClean: typeof isClean;
+}
+
+/**
+ * Default export object implementing GitModule interface
+ */
+const git: GitModule = {
+  // Core git operations
+  isGitRepository,
+  isGitAvailable,
+  getRepositoryRoot,
+  init,
+  clone,
+  getStatus,
+  add,
+  commit,
+
+  // Advanced operations
+  getCommits,
+  getDiff,
+  getBranches,
+  createBranch,
+  checkout,
+  getCurrentCommit,
+  isClean,
+};
+
+export default git;

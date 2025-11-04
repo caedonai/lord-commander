@@ -3,11 +3,11 @@ import type { CommandContext, CreateCliOptions } from '../types/cli';
 import resolveCliDefaults, { loadConfig } from '../utils/config.js';
 import { analyzeProgram, detectShell, installCompletion } from './commands/autocomplete.js';
 import { registerCommands } from './commands/registerCommands.js';
-import * as execa from './execution/execa.js';
-import * as fs from './execution/fs.js';
+import execa from './execution/execa.js';
+import fs from './execution/fs.js';
 import { CLIError, formatError } from './foundation/errors/errors.js';
 import { logger } from './ui/logger.js';
-import * as prompts from './ui/prompts.js';
+import prompts from './ui/prompts.js';
 
 /**
  * Custom error class for error handler validation failures
@@ -559,7 +559,9 @@ export async function createCLI(options: CreateCliOptions): Promise<EnhancedComm
         try {
           // Dynamic import based on plugin name - only imports requested plugins
           const pluginModule = await import(`../plugins/${pluginName}.js`);
-          (context as unknown as Record<string, unknown>)[pluginName] = pluginModule;
+          // Use default export if available, otherwise use the module itself
+          const plugin = pluginModule.default || pluginModule;
+          (context as unknown as Record<string, unknown>)[pluginName] = plugin;
           logger.debug(`Dynamically loaded plugin: ${pluginName}`);
         } catch (error) {
           logger.warn(
