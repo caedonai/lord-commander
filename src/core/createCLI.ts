@@ -42,11 +42,11 @@ const DEFAULT_ERROR_HANDLER_CONFIG: ErrorHandlerSecurityOptions = {
 };
 
 /**
- * Validate error handler function for security risks
+ * Validate error handler for security issues before execution
  *
- * Performs comprehensive security analysis including:
- * - Function type and parameter validation
- * - Code content analysis for dangerous operations
+ * This function performs comprehensive security validation including:
+ * - Function type verification
+ * - Source code analysis for dangerous operations
  * - Module usage validation
  * - Size and complexity limits
  *
@@ -55,7 +55,7 @@ const DEFAULT_ERROR_HANDLER_CONFIG: ErrorHandlerSecurityOptions = {
  * @throws {ErrorHandlerValidationError} If validation fails
  */
 export function validateErrorHandler(
-  handler: unknown,
+  handler: ((error: Error) => void | Promise<void>) | unknown,
   options: ErrorHandlerSecurityOptions = {}
 ): void {
   const config = { ...DEFAULT_ERROR_HANDLER_CONFIG, ...options };
@@ -395,17 +395,16 @@ function sanitizeErrorObject(error: Error, securityConfig = DEFAULT_SECURITY_CON
       0,
       securityConfig.maxContextProperties
     );
-    (sanitizedError as unknown as { context: Record<string, unknown> }).context =
-      Object.fromEntries(
-        contextEntries.map(([key, value]) => [
-          key,
-          typeof value === 'string'
-            ? truncateErrorMessage(value, 100)
-            : typeof value === 'object'
-              ? '[Object - truncated]'
-              : value,
-        ])
-      );
+    (sanitizedError as Error & { context: Record<string, unknown> }).context = Object.fromEntries(
+      contextEntries.map(([key, value]) => [
+        key,
+        typeof value === 'string'
+          ? truncateErrorMessage(value, 100)
+          : typeof value === 'object'
+            ? '[Object - truncated]'
+            : value,
+      ])
+    );
   }
 
   return sanitizedError;
@@ -561,7 +560,8 @@ export async function createCLI(options: CreateCliOptions): Promise<EnhancedComm
           const pluginModule = await import(`../plugins/${pluginName}.js`);
           // Use default export if available, otherwise use the module itself
           const plugin = pluginModule.default || pluginModule;
-          (context as unknown as Record<string, unknown>)[pluginName] = plugin;
+          // Type-safe dynamic assignment to context
+          (context as CommandContext & Record<string, unknown>)[pluginName] = plugin;
           logger.debug(`Dynamically loaded plugin: ${pluginName}`);
         } catch (error) {
           logger.warn(
@@ -753,7 +753,7 @@ async function handleAutocompleteSetup(program: Command, options: CreateCliOptio
   }
 
   // Add completion context to program for command access
-  (program as unknown as { _autocompleteContext: unknown })._autocompleteContext =
+  (program as Command & { _autocompleteContext: unknown })._autocompleteContext =
     analyzeProgram(program);
 }
 

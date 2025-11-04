@@ -89,23 +89,33 @@ import type { CommandContext } from '../types/cli.js';
  * @param program - Commander.js program instance
  * @param context - CLI context with logger and other utilities
  */
-interface CLILogger {
-  intro: (msg: string) => void;
-  outro: (msg: string) => void;
-  info: (msg: string) => void;
-  success: (msg: string) => void;
-  warn: (msg: string) => void;
-  error: (msg: string) => void;
-  note: (msg: string, title?: string) => void;
-  spinner: (msg: string) => {
-    success: (msg: string) => void;
-    fail: (msg: string) => void;
-  };
-}
 
 export default function (program: Command, context: CommandContext) {
   const { logger } = context;
-  const log = logger as unknown as CLILogger;
+
+  // Create a logger wrapper that matches the expected interface
+  const log = {
+    info: (msg: string) => logger.info(msg),
+    success: (msg: string) => logger.success(msg),
+    warn: (msg: string) => logger.warn(msg),
+    error: (msg: string) => logger.error(msg),
+    note: (msg: string, title?: string) => logger.note(msg, title),
+    intro: (msg: string) => logger.intro(msg),
+    outro: (msg: string) => logger.outro(msg),
+    spinner: (msg: string) => {
+      const spinner = logger.spinner(msg);
+      return {
+        success: (msg: string) => {
+          spinner.stop(msg, 0);
+          logger.success(msg);
+        },
+        fail: (msg: string) => {
+          spinner.stop(msg, 1);
+          logger.error(msg);
+        },
+      };
+    },
+  };
 
   const completionCmd = program
     .command('completion')

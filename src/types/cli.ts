@@ -46,12 +46,12 @@ export interface CommandContext {
   execa?: ExecaModule; // Process execution (implemented)
   logger: Logger; // Logging and spinners (implemented)
   prompts: PromptsModule; // Interactive user input (implemented)
-  temp?: unknown; // Temporary workspace management (to be implemented)
+  temp?: TempModule; // Temporary workspace management (to be implemented)
 
   // Plugin utilities (all optional - only available when explicitly enabled)
   git?: GitModule; // Git operations (implemented, plugin)
-  config?: unknown; // Configuration management (to be implemented)
-  telemetry?: unknown; // Analytics and tracking (to be implemented)
+  config?: import('../utils/config.js').ConfigType; // Configuration data (loaded config object)
+  telemetry?: TelemetryModule; // Analytics and tracking (to be implemented)
 
   // Configuration and state
   cwd?: string; // Current working directory
@@ -83,4 +83,35 @@ export interface CLIConfig {
     endpoint?: string;
   };
   verbose?: boolean;
+}
+
+/**
+ * Configuration module interface for CommandContext
+ */
+export interface ConfigModule {
+  loadConfig: typeof import('../utils/config.js').loadConfig;
+  getPackageJSON: typeof import('../utils/config.js').getPackageJSON;
+  // Future configuration methods will be added here
+}
+
+/**
+ * Temporary workspace module interface for CommandContext
+ */
+export interface TempModule {
+  // Temporary workspace management methods (to be implemented)
+  createTempDir: (prefix?: string) => Promise<string>;
+  cleanupTempDir: (path: string) => Promise<void>;
+  createTempFile: (content: string, extension?: string) => Promise<string>;
+  // Future temp workspace methods will be added here
+}
+
+/**
+ * Telemetry module interface for CommandContext
+ */
+export interface TelemetryModule {
+  // Analytics tracking methods (to be implemented)
+  track: (event: string, data?: Record<string, string | number | boolean>) => void;
+  identify: (userId: string, traits?: Record<string, string | number | boolean>) => void;
+  flush: () => Promise<void>;
+  // Future telemetry methods will be added here
 }
