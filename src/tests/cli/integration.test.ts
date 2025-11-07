@@ -47,7 +47,7 @@ const testCases: TestCase[] = [
   {
     name: 'Completion Status',
     command: ['completion', 'status'],
-    shouldContain: ['Shell:', 'powershell'], // Adjust based on shell
+    shouldContain: ['Shell:', 'Detected Shell:'], // Shell-agnostic check
     shouldNotContain: ['Error:', 'Failed:'],
     expectSuccess: true,
   },

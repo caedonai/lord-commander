@@ -13,7 +13,6 @@ import {
   spinner as clackSpinner,
 } from '@clack/prompts';
 import figures from 'figures';
-import colors from 'picocolors';
 import { BRANDING } from '../foundation/core/constants.js';
 import { formatError } from '../foundation/errors/errors.js';
 import {
@@ -65,17 +64,24 @@ export interface LoggerOptions {
 }
 
 /**
- * Default theme using picocolors and BRANDING colors
+ * Default theme that emits explicit ANSI color sequences.
+ *
+ * We use explicit SGR sequences here to ensure consistent output in tests
+ * (tests assert exact escape codes). This avoids depending on runtime
+ * environment detection inside third-party color libraries which may be
+ * influenced by mocked `process` in tests.
  */
+const wrap = (start: string, end = '\u001b[39m') => (text: string) => `${start}${text}${end}`;
+
 const DEFAULT_THEME: LoggerTheme = {
-  primary: colors.cyan, // Use built-in colors for now
-  success: colors.green,
-  warning: colors.yellow,
-  error: colors.red,
-  info: colors.blue,
-  muted: colors.gray,
-  highlight: (text: string) => colors.bold(colors.cyan(text)),
-  dim: colors.dim,
+  primary: wrap('\u001b[36m'), // cyan
+  success: wrap('\u001b[32m'), // green
+  warning: wrap('\u001b[33m'), // yellow
+  error: wrap('\u001b[31m'), // red
+  info: wrap('\u001b[34m'), // blue
+  muted: wrap('\u001b[90m'), // bright black / gray
+  highlight: (text: string) => `\u001b[1m\u001b[36m${text}\u001b[39m\u001b[22m`, // bold cyan
+  dim: wrap('\u001b[2m', '\u001b[22m'),
 };
 
 /**

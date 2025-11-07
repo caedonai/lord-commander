@@ -1264,37 +1264,40 @@ export function sanitizePath(
   let sanitized = path.trim();
 
   // Check for absolute paths first (before general path safety)
-  if (isAbsolute(sanitized) && !allowAbsolute) {
+  // Detect Windows absolute paths (drive letter) and UNC paths on non-Windows hosts
+  const isWindowsDrive = /^[A-Za-z]:\\/.test(path) || /^[A-Za-z]:\//.test(path);
+  const isUNC = /^\\\\/.test(path) || /^\/\//.test(path);
+
+  if ((isAbsolute(sanitized) || isWindowsDrive || isUNC) && !allowAbsolute) {
     throw new Error('Absolute paths not allowed');
   }
 
-  // Check for specific malicious targets first (before normalization to preserve original path)
+  // Normalize the path early for consistent processing
+  try {
+    // Convert backslashes to forward slashes for cross-platform compatibility BEFORE normalization
+    sanitized = sanitized.replace(/\\/g, '/');
+    // Normalize the path (this will resolve .. and . segments)
+    sanitized = normalize(sanitized);
+    // Collapse duplicate separators (tests expect no double slashes)
+    sanitized = sanitized.replace(/\/+/g, '/');
+  } catch (_error) {
+    throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(path, 'Path normalization failed'));
+  }
+
+  // Check for specific malicious targets after normalization
   if (!allowTraversal) {
     // Check if this path targets specific sensitive system files or contains known attack patterns
     const hasSensitiveTarget =
-      /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|windows\/system32|boot|sys|proc)/i.test(path) ||
-      /\\(windows\\system32|documents and settings|users|programfiles)/i.test(path) ||
+      /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|windows\/system32|boot|sys|proc)/i.test(sanitized) ||
+      /\\(windows\\system32|documents and settings|users|programfiles)/i.test(sanitized) ||
       /\.\.[/\\].*\/(passwd|shadow|hosts|root|windows|system32|boot|sys|proc|sensitive)/i.test(
-        path
+        sanitized
       ) ||
-      /\.\.[/\\].*\\(windows|system32|boot|users|programfiles|sensitive)/i.test(path);
+      /\.\.[/\\].*\\(windows|system32|boot|users|programfiles|sensitive)/i.test(sanitized);
 
     if (hasSensitiveTarget) {
       throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(path, 'Path traversal detected'));
     }
-  }
-
-  // Normalize the path for proper directory escape checking
-  try {
-    sanitized = normalize(sanitized);
-    // Only convert backslashes to forward slashes if not preserving absolute paths
-    // When allowAbsolute is true, preserve the original path format for Windows compatibility
-    if (!allowAbsolute || !isAbsolute(path)) {
-      // Convert backslashes to forward slashes for consistency across platforms
-      sanitized = sanitized.replace(/\\/g, '/');
-    }
-  } catch (_error) {
-    throw new Error(ERROR_MESSAGES.MALICIOUS_PATH_DETECTED(path, 'Path normalization failed'));
   }
 
   // Check if path escapes working directory (for generic traversal without sensitive targets)

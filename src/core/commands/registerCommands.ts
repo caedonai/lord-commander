@@ -13,14 +13,30 @@ const processedPaths = new Set<string>();
  */
 function validateCommandPath(commandPath: string, workingDir: string): boolean {
   try {
+    // Check for Windows-style absolute paths even on non-Windows systems
+    const isWindowsDrive = /^[A-Za-z]:[\\\/]/.test(commandPath);
+    const isUNCPath = /^[\\\/][\\\/]/.test(commandPath);
+    const isUnixAbsolute = commandPath.startsWith('/');
+    
+    // Reject dangerous absolute paths that are outside our control
+    if (isWindowsDrive || isUNCPath) {
+      return false; // Block Windows absolute and UNC paths
+    }
+
     const resolvedPath = path.resolve(commandPath);
     const resolvedWorkingDir = path.resolve(workingDir);
 
-    // Ensure the resolved path is within the working directory or its subdirectories
+    // For Unix absolute paths, ensure they're within the working directory
+    if (isUnixAbsolute || path.isAbsolute(commandPath)) {
+      return resolvedPath.startsWith(resolvedWorkingDir + path.sep) || 
+             resolvedPath === resolvedWorkingDir;
+    }
+
+    // For relative paths, use standard validation
     const relativePath = path.relative(resolvedWorkingDir, resolvedPath);
 
-    // If relative path starts with '..' or is absolute, it's trying to escape
-    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+    // If relative path starts with '..', it's trying to escape
+    if (relativePath.startsWith('..')) {
       return false;
     }
 

@@ -367,8 +367,13 @@ export async function detectFrameworkSecurely(
 ): Promise<SecureFrameworkInfo | null> {
   // Allow test temp directories in test environment
   const isTestEnv = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
-  const isTestTempDir =
-    isTestEnv && (projectPath.includes('Temp') || projectPath.includes('/tmp/'));
+  // Consider common temporary directories (including macOS /var/folders used by Vitest)
+  const isTempPath =
+    projectPath.includes(tmpdir()) ||
+    projectPath.toLowerCase().includes('temp') ||
+    projectPath.includes('/tmp/') ||
+    projectPath.includes('/var/folders');
+  const isTestTempDir = isTestEnv && isTempPath;
 
   // Validate project path for security BEFORE resolving (unless it's a test temp dir)
   if (!isTestTempDir && !isPathSafe(projectPath)) {

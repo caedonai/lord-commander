@@ -5,10 +5,13 @@
  * ensuring API compatibility, color output, and bundle size benefits.
  */
 
-import colors from 'picocolors';
+import picocolors from 'picocolors';
 import { describe, expect, it } from 'vitest';
 import { formatError } from '../../core/foundation/errors/errors.js';
 import { createLogger, type LoggerTheme, LogLevel } from '../../core/ui/logger.js';
+
+// Force colors to be enabled for consistent test results
+const colors = picocolors.createColors(true);
 
 describe('Picocolors Migration Tests', () => {
   describe('Picocolors API Compatibility', () => {
@@ -207,7 +210,7 @@ describe('Picocolors Migration Tests', () => {
       ];
 
       requiredFunctions.forEach((funcName) => {
-        expect(typeof (colors as Record<string, unknown>)[funcName]).toBe('function');
+        expect(typeof (colors as unknown as Record<string, unknown>)[funcName]).toBe('function');
       });
     });
 
