@@ -190,10 +190,10 @@ describe('Logger Core Functionality', () => {
           // Other theme properties should remain default
         },
       });
-      
+
       partialThemeLogger.success('success message');
       partialThemeLogger.info('info message'); // Should use default theme
-      
+
       expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('SUCCESS-'));
       expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('\u001b[34m')); // Default blue for info
     });
@@ -204,7 +204,7 @@ describe('Logger Core Functionality', () => {
       logger.setLevel(LogLevel.ERROR);
       logger.info('info message'); // Should not log
       logger.error('error message'); // Should log
-      
+
       expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('info message'));
       expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('error message'));
     });
@@ -223,13 +223,13 @@ describe('Logger Core Functionality', () => {
 
     it('should respect log levels hierarchy', () => {
       logger.setLevel(LogLevel.WARN);
-      
+
       logger.verbose('verbose'); // Should not log
-      logger.debug('debug');     // Should not log
-      logger.info('info');       // Should not log
-      logger.warn('warn');       // Should log
-      logger.error('error');     // Should log
-      
+      logger.debug('debug'); // Should not log
+      logger.info('info'); // Should not log
+      logger.warn('warn'); // Should log
+      logger.error('error'); // Should log
+
       expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('verbose'));
       expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('debug'));
       expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('info'));
@@ -266,7 +266,9 @@ describe('Logger Core Functionality', () => {
     it('should log error messages as Error objects', () => {
       const error = new Error('test error');
       logger.error(error);
-      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Formatted: test error'));
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Formatted: test error')
+      );
     });
 
     it('should log debug messages', () => {
@@ -352,7 +354,7 @@ describe('Logger Core Functionality', () => {
         stop: vi.fn(),
         message: vi.fn(),
       } as MockSpinner);
-      
+
       const spinner = logger.spinner('loading...');
       expect(clackSpinner).toHaveBeenCalled();
       expect(spinner.start).toHaveBeenCalledWith(expect.stringContaining('loading...'));
@@ -362,28 +364,28 @@ describe('Logger Core Functionality', () => {
       const startSpy = vi.fn();
       const stopSpy = vi.fn();
       const messageSpy = vi.fn();
-      
+
       const mockSpinner = {
         start: startSpy,
         stop: stopSpy,
         message: messageSpy,
       };
       vi.mocked(clackSpinner).mockReturnValueOnce(mockSpinner as MockSpinner);
-      
+
       const spinner = logger.spinner('loading...');
-      
+
       // Test enhanced methods
       (spinner as MockSpinner).success('completed');
       (spinner as MockSpinner).fail('failed');
       (spinner as MockSpinner).warn('warning');
-      
+
       expect(stopSpy).toHaveBeenCalledTimes(3);
     });
 
     it('should stop all spinners', () => {
       const stop1Spy = vi.fn();
       const stop2Spy = vi.fn();
-      
+
       const mockSpinner1 = {
         start: vi.fn(),
         stop: stop1Spy,
@@ -394,16 +396,16 @@ describe('Logger Core Functionality', () => {
         stop: stop2Spy,
         message: vi.fn(),
       };
-      
+
       vi.mocked(clackSpinner)
         .mockReturnValueOnce(mockSpinner1 as MockSpinner)
         .mockReturnValueOnce(mockSpinner2 as MockSpinner);
-      
+
       logger.spinner('loading 1');
       logger.spinner('loading 2');
-      
+
       logger.stopAllSpinners('Stopped all');
-      
+
       expect(stop1Spy).toHaveBeenCalledWith('Stopped all', undefined);
       expect(stop2Spy).toHaveBeenCalledWith('Stopped all', undefined);
     });
@@ -417,9 +419,9 @@ describe('Logger Core Functionality', () => {
         active: true,
         count: 42,
       };
-      
+
       logger.table(data);
-      
+
       expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('name'));
       expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Test'));
       expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('1.0.0'));
@@ -430,8 +432,8 @@ describe('Logger Core Functionality', () => {
     it('should display lists with default bullet', () => {
       const items = ['item1', 'item2', 'item3'];
       logger.list(items);
-      
-      items.forEach(item => {
+
+      items.forEach((item) => {
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining(item));
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('•'));
       });
@@ -440,8 +442,8 @@ describe('Logger Core Functionality', () => {
     it('should display lists with custom bullet', () => {
       const items = ['item1', 'item2'];
       logger.list(items, '→');
-      
-      items.forEach(item => {
+
+      items.forEach((item) => {
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining(item));
         expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('→'));
       });
@@ -488,10 +490,10 @@ describe('Logger Core Functionality', () => {
     it('should inherit parent logger settings', () => {
       const parentLogger = createLogger({ level: LogLevel.ERROR, timestamp: true });
       const childLogger = parentLogger.child('child');
-      
+
       childLogger.info('info message'); // Should not log due to parent level
       childLogger.error('error message'); // Should log
-      
+
       expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('info message'));
       expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('error message'));
     });
@@ -499,7 +501,7 @@ describe('Logger Core Functionality', () => {
     it('should override parent settings when specified', () => {
       const parentLogger = createLogger({ level: LogLevel.ERROR });
       const childLogger = parentLogger.child('child', { level: LogLevel.INFO });
-      
+
       childLogger.info('child info'); // Should log due to child override
       expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('child info'));
     });
@@ -524,7 +526,7 @@ describe('Logger Core Functionality', () => {
       const theme1 = logger.getTheme();
       logger.setTheme({ info: (text) => `MODIFIED-${text}` });
       const theme2 = logger.getTheme();
-      
+
       expect(theme1.info).not.toBe(theme2.info);
     });
   });
@@ -538,10 +540,10 @@ describe('Logger Core Functionality', () => {
         preserveFormatting: false,
         allowControlChars: false,
       };
-      
+
       logger.setLogInjectionProtection(config);
       const retrieved = logger.getLogInjectionProtection();
-      
+
       expect(retrieved.enableProtection).toBe(true);
       expect(retrieved.protectionLevel).toBe('strict');
     });
@@ -582,17 +584,19 @@ describe('Logger Core Functionality', () => {
     });
 
     it('should handle invalid icons gracefully', async () => {
-      const { IconProvider: MockIconProvider } = await vi.importMock('../../core/ui/icons.js') as { IconProvider: MockIconProvider };
+      const { IconProvider: MockIconProvider } = (await vi.importMock(
+        '../../core/ui/icons.js'
+      )) as { IconProvider: MockIconProvider };
       const originalGet = MockIconProvider.get;
-      
+
       MockIconProvider.get = vi.fn().mockImplementationOnce(() => {
         throw new Error('Icon not found');
       });
-      
+
       logger.withIcon('invalid' as never, 'fallback message');
       expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Error getting icon'));
       expect(clackLog.message).toHaveBeenCalledWith(expect.stringContaining('fallback message'));
-      
+
       // Restore original function
       MockIconProvider.get = originalGet;
     });
@@ -611,15 +615,37 @@ describe('Logger Core Functionality', () => {
 
   describe('Convenience Icon Methods', () => {
     const iconMethods = [
-      'rocket', 'cloud', 'package', 'deploy', 'server', 'database', 'api', 'network', 'globe',
-      'folder', 'file', 'upload', 'download', 'sync',
-      'shield', 'key', 'lock', 'gear',
-      'build', 'lightning', 'pending', 'skip',
-      'successWithIcon', 'failureWithIcon',
-      'sparkle', 'diamond', 'crown', 'trophy'
+      'rocket',
+      'cloud',
+      'package',
+      'deploy',
+      'server',
+      'database',
+      'api',
+      'network',
+      'globe',
+      'folder',
+      'file',
+      'upload',
+      'download',
+      'sync',
+      'shield',
+      'key',
+      'lock',
+      'gear',
+      'build',
+      'lightning',
+      'pending',
+      'skip',
+      'successWithIcon',
+      'failureWithIcon',
+      'sparkle',
+      'diamond',
+      'crown',
+      'trophy',
     ];
 
-    iconMethods.forEach(method => {
+    iconMethods.forEach((method) => {
       it(`should have ${method} method`, () => {
         const loggerMethods = logger as unknown as Record<string, (message: string) => void>;
         expect(typeof loggerMethods[method]).toBe('function');
@@ -643,7 +669,7 @@ describe('Logger Core Functionality', () => {
       logger.error('should not log');
       logger.warn('should not log');
       logger.info('should not log');
-      
+
       expect(consoleLogSpy).not.toHaveBeenCalled();
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
@@ -651,7 +677,7 @@ describe('Logger Core Functionality', () => {
     it('should handle undefined data in debug/verbose', () => {
       logger.debug('debug without data', undefined);
       logger.verbose('verbose without data', undefined);
-      
+
       expect(consoleLogSpy).toHaveBeenCalledTimes(2);
       expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('undefined'));
     });
@@ -668,11 +694,11 @@ describe('Logger Core Functionality', () => {
         info: undefined,
         success: (text: string) => `SUCCESS: ${text}`,
       };
-      
+
       const themeLogger = createLogger({ theme: partialTheme });
       themeLogger.info('info message'); // Should use default theme
       themeLogger.success('success message'); // Should use custom theme
-      
+
       expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('\u001b[34m')); // Default blue
       expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('SUCCESS:'));
     });

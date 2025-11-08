@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock @clack/prompts
 const mockClackText = vi.fn();
@@ -47,7 +47,7 @@ vi.mock('picocolors', () => ({
   },
 }));
 
-// Mock figures  
+// Mock figures
 vi.mock('figures', () => ({
   default: {
     info: 'ℹ',
@@ -87,7 +87,7 @@ describe('UI Prompts Module', () => {
 
     it('should have default theme with required properties', async () => {
       const { DEFAULT_THEME } = await import('../../core/ui/prompts.js');
-      
+
       expect(DEFAULT_THEME).toBeDefined();
       expect(DEFAULT_THEME.prefix).toBe('⚡');
       expect(DEFAULT_THEME.symbol).toHaveProperty('info');
@@ -102,10 +102,10 @@ describe('UI Prompts Module', () => {
 
     it('should handle theme management', async () => {
       const { setTheme, getTheme } = await import('../../core/ui/prompts.js');
-      
+
       const customTheme = { prefix: '🚀' };
       setTheme(customTheme);
-      
+
       const currentTheme = getTheme();
       expect(currentTheme.prefix).toBe('🚀');
       // Should merge with defaults
@@ -113,26 +113,28 @@ describe('UI Prompts Module', () => {
     });
 
     it('should handle visual helper functions', async () => {
-      const { printSeparator, printSpacing, printSection } = await import('../../core/ui/prompts.js');
-      
+      const { printSeparator, printSpacing, printSection } = await import(
+        '../../core/ui/prompts.js'
+      );
+
       // Test separator without title
       printSeparator();
       expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('─'));
-      
+
       mockConsoleLog.mockClear();
-      
+
       // Test separator with title
       printSeparator('Test Title');
       expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('Test Title'));
-      
+
       mockConsoleLog.mockClear();
-      
+
       // Test spacing
       printSpacing(2);
       expect(mockConsoleLog).toHaveBeenCalledTimes(2);
-      
+
       mockConsoleLog.mockClear();
-      
+
       // Test section
       printSection('Section Title');
       expect(mockConsoleLog).toHaveBeenCalled();
@@ -140,11 +142,11 @@ describe('UI Prompts Module', () => {
 
     it('should handle text prompts', async () => {
       const { text } = await import('../../core/ui/prompts.js');
-      
+
       const mockResult = 'user input';
       mockClackText.mockResolvedValue(mockResult);
       mockClackIsCancel.mockReturnValue(false);
-      
+
       const result = await text('Enter text:');
       expect(result).toBe(mockResult);
       expect(mockClackText).toHaveBeenCalledWith({
@@ -157,21 +159,21 @@ describe('UI Prompts Module', () => {
 
     it('should handle cancelled prompts', async () => {
       const { text } = await import('../../core/ui/prompts.js');
-      
+
       const cancelSymbol = Symbol('cancel');
       mockClackText.mockResolvedValue(cancelSymbol);
       mockClackIsCancel.mockReturnValue(true);
-      
+
       await expect(text('Enter text:')).rejects.toThrow('Operation cancelled by user');
     });
 
     it('should handle password prompts', async () => {
       const { password } = await import('../../core/ui/prompts.js');
-      
+
       const mockResult = 'secret';
       mockClackPassword.mockResolvedValue(mockResult);
       mockClackIsCancel.mockReturnValue(false);
-      
+
       const result = await password('Enter password:');
       expect(result).toBe(mockResult);
       expect(mockClackPassword).toHaveBeenCalledWith({
@@ -182,10 +184,10 @@ describe('UI Prompts Module', () => {
 
     it('should handle confirm prompts', async () => {
       const { confirm } = await import('../../core/ui/prompts.js');
-      
+
       mockClackConfirm.mockResolvedValue(true);
       mockClackIsCancel.mockReturnValue(false);
-      
+
       const result = await confirm('Continue?');
       expect(result).toBe(true);
       expect(mockClackConfirm).toHaveBeenCalledWith({
@@ -198,16 +200,16 @@ describe('UI Prompts Module', () => {
 
     it('should handle select prompts', async () => {
       const { select } = await import('../../core/ui/prompts.js');
-      
+
       const mockResult = 'option1';
       mockClackSelect.mockResolvedValue(mockResult);
       mockClackIsCancel.mockReturnValue(false);
-      
+
       const options = [
         { value: 'option1', label: 'Option 1' },
         { value: 'option2', label: 'Option 2' },
       ];
-      
+
       const result = await select('Choose option:', options);
       expect(result).toBe(mockResult);
       expect(mockClackSelect).toHaveBeenCalled();
@@ -215,16 +217,16 @@ describe('UI Prompts Module', () => {
 
     it('should handle multiselect prompts', async () => {
       const { multiselect } = await import('../../core/ui/prompts.js');
-      
+
       const mockResult = ['option1', 'option2'];
       mockClackMultiselect.mockResolvedValue(mockResult);
       mockClackIsCancel.mockReturnValue(false);
-      
+
       const options = [
         { value: 'option1', label: 'Option 1' },
         { value: 'option2', label: 'Option 2' },
       ];
-      
+
       const result = await multiselect('Choose options:', options);
       expect(result).toEqual(mockResult);
       expect(mockClackMultiselect).toHaveBeenCalled();
@@ -232,23 +234,23 @@ describe('UI Prompts Module', () => {
 
     it('should handle utility functions', async () => {
       const { intro, outro, note, log, spinner } = await import('../../core/ui/prompts.js');
-      
+
       // Test intro
       intro('Welcome');
       expect(mockClackIntro).toHaveBeenCalled();
-      
-      // Test outro  
+
+      // Test outro
       outro('Complete');
       expect(mockClackOutro).toHaveBeenCalled();
-      
+
       // Test note
       note('Important note', 'Note');
       expect(mockClackNote).toHaveBeenCalled();
-      
+
       // Test log
       log('Info message', 'info');
       expect(mockClackLog.message).toHaveBeenCalled();
-      
+
       // Test spinner
       const mockSpinnerInstance = {
         start: vi.fn(),
@@ -256,66 +258,68 @@ describe('UI Prompts Module', () => {
         message: vi.fn(),
       };
       mockClackSpinner.mockReturnValue(mockSpinnerInstance);
-      
+
       const s = spinner();
       s.start('Loading...');
       s.stop('Complete!', 0);
-      
+
       expect(mockSpinnerInstance.start).toHaveBeenCalled();
       expect(mockSpinnerInstance.stop).toHaveBeenCalled();
     });
 
     it('should handle enhanced prompts with options', async () => {
       const { enhancedText, enhancedConfirm } = await import('../../core/ui/prompts.js');
-      
+
       mockClackText.mockResolvedValue('enhanced text');
       mockClackIsCancel.mockReturnValue(false);
-      
+
       const result = await enhancedText('Enter text:', {
         section: 'Configuration',
         spacing: true,
       });
-      
+
       expect(result).toBe('enhanced text');
       expect(mockConsoleLog).toHaveBeenCalled();
-      
+
       mockConsoleLog.mockClear();
       mockClackConfirm.mockResolvedValue(true);
-      
+
       const confirmResult = await enhancedConfirm('Continue?', {
         showProgress: { current: 1, total: 3 },
       });
-      
+
       expect(confirmResult).toBe(true);
       expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('[1/3]'));
     });
 
     it('should handle PromptFlow class', async () => {
       const { PromptFlow } = await import('../../core/ui/prompts.js');
-      
+
       const flow = new PromptFlow('Setup Wizard', 3);
-      
+
       flow.start();
       expect(mockConsoleLog).toHaveBeenCalled();
-      
+
       mockClackText.mockResolvedValue('test input');
       mockClackIsCancel.mockReturnValue(false);
-      
+
       const result = await flow.text('Enter name:');
       expect(result).toBe('test input');
-      
+
       flow.nextStep();
       flow.end();
     });
 
     it('should validate project names correctly', async () => {
       const { patterns } = await import('../../core/ui/prompts.js');
-      
+
       const { validate } = patterns.projectName;
-      
+
       expect(validate('')).toBe('Project name is required');
       expect(validate('   ')).toBe('Project name is required');
-      expect(validate('invalid-name!')).toBe('Project name can only contain letters, numbers, hyphens, and underscores');
+      expect(validate('invalid-name!')).toBe(
+        'Project name can only contain letters, numbers, hyphens, and underscores'
+      );
       expect(validate('a'.repeat(51))).toBe('Project name must be 50 characters or less');
       expect(validate('valid-project-name')).toBeUndefined();
       expect(validate('validProjectName123')).toBeUndefined();
@@ -323,34 +327,38 @@ describe('UI Prompts Module', () => {
 
     it('should handle required field validation', async () => {
       const { text, password } = await import('../../core/ui/prompts.js');
-      
+
       // Empty text with required flag
       mockClackText.mockResolvedValue('');
       mockClackIsCancel.mockReturnValue(false);
-      
-      await expect(text('Enter text:', { required: true })).rejects.toThrow('This field is required');
-      
+
+      await expect(text('Enter text:', { required: true })).rejects.toThrow(
+        'This field is required'
+      );
+
       // Empty password with required flag
       mockClackPassword.mockResolvedValue('');
-      
-      await expect(password('Enter password:', { required: true })).rejects.toThrow('Password is required');
+
+      await expect(password('Enter password:', { required: true })).rejects.toThrow(
+        'Password is required'
+      );
     });
 
     it('should handle edge cases gracefully', async () => {
       const { printSeparator } = await import('../../core/ui/prompts.js');
-      
+
       // Very long title
       const longTitle = 'A'.repeat(100);
       printSeparator(longTitle);
       expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('...'));
-      
+
       // Narrow terminal
       if (process.stdout && 'columns' in process.stdout) {
         (process.stdout as NodeJS.WriteStream & { columns?: number }).columns = 20;
       }
       printSeparator('Test');
       expect(mockConsoleLog).toHaveBeenCalled();
-      
+
       // Missing terminal columns
       if (process.stdout && 'columns' in process.stdout) {
         Reflect.deleteProperty(process.stdout, 'columns');
@@ -361,7 +369,7 @@ describe('UI Prompts Module', () => {
 
     it('should handle pre-built flows', async () => {
       const { flows } = await import('../../core/ui/prompts.js');
-      
+
       mockClackGroup.mockResolvedValue({
         name: 'test-project',
         packageManager: 'pnpm',
@@ -370,9 +378,9 @@ describe('UI Prompts Module', () => {
         initGit: true,
       });
       mockClackIsCancel.mockReturnValue(false);
-      
+
       const result = await flows.projectInit();
-      
+
       expect(result).toHaveProperty('name');
       expect(result).toHaveProperty('packageManager');
       expect(mockClackIntro).toHaveBeenCalled();

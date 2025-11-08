@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { Command } from 'commander';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import versionCommand from '../../commands/version.js';
 import type { CommandContext } from '../../types/cli.js';
 
@@ -148,9 +148,17 @@ describe('Version Command', () => {
       };
       mockParseVersion.mockReturnValue(mockVersion);
 
-      await program.parseAsync(['node', 'test', 'version', '--validate', '1.2.3-alpha.1+build.123']);
+      await program.parseAsync([
+        'node',
+        'test',
+        'version',
+        '--validate',
+        '1.2.3-alpha.1+build.123',
+      ]);
 
-      expect(mockLogger.success).toHaveBeenCalledWith('✓ Valid semantic version: 1.2.3-alpha.1+build.123');
+      expect(mockLogger.success).toHaveBeenCalledWith(
+        '✓ Valid semantic version: 1.2.3-alpha.1+build.123'
+      );
       expect(mockLogger.info).toHaveBeenCalledWith('  Prerelease: alpha.1');
       expect(mockLogger.info).toHaveBeenCalledWith('  Build: build.123');
     });
@@ -162,7 +170,9 @@ describe('Version Command', () => {
 
       await program.parseAsync(['node', 'test', 'version', '--validate', 'invalid']);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('✗ Invalid semantic version: Invalid version format');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        '✗ Invalid semantic version: Invalid version format'
+      );
     });
 
     it('should handle non-error thrown during validation', async () => {
@@ -184,7 +194,7 @@ describe('Version Command', () => {
     it('should compare two versions when first is less than second', async () => {
       const version1 = { raw: '1.0.0', major: 1, minor: 0, patch: 0 };
       const version2 = { raw: '2.0.0', major: 2, minor: 0, patch: 0 };
-      
+
       mockParseVersion.mockReturnValueOnce(version1).mockReturnValueOnce(version2);
       mockCompareVersions.mockReturnValue(-1);
       mockGetChangeType.mockReturnValue('major');
@@ -199,7 +209,7 @@ describe('Version Command', () => {
     it('should compare two versions when first is greater than second', async () => {
       const version1 = { raw: '2.0.0', major: 2, minor: 0, patch: 0 };
       const version2 = { raw: '1.0.0', major: 1, minor: 0, patch: 0 };
-      
+
       mockParseVersion.mockReturnValueOnce(version1).mockReturnValueOnce(version2);
       mockCompareVersions.mockReturnValue(1);
       mockGetChangeType.mockReturnValue('major');
@@ -214,7 +224,7 @@ describe('Version Command', () => {
     it('should compare two equal versions', async () => {
       const version1 = { raw: '1.0.0', major: 1, minor: 0, patch: 0 };
       const version2 = { raw: '1.0.0', major: 1, minor: 0, patch: 0 };
-      
+
       mockParseVersion.mockReturnValueOnce(version1).mockReturnValueOnce(version2);
       mockCompareVersions.mockReturnValue(0);
 
@@ -227,7 +237,9 @@ describe('Version Command', () => {
     it('should handle missing version in comparison', async () => {
       await program.parseAsync(['node', 'test', 'version', '--compare', '1.0.0']);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Please provide two versions: --compare v1.0.0,v2.0.0');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Please provide two versions: --compare v1.0.0,v2.0.0'
+      );
     });
 
     it('should handle comparison errors', async () => {
@@ -295,9 +307,9 @@ describe('Version Command', () => {
       mockGetAllTags.mockResolvedValue(mockTags);
       mockParseVersion.mockImplementation((tag: string) => ({
         raw: tag,
-        major: parseInt(tag.split('.')[0].slice(1)),
-        minor: parseInt(tag.split('.')[1]),
-        patch: parseInt(tag.split('.')[2]),
+        major: parseInt(tag.split('.')[0].slice(1), 10),
+        minor: parseInt(tag.split('.')[1], 10),
+        patch: parseInt(tag.split('.')[2], 10),
       }));
 
       await program.parseAsync(['node', 'test', 'version', '--list-tags']);
@@ -318,9 +330,9 @@ describe('Version Command', () => {
         }
         return {
           raw: tag,
-          major: parseInt(tag.split('.')[0].slice(1)),
-          minor: parseInt(tag.split('.')[1]),
-          patch: parseInt(tag.split('.')[2]),
+          major: parseInt(tag.split('.')[0].slice(1), 10),
+          minor: parseInt(tag.split('.')[1], 10),
+          patch: parseInt(tag.split('.')[2], 10),
         };
       });
 
@@ -395,9 +407,7 @@ describe('Version Command', () => {
         to: { raw: 'v2.0.0' },
         changeType: 'major',
         breaking: false,
-        files: [
-          { path: 'src/file1.ts', status: 'modified', insertions: 10, deletions: 5 },
-        ],
+        files: [{ path: 'src/file1.ts', status: 'modified', insertions: 10, deletions: 5 }],
         commits: [],
       };
       mockGetVersionDiff.mockResolvedValue(mockDiff);
@@ -415,9 +425,7 @@ describe('Version Command', () => {
         changeType: 'major',
         breaking: false,
         files: [],
-        commits: [
-          { shortHash: 'abc123', message: 'feat: new feature' },
-        ],
+        commits: [{ shortHash: 'abc123', message: 'feat: new feature' }],
       };
       mockGetVersionDiff.mockResolvedValue(mockDiff);
 
@@ -434,7 +442,7 @@ describe('Version Command', () => {
         insertions: 1,
         deletions: 1,
       }));
-      
+
       const mockDiff = {
         from: { raw: 'v1.0.0' },
         to: { raw: 'v2.0.0' },
@@ -455,7 +463,7 @@ describe('Version Command', () => {
         shortHash: `hash${i}`,
         message: `commit ${i}`,
       }));
-      
+
       const mockDiff = {
         from: { raw: 'v1.0.0' },
         to: { raw: 'v2.0.0' },
@@ -474,7 +482,9 @@ describe('Version Command', () => {
     it('should handle missing version in diff', async () => {
       await program.parseAsync(['node', 'test', 'version', '--diff', 'v1.0.0']);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Please provide two versions: --diff v1.0.0,v2.0.0');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Please provide two versions: --diff v1.0.0,v2.0.0'
+      );
     });
 
     it('should handle diff error', async () => {
@@ -506,13 +516,9 @@ describe('Version Command', () => {
         toVersion: 'v2.0.0',
         strategy: { type: 'automatic' },
         backupRequired: true,
-        conflicts: [
-          { file: 'package.json', description: 'Version conflict' },
-        ],
+        conflicts: [{ file: 'package.json', description: 'Version conflict' }],
         diff: {
-          files: [
-            { path: 'src/file1.ts', status: 'modified' },
-          ],
+          files: [{ path: 'src/file1.ts', status: 'modified' }],
         },
       };
       mockCreateUpdatePlan.mockResolvedValue(mockPlan);
@@ -534,9 +540,7 @@ describe('Version Command', () => {
         toVersion: 'v2.0.0',
         strategy: { type: 'manual' },
         backupRequired: false,
-        conflicts: [
-          { file: 'package.json', description: 'Version conflict' },
-        ],
+        conflicts: [{ file: 'package.json', description: 'Version conflict' }],
         diff: { files: [] },
       };
       mockCreateUpdatePlan.mockResolvedValue(mockPlan);
@@ -555,9 +559,7 @@ describe('Version Command', () => {
         backupRequired: false,
         conflicts: [],
         diff: {
-          files: [
-            { path: 'src/file1.ts', status: 'modified' },
-          ],
+          files: [{ path: 'src/file1.ts', status: 'modified' }],
         },
       };
       mockCreateUpdatePlan.mockResolvedValue(mockPlan);
@@ -573,7 +575,7 @@ describe('Version Command', () => {
         path: `file${i}.ts`,
         status: 'modified',
       }));
-      
+
       const mockPlan = {
         fromVersion: 'v1.0.0',
         toVersion: 'v2.0.0',
@@ -592,7 +594,9 @@ describe('Version Command', () => {
     it('should handle missing version in plan', async () => {
       await program.parseAsync(['node', 'test', 'version', '--plan', 'v1.0.0']);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Please provide two versions: --plan v1.0.0,v2.0.0');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Please provide two versions: --plan v1.0.0,v2.0.0'
+      );
     });
 
     it('should handle update plan error', async () => {
@@ -699,10 +703,8 @@ describe('Version Command', () => {
     it('should handle interactive comparison', async () => {
       mockIsGitRepository.mockResolvedValue(false);
       mockPrompts.select.mockResolvedValue('compare');
-      mockPrompts.text
-        .mockResolvedValueOnce('1.0.0')
-        .mockResolvedValueOnce('2.0.0');
-      
+      mockPrompts.text.mockResolvedValueOnce('1.0.0').mockResolvedValueOnce('2.0.0');
+
       const version1 = { raw: '1.0.0', major: 1, minor: 0, patch: 0 };
       const version2 = { raw: '2.0.0', major: 2, minor: 0, patch: 0 };
       mockParseVersion.mockReturnValueOnce(version1).mockReturnValueOnce(version2);
@@ -724,10 +726,8 @@ describe('Version Command', () => {
     it('should handle interactive comparison with equal versions', async () => {
       mockIsGitRepository.mockResolvedValue(false);
       mockPrompts.select.mockResolvedValue('compare');
-      mockPrompts.text
-        .mockResolvedValueOnce('1.0.0')
-        .mockResolvedValueOnce('1.0.0');
-      
+      mockPrompts.text.mockResolvedValueOnce('1.0.0').mockResolvedValueOnce('1.0.0');
+
       const version1 = { raw: '1.0.0', major: 1, minor: 0, patch: 0 };
       const version2 = { raw: '1.0.0', major: 1, minor: 0, patch: 0 };
       mockParseVersion.mockReturnValueOnce(version1).mockReturnValueOnce(version2);
@@ -741,9 +741,7 @@ describe('Version Command', () => {
     it('should handle interactive comparison error', async () => {
       mockIsGitRepository.mockResolvedValue(false);
       mockPrompts.select.mockResolvedValue('compare');
-      mockPrompts.text
-        .mockResolvedValueOnce('invalid')
-        .mockResolvedValueOnce('1.0.0');
+      mockPrompts.text.mockResolvedValueOnce('invalid').mockResolvedValueOnce('1.0.0');
       mockParseVersion.mockImplementation(() => {
         throw new Error('Parse error');
       });
@@ -756,9 +754,7 @@ describe('Version Command', () => {
     it('should handle interactive comparison with non-error thrown', async () => {
       mockIsGitRepository.mockResolvedValue(false);
       mockPrompts.select.mockResolvedValue('compare');
-      mockPrompts.text
-        .mockResolvedValueOnce('invalid')
-        .mockResolvedValueOnce('1.0.0');
+      mockPrompts.text.mockResolvedValueOnce('invalid').mockResolvedValueOnce('1.0.0');
       mockParseVersion.mockImplementation(() => {
         throw 'String error';
       });
@@ -797,9 +793,9 @@ describe('Version Command', () => {
         .mockResolvedValueOnce('diff')
         .mockResolvedValueOnce('v1.0.0')
         .mockResolvedValueOnce('v2.0.0');
-      
+
       mockGetAllTags.mockResolvedValue(['v1.0.0', 'v2.0.0', 'v3.0.0']);
-      
+
       const mockDiff = {
         from: { raw: 'v1.0.0' },
         to: { raw: 'v2.0.0' },
@@ -818,7 +814,7 @@ describe('Version Command', () => {
           { value: 'v3.0.0', label: 'v3.0.0' },
         ],
       });
-      
+
       expect(mockPrompts.select).toHaveBeenCalledWith({
         message: 'Select target version:',
         options: [
@@ -826,7 +822,7 @@ describe('Version Command', () => {
           { value: 'v3.0.0', label: 'v3.0.0' },
         ],
       });
-      
+
       expect(mockGetVersionDiff).toHaveBeenCalledWith('v1.0.0', 'v2.0.0');
       expect(mockLogger.success).toHaveBeenCalledWith('Diff: v1.0.0 → v2.0.0');
       expect(mockLogger.info).toHaveBeenCalledWith('Files changed: 1, Commits: 1');
@@ -838,9 +834,9 @@ describe('Version Command', () => {
         .mockResolvedValueOnce('plan')
         .mockResolvedValueOnce('v1.0.0')
         .mockResolvedValueOnce('v2.0.0');
-      
+
       mockGetAllTags.mockResolvedValue(['v1.0.0', 'v2.0.0']);
-      
+
       const mockPlan = {
         fromVersion: 'v1.0.0',
         toVersion: 'v2.0.0',
@@ -863,7 +859,9 @@ describe('Version Command', () => {
 
       await program.parseAsync(['node', 'test', 'version']);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Need at least 2 tags for diff/plan operations');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Need at least 2 tags for diff/plan operations'
+      );
     });
 
     it('should complete interactive mode successfully', async () => {

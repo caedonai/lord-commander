@@ -71,7 +71,10 @@ export interface LoggerOptions {
  * environment detection inside third-party color libraries which may be
  * influenced by mocked `process` in tests.
  */
-const wrap = (start: string, end = '\u001b[39m') => (text: string) => `${start}${text}${end}`;
+const wrap =
+  (start: string, end = '\u001b[39m') =>
+  (text: string) =>
+    `${start}${text}${end}`;
 
 const DEFAULT_THEME: LoggerTheme = {
   primary: wrap('\u001b[36m'), // cyan

@@ -1,6 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { demonstrateIconSystem, demonstrateErrorScenarios, runDemo } from '../../examples/logger-icons-demo.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as coreModule from '../../core/index.js';
+import {
+  demonstrateErrorScenarios,
+  demonstrateIconSystem,
+  runDemo,
+} from '../../examples/logger-icons-demo.js';
 
 // Mock the core module
 vi.mock('../../core/index.js', () => ({
@@ -94,7 +98,9 @@ describe('Logger Icons Demo', () => {
     };
 
     // Mock createLogger to return our comprehensive mock logger
-    vi.mocked(coreModule.createLogger).mockReturnValue(mockLogger as unknown as ReturnType<typeof coreModule.createLogger>);
+    vi.mocked(coreModule.createLogger).mockReturnValue(
+      mockLogger as unknown as ReturnType<typeof coreModule.createLogger>
+    );
 
     // Mock console methods
     mockConsole = {
@@ -127,7 +133,9 @@ describe('Logger Icons Demo', () => {
       // Since the implementation checks for method existence and all methods exist in our mock,
       // it should use the enhanced methods
       expect(mockLogger.intro).toHaveBeenCalledWith('🚀 Enhanced Logger Icon System Demo');
-      expect(mockLogger.sparkle).toHaveBeenCalledWith('Welcome to the comprehensive icon demonstration!');
+      expect(mockLogger.sparkle).toHaveBeenCalledWith(
+        'Welcome to the comprehensive icon demonstration!'
+      );
     });
 
     it('should analyze platform capabilities', async () => {
@@ -150,13 +158,17 @@ describe('Logger Icons Demo', () => {
         error: vi.fn(),
         success: vi.fn(),
       };
-      vi.mocked(coreModule.createLogger).mockReturnValue(basicMockLogger as unknown as ReturnType<typeof coreModule.createLogger>);
+      vi.mocked(coreModule.createLogger).mockReturnValue(
+        basicMockLogger as unknown as ReturnType<typeof coreModule.createLogger>
+      );
 
       await demonstrateIconSystem();
 
       // Should fall back to basic info method
       expect(basicMockLogger.info).toHaveBeenCalledWith('🚀 Enhanced Logger Icon System Demo');
-      expect(basicMockLogger.info).toHaveBeenCalledWith('✨ Welcome to the comprehensive icon demonstration!');
+      expect(basicMockLogger.info).toHaveBeenCalledWith(
+        '✨ Welcome to the comprehensive icon demonstration!'
+      );
     });
 
     it('should demonstrate infrastructure icons', async () => {
@@ -164,9 +176,18 @@ describe('Logger Icons Demo', () => {
 
       // Verify infrastructure icon demonstrations
       expect(mockLogger.server).toHaveBeenCalledWith('Infrastructure & Deployment Icons');
-      expect(mockLogger.withIcon).toHaveBeenCalledWith('rocket', 'Deploying application to production...');
-      expect(mockLogger.withIcon).toHaveBeenCalledWith('cloud', 'Connecting to cloud infrastructure...');
-      expect(mockLogger.withIcon).toHaveBeenCalledWith('server', 'Starting web server on port 3000...');
+      expect(mockLogger.withIcon).toHaveBeenCalledWith(
+        'rocket',
+        'Deploying application to production...'
+      );
+      expect(mockLogger.withIcon).toHaveBeenCalledWith(
+        'cloud',
+        'Connecting to cloud infrastructure...'
+      );
+      expect(mockLogger.withIcon).toHaveBeenCalledWith(
+        'server',
+        'Starting web server on port 3000...'
+      );
     });
 
     it('should demonstrate file operations', async () => {
@@ -174,7 +195,10 @@ describe('Logger Icons Demo', () => {
 
       // Verify file operation demonstrations
       expect(mockLogger.folder).toHaveBeenCalledWith('File & Directory Operations');
-      expect(mockLogger.withIcon).toHaveBeenCalledWith('folder', 'Creating project directory structure...');
+      expect(mockLogger.withIcon).toHaveBeenCalledWith(
+        'folder',
+        'Creating project directory structure...'
+      );
       expect(mockLogger.withIcon).toHaveBeenCalledWith('upload', 'Uploading assets to S3...');
       expect(mockLogger.withIcon).toHaveBeenCalledWith('download', 'Downloading dependencies...');
     });
@@ -184,7 +208,10 @@ describe('Logger Icons Demo', () => {
 
       // Verify security demonstrations
       expect(mockLogger.shield).toHaveBeenCalledWith('Security & Configuration');
-      expect(mockLogger.withIcon).toHaveBeenCalledWith('shield', 'Initializing security protocols...');
+      expect(mockLogger.withIcon).toHaveBeenCalledWith(
+        'shield',
+        'Initializing security protocols...'
+      );
       expect(mockLogger.withIcon).toHaveBeenCalledWith('key', 'Generating API keys...');
       expect(mockLogger.withIcon).toHaveBeenCalledWith('lock', 'Encrypting sensitive data...');
     });
@@ -195,8 +222,14 @@ describe('Logger Icons Demo', () => {
       // Verify process status demonstrations
       expect(mockLogger.build).toHaveBeenCalledWith('Process & Status Indicators');
       expect(mockLogger.withIcon).toHaveBeenCalledWith('build', 'Building TypeScript project...');
-      expect(mockLogger.withIcon).toHaveBeenCalledWith('lightning', 'Running performance optimization...');
-      expect(mockLogger.withIcon).toHaveBeenCalledWith('pending', 'Waiting for database migration...');
+      expect(mockLogger.withIcon).toHaveBeenCalledWith(
+        'lightning',
+        'Running performance optimization...'
+      );
+      expect(mockLogger.withIcon).toHaveBeenCalledWith(
+        'pending',
+        'Waiting for database migration...'
+      );
     });
 
     it('should run real-world deployment scenario', async () => {
@@ -204,7 +237,10 @@ describe('Logger Icons Demo', () => {
 
       // Verify deployment scenario
       expect(mockLogger.trophy).toHaveBeenCalledWith('Real-world Deployment Scenario');
-      expect(mockLogger.withIcon).toHaveBeenCalledWith('gear', 'Initializing deployment pipeline...');
+      expect(mockLogger.withIcon).toHaveBeenCalledWith(
+        'gear',
+        'Initializing deployment pipeline...'
+      );
       expect(mockLogger.withIcon).toHaveBeenCalledWith('trophy', 'Deployment successful!');
     });
 
@@ -213,7 +249,9 @@ describe('Logger Icons Demo', () => {
 
       // Verify performance testing
       expect(mockLogger.lightning).toHaveBeenCalledWith('Performance & Compatibility Test');
-      expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Icon retrieval performance: 1000 iterations in'));
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        expect.stringContaining('Icon retrieval performance: 1000 iterations in')
+      );
       expect(mockLogger.info).toHaveBeenCalledWith(expect.stringContaining('Average per icon:'));
     });
 
@@ -242,7 +280,10 @@ describe('Logger Icons Demo', () => {
 
       // Verify error handling demonstration
       expect(mockLogger.warning).toHaveBeenCalledWith('Error Handling with Icons');
-      expect(mockLogger.withIcon).toHaveBeenCalledWith('warning', 'This demonstrates icon system resilience');
+      expect(mockLogger.withIcon).toHaveBeenCalledWith(
+        'warning',
+        'This demonstrates icon system resilience'
+      );
     });
 
     it('should handle icon errors gracefully', async () => {
@@ -254,14 +295,18 @@ describe('Logger Icons Demo', () => {
       await demonstrateErrorScenarios();
 
       // Should catch and handle the error
-      expect(mockLogger.failureWithIcon).toHaveBeenCalledWith(expect.stringContaining('Caught error'));
+      expect(mockLogger.failureWithIcon).toHaveBeenCalledWith(
+        expect.stringContaining('Caught error')
+      );
     });
 
     it('should demonstrate icon sanitization', async () => {
       await demonstrateErrorScenarios();
-      
+
       // Verify sanitization demonstration
-      expect(mockLogger.shield).toHaveBeenCalledWith(expect.stringContaining('Sanitized malicious input:'));
+      expect(mockLogger.shield).toHaveBeenCalledWith(
+        expect.stringContaining('Sanitized malicious input:')
+      );
     });
 
     it('should handle non-Error objects', async () => {
@@ -273,7 +318,9 @@ describe('Logger Icons Demo', () => {
       await demonstrateErrorScenarios();
 
       // Should handle non-Error objects
-      expect(mockLogger.failureWithIcon).toHaveBeenCalledWith(expect.stringContaining('String error'));
+      expect(mockLogger.failureWithIcon).toHaveBeenCalledWith(
+        expect.stringContaining('String error')
+      );
     });
   });
 
@@ -348,11 +395,14 @@ describe('Logger Icons Demo', () => {
 
     it('should handle missing environment variables', async () => {
       delete process.env.TERM_PROGRAM;
-      
+
       await demonstrateIconSystem();
 
       const mockLogger = coreModule.createLogger();
-      expect(mockLogger.withIcon).toHaveBeenCalledWith('network', expect.stringContaining('unknown'));
+      expect(mockLogger.withIcon).toHaveBeenCalledWith(
+        'network',
+        expect.stringContaining('unknown')
+      );
     });
   });
 

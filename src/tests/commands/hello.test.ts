@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { Command } from 'commander';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import helloCommand from '../../commands/hello.js';
 import type { CommandContext } from '../../types/cli.js';
 
@@ -223,38 +223,40 @@ describe('Hello Command', () => {
       mockExeca.execa.mockResolvedValueOnce({ stdout: 'v18.17.0' });
       // Mock npm version
       mockExeca.execa.mockResolvedValueOnce({ stdout: '9.6.7' });
-      
+
       // Mock package.json existence and content
       mockFs.exists.mockReturnValue(true);
-      mockFs.readFile.mockResolvedValue(JSON.stringify({
-        name: 'my-project',
-        version: '1.0.0',
-        dependencies: {
-          'react': '^18.0.0',
-          'typescript': '^5.0.0',
-        },
-        scripts: {
-          'build': 'tsc',
-          'test': 'vitest',
-          'start': 'node dist/index.js',
-        },
-      }));
+      mockFs.readFile.mockResolvedValue(
+        JSON.stringify({
+          name: 'my-project',
+          version: '1.0.0',
+          dependencies: {
+            react: '^18.0.0',
+            typescript: '^5.0.0',
+          },
+          scripts: {
+            build: 'tsc',
+            test: 'vitest',
+            start: 'node dist/index.js',
+          },
+        })
+      );
 
       await program.parseAsync(['node', 'test', 'hello', '--info']);
 
       expect(mockLogger.info).toHaveBeenCalledWith('Gathering system information...');
-      
+
       // Node.js version check
       expect(mockExeca.execa).toHaveBeenCalledWith('node', ['--version']);
       expect(mockLogger.info).toHaveBeenCalledWith('Node.js version: v18.17.0');
-      
+
       // npm version check
       expect(mockExeca.execa).toHaveBeenCalledWith('npm', ['--version']);
       expect(mockLogger.info).toHaveBeenCalledWith('npm version: 9.6.7');
-      
+
       // Current working directory
       expect(mockLogger.info).toHaveBeenCalledWith(`Current directory: ${process.cwd()}`);
-      
+
       // Package.json checks
       expect(mockFs.exists).toHaveBeenCalledWith('package.json');
       expect(mockLogger.info).toHaveBeenCalledWith('Has package.json: ✅');
@@ -263,7 +265,7 @@ describe('Hello Command', () => {
       expect(mockLogger.info).toHaveBeenCalledWith('Version: 1.0.0');
       expect(mockLogger.info).toHaveBeenCalledWith('Dependencies: 2');
       expect(mockLogger.info).toHaveBeenCalledWith('Available scripts: build, test, start');
-      
+
       // Environment info
       expect(mockLogger.info).toHaveBeenCalledWith(`Platform: ${process.platform}`);
       expect(mockLogger.info).toHaveBeenCalledWith(`Architecture: ${process.arch}`);
@@ -272,11 +274,13 @@ describe('Hello Command', () => {
     it('should handle package.json without name', async () => {
       mockExeca.execa.mockResolvedValueOnce({ stdout: 'v18.17.0' });
       mockExeca.execa.mockResolvedValueOnce({ stdout: '9.6.7' });
-      
+
       mockFs.exists.mockReturnValue(true);
-      mockFs.readFile.mockResolvedValue(JSON.stringify({
-        version: '1.0.0',
-      }));
+      mockFs.readFile.mockResolvedValue(
+        JSON.stringify({
+          version: '1.0.0',
+        })
+      );
 
       await program.parseAsync(['node', 'test', 'hello', '--info']);
 
@@ -286,11 +290,13 @@ describe('Hello Command', () => {
     it('should handle package.json without version', async () => {
       mockExeca.execa.mockResolvedValueOnce({ stdout: 'v18.17.0' });
       mockExeca.execa.mockResolvedValueOnce({ stdout: '9.6.7' });
-      
+
       mockFs.exists.mockReturnValue(true);
-      mockFs.readFile.mockResolvedValue(JSON.stringify({
-        name: 'my-project',
-      }));
+      mockFs.readFile.mockResolvedValue(
+        JSON.stringify({
+          name: 'my-project',
+        })
+      );
 
       await program.parseAsync(['node', 'test', 'hello', '--info']);
 
@@ -300,12 +306,14 @@ describe('Hello Command', () => {
     it('should handle package.json without dependencies', async () => {
       mockExeca.execa.mockResolvedValueOnce({ stdout: 'v18.17.0' });
       mockExeca.execa.mockResolvedValueOnce({ stdout: '9.6.7' });
-      
+
       mockFs.exists.mockReturnValue(true);
-      mockFs.readFile.mockResolvedValue(JSON.stringify({
-        name: 'my-project',
-        version: '1.0.0',
-      }));
+      mockFs.readFile.mockResolvedValue(
+        JSON.stringify({
+          name: 'my-project',
+          version: '1.0.0',
+        })
+      );
 
       await program.parseAsync(['node', 'test', 'hello', '--info']);
 
@@ -315,22 +323,26 @@ describe('Hello Command', () => {
     it('should handle package.json without scripts', async () => {
       mockExeca.execa.mockResolvedValueOnce({ stdout: 'v18.17.0' });
       mockExeca.execa.mockResolvedValueOnce({ stdout: '9.6.7' });
-      
+
       mockFs.exists.mockReturnValue(true);
-      mockFs.readFile.mockResolvedValue(JSON.stringify({
-        name: 'my-project',
-        version: '1.0.0',
-      }));
+      mockFs.readFile.mockResolvedValue(
+        JSON.stringify({
+          name: 'my-project',
+          version: '1.0.0',
+        })
+      );
 
       await program.parseAsync(['node', 'test', 'hello', '--info']);
 
-      expect(mockLogger.info).not.toHaveBeenCalledWith(expect.stringContaining('Available scripts:'));
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        expect.stringContaining('Available scripts:')
+      );
     });
 
     it('should handle missing package.json', async () => {
       mockExeca.execa.mockResolvedValueOnce({ stdout: 'v18.17.0' });
       mockExeca.execa.mockResolvedValueOnce({ stdout: '9.6.7' });
-      
+
       mockFs.exists.mockReturnValue(false);
 
       await program.parseAsync(['node', 'test', 'hello', '--info']);
@@ -377,7 +389,7 @@ describe('Hello Command', () => {
     it('should handle JSON parsing error', async () => {
       mockExeca.execa.mockResolvedValueOnce({ stdout: 'v18.17.0' });
       mockExeca.execa.mockResolvedValueOnce({ stdout: '9.6.7' });
-      
+
       mockFs.exists.mockReturnValue(true);
       mockFs.readFile.mockResolvedValue('invalid json');
 
@@ -389,7 +401,7 @@ describe('Hello Command', () => {
     it('should handle file read error', async () => {
       mockExeca.execa.mockResolvedValueOnce({ stdout: 'v18.17.0' });
       mockExeca.execa.mockResolvedValueOnce({ stdout: '9.6.7' });
-      
+
       mockFs.exists.mockReturnValue(true);
       mockFs.readFile.mockRejectedValue(new Error('File read error'));
 
@@ -419,7 +431,15 @@ describe('Hello Command', () => {
       mockExeca.execa.mockResolvedValueOnce({ stdout: '9.6.7' });
       mockFs.exists.mockReturnValue(false);
 
-      await program.parseAsync(['node', 'test', 'hello', 'TestUser', '--verbose', '--uppercase', '--info']);
+      await program.parseAsync([
+        'node',
+        'test',
+        'hello',
+        'TestUser',
+        '--verbose',
+        '--uppercase',
+        '--info',
+      ]);
 
       expect(mockLogger.enableVerbose).toHaveBeenCalled();
       expect(mockLogger.success).toHaveBeenCalledWith('HELLO, TESTUSER!');

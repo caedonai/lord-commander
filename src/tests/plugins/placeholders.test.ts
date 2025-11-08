@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import * as placeholderModule from '../../plugins/placeholders.js';
 
 describe('Placeholders Plugin', () => {
@@ -33,13 +33,13 @@ describe('Placeholders Plugin', () => {
     it('should export all expected constants', () => {
       const expectedExports = [
         'PLACEHOLDER_GIT',
-        'PLACEHOLDER_UPDATER', 
+        'PLACEHOLDER_UPDATER',
         'PLACEHOLDER_WORKSPACE',
         'PLACEHOLDER_TELEMETRY',
-        'PLACEHOLDER_CONFIG_LOADER'
+        'PLACEHOLDER_CONFIG_LOADER',
       ];
 
-      expectedExports.forEach(exportName => {
+      expectedExports.forEach((exportName) => {
         expect(placeholderModule).toHaveProperty(exportName);
       });
     });
@@ -51,10 +51,10 @@ describe('Placeholders Plugin', () => {
         placeholderModule.PLACEHOLDER_UPDATER,
         placeholderModule.PLACEHOLDER_WORKSPACE,
         placeholderModule.PLACEHOLDER_TELEMETRY,
-        placeholderModule.PLACEHOLDER_CONFIG_LOADER
+        placeholderModule.PLACEHOLDER_CONFIG_LOADER,
       ];
 
-      placeholders.forEach(placeholder => {
+      placeholders.forEach((placeholder) => {
         expect(placeholder).toBe(expectedMessage);
       });
     });

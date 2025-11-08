@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ExecResult } from '../../core/execution/execa.js';
 
@@ -8,12 +8,16 @@ vi.mock('../../core/execution/execa.js', () => ({
   execaStream: vi.fn(),
 }));
 
+import { execa } from '../../core/execution/execa.js';
 // Import git module and its dependencies
 import * as gitModule from '../../plugins/git.js';
-import { execa } from '../../core/execution/execa.js';
 
 // Helper function to create proper ExecResult objects
-function createMockExecResult(stdout: string, stderr: string = '', exitCode: number = 0): ExecResult {
+function createMockExecResult(
+  stdout: string,
+  stderr: string = '',
+  exitCode: number = 0
+): ExecResult {
   return {
     stdout,
     stderr,
@@ -38,7 +42,9 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
       const result = await gitModule.isGitRepository('/path/to/repo');
 
       expect(result).toBe(true);
-      expect(execa).toHaveBeenCalledWith('git', ['rev-parse', '--git-dir'], { cwd: '/path/to/repo' });
+      expect(execa).toHaveBeenCalledWith('git', ['rev-parse', '--git-dir'], {
+        cwd: '/path/to/repo',
+      });
     });
 
     it('should return false when not a git repository', async () => {
@@ -84,7 +90,9 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
       const result = await gitModule.getRepositoryRoot('/path/to/repo/subdir');
 
       expect(result).toBe('/path/to/repo');
-      expect(execa).toHaveBeenCalledWith('git', ['rev-parse', '--show-toplevel'], { cwd: '/path/to/repo/subdir' });
+      expect(execa).toHaveBeenCalledWith('git', ['rev-parse', '--show-toplevel'], {
+        cwd: '/path/to/repo/subdir',
+      });
     });
 
     it('should throw CLIError when not in git repository', async () => {
@@ -98,7 +106,9 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
       await gitModule.getRepositoryRoot();
 
-      expect(execa).toHaveBeenCalledWith('git', ['rev-parse', '--show-toplevel'], { cwd: process.cwd() });
+      expect(execa).toHaveBeenCalledWith('git', ['rev-parse', '--show-toplevel'], {
+        cwd: process.cwd(),
+      });
     });
   });
 
@@ -116,7 +126,11 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
       await gitModule.init('/new/repo', { defaultBranch: 'develop' });
 
-      expect(execa).toHaveBeenCalledWith('git', ['init', '--initial-branch', 'develop', '/new/repo'], { cwd: '/new/repo' });
+      expect(execa).toHaveBeenCalledWith(
+        'git',
+        ['init', '--initial-branch', 'develop', '/new/repo'],
+        { cwd: '/new/repo' }
+      );
     });
 
     it('should initialize bare repository', async () => {
@@ -124,7 +138,9 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
       await gitModule.init('/new/repo', { bare: true });
 
-      expect(execa).toHaveBeenCalledWith('git', ['init', '--bare', '/new/repo'], { cwd: '/new/repo' });
+      expect(execa).toHaveBeenCalledWith('git', ['init', '--bare', '/new/repo'], {
+        cwd: '/new/repo',
+      });
     });
 
     it('should handle initialization errors', async () => {
@@ -140,15 +156,27 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
       await gitModule.clone('https://github.com/user/repo.git', '/target/dir');
 
-      expect(execa).toHaveBeenCalledWith('git', ['clone', 'https://github.com/user/repo.git', '/target/dir']);
+      expect(execa).toHaveBeenCalledWith('git', [
+        'clone',
+        'https://github.com/user/repo.git',
+        '/target/dir',
+      ]);
     });
 
     it('should clone with specific branch', async () => {
       vi.mocked(execa).mockResolvedValue(createMockExecResult('Cloning into repository...'));
 
-      await gitModule.clone('https://github.com/user/repo.git', '/target/dir', { branch: 'develop' });
+      await gitModule.clone('https://github.com/user/repo.git', '/target/dir', {
+        branch: 'develop',
+      });
 
-      expect(execa).toHaveBeenCalledWith('git', ['clone', '--branch', 'develop', 'https://github.com/user/repo.git', '/target/dir']);
+      expect(execa).toHaveBeenCalledWith('git', [
+        'clone',
+        '--branch',
+        'develop',
+        'https://github.com/user/repo.git',
+        '/target/dir',
+      ]);
     });
 
     it('should clone with depth limit', async () => {
@@ -156,7 +184,13 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
       await gitModule.clone('https://github.com/user/repo.git', '/target/dir', { depth: 1 });
 
-      expect(execa).toHaveBeenCalledWith('git', ['clone', '--depth', '1', 'https://github.com/user/repo.git', '/target/dir']);
+      expect(execa).toHaveBeenCalledWith('git', [
+        'clone',
+        '--depth',
+        '1',
+        'https://github.com/user/repo.git',
+        '/target/dir',
+      ]);
     });
 
     it('should clone recursively', async () => {
@@ -164,13 +198,20 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
       await gitModule.clone('https://github.com/user/repo.git', '/target/dir', { recursive: true });
 
-      expect(execa).toHaveBeenCalledWith('git', ['clone', '--recursive', 'https://github.com/user/repo.git', '/target/dir']);
+      expect(execa).toHaveBeenCalledWith('git', [
+        'clone',
+        '--recursive',
+        'https://github.com/user/repo.git',
+        '/target/dir',
+      ]);
     });
 
     it('should handle clone errors', async () => {
       vi.mocked(execa).mockRejectedValue(new Error('Repository not found'));
 
-      await expect(gitModule.clone('https://github.com/user/nonexistent.git', '/target/dir')).rejects.toThrow();
+      await expect(
+        gitModule.clone('https://github.com/user/nonexistent.git', '/target/dir')
+      ).rejects.toThrow();
     });
   });
 
@@ -179,7 +220,9 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
       vi.mocked(execa)
         .mockResolvedValueOnce(createMockExecResult('main')) // git branch --show-current
         .mockResolvedValueOnce(createMockExecResult('0\t1')) // git rev-list --count --left-right
-        .mockResolvedValueOnce(createMockExecResult('M  modified.txt\nA  added.txt\n?? untracked.txt')); // git status --porcelain
+        .mockResolvedValueOnce(
+          createMockExecResult('M  modified.txt\nA  added.txt\n?? untracked.txt')
+        ); // git status --porcelain
 
       const result = await gitModule.getStatus('/repo');
 
@@ -190,7 +233,7 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
         staged: ['modified.txt', 'added.txt'],
         unstaged: [],
         untracked: ['untracked.txt'],
-        clean: false
+        clean: false,
       });
     });
 
@@ -229,7 +272,9 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
       await gitModule.add(['file1.txt', 'file2.txt'], '/repo');
 
-      expect(execa).toHaveBeenCalledWith('git', ['add', 'file1.txt', 'file2.txt'], { cwd: '/repo' });
+      expect(execa).toHaveBeenCalledWith('git', ['add', 'file1.txt', 'file2.txt'], {
+        cwd: '/repo',
+      });
     });
 
     it('should add all files with dot', async () => {
@@ -258,11 +303,15 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
     });
 
     it('should commit with amend option', async () => {
-      vi.mocked(execa).mockResolvedValue(createMockExecResult('[main def456a] Test commit (amended)'));
+      vi.mocked(execa).mockResolvedValue(
+        createMockExecResult('[main def456a] Test commit (amended)')
+      );
 
       await gitModule.commit({ message: 'Test commit', amend: true }, '/repo');
 
-      expect(execa).toHaveBeenCalledWith('git', ['commit', '-m', 'Test commit', '--amend'], { cwd: '/repo' });
+      expect(execa).toHaveBeenCalledWith('git', ['commit', '-m', 'Test commit', '--amend'], {
+        cwd: '/repo',
+      });
     });
 
     it('should commit with sign-off', async () => {
@@ -270,7 +319,9 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
       await gitModule.commit({ message: 'Test commit', signOff: true }, '/repo');
 
-      expect(execa).toHaveBeenCalledWith('git', ['commit', '-m', 'Test commit', '--signoff'], { cwd: '/repo' });
+      expect(execa).toHaveBeenCalledWith('git', ['commit', '-m', 'Test commit', '--signoff'], {
+        cwd: '/repo',
+      });
     });
 
     it('should allow empty commits', async () => {
@@ -278,7 +329,9 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
       await gitModule.commit({ message: 'Empty commit', allowEmpty: true }, '/repo');
 
-      expect(execa).toHaveBeenCalledWith('git', ['commit', '-m', 'Empty commit', '--allow-empty'], { cwd: '/repo' });
+      expect(execa).toHaveBeenCalledWith('git', ['commit', '-m', 'Empty commit', '--allow-empty'], {
+        cwd: '/repo',
+      });
     });
 
     it('should handle commit errors', async () => {
@@ -292,9 +345,9 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
     it('should get commits with default limit', async () => {
       const gitLog = [
         'abc123d|abc123d|John Doe|john@example.com|2023-01-01 12:00:00 +0000|Initial commit',
-        'def456e|def456e|Jane Smith|jane@example.com|2023-01-02 13:00:00 +0000|Add feature'
+        'def456e|def456e|Jane Smith|jane@example.com|2023-01-02 13:00:00 +0000|Add feature',
       ].join('\n');
-      
+
       vi.mocked(execa).mockResolvedValue(createMockExecResult(gitLog));
 
       const commits = await gitModule.getCommits(10, '/repo');
@@ -306,18 +359,30 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
         author: 'John Doe',
         email: 'john@example.com',
         date: new Date('2023-01-01 12:00:00 +0000'),
-        message: 'Initial commit'
+        message: 'Initial commit',
       });
-      
-      expect(execa).toHaveBeenCalledWith('git', ['log', '-10', '--pretty=format:%H|%h|%an|%ae|%ai|%s'], { cwd: '/repo' });
+
+      expect(execa).toHaveBeenCalledWith(
+        'git',
+        ['log', '-10', '--pretty=format:%H|%h|%an|%ae|%ai|%s'],
+        { cwd: '/repo' }
+      );
     });
 
     it('should get commits with custom limit', async () => {
-      vi.mocked(execa).mockResolvedValue(createMockExecResult('abc123d|abc123d|John Doe|john@example.com|2023-01-01 12:00:00 +0000|Initial commit'));
+      vi.mocked(execa).mockResolvedValue(
+        createMockExecResult(
+          'abc123d|abc123d|John Doe|john@example.com|2023-01-01 12:00:00 +0000|Initial commit'
+        )
+      );
 
       await gitModule.getCommits(5, '/repo');
 
-      expect(execa).toHaveBeenCalledWith('git', ['log', '-5', '--pretty=format:%H|%h|%an|%ae|%ai|%s'], { cwd: '/repo' });
+      expect(execa).toHaveBeenCalledWith(
+        'git',
+        ['log', '-5', '--pretty=format:%H|%h|%an|%ae|%ai|%s'],
+        { cwd: '/repo' }
+      );
     });
 
     it('should handle empty log', async () => {
@@ -337,7 +402,11 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
   describe('getDiff', () => {
     it('should get diff between commits', async () => {
-      vi.mocked(execa).mockResolvedValue(createMockExecResult('diff --git a/file.txt b/file.txt\nindex abc123..def456 100644\n--- a/file.txt\n+++ b/file.txt\n@@ -1 +1 @@\n-old content\n+new content'));
+      vi.mocked(execa).mockResolvedValue(
+        createMockExecResult(
+          'diff --git a/file.txt b/file.txt\nindex abc123..def456 100644\n--- a/file.txt\n+++ b/file.txt\n@@ -1 +1 @@\n-old content\n+new content'
+        )
+      );
 
       const diff = await gitModule.getDiff('abc123', 'def456', '/repo');
 
@@ -346,7 +415,11 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
     });
 
     it('should get working directory diff', async () => {
-      vi.mocked(execa).mockResolvedValue(createMockExecResult('diff --git a/file.txt b/file.txt\nindex abc123..def456 100644\n--- a/file.txt\n+++ b/file.txt\n@@ -1 +1 @@\n-old content\n+new content'));
+      vi.mocked(execa).mockResolvedValue(
+        createMockExecResult(
+          'diff --git a/file.txt b/file.txt\nindex abc123..def456 100644\n--- a/file.txt\n+++ b/file.txt\n@@ -1 +1 @@\n-old content\n+new content'
+        )
+      );
 
       await gitModule.getDiff(undefined, undefined, '/repo');
 
@@ -362,7 +435,9 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
   describe('getBranches', () => {
     it('should get branches without remote', async () => {
-      vi.mocked(execa).mockResolvedValue(createMockExecResult('* main\n  develop\n  feature/new-feature'));
+      vi.mocked(execa).mockResolvedValue(
+        createMockExecResult('* main\n  develop\n  feature/new-feature')
+      );
 
       const branches = await gitModule.getBranches('/repo');
 
@@ -371,11 +446,21 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
     });
 
     it('should get branches with remote', async () => {
-      vi.mocked(execa).mockResolvedValue(createMockExecResult('* main\n  develop\n  feature/new-feature\n  remotes/origin/main\n  remotes/origin/develop'));
+      vi.mocked(execa).mockResolvedValue(
+        createMockExecResult(
+          '* main\n  develop\n  feature/new-feature\n  remotes/origin/main\n  remotes/origin/develop'
+        )
+      );
 
       const branches = await gitModule.getBranches('/repo', true);
 
-      expect(branches).toEqual(['main', 'develop', 'feature/new-feature', 'remotes/origin/main', 'remotes/origin/develop']);
+      expect(branches).toEqual([
+        'main',
+        'develop',
+        'feature/new-feature',
+        'remotes/origin/main',
+        'remotes/origin/develop',
+      ]);
       expect(execa).toHaveBeenCalledWith('git', ['branch', '-a'], { cwd: '/repo' });
     });
 
@@ -400,7 +485,9 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
       await gitModule.createBranch('new-feature', '/repo', true);
 
-      expect(execa).toHaveBeenCalledWith('git', ['checkout', '-b', 'new-feature'], { cwd: '/repo' });
+      expect(execa).toHaveBeenCalledWith('git', ['checkout', '-b', 'new-feature'], {
+        cwd: '/repo',
+      });
     });
 
     it('should handle branch creation errors', async () => {
@@ -412,7 +499,7 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
 
   describe('checkout', () => {
     it('should checkout branch', async () => {
-      vi.mocked(execa).mockResolvedValue(createMockExecResult('Switched to branch \'develop\''));
+      vi.mocked(execa).mockResolvedValue(createMockExecResult("Switched to branch 'develop'"));
 
       await gitModule.checkout('develop', '/repo');
 
@@ -420,7 +507,9 @@ describe('Git Plugin - comprehensive tests (fixed)', () => {
     });
 
     it('should checkout commit hash', async () => {
-      vi.mocked(execa).mockResolvedValue(createMockExecResult('HEAD is now at abc123d Initial commit'));
+      vi.mocked(execa).mockResolvedValue(
+        createMockExecResult('HEAD is now at abc123d Initial commit')
+      );
 
       await gitModule.checkout('abc123d', '/repo');
 

@@ -1288,7 +1288,9 @@ export function sanitizePath(
   if (!allowTraversal) {
     // Check if this path targets specific sensitive system files or contains known attack patterns
     const hasSensitiveTarget =
-      /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|windows\/system32|boot|sys|proc)/i.test(sanitized) ||
+      /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|windows\/system32|boot|sys|proc)/i.test(
+        sanitized
+      ) ||
       /\\(windows\\system32|documents and settings|users|programfiles)/i.test(sanitized) ||
       /\.\.[/\\].*\/(passwd|shadow|hosts|root|windows|system32|boot|sys|proc|sensitive)/i.test(
         sanitized

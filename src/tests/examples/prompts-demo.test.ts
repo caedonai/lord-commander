@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as coreModule from '../../core/index.js';
 
 // Mock the core module functions
@@ -40,7 +40,7 @@ describe('Prompts Demo', () => {
     // Mock console methods
     vi.spyOn(console, 'log').mockImplementation(mockConsole.log);
     vi.spyOn(console, 'error').mockImplementation(mockConsole.error);
-    
+
     // Mock setTimeout for sleep function
     vi.spyOn(global, 'setTimeout').mockImplementation((fn: Function) => {
       fn();
@@ -104,9 +104,13 @@ describe('Prompts Demo', () => {
 
         // Verify task progress methods are called
         expect(coreModule.printTaskStart).toHaveBeenCalledWith('Loading configuration files');
-        expect(coreModule.printTaskComplete).toHaveBeenCalledWith('Configuration files loaded successfully');
+        expect(coreModule.printTaskComplete).toHaveBeenCalledWith(
+          'Configuration files loaded successfully'
+        );
         expect(coreModule.printTaskStart).toHaveBeenCalledWith('Starting web server');
-        expect(coreModule.printTaskComplete).toHaveBeenCalledWith('Web server running on port 3000');
+        expect(coreModule.printTaskComplete).toHaveBeenCalledWith(
+          'Web server running on port 3000'
+        );
       }
     });
   });
@@ -129,7 +133,9 @@ describe('Prompts Demo', () => {
 
         // Verify prompt content is shown
         expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('What is your name?'));
-        expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Target environment?'));
+        expect(mockConsole.log).toHaveBeenCalledWith(
+          expect.stringContaining('Target environment?')
+        );
       }
     });
   });
@@ -179,8 +185,13 @@ describe('Prompts Demo', () => {
         await demoModule.demoComparison();
 
         // Verify comparison content
-        expect(coreModule.printSeparator).toHaveBeenCalledWith('Before vs After Comparison', 'double');
-        expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Readability Improvements Summary'));
+        expect(coreModule.printSeparator).toHaveBeenCalledWith(
+          'Before vs After Comparison',
+          'double'
+        );
+        expect(mockConsole.log).toHaveBeenCalledWith(
+          expect.stringContaining('Readability Improvements Summary')
+        );
       }
     });
 
@@ -204,9 +215,7 @@ describe('Prompts Demo', () => {
         expect(coreModule.intro).toHaveBeenCalledWith(
           '📚 Enhanced Prompts & Visual Separation Demo'
         );
-        expect(coreModule.outro).toHaveBeenCalledWith(
-          'Enhanced prompts demo completed! ✨'
-        );
+        expect(coreModule.outro).toHaveBeenCalledWith('Enhanced prompts demo completed! ✨');
       }
     });
 
@@ -279,9 +288,7 @@ describe('Prompts Demo', () => {
         await demoModule.demoBasicSeparators();
 
         // Verify Unicode characters are used in output
-        expect(mockConsole.log).toHaveBeenCalledWith(
-          expect.stringContaining('🎯')
-        );
+        expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('🎯'));
       }
     });
 

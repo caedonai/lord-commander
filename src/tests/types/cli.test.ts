@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 // Import as a module to ensure it compiles and exports are accessible
 import * as cliTypes from '../../types/cli.js';
 
@@ -35,19 +35,19 @@ describe('CLI Types', () => {
           enabled: true,
           autoInstall: false,
           shells: ['bash' as const, 'zsh' as const],
-          enableFileCompletion: true
+          enableFileCompletion: true,
         },
         builtinCommands: {
           completion: true,
           hello: false,
-          version: false
+          version: false,
         },
         plugins: {
           git: true,
           workspace: false,
-          updater: false
+          updater: false,
         },
-        autoStart: true
+        autoStart: true,
       };
 
       // This compiles successfully if the interface is well-defined
@@ -63,14 +63,14 @@ describe('CLI Types', () => {
           info: () => {},
           error: () => {},
           warn: () => {},
-          debug: () => {}
+          debug: () => {},
         },
         prompts: {
           text: () => Promise.resolve(''),
-          confirm: () => Promise.resolve(true)
+          confirm: () => Promise.resolve(true),
         },
         cwd: process.cwd(),
-        packageManager: 'npm' as const
+        packageManager: 'npm' as const,
       };
 
       // This compiles successfully if the interface is well-defined
@@ -83,12 +83,12 @@ describe('CLI Types', () => {
     it('should support optional properties in interfaces', () => {
       // Test optional properties work as expected
       const minimalOptions = {
-        name: 'minimal-cli'
+        name: 'minimal-cli',
       };
 
       const minimalContext = {
         logger: { info: () => {} },
-        prompts: { text: () => Promise.resolve('') }
+        prompts: { text: () => Promise.resolve('') },
       };
 
       expect(minimalOptions.name).toBe('minimal-cli');

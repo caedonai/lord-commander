@@ -7,7 +7,6 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-
 // Mock dependencies
 vi.mock('execa', () => ({
   execa: vi.fn(),
@@ -46,7 +45,12 @@ vi.mock('../../core/foundation/core/constants.js', () => ({
 
 vi.mock('../../core/foundation/errors/errors.js', () => ({
   ProcessError: class ProcessError extends Error {
-    constructor(message: string, public command?: string, public exitCode?: number, public cause?: Error) {
+    constructor(
+      message: string,
+      public command?: string,
+      public exitCode?: number,
+      public cause?: Error
+    ) {
       super(message);
       this.name = 'ProcessError';
     }
@@ -68,31 +72,33 @@ vi.mock('../../core/execution/fs.js', () => ({
 
 import { mkdir } from 'node:fs/promises';
 import { execa as execaLib, execaSync as execaSyncLib } from 'execa';
-import { ProcessError } from '../../core/foundation/errors/errors.js';
-import { exists } from '../../core/execution/fs.js';
 import {
-  execa,
-  execaSync,
-  execaStream,
-  execaWithOutput,
   commandExists,
-  detectPackageManager,
-  runPackageManagerExeca,
-  gitExeca,
   createCancellableExecution,
-  execaSequence,
+  detectPackageManager,
+  execa,
   execaParallel,
+  execaSequence,
+  execaStream,
+  execaSync,
+  execaWithOutput,
+  gitExeca,
+  runPackageManagerExeca,
 } from '../../core/execution/execa.js';
+import { exists } from '../../core/execution/fs.js';
+import { ProcessError } from '../../core/foundation/errors/errors.js';
 
 // Helper function to create properly typed mock results
-function createTypedMockResult(overrides: Partial<{
-  stdout: string;
-  stderr: string;
-  exitCode: number;
-  failed: boolean;
-  timedOut: boolean;
-  killed: boolean;
-}> = {}): unknown {
+function createTypedMockResult(
+  overrides: Partial<{
+    stdout: string;
+    stderr: string;
+    exitCode: number;
+    failed: boolean;
+    timedOut: boolean;
+    killed: boolean;
+  }> = {}
+): unknown {
   return {
     stdout: '',
     stderr: '',
@@ -464,10 +470,10 @@ describe('Execa Module', () => {
 
     it('should use correct command based on platform', async () => {
       const originalPlatform = process.platform;
-      
+
       // Test Windows
       Object.defineProperty(process, 'platform', { value: 'win32' });
-      
+
       vi.mocked(execaLib).mockResolvedValue({
         stdout: 'C:\\Windows\\System32\\git.exe',
         stderr: '',
@@ -480,11 +486,7 @@ describe('Execa Module', () => {
 
       await commandExists('git');
 
-      expect(execaLib).toHaveBeenCalledWith(
-        'where',
-        ['git'],
-        expect.any(Object)
-      );
+      expect(execaLib).toHaveBeenCalledWith('where', ['git'], expect.any(Object));
 
       // Restore platform
       Object.defineProperty(process, 'platform', { value: originalPlatform });
@@ -513,7 +515,7 @@ describe('Execa Module', () => {
 
     it('should return null when no package manager detected', async () => {
       vi.mocked(exists).mockReturnValue(false);
-      
+
       // Also mock commandExists to return false
       vi.mocked(execaLib).mockResolvedValue({
         exitCode: 1,
@@ -527,7 +529,7 @@ describe('Execa Module', () => {
 
     it('should fallback to checking available commands', async () => {
       vi.mocked(exists).mockReturnValue(false);
-      
+
       // Mock pnpm command exists
       vi.mocked(execaLib).mockResolvedValue({
         stdout: '/usr/bin/pnpm',
@@ -589,11 +591,7 @@ describe('Execa Module', () => {
 
       await runPackageManagerExeca('install', 'express');
 
-      expect(execaLib).toHaveBeenCalledWith(
-        'npm',
-        ['install', 'express'],
-        expect.any(Object)
-      );
+      expect(execaLib).toHaveBeenCalledWith('npm', ['install', 'express'], expect.any(Object));
     });
 
     it('should run dev dependency install', async () => {
@@ -633,11 +631,7 @@ describe('Execa Module', () => {
 
       await runPackageManagerExeca('run', 'test');
 
-      expect(execaLib).toHaveBeenCalledWith(
-        'npm',
-        ['run', 'test'],
-        expect.any(Object)
-      );
+      expect(execaLib).toHaveBeenCalledWith('npm', ['run', 'test'], expect.any(Object));
     });
 
     it('should throw error when no package manager detected', async () => {
@@ -862,8 +856,8 @@ describe('Execa Module', () => {
       const results = await execaParallel(commands);
 
       expect(results).toHaveLength(2);
-      expect(results.some(r => r.stdout === 'result 1')).toBe(true);
-      expect(results.some(r => r.stdout === 'result 2')).toBe(true);
+      expect(results.some((r) => r.stdout === 'result 1')).toBe(true);
+      expect(results.some((r) => r.stdout === 'result 2')).toBe(true);
     });
 
     it('should respect maxConcurrency limit', async () => {
@@ -948,7 +942,7 @@ describe('Execa Module', () => {
 
     it('should handle sandbox directory creation failure gracefully', async () => {
       vi.mocked(mkdir).mockRejectedValue(new Error('Permission denied'));
-      
+
       const mockResult = {
         stdout: 'output',
         stderr: '',

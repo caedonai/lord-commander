@@ -3,14 +3,14 @@
  * @description Focused test suite for the fs.ts module with proper mocking
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach, type MockedFunction } from 'vitest';
 import * as fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
 import path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, type MockedFunction, vi } from 'vitest';
 
 // Mock Node.js fs modules
 vi.mock('node:fs', () => ({
-  existsSync: vi.fn()
+  existsSync: vi.fn(),
 }));
 
 vi.mock('node:fs/promises', () => ({
@@ -24,8 +24,8 @@ vi.mock('node:fs/promises', () => ({
     copyFile: vi.fn(),
     utimes: vi.fn(),
     readdir: vi.fn(),
-    rename: vi.fn()
-  }
+    rename: vi.fn(),
+  },
 }));
 
 // Mock logger to prevent console output during tests
@@ -34,13 +34,13 @@ vi.mock('../../core/ui/logger.js', () => ({
     debug: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
-    error: vi.fn()
-  }))
+    error: vi.fn(),
+  })),
 }));
 
 // Mock constants
 vi.mock('../../core/foundation/core/constants.js', () => ({
-  DEFAULT_IGNORE_PATTERNS: ['node_modules', '.git', '*.log']
+  DEFAULT_IGNORE_PATTERNS: ['node_modules', '.git', '*.log'],
 }));
 
 // Mock FileSystemError
@@ -51,7 +51,7 @@ vi.mock('../../core/foundation/errors/errors.js', () => ({
       this.name = 'FileSystemError';
       this.cause = cause;
     }
-  }
+  },
 }));
 
 import * as fsModule from '../../core/execution/fs.js';
@@ -65,7 +65,7 @@ describe('File System Module - Basic Functions', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Setup mocked functions
     mockExistsSync = vi.mocked(fs.existsSync);
     mockStat = vi.mocked(fsPromises.stat);
@@ -81,18 +81,18 @@ describe('File System Module - Basic Functions', () => {
   describe('exists', () => {
     it('should return true when file exists', () => {
       mockExistsSync.mockReturnValue(true);
-      
+
       const result = fsModule.exists('/test/file.txt');
-      
+
       expect(result).toBe(true);
       expect(mockExistsSync).toHaveBeenCalledWith('/test/file.txt');
     });
 
     it('should return false when file does not exist', () => {
       mockExistsSync.mockReturnValue(false);
-      
+
       const result = fsModule.exists('/nonexistent/file.txt');
-      
+
       expect(result).toBe(false);
       expect(mockExistsSync).toHaveBeenCalledWith('/nonexistent/file.txt');
     });
@@ -101,9 +101,9 @@ describe('File System Module - Basic Functions', () => {
       mockExistsSync.mockImplementation(() => {
         throw new Error('Permission denied');
       });
-      
+
       const result = fsModule.exists('/protected/file.txt');
-      
+
       expect(result).toBe(false);
     });
   });
@@ -116,43 +116,47 @@ describe('File System Module - Basic Functions', () => {
         isSymbolicLink: vi.fn(() => false),
         size: 1024,
         mtime: new Date('2023-01-01'),
-        birthtime: new Date('2023-01-01')
+        birthtime: new Date('2023-01-01'),
       };
-      mockStat.mockResolvedValue(mockStats as any);
-      
+      mockStat.mockResolvedValue(mockStats as never);
+
       const result = await fsModule.stat('/test/file.txt');
-      
+
       expect(result).toEqual({
         isFile: true,
         isDirectory: false,
         isSymbolicLink: false,
         size: 1024,
         modified: new Date('2023-01-01'),
-        created: new Date('2023-01-01')
+        created: new Date('2023-01-01'),
       });
       expect(mockStat).toHaveBeenCalledWith('/test/file.txt');
     });
 
     it('should throw FileSystemError when stat fails', async () => {
       mockStat.mockRejectedValue(new Error('File not found'));
-      
-      await expect(fsModule.stat('/nonexistent/file.txt')).rejects.toThrow('Failed to get stats for: /nonexistent/file.txt');
+
+      await expect(fsModule.stat('/nonexistent/file.txt')).rejects.toThrow(
+        'Failed to get stats for: /nonexistent/file.txt'
+      );
     });
   });
 
   describe('ensureDir', () => {
     it('should create directory successfully', async () => {
       mockMkdir.mockResolvedValue(undefined);
-      
+
       await fsModule.ensureDir('/test/new-dir');
-      
+
       expect(mockMkdir).toHaveBeenCalledWith('/test/new-dir', { recursive: true });
     });
 
     it('should throw FileSystemError when mkdir fails', async () => {
       mockMkdir.mockRejectedValue(new Error('Permission denied'));
-      
-      await expect(fsModule.ensureDir('/protected/new-dir')).rejects.toThrow('Failed to create directory: /protected/new-dir');
+
+      await expect(fsModule.ensureDir('/protected/new-dir')).rejects.toThrow(
+        'Failed to create directory: /protected/new-dir'
+      );
     });
   });
 
@@ -160,9 +164,9 @@ describe('File System Module - Basic Functions', () => {
     it('should read file successfully with default encoding', async () => {
       const content = 'Hello, World!';
       mockReadFile.mockResolvedValue(content);
-      
+
       const result = await fsModule.readFile('/test/file.txt');
-      
+
       expect(result).toBe(content);
       expect(mockReadFile).toHaveBeenCalledWith('/test/file.txt', 'utf8');
     });
@@ -170,49 +174,52 @@ describe('File System Module - Basic Functions', () => {
     it('should read file with custom encoding', async () => {
       const content = 'Hello, World!';
       mockReadFile.mockResolvedValue(content);
-      
+
       const result = await fsModule.readFile('/test/file.txt', 'ascii');
-      
+
       expect(result).toBe(content);
       expect(mockReadFile).toHaveBeenCalledWith('/test/file.txt', 'ascii');
     });
 
     it('should throw FileSystemError when read fails', async () => {
       mockReadFile.mockRejectedValue(new Error('File not found'));
-      
-      await expect(fsModule.readFile('/nonexistent/file.txt')).rejects.toThrow('Failed to read file: /nonexistent/file.txt');
+
+      await expect(fsModule.readFile('/nonexistent/file.txt')).rejects.toThrow(
+        'Failed to read file: /nonexistent/file.txt'
+      );
     });
   });
 
   describe('writeFile', () => {
     it('should write file successfully with simple options', async () => {
       const content = 'Hello, World!';
-      
+
       // Mock path.dirname to return a directory
       vi.spyOn(path, 'dirname').mockReturnValue('/test');
       mockMkdir.mockResolvedValue(undefined);
       mockWriteFile.mockResolvedValue(undefined);
       mockExistsSync.mockReturnValue(false); // File doesn't exist yet
-      
+
       await fsModule.writeFile('/test/file.txt', content);
-      
+
       expect(mockWriteFile).toHaveBeenCalledWith('/test/file.txt', content, 'utf8');
     });
 
     it('should throw FileSystemError when file exists and overwrite is disabled', async () => {
       mockExistsSync.mockReturnValue(true);
-      
-      await expect(fsModule.writeFile('/test/file.txt', 'content', { overwrite: false }))
-        .rejects.toThrow('File already exists and overwrite is disabled: /test/file.txt');
+
+      await expect(
+        fsModule.writeFile('/test/file.txt', 'content', { overwrite: false })
+      ).rejects.toThrow('File already exists and overwrite is disabled: /test/file.txt');
     });
 
     it('should not create directories when createDirs is false', async () => {
       const content = 'Hello, World!';
       mockWriteFile.mockResolvedValue(undefined);
       mockExistsSync.mockReturnValue(false);
-      
+
       await fsModule.writeFile('/test/file.txt', content, { createDirs: false });
-      
+
       expect(mockMkdir).not.toHaveBeenCalled();
       expect(mockWriteFile).toHaveBeenCalledWith('/test/file.txt', content, 'utf8');
     });
@@ -223,9 +230,9 @@ describe('File System Module - Basic Functions', () => {
       const jsonContent = '{"name": "test", "version": "1.0.0"}';
       const expectedData = { name: 'test', version: '1.0.0' };
       mockReadFile.mockResolvedValue(jsonContent);
-      
+
       const result = await fsModule.readJSON('/test/package.json');
-      
+
       expect(result).toEqual(expectedData);
       expect(mockReadFile).toHaveBeenCalledWith('/test/package.json', 'utf8');
     });
@@ -233,8 +240,10 @@ describe('File System Module - Basic Functions', () => {
     it('should throw FileSystemError for invalid JSON', async () => {
       const invalidJson = '{"name": "test", "version":}';
       mockReadFile.mockResolvedValue(invalidJson);
-      
-      await expect(fsModule.readJSON('/test/invalid.json')).rejects.toThrow('Invalid JSON in file: /test/invalid.json');
+
+      await expect(fsModule.readJSON('/test/invalid.json')).rejects.toThrow(
+        'Invalid JSON in file: /test/invalid.json'
+      );
     });
   });
 
@@ -242,29 +251,29 @@ describe('File System Module - Basic Functions', () => {
     it('should write JSON file with default indent', async () => {
       const data = { name: 'test', version: '1.0.0' };
       const expectedContent = JSON.stringify(data, null, 2);
-      
+
       // Mock dependencies
       vi.spyOn(path, 'dirname').mockReturnValue('/test');
       mockMkdir.mockResolvedValue(undefined);
       mockWriteFile.mockResolvedValue(undefined);
       mockExistsSync.mockReturnValue(false);
-      
+
       await fsModule.writeJSON('/test/package.json', data);
-      
+
       expect(mockWriteFile).toHaveBeenCalledWith('/test/package.json', expectedContent, 'utf8');
     });
 
     it('should write JSON file with custom indent', async () => {
       const data = { name: 'test' };
       const expectedContent = JSON.stringify(data, null, 4);
-      
+
       vi.spyOn(path, 'dirname').mockReturnValue('/test');
       mockMkdir.mockResolvedValue(undefined);
       mockWriteFile.mockResolvedValue(undefined);
       mockExistsSync.mockReturnValue(false);
-      
+
       await fsModule.writeJSON('/test/file.json', data, { indent: 4 });
-      
+
       expect(mockWriteFile).toHaveBeenCalledWith('/test/file.json', expectedContent, 'utf8');
     });
   });

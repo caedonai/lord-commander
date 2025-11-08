@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { runIconTest } from '../../examples/simple-icon-test.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as coreModule from '../../core/index.js';
+import { runIconTest } from '../../examples/simple-icon-test.js';
 
 // Mock the core module
 vi.mock('../../core/index.js', () => ({
@@ -35,7 +35,9 @@ describe('Simple Icon Test', () => {
     };
 
     // Mock createLogger to return our mock logger
-    vi.mocked(coreModule.createLogger).mockReturnValue(mockLogger as unknown as ReturnType<typeof coreModule.createLogger>);
+    vi.mocked(coreModule.createLogger).mockReturnValue(
+      mockLogger as unknown as ReturnType<typeof coreModule.createLogger>
+    );
 
     // Mock console methods
     mockConsole = {
@@ -64,10 +66,10 @@ describe('Simple Icon Test', () => {
     it('should test basic logger methods', async () => {
       await runIconTest();
 
-        // Verify basic logging methods are called
-        expect(mockLogger.info).toHaveBeenCalledWith('📝 Basic info message');
-        expect(mockLogger.success).toHaveBeenCalledWith('🎉 Success message with semantic meaning');
-        expect(mockLogger.warn).toHaveBeenCalledWith('⚠️ Warning message for attention');
+      // Verify basic logging methods are called
+      expect(mockLogger.info).toHaveBeenCalledWith('📝 Basic info message');
+      expect(mockLogger.success).toHaveBeenCalledWith('🎉 Success message with semantic meaning');
+      expect(mockLogger.warn).toHaveBeenCalledWith('⚠️ Warning message for attention');
     });
 
     it('should test enhanced icon methods when available', async () => {
@@ -87,7 +89,10 @@ describe('Simple Icon Test', () => {
       // Since our mock has withIcon method, it should be called
       if (typeof mockLogger.withIcon === 'function') {
         // Verify withIcon method is called
-        expect(mockLogger.withIcon).toHaveBeenCalledWith('sparkle', 'Generic icon method working! ✨');
+        expect(mockLogger.withIcon).toHaveBeenCalledWith(
+          'sparkle',
+          'Generic icon method working! ✨'
+        );
       }
     });
 
@@ -129,7 +134,7 @@ describe('Simple Icon Test', () => {
       delete process.env.TERM_PROGRAM;
       // Also set isTTY to false to test the ❌ case
       Object.defineProperty(process.stdout, 'isTTY', { value: false, writable: true });
-      
+
       await runIconTest();
 
       // Should show no TTY support when isTTY is false

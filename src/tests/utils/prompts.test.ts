@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import prompts, * as promptsModule from '../../utils/prompts.js';
 
 describe('Prompts Utils', () => {
@@ -53,11 +53,17 @@ describe('Prompts Utils', () => {
 
     it('should include all expected functions in default export', () => {
       const expectedFunctions: (keyof typeof prompts)[] = [
-        'intro', 'outro', 'text', 'confirm', 
-        'select', 'multiselect', 'spinner', 'note'
+        'intro',
+        'outro',
+        'text',
+        'confirm',
+        'select',
+        'multiselect',
+        'spinner',
+        'note',
       ];
 
-      expectedFunctions.forEach(funcName => {
+      expectedFunctions.forEach((funcName) => {
         expect(prompts).toHaveProperty(funcName);
         expect(prompts[funcName]).toBeTypeOf('function');
       });

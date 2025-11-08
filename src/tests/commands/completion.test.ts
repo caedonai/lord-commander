@@ -1,8 +1,8 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { Command } from 'commander';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import completionCommand from '../../commands/completion.js';
-import type { CommandContext } from '../../types/cli.js';
 import type { CompletionResult, CompletionStatus } from '../../core/commands/autocomplete.js';
+import type { CommandContext } from '../../types/cli.js';
 
 // Mock the autocomplete module
 vi.mock('../../core/commands/autocomplete.js', () => ({
@@ -266,7 +266,10 @@ describe('Completion Command', () => {
       await program.parseAsync(['node', 'test', 'completion', 'install']);
 
       expect(mockLogger.success).toHaveBeenCalledWith('Completion installed successfully!');
-      expect(mockLogger.note).toHaveBeenCalledWith('Restart your shell or run the following to activate:', undefined);
+      expect(mockLogger.note).toHaveBeenCalledWith(
+        'Restart your shell or run the following to activate:',
+        undefined
+      );
       expect(mockLogger.info).toHaveBeenCalledWith('  source ~/.bashrc');
     });
 
@@ -287,7 +290,9 @@ describe('Completion Command', () => {
 
       await program.parseAsync(['node', 'test', 'completion', 'install']);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Failed to install completion: Shell detection failed');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to install completion: Shell detection failed'
+      );
     });
 
     it('should handle non-error thrown during installation', async () => {
@@ -370,7 +375,9 @@ describe('Completion Command', () => {
 
       await program.parseAsync(['node', 'test', 'completion', 'uninstall']);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Failed to remove completion: Shell detection failed');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to remove completion: Shell detection failed'
+      );
     });
 
     it('should handle non-error thrown during uninstallation', async () => {
@@ -387,7 +394,7 @@ describe('Completion Command', () => {
 
     beforeEach(async () => {
       completionCommand(program, context);
-      
+
       // Import and mock fs/promises
       const fs = await import('node:fs/promises');
       mockWriteFile = vi.mocked(fs.writeFile);
@@ -419,11 +426,24 @@ describe('Completion Command', () => {
       mockGenerateCompletion.mockReturnValue('completion script content');
       mockWriteFile.mockResolvedValue(undefined);
 
-      await program.parseAsync(['node', 'test', 'completion', 'generate', '--output', '/tmp/completion.sh']);
+      await program.parseAsync([
+        'node',
+        'test',
+        'completion',
+        'generate',
+        '--output',
+        '/tmp/completion.sh',
+      ]);
 
       expect(mockGenerateCompletion).toHaveBeenCalledWith(program, 'bash');
-      expect(mockWriteFile).toHaveBeenCalledWith('/tmp/completion.sh', 'completion script content', 'utf-8');
-      expect(mockLogger.success).toHaveBeenCalledWith('Completion script written to /tmp/completion.sh');
+      expect(mockWriteFile).toHaveBeenCalledWith(
+        '/tmp/completion.sh',
+        'completion script content',
+        'utf-8'
+      );
+      expect(mockLogger.success).toHaveBeenCalledWith(
+        'Completion script written to /tmp/completion.sh'
+      );
       expect(mockConsoleLog).not.toHaveBeenCalled();
     });
 
@@ -431,7 +451,16 @@ describe('Completion Command', () => {
       mockGenerateCompletion.mockReturnValue('fish completion script');
       mockWriteFile.mockResolvedValue(undefined);
 
-      await program.parseAsync(['node', 'test', 'completion', 'generate', '-s', 'fish', '-o', 'output.fish']);
+      await program.parseAsync([
+        'node',
+        'test',
+        'completion',
+        'generate',
+        '-s',
+        'fish',
+        '-o',
+        'output.fish',
+      ]);
 
       expect(mockGenerateCompletion).toHaveBeenCalledWith(program, 'fish');
       expect(mockWriteFile).toHaveBeenCalledWith('output.fish', 'fish completion script', 'utf-8');
@@ -443,7 +472,9 @@ describe('Completion Command', () => {
 
       await program.parseAsync(['node', 'test', 'completion', 'generate']);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Failed to generate completion: Shell detection failed');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to generate completion: Shell detection failed'
+      );
     });
 
     it('should handle file write error', async () => {
@@ -451,9 +482,18 @@ describe('Completion Command', () => {
       mockGenerateCompletion.mockReturnValue('completion script');
       mockWriteFile.mockRejectedValue(new Error('Permission denied'));
 
-      await program.parseAsync(['node', 'test', 'completion', 'generate', '--output', '/root/completion.sh']);
+      await program.parseAsync([
+        'node',
+        'test',
+        'completion',
+        'generate',
+        '--output',
+        '/root/completion.sh',
+      ]);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Failed to generate completion: Permission denied');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to generate completion: Permission denied'
+      );
     });
 
     it('should handle non-error thrown during generation', async () => {
@@ -486,12 +526,14 @@ describe('Completion Command', () => {
       expect(mockLogger.intro).toHaveBeenCalledWith('Checking completion status...');
       expect(mockDetectShell).toHaveBeenCalled();
       expect(mockCheckCompletionStatus).toHaveBeenCalledWith(program, 'bash');
-      
+
       expect(mockLogger.info).toHaveBeenCalledWith('CLI Name: test-cli');
       expect(mockLogger.info).toHaveBeenCalledWith('Detected Shell: bash');
       expect(mockLogger.info).toHaveBeenCalledWith('Checking Shell: bash');
       expect(mockLogger.success).toHaveBeenCalledWith('✓ Completion is installed');
-      expect(mockLogger.info).toHaveBeenCalledWith('  Installation Path: /home/user/.local/share/bash-completion/completions/test-cli');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '  Installation Path: /home/user/.local/share/bash-completion/completions/test-cli'
+      );
       expect(mockLogger.info).toHaveBeenCalledWith('  Installation Type: local');
       expect(mockLogger.success).toHaveBeenCalledWith('  Status: Active and working');
       expect(mockLogger.outro).toHaveBeenCalledWith('Completion status check complete');
@@ -511,8 +553,13 @@ describe('Completion Command', () => {
       expect(mockLogger.info).toHaveBeenCalledWith('Detected Shell: bash');
       expect(mockLogger.info).toHaveBeenCalledWith('Checking Shell: zsh (specified)');
       expect(mockLogger.warn).toHaveBeenCalledWith('✗ Completion is not installed');
-      expect(mockLogger.note).toHaveBeenCalledWith('Run `completion install` to set up shell completion', undefined);
-      expect(mockLogger.outro).toHaveBeenCalledWith('To install completion, run: completion install');
+      expect(mockLogger.note).toHaveBeenCalledWith(
+        'Run `completion install` to set up shell completion',
+        undefined
+      );
+      expect(mockLogger.outro).toHaveBeenCalledWith(
+        'To install completion, run: completion install'
+      );
     });
 
     it('should show status when completion is installed but not active', async () => {
@@ -530,7 +577,9 @@ describe('Completion Command', () => {
 
       expect(mockLogger.success).toHaveBeenCalledWith('✓ Completion is installed');
       expect(mockLogger.warn).toHaveBeenCalledWith('  Status: Installed but may not be active');
-      expect(mockLogger.outro).toHaveBeenCalledWith('Completion installed but may need shell restart. Try: exec $SHELL');
+      expect(mockLogger.outro).toHaveBeenCalledWith(
+        'Completion installed but may need shell restart. Try: exec $SHELL'
+      );
     });
 
     it('should show status when completion status is unknown', async () => {
@@ -546,7 +595,10 @@ describe('Completion Command', () => {
 
       await program.parseAsync(['node', 'test', 'completion', 'status']);
 
-      expect(mockLogger.note).toHaveBeenCalledWith('  Status: Cannot determine if active (manual verification needed)', undefined);
+      expect(mockLogger.note).toHaveBeenCalledWith(
+        '  Status: Cannot determine if active (manual verification needed)',
+        undefined
+      );
     });
 
     it('should show error message when present', async () => {
@@ -571,7 +623,9 @@ describe('Completion Command', () => {
 
       await program.parseAsync(['node', 'test', 'completion', 'status']);
 
-      expect(mockLogger.error).toHaveBeenCalledWith('Failed to check status: Shell detection failed');
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'Failed to check status: Shell detection failed'
+      );
     });
 
     it('should handle non-error thrown during status check', async () => {

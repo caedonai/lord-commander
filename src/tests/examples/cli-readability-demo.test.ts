@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the core module BEFORE any imports that use it
 vi.mock('../../core/index.js', () => ({
@@ -21,7 +21,7 @@ describe('CLI Readability Demo', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Mock console methods
     mockConsole = {
       log: vi.fn(),
@@ -29,7 +29,7 @@ describe('CLI Readability Demo', () => {
     };
     vi.spyOn(console, 'log').mockImplementation(mockConsole.log);
     vi.spyOn(console, 'error').mockImplementation(mockConsole.error);
-    
+
     // Mock setTimeout for sleep function
     vi.spyOn(global, 'setTimeout').mockImplementation((fn: Function) => {
       fn();
@@ -45,7 +45,7 @@ describe('CLI Readability Demo', () => {
     it('should demonstrate poor readability patterns', async () => {
       // Dynamic import after mocks are set up
       const { demoBadReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoBadReadability();
 
       // Verify header is shown
@@ -72,15 +72,15 @@ describe('CLI Readability Demo', () => {
 
     it('should use logger methods for system messages', async () => {
       const { demoBadReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoBadReadability();
-      
+
       // Verify that the demo executes and displays system output through console
       // This verifies behavior rather than implementation details
       expect(mockConsole.log).toHaveBeenCalledWith(
         expect.stringContaining('POOR READABILITY EXAMPLE')
       );
-      
+
       // Verify various types of output are present
       expect(mockConsole.log).toHaveBeenCalled();
       expect(mockConsole.log.mock.calls.length).toBeGreaterThan(5);
@@ -88,7 +88,7 @@ describe('CLI Readability Demo', () => {
 
     it('should show user input examples', async () => {
       const { demoBadReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoBadReadability();
 
       // Verify user input is shown
@@ -101,7 +101,7 @@ describe('CLI Readability Demo', () => {
   describe('demoGoodReadability', () => {
     it('should demonstrate improved readability patterns', async () => {
       const { demoGoodReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoGoodReadability();
 
       // Verify core functions are called for better structure
@@ -113,7 +113,7 @@ describe('CLI Readability Demo', () => {
 
     it('should show progress tracking', async () => {
       const { demoGoodReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoGoodReadability();
 
       // Verify progress indicators
@@ -125,7 +125,7 @@ describe('CLI Readability Demo', () => {
 
     it('should show deployment task progress', async () => {
       const { demoGoodReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoGoodReadability();
 
       // Verify deployment tasks are shown
@@ -140,13 +140,15 @@ describe('CLI Readability Demo', () => {
         const current = index + 1;
         const total = deploymentTasks.length;
         expect(mockConsole.log).toHaveBeenCalledWith(`\n🔄 [${current}/${total}] ${task}...`);
-        expect(mockConsole.log).toHaveBeenCalledWith(`✅ [${current}/${total}] ${task} - completed`);
+        expect(mockConsole.log).toHaveBeenCalledWith(
+          `✅ [${current}/${total}] ${task} - completed`
+        );
       });
     });
 
     it('should use note and separators for structure', async () => {
       const { demoGoodReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoGoodReadability();
 
       // Verify structured output
@@ -160,7 +162,7 @@ describe('CLI Readability Demo', () => {
 
     it('should show user input with proper formatting', async () => {
       const { demoGoodReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoGoodReadability();
 
       // Verify user input is properly formatted with arrows
@@ -171,7 +173,7 @@ describe('CLI Readability Demo', () => {
 
     it('should show improvements list', async () => {
       const { demoGoodReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoGoodReadability();
 
       // Verify improvements are listed
@@ -190,7 +192,7 @@ describe('CLI Readability Demo', () => {
   describe('demoComparisonSummary', () => {
     it('should show comparison between approaches', async () => {
       const { demoComparisonSummary } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoComparisonSummary();
 
       // Verify comparison header
@@ -200,7 +202,7 @@ describe('CLI Readability Demo', () => {
 
     it('should show improvement categories', async () => {
       const { demoComparisonSummary } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoComparisonSummary();
 
       // Verify improvement categories are shown
@@ -219,32 +221,38 @@ describe('CLI Readability Demo', () => {
 
     it('should show before/after comparisons', async () => {
       const { demoComparisonSummary } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoComparisonSummary();
 
       // Verify before/after comparisons are shown
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Before:'));
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('After:'));
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Flat, uniform output'));
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Clear sections with separators'));
+      expect(mockConsole.log).toHaveBeenCalledWith(
+        expect.stringContaining('Clear sections with separators')
+      );
     });
 
     it('should show impact metrics', async () => {
       const { demoComparisonSummary } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoComparisonSummary();
 
       // Verify impact section is shown
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('📈 Impact:'));
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('97% improvement in readability'));
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Faster user comprehension'));
+      expect(mockConsole.log).toHaveBeenCalledWith(
+        expect.stringContaining('97% improvement in readability')
+      );
+      expect(mockConsole.log).toHaveBeenCalledWith(
+        expect.stringContaining('Faster user comprehension')
+      );
     });
   });
 
   describe('runFullDemo', () => {
     it('should execute complete demo sequence', async () => {
       const { runFullDemo } = await import('../../examples/cli-readability-demo.js');
-      
+
       await runFullDemo();
 
       // Verify demo starts and ends properly
@@ -254,7 +262,7 @@ describe('CLI Readability Demo', () => {
 
     it('should show demo overview', async () => {
       const { runFullDemo } = await import('../../examples/cli-readability-demo.js');
-      
+
       await runFullDemo();
 
       // Verify demo overview is provided
@@ -266,7 +274,7 @@ describe('CLI Readability Demo', () => {
 
     it('should include separator between bad and good examples', async () => {
       const { runFullDemo } = await import('../../examples/cli-readability-demo.js');
-      
+
       await runFullDemo();
 
       // Verify separator is shown
@@ -284,10 +292,10 @@ describe('CLI Readability Demo', () => {
       });
 
       const { runFullDemo } = await import('../../examples/cli-readability-demo.js');
-      
+
       // Should not throw but should be caught
       await expect(runFullDemo()).rejects.toThrow('Demo error');
-      
+
       // Restore mock
       if (originalPrintSeparator) {
         vi.mocked(coreModule.printSeparator).mockImplementation(originalPrintSeparator);
@@ -298,7 +306,7 @@ describe('CLI Readability Demo', () => {
   describe('Task interface and utility functions', () => {
     it('should handle task progress display correctly', async () => {
       const { demoGoodReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoGoodReadability();
 
       // Verify task progress function works (implicit through calls)
@@ -307,7 +315,7 @@ describe('CLI Readability Demo', () => {
 
     it('should handle sleep function for timing', async () => {
       const { demoGoodReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoGoodReadability();
 
       // Verify setTimeout is called for timing (mocked to execute immediately)
@@ -328,10 +336,10 @@ describe('CLI Readability Demo', () => {
       });
 
       const { runFullDemo } = await import('../../examples/cli-readability-demo.js');
-      
+
       // Verify error handling in CLI execution
       await expect(() => runFullDemo()).rejects.toThrow();
-      
+
       mockExit.mockRestore();
     });
   });
@@ -339,42 +347,48 @@ describe('CLI Readability Demo', () => {
   describe('TypeScript interfaces and type safety', () => {
     it('should properly handle Task interface', async () => {
       const { demoGoodReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       // This test verifies type safety is maintained
       await demoGoodReadability();
 
       // Verify tasks are processed correctly (implicitly through execution)
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Validating credentials'));
+      expect(mockConsole.log).toHaveBeenCalledWith(
+        expect.stringContaining('Validating credentials')
+      );
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Building application'));
     });
 
     it('should handle readonly properties correctly', async () => {
       const { demoGoodReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       // Verify readonly interface properties work correctly
       await demoGoodReadability();
 
       // Tasks with readonly properties should execute without issues
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Running database migrations'));
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('Deploying to production'));
+      expect(mockConsole.log).toHaveBeenCalledWith(
+        expect.stringContaining('Running database migrations')
+      );
+      expect(mockConsole.log).toHaveBeenCalledWith(
+        expect.stringContaining('Deploying to production')
+      );
     });
   });
 
   describe('Color and formatting codes', () => {
     it('should use proper ANSI color codes', async () => {
       const { demoBadReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoBadReadability();
 
       // Verify ANSI color codes are used
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('\x1b[31m')); // Red
       expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('\x1b[33m')); // Yellow
-      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('\x1b[0m'));  // Reset
+      expect(mockConsole.log).toHaveBeenCalledWith(expect.stringContaining('\x1b[0m')); // Reset
     });
 
     it('should use consistent formatting in good example', async () => {
       const { demoGoodReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoGoodReadability();
 
       // Verify consistent formatting
@@ -384,7 +398,7 @@ describe('CLI Readability Demo', () => {
 
     it('should show proper Unicode characters', async () => {
       const { demoGoodReadability } = await import('../../examples/cli-readability-demo.js');
-      
+
       await demoGoodReadability();
 
       // Verify Unicode characters are used

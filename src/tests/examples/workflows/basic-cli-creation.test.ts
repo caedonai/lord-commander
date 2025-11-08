@@ -1,22 +1,24 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import * as indexModule from '../../../index.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as workflowModule from '../../../examples/workflows/basic-cli-creation.js';
+import * as indexModule from '../../../index.js';
 
 // Mock the main index module
 vi.mock('../../../index.js', () => ({
-  createCLI: vi.fn(() => Promise.resolve({
-    name: vi.fn(),
-    version: vi.fn(),
-    description: vi.fn(),
-    command: vi.fn(() => ({
+  createCLI: vi.fn(() =>
+    Promise.resolve({
+      name: vi.fn(),
+      version: vi.fn(),
       description: vi.fn(),
-      argument: vi.fn(),
-      option: vi.fn(),
-      action: vi.fn(),
-    })),
-    parseAsync: vi.fn(),
-    run: vi.fn(),
-  })),
+      command: vi.fn(() => ({
+        description: vi.fn(),
+        argument: vi.fn(),
+        option: vi.fn(),
+        action: vi.fn(),
+      })),
+      parseAsync: vi.fn(),
+      run: vi.fn(),
+    })
+  ),
 }));
 
 describe('Basic CLI Creation Workflow - Fixed', () => {
@@ -43,7 +45,7 @@ describe('Basic CLI Creation Workflow - Fixed', () => {
 
     it('should return CLI instance', async () => {
       const cli = await workflowModule.createMinimalCLI();
-      
+
       expect(cli).toBeDefined();
       expect(typeof cli.name).toBe('function');
       expect(typeof cli.version).toBe('function');
@@ -84,11 +86,7 @@ describe('Basic CLI Creation Workflow - Fixed', () => {
         name: 'organized-cli',
         version: '2.0.0',
         description: 'Well-organized CLI with multiple command groups',
-        commandsPath: [
-          './commands/core',
-          './commands/admin',
-          './commands/utilities',
-        ],
+        commandsPath: ['./commands/core', './commands/admin', './commands/utilities'],
         builtinCommands: {
           completion: true,
           hello: false,
@@ -190,7 +188,9 @@ describe('Basic CLI Creation Workflow - Fixed', () => {
       await workflowModule.runBasicCLIDemo();
 
       expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('Minimal CLI setup'));
-      expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('CLI with built-in commands'));
+      expect(mockConsoleLog).toHaveBeenCalledWith(
+        expect.stringContaining('CLI with built-in commands')
+      );
       expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('Production-ready CLI'));
 
       mockConsoleLog.mockRestore();
@@ -241,11 +241,13 @@ describe('Basic CLI Creation Workflow - Fixed', () => {
       await workflowModule.createMinimalCLI();
       await workflowModule.createProductionCLI();
 
-      const [simpleConfig, advancedConfig] = vi.mocked(indexModule.createCLI).mock.calls.map(call => call[0]);
+      const [simpleConfig, advancedConfig] = vi
+        .mocked(indexModule.createCLI)
+        .mock.calls.map((call) => call[0]);
 
       // Simple config should be minimal
       expect(Object.keys(simpleConfig)).toHaveLength(3);
-      
+
       // Advanced config should have more features
       expect(Object.keys(advancedConfig).length).toBeGreaterThan(5);
       expect(advancedConfig.autocomplete).toBeDefined();
@@ -279,11 +281,11 @@ describe('Basic CLI Creation Workflow - Fixed', () => {
       const originalArgv = process.argv;
       process.env.API_KEY = 'test-key';
       process.argv = ['node', 'cli.js', '--version'];
-      
+
       await workflowModule.createManualControlCLI();
-      
+
       expect(indexModule.createCLI).toHaveBeenCalled();
-      
+
       // Restore process.argv
       process.argv = originalArgv;
       delete process.env.API_KEY;
@@ -293,13 +295,13 @@ describe('Basic CLI Creation Workflow - Fixed', () => {
       const originalArgv = process.argv;
       process.env.API_KEY = 'test-key';
       process.argv = ['node', 'cli.js'];
-      
+
       await workflowModule.createManualControlCLI();
-      
+
       // Should still execute successfully
       expect(indexModule.createCLI).toHaveBeenCalled();
-      
-      // Restore process.argv  
+
+      // Restore process.argv
       process.argv = originalArgv;
       delete process.env.API_KEY;
     });
