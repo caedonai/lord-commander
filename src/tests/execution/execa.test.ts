@@ -84,6 +84,26 @@ import {
   execaParallel,
 } from '../../core/execution/execa.js';
 
+// Helper function to create properly typed mock results
+function createTypedMockResult(overrides: Partial<{
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  failed: boolean;
+  timedOut: boolean;
+  killed: boolean;
+}> = {}): unknown {
+  return {
+    stdout: '',
+    stderr: '',
+    exitCode: 0,
+    failed: false,
+    timedOut: false,
+    killed: false,
+    ...overrides,
+  };
+}
+
 describe('Execa Module', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -95,16 +115,11 @@ describe('Execa Module', () => {
 
   describe('execa', () => {
     it('should execute a command successfully', async () => {
-      const mockResult = {
+      const mockResult = createTypedMockResult({
         stdout: 'success output',
-        stderr: '',
-        exitCode: 0,
-        failed: false,
-        timedOut: false,
-        killed: false,
-      };
+      });
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       const result = await execa('echo', ['hello']);
@@ -155,16 +170,11 @@ describe('Execa Module', () => {
     });
 
     it('should create sandbox environment when enabled', async () => {
-      const mockResult = {
+      const mockResult = createTypedMockResult({
         stdout: 'success',
-        stderr: '',
-        exitCode: 0,
-        failed: false,
-        timedOut: false,
-        killed: false,
-      };
+      });
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       await execa('echo', ['test'], {
@@ -187,16 +197,11 @@ describe('Execa Module', () => {
     });
 
     it('should use custom environment variables', async () => {
-      const mockResult = {
+      const mockResult = createTypedMockResult({
         stdout: 'success',
-        stderr: '',
-        exitCode: 0,
-        failed: false,
-        timedOut: false,
-        killed: false,
-      };
+      });
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       await execa('env', [], {
@@ -224,7 +229,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       await execa('echo', ['test'], { shell: true });
@@ -249,7 +254,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       await execa('sleep', ['1'], { timeout: 5000 });
@@ -275,7 +280,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaSyncLib).mockReturnValue(mockResult as any);
+      vi.mocked(execaSyncLib).mockReturnValue(mockResult);
 
       const result = execaSync('echo', ['hello']);
 
@@ -313,7 +318,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaSyncLib).mockReturnValue(mockResult as any);
+      vi.mocked(execaSyncLib).mockReturnValue(mockResult);
 
       execaSync('echo', ['test'], {
         sandbox: {
@@ -353,10 +358,10 @@ describe('Execa Module', () => {
       };
 
       vi.mocked(execaLib).mockReturnValue(
-        Promise.resolve(mockResult as any).then((result) => {
+        Promise.resolve(mockResult).then((result) => {
           Object.assign(mockSubprocess, result);
           return result;
-        }) as any
+        })
       );
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
@@ -404,7 +409,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       const result = await execaWithOutput('echo', ['test']);
@@ -431,7 +436,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       const result = await commandExists('git');
@@ -470,7 +475,7 @@ describe('Execa Module', () => {
         failed: false,
         timedOut: false,
         killed: false,
-      } as any);
+      });
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       await commandExists('git');
@@ -513,7 +518,7 @@ describe('Execa Module', () => {
       vi.mocked(execaLib).mockResolvedValue({
         exitCode: 1,
         failed: true,
-      } as any);
+      });
 
       const result = await detectPackageManager();
 
@@ -528,7 +533,7 @@ describe('Execa Module', () => {
         stdout: '/usr/bin/pnpm',
         exitCode: 0,
         failed: false,
-      } as any);
+      });
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       const result = await detectPackageManager();
@@ -554,7 +559,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       const result = await runPackageManagerExeca('install');
@@ -579,7 +584,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       await runPackageManagerExeca('install', 'express');
@@ -601,7 +606,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       await runPackageManagerExeca('installDev', 'typescript');
@@ -623,7 +628,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       await runPackageManagerExeca('run', 'test');
@@ -640,7 +645,7 @@ describe('Execa Module', () => {
       vi.mocked(execaLib).mockResolvedValue({
         exitCode: 1,
         failed: true,
-      } as any);
+      });
 
       await expect(runPackageManagerExeca('install')).rejects.toThrow(ProcessError);
     });
@@ -671,8 +676,8 @@ describe('Execa Module', () => {
           stdout: '/usr/bin/git',
           exitCode: 0,
           failed: false,
-        } as any)
-        .mockResolvedValueOnce(mockResult as any);
+        })
+        .mockResolvedValueOnce(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       const result = await gitExeca('status');
@@ -720,7 +725,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       const cancellable = createCancellableExecution();
@@ -758,8 +763,8 @@ describe('Execa Module', () => {
       ];
 
       vi.mocked(execaLib)
-        .mockResolvedValueOnce(mockResults[0] as any)
-        .mockResolvedValueOnce(mockResults[1] as any);
+        .mockResolvedValueOnce(mockResults[0])
+        .mockResolvedValueOnce(mockResults[1]);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       const commands = [
@@ -780,7 +785,7 @@ describe('Execa Module', () => {
           stdout: 'result 1',
           exitCode: 0,
           failed: false,
-        } as any)
+        })
         .mockRejectedValueOnce(new Error('Command failed'));
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
@@ -799,13 +804,13 @@ describe('Execa Module', () => {
           stdout: 'result 1',
           exitCode: 0,
           failed: false,
-        } as any)
+        })
         .mockRejectedValueOnce(new Error('Command failed'))
         .mockResolvedValueOnce({
           stdout: 'result 3',
           exitCode: 0,
           failed: false,
-        } as any);
+        });
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       const commands = [
@@ -845,8 +850,8 @@ describe('Execa Module', () => {
       ];
 
       vi.mocked(execaLib)
-        .mockResolvedValueOnce(mockResults[0] as any)
-        .mockResolvedValueOnce(mockResults[1] as any);
+        .mockResolvedValueOnce(mockResults[0])
+        .mockResolvedValueOnce(mockResults[1]);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       const commands = [
@@ -871,7 +876,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       const commands = Array.from({ length: 10 }, (_, i) => ({
@@ -896,7 +901,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
       vi.mocked(mkdir).mockResolvedValue(undefined);
 
       await execa('env', [], {
@@ -929,7 +934,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
 
       await execa('env', [], {
         sandbox: {
@@ -953,7 +958,7 @@ describe('Execa Module', () => {
         killed: false,
       };
 
-      vi.mocked(execaLib).mockResolvedValue(mockResult as any);
+      vi.mocked(execaLib).mockResolvedValue(mockResult);
 
       // Should not throw, should fallback to current directory
       const result = await execa('echo', ['test'], {

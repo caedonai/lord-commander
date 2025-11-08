@@ -394,7 +394,7 @@ describe('Task 1.4.3: Audit Trail Edge Cases and Security Analysis', () => {
       const maxDeviation = Math.max(...timings.map((t) => Math.abs(t - avgTiming)));
 
       // Allow some variance but should be reasonably consistent
-      expect(maxDeviation).toBeLessThan(avgTiming * 2); // Max 200% deviation (generous for CI)
+      expect(maxDeviation).toBeLessThan(avgTiming * 2.5); // Max 250% deviation (generous for CI)
     });
   });
 

@@ -115,6 +115,22 @@ import {
 } from '@clack/prompts';
 import { createLogger, Logger, LogLevel } from '../../core/ui/logger.js';
 
+// Type definitions for proper typing
+interface MockSpinner {
+  start: ReturnType<typeof vi.fn>;
+  stop: ReturnType<typeof vi.fn>;
+  message: ReturnType<typeof vi.fn>;
+  success: ReturnType<typeof vi.fn>;
+  fail: ReturnType<typeof vi.fn>;
+  warn: ReturnType<typeof vi.fn>;
+  [key: string]: ReturnType<typeof vi.fn>;
+}
+
+interface MockIconProvider {
+  getIcons: ReturnType<typeof vi.fn>;
+  get: ReturnType<typeof vi.fn>;
+}
+
 describe('Logger Core Functionality', () => {
   let logger: Logger;
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
@@ -335,7 +351,7 @@ describe('Logger Core Functionality', () => {
         start: vi.fn(),
         stop: vi.fn(),
         message: vi.fn(),
-      } as any);
+      } as MockSpinner);
       
       const spinner = logger.spinner('loading...');
       expect(clackSpinner).toHaveBeenCalled();
@@ -352,14 +368,14 @@ describe('Logger Core Functionality', () => {
         stop: stopSpy,
         message: messageSpy,
       };
-      vi.mocked(clackSpinner).mockReturnValueOnce(mockSpinner as any);
+      vi.mocked(clackSpinner).mockReturnValueOnce(mockSpinner as MockSpinner);
       
       const spinner = logger.spinner('loading...');
       
       // Test enhanced methods
-      (spinner as any).success('completed');
-      (spinner as any).fail('failed');
-      (spinner as any).warn('warning');
+      (spinner as MockSpinner).success('completed');
+      (spinner as MockSpinner).fail('failed');
+      (spinner as MockSpinner).warn('warning');
       
       expect(stopSpy).toHaveBeenCalledTimes(3);
     });
@@ -380,8 +396,8 @@ describe('Logger Core Functionality', () => {
       };
       
       vi.mocked(clackSpinner)
-        .mockReturnValueOnce(mockSpinner1 as any)
-        .mockReturnValueOnce(mockSpinner2 as any);
+        .mockReturnValueOnce(mockSpinner1 as MockSpinner)
+        .mockReturnValueOnce(mockSpinner2 as MockSpinner);
       
       logger.spinner('loading 1');
       logger.spinner('loading 2');
@@ -566,14 +582,14 @@ describe('Logger Core Functionality', () => {
     });
 
     it('should handle invalid icons gracefully', async () => {
-      const { IconProvider: MockIconProvider } = await vi.importMock('../../core/ui/icons.js') as any;
+      const { IconProvider: MockIconProvider } = await vi.importMock('../../core/ui/icons.js') as { IconProvider: MockIconProvider };
       const originalGet = MockIconProvider.get;
       
       MockIconProvider.get = vi.fn().mockImplementationOnce(() => {
         throw new Error('Icon not found');
       });
       
-      logger.withIcon('invalid' as any, 'fallback message');
+      logger.withIcon('invalid' as never, 'fallback message');
       expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Error getting icon'));
       expect(clackLog.message).toHaveBeenCalledWith(expect.stringContaining('fallback message'));
       
@@ -605,8 +621,9 @@ describe('Logger Core Functionality', () => {
 
     iconMethods.forEach(method => {
       it(`should have ${method} method`, () => {
-        expect(typeof (logger as any)[method]).toBe('function');
-        (logger as any)[method]('test message');
+        const loggerMethods = logger as unknown as Record<string, (message: string) => void>;
+        expect(typeof loggerMethods[method]).toBe('function');
+        loggerMethods[method]('test message');
         expect(clackLog.message).toHaveBeenCalled();
       });
     });

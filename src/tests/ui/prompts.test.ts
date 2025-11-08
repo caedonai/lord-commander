@@ -70,7 +70,9 @@ describe('UI Prompts Module', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     console.log = mockConsoleLog;
-    (process.stdout as any).columns = 80;
+    if (process.stdout && 'columns' in process.stdout) {
+      (process.stdout as NodeJS.WriteStream & { columns?: number }).columns = 80;
+    }
   });
 
   describe('Basic Functionality Tests', () => {
@@ -343,12 +345,16 @@ describe('UI Prompts Module', () => {
       expect(mockConsoleLog).toHaveBeenCalledWith(expect.stringContaining('...'));
       
       // Narrow terminal
-      (process.stdout as any).columns = 20;
+      if (process.stdout && 'columns' in process.stdout) {
+        (process.stdout as NodeJS.WriteStream & { columns?: number }).columns = 20;
+      }
       printSeparator('Test');
       expect(mockConsoleLog).toHaveBeenCalled();
       
       // Missing terminal columns
-      delete (process.stdout as any).columns;
+      if (process.stdout && 'columns' in process.stdout) {
+        Reflect.deleteProperty(process.stdout, 'columns');
+      }
       printSeparator('Test');
       expect(mockConsoleLog).toHaveBeenCalled();
     });
