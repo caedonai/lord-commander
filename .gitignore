@@ -58,6 +58,18 @@ examples/**/build/
 /test-*.mjs
 test-temp-*
 
+# Test temporary directories
+temp-*
+*-temp-*
+framework-test-*
+createcli-run-test-*
+workspace-test-*
+temp-register-commands-test-*
+temp-framework-*
+temp-workspace-*
+**/temp-*
+src/tests/**/temp-*
+
 # Misc
 *.orig
 
