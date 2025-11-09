@@ -27,17 +27,26 @@ describe('Framework Security Detection', () => {
   let testDir: string;
 
   beforeEach(async () => {
-    // Create temporary test directory
-    testDir = join(tmpdir(), `framework-test-${Date.now()}`);
+    // Create temporary test directory with unique ID to prevent conflicts
+    testDir = join(tmpdir(), `framework-test-${process.pid}-${Date.now()}`);
     await mkdir(testDir, { recursive: true });
   });
 
   afterEach(async () => {
-    // Clean up test directory
-    try {
-      await rm(testDir, { recursive: true });
-    } catch {
-      // Ignore cleanup errors
+    // Clean up test directory - use force mode for better cleanup
+    if (testDir) {
+      try {
+        await rm(testDir, { recursive: true, force: true });
+      } catch {
+        // Ignore cleanup errors but schedule cleanup
+        setTimeout(async () => {
+          try {
+            await rm(testDir, { recursive: true, force: true });
+          } catch {
+            // Final ignore
+          }
+        }, 100);
+      }
     }
   });
 
@@ -260,8 +269,8 @@ describe('Framework Security Detection', () => {
     });
 
     it('should handle large config files', async () => {
-      // Create unusually large config file
-      const largeConfig = `module.exports = {${'x'.repeat(1024 * 1024)}}`;
+      // Create file just over 1MB threshold to trigger warning
+      const largeConfig = `module.exports = {${'x'.repeat(1024 * 1024 + 1)}}`;
 
       await writeFile(join(testDir, 'next.config.js'), largeConfig);
       await writeFile(

@@ -5,7 +5,12 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.{test,spec}.{js,ts}'],
-    exclude: ['node_modules', 'dist'],
+    exclude: [
+      'node_modules',
+      'dist',
+      // Exclude the original memory-intensive fs-advanced test in favor of lightweight version
+      'src/tests/core/execution/fs-advanced.test.ts',
+    ],
     env: {
       FORCE_UNICODE_DETECTION: 'true',
       FORCE_EMOJI_DETECTION: 'false',
@@ -14,9 +19,32 @@ export default defineConfig({
     hookTimeout: 10000, // 10 seconds for setup/teardown
     teardownTimeout: 10000, // 10 seconds for cleanup
     reporters: ['verbose'],
+    // Optimize memory usage - single threaded approach
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        maxForks: 1, // Single worker for maximum memory control
+        minForks: 1,
+        isolate: true, // Isolate each test file in its own process
+        execArgv: [
+          '--max-old-space-size=4096', // 4GB heap limit
+          '--expose-gc', // Enable manual garbage collection
+        ],
+      },
+    },
+    // Additional memory optimizations
+    maxConcurrency: 1, // Run tests completely sequentially
+    isolate: true, // Use fresh environments to prevent memory leaks
+    // Force garbage collection between test files
+    sequence: {
+      concurrent: false,
+      shuffle: false,
+    },
+    // Reduce memory pressure by running smaller test batches
+    fileParallelism: false,
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text', 'json', 'html'], // Full reporting with increased memory limit
       exclude: [
         'node_modules/',
         'src/tests/',

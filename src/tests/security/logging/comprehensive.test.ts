@@ -20,22 +20,8 @@
  */
 
 import { beforeEach, describe, expect, it, type MockedFunction, vi } from 'vitest';
-import {
-  analyzeLogSecurity,
-  sanitizeLogOutputAdvanced,
-} from '../../../core/foundation/logging/security.js';
-import {
-  createStructuredLogger,
-  DEFAULT_STRUCTURED_LOGGING_CONFIG,
-  type LogEntryOptions,
-  SecurityClassification,
-  type StructuredLogEntry,
-  StructuredLogger,
-  StructuredLogLevel,
-  structuredLog,
-} from '../../../core/foundation/logging/structured.js';
 
-// Mock the log security functions to control test behavior
+// Mock the log security functions to control test behavior - MUST be before imports
 vi.mock('../../../core/foundation/logging/security.js', () => ({
   sanitizeLogOutputAdvanced: vi.fn((input: string) => {
     // Simulate sanitization for various test patterns
@@ -74,6 +60,22 @@ vi.mock('../../../core/foundation/errors/sanitization.js', () => ({
   sanitizeErrorMessage: vi.fn((message: string) => message.replace(/secret/gi, '[REDACTED]')),
   sanitizeStackTrace: vi.fn((stack: string) => stack.split('\n').slice(0, 5).join('\n')),
 }));
+
+// Import after mocks are set up
+import {
+  analyzeLogSecurity,
+  sanitizeLogOutputAdvanced,
+} from '../../../core/foundation/logging/security.js';
+import {
+  createStructuredLogger,
+  DEFAULT_STRUCTURED_LOGGING_CONFIG,
+  type LogEntryOptions,
+  SecurityClassification,
+  type StructuredLogEntry,
+  StructuredLogger,
+  StructuredLogLevel,
+  structuredLog,
+} from '../../../core/foundation/logging/structured.js';
 
 describe('Task 1.4.2: Structured Logging with Security', () => {
   let logger: StructuredLogger;
