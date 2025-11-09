@@ -1,2 +1,0 @@
-# This file ensures the tasks directory is tracked by git
-# The tasks directory itself is ignored in .gitignore but this .gitkeep file allows the folder structure to be preserved

@@ -1,0 +1,61 @@
+{
+  "name": "@lord-commander/cli-core",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Core CLI SDK library for building advanced command-line tools",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./core": {
+      "import": "./dist/core/index.js",
+      "types": "./dist/core/index.d.ts"
+    },
+    "./commands": {
+      "import": "./dist/commands/index.js", 
+      "types": "./dist/commands/index.d.ts"
+    },
+    "./plugins": {
+      "import": "./dist/plugins/index.js",
+      "types": "./dist/plugins/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types/index.js",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./utils": {
+      "import": "./dist/utils/index.js",
+      "types": "./dist/utils/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "cli",
+    "sdk",
+    "framework",
+    "command-line",
+    "tool",
+    "typescript",
+    "commander",
+    "scaffolding",
+    "automation"
+  ],
+  "author": "fabiomarcellusdev",
+  "license": "ISC",
+  "sideEffects": false,
+  "dependencies": {
+    "@clack/prompts": "^0.11.0",
+    "axios": "^1.6.0",
+    "commander": "^14.0.1",
+    "execa": "^8.0.1",
+    "figures": "^6.1.0",
+    "picocolors": "^1.1.1",
+    "tslib": "^2.3.0"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "lord-commander",
+  "version": "3.0.0",
+  "type": "module",
+  "description": "Professional CLI tool built with the Lord Commander SDK",
+  "main": "./dist/main.js",
+  "bin": {
+    "lord-commander": "./dist/main.js",
+    "lc": "./dist/main.js",
+    "lord": "./dist/main.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "cli",
+    "tool",
+    "command-line",
+    "lord-commander"
+  ],
+  "author": "fabiomarcellusdev",
+  "license": "ISC",
+  "dependencies": {
+    "@lord-commander/cli-core": "workspace:*"
+  }
+}
