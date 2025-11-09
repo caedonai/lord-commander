@@ -44,10 +44,12 @@
       }
     },
     "test": {
-      "executor": "@nx/jest:jest",
+      "executor": "@nx/vite:test",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/ui/jest.config.ts"
+        "config": "apps/ui/vitest.config.ts",
+        "passWithNoTests": false,
+        "reportsDirectory": "../../coverage/apps/ui"
       }
     }
   }
