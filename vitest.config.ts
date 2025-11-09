@@ -4,12 +4,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['src/**/*.{test,spec}.{js,ts}'],
+    include: ['libs/**/*.{test,spec}.{js,ts}', 'apps/**/*.{test,spec}.{js,ts}'],
     exclude: [
       'node_modules',
       'dist',
       // Exclude the original memory-intensive fs-advanced test in favor of lightweight version
-      'src/tests/core/execution/fs-advanced.test.ts',
+      'libs/cli-core/src/tests/core/execution/fs-advanced.test.ts',
     ],
     env: {
       FORCE_UNICODE_DETECTION: 'true',
@@ -47,7 +47,8 @@ export default defineConfig({
       reporter: ['text', 'json', 'html'], // Full reporting with increased memory limit
       exclude: [
         'node_modules/',
-        'src/tests/',
+        'libs/**/tests/',
+        'apps/**/tests/',
         '**/*.d.ts',
         '**/*.config.*',
         'dist/',

@@ -45,7 +45,17 @@
     }
   },
   "files": {
-    "includes": ["src/**/*.ts", "src/**/*.js", "*.ts", "*.js"],
+    "includes": [
+      "libs/**/*.ts",
+      "libs/**/*.tsx",
+      "libs/**/*.js",
+      "apps/*/src/**/*.ts",
+      "apps/*/src/**/*.tsx",
+      "apps/*/src/**/*.js",
+      "apps/*/src/**/*.jsx",
+      "*.ts",
+      "*.js"
+    ],
     "ignoreUnknown": false
   }
 }
