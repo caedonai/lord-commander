@@ -72,5 +72,3 @@ src/tests/**/temp-*
 
 # Misc
 *.orig
-
-.github/copilot-instructions.md
