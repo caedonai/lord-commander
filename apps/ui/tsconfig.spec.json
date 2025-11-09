@@ -5,18 +5,19 @@
     "module": "commonjs",
     "moduleResolution": "node10",
     "jsx": "react",
-    "types": ["jest", "node"]
+    "types": ["vitest/globals", "node"]
   },
   "include": [
-    "jest.config.ts",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-    "src/**/*.test.tsx",
-    "src/**/*.spec.tsx",
-    "src/**/*.test.js",
-    "src/**/*.spec.js",
-    "src/**/*.test.jsx",
-    "src/**/*.spec.jsx",
+    "vitest.config.ts",
+    "vitest.setup.ts",
+    "specs/**/*.test.ts",
+    "specs/**/*.spec.ts",
+    "specs/**/*.test.tsx",
+    "specs/**/*.spec.tsx",
+    "specs/**/*.test.js",
+    "specs/**/*.spec.js",
+    "specs/**/*.test.jsx",
+    "specs/**/*.spec.jsx",
     "src/**/*.d.ts"
   ]
 }

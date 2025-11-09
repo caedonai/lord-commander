@@ -25,7 +25,7 @@
       }
     ],
     "types": [
-      "jest",
+      "vitest/globals",
       "node"
     ]
   },
@@ -41,7 +41,7 @@
   ],
   "exclude": [
     "node_modules",
-    "jest.config.ts",
+
     "**/*.spec.ts",
     "**/*.test.ts",
     "src/**/*.spec.ts",
