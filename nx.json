@@ -79,7 +79,7 @@
       "options": {
         "targetName": "test"
       },
-      "exclude": ["cli-e2e/**/*"]
+      "exclude": ["cli-e2e/**/*", "api-e2e/**/*"]
     },
     {
       "plugin": "@nx/next/plugin",

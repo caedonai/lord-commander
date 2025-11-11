@@ -1,0 +1,64 @@
+{
+  "name": "api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/api/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/api"],
+      "options": {
+        "commands": [
+          "vite build",
+          "cp package.json ../../dist/apps/api/package.json",
+          "cd ../../dist/apps/api && pnpm install --prod --frozen-lockfile"
+        ],
+        "cwd": "apps/api",
+        "parallel": false
+      },
+      "configurations": {
+        "development": {
+          "commands": [
+            "vite build --mode development",
+            "cp package.json ../../dist/apps/api/package.json",
+            "cd ../../dist/apps/api && pnpm install --prod --frozen-lockfile"
+          ]
+        },
+        "production": {
+          "commands": [
+            "vite build --mode production",
+            "cp package.json ../../dist/apps/api/package.json",
+            "cd ../../dist/apps/api && pnpm install --prod --frozen-lockfile"
+          ]
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "passWithNoTests": false,
+        "reportsDirectory": "../../coverage/apps/api"
+      }
+    },
+
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "api:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "api:build:development"
+        },
+        "production": {
+          "buildTarget": "api:build:production"
+        }
+      }
+    }
+  },
+  "tags": ["scope:api"]
+}

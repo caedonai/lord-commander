@@ -1,0 +1,33 @@
+{
+  "name": "@lord-commander/api",
+  "version": "3.0.0",
+  "type": "commonjs",
+  "description": "NestJS API for Lord Commander CLI tools",
+  "main": "./main.js",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "api",
+    "nestjs",
+    "lord-commander",
+    "cli-api"
+  ],
+  "author": "fabiomarcellusdev",
+  "license": "ISC",
+  "dependencies": {
+    "@nestjs/common": "^10.0.0",
+    "@nestjs/core": "^10.0.0",
+    "@nestjs/platform-express": "^10.0.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.0.0",
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@swc/core": "~1.5.29",
+    "@types/supertest": "^6.0.0",
+    "supertest": "^7.0.0",
+    "unplugin-swc": "^1.5.8"
+  }
+}
