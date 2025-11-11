@@ -94,7 +94,6 @@
     "@nestjs/testing": "^11.0.0",
     "@nx/cypress": "22.0.2",
     "@nx/esbuild": "^22.0.2",
-
     "@nx/js": "22.0.2",
     "@nx/nest": "22.0.2",
     "@nx/next": "^22.0.2",
@@ -110,21 +109,19 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "16.3.0",
     "@testing-library/user-event": "^14.6.1",
-
     "@types/node": "^24.7.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/supertest": "^6.0.3",
     "@vitejs/plugin-react": "^5.1.0",
     "@vitest/coverage-v8": "3.2.4",
     "@vitest/ui": "^3.0.0",
-
     "cypress": "^14.2.1",
-
     "jiti": "2.4.2",
     "jsdom": "~22.1.0",
     "nx": "22.0.2",
     "prettier": "^2.6.2",
-
+    "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
     "tsx": "^4.20.6",
