@@ -6,5 +6,12 @@
   "tags": [],
   "implicitDependencies": ["ui"],
   "// targets": "to see all targets run: nx show project ui-e2e --web",
-  "targets": {}
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ultracite check apps/ui-e2e/src"
+      }
+    }
+  }
 }
