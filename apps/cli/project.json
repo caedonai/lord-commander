@@ -57,6 +57,12 @@
           "buildTarget": "cli:build:production"
         }
       }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ultracite check apps/cli/src"
+      }
     }
   }
 }

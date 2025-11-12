@@ -12,6 +12,12 @@
         "reportsDirectory": "../../coverage/apps/api-e2e"
       },
       "dependsOn": ["api:build", "api:serve"]
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ultracite check apps/api-e2e/src"
+      }
     }
   }
 }

@@ -30,10 +30,9 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
+      "executor": "nx:run-commands",
       "options": {
-        "lintFilePatterns": ["libs/cli-core/**/*.ts"]
+        "command": "ultracite check libs/cli-core/src"
       }
     }
   }
