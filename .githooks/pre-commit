@@ -1,10 +1,18 @@
 #!/bin/sh
 # Pre-commit hook for Lord Commander SDK
 
+# Ensure non-interactive mode for CI environments
+export CI=true
+export NODE_ENV=test
+
 echo "🔍 Running pre-commit checks..."
 
-# Run linting on individual projects only (skip root project to avoid ultracite issues)
+# Run linting on affected projects using NX
 echo "📏 Running linting checks..."
-CI=true pnpm nx run-many --target=lint --projects=api,ui,cli,cli-core,api-e2e,ui-e2e --parallel=3 || exit 1
+pnpm nx run-many --target=lint --projects=api,ui,cli,cli-core,api-e2e,ui-e2e --parallel=3 || exit 1
+
+# Run tests on projects that have test targets using NX  
+echo "🧪 Running tests..."
+pnpm test:all || exit 1
 
 echo "✅ Pre-commit checks passed!"

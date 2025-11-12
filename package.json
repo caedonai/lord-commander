@@ -18,7 +18,7 @@
     "lint:check": "nx affected --target=lint --dry-run",
     "lint:check:all": "ultracite check .",
     "lint:api": "nx lint api",
-    "lint:ui": "nx lint ui", 
+    "lint:ui": "nx lint ui",
     "lint:cli": "nx lint cli",
     "lint:cli-core": "nx lint cli-core",
     "format": "ultracite fix .",
@@ -29,7 +29,7 @@
     "test:coverage:text": "nx test cli-core --coverage --reporter=text",
     "test:ui": "nx test cli-core --ui",
     "test:all": "nx run-many --target=test",
-        "ci": "pnpm lint:check:all && pnpm build && pnpm test",
+    "ci": "pnpm lint:check:all && pnpm build && pnpm test",
     "setup": "node libs/cli-core/scripts/setup-dev.mjs",
     "release": "tsx libs/cli-core/scripts/release.ts",
     "analyze": "tsx libs/cli-core/scripts/generate-bundle-docs.ts",
@@ -96,6 +96,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.5",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.0",
     "@nx/cypress": "22.0.2",
