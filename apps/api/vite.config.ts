@@ -73,6 +73,7 @@ export default defineConfig({
         'querystring',
       ],
       output: {
+        entryFileNames: 'main.cjs',
         banner: '#!/usr/bin/env node',
       },
     },

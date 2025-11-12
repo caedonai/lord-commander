@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
-import type { CommandsService } from './commands.service';
+import { CommandsService } from './commands.service';
 
 @Controller('commands')
 export class CommandsController {

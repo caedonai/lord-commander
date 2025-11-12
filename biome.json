@@ -6,7 +6,8 @@
       "recommended": true,
       "style": {
         "useConst": "warn",
-        "noNonNullAssertion": "warn"
+        "noNonNullAssertion": "warn",
+        "useImportType": "off"
       },
       "suspicious": {
         "noExplicitAny": "error",

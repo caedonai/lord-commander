@@ -61,7 +61,8 @@
         "typecheckTargetName": "typecheck",
         "buildDepsTargetName": "build-deps",
         "watchDepsTargetName": "watch-deps"
-      }
+      },
+      "exclude": ["package.json"]
     },
     {
       "plugin": "@nx/webpack/plugin",
@@ -108,7 +109,15 @@
       }
     }
   ],
-  "nxCloudId": "690ffc6f857ce863eb428fe6",
+
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "production": ["!{projectRoot}/**/*.spec.ts", "!{projectRoot}/**/*.test.ts"]
+  },
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
   "generators": {
     "@nx/next": {
       "application": {

@@ -1,0 +1,8 @@
+# Ignore root package.json from being treated as a project
+package.json
+node_modules
+dist
+.git
+coverage
+.nx
+tmp
