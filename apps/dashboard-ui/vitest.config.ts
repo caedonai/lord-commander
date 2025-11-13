@@ -15,7 +15,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      reportsDirectory: '../../coverage/apps/ui',
+      reportsDirectory: '../coverage/apps/ui',
       exclude: [
         'node_modules/',
         'specs/',

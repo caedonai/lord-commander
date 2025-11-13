@@ -27,15 +27,24 @@
     "types": [
       "vitest/globals",
       "node"
-    ]
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/app/*": ["./src/app/*"],
+      "@/providers/*": ["./src/providers/*"],
+      "@/stores/*": ["./src/stores/*"]
+    }
   },
   "include": [
     "**/*.js",
     "**/*.jsx",
     "**/*.ts",
     "**/*.tsx",
-    "../../apps/ui/.next/types/**/*.ts",
-    "../../dist/apps/ui/.next/types/**/*.ts",
+    "../dashboard-ui/.next/types/**/*.ts",
+    "../../dist/apps/dashboard-ui/.next/types/**/*.ts",
     "next-env.d.ts",
     ".next/types/**/*.ts"
   ],
