@@ -1,20 +1,22 @@
 {
-  "name": "ui",
+  "name": "dashboard-ui",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/ui",
+  "sourceRoot": "apps/dashboard-ui",
   "projectType": "application",
   "tags": [],
   "targets": {
     "build": {
       "executor": "@nx/next:build",
-      "outputs": ["{options.outputPath}"],
+      "outputs": [
+        "{options.outputPath}"
+      ],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/ui"
+        "outputPath": "dist/apps/dashboard-ui"
       },
       "configurations": {
         "development": {
-          "outputPath": "apps/ui"
+          "outputPath": "apps/dashboard-ui"
         },
         "production": {}
       }
@@ -23,16 +25,16 @@
       "executor": "@nx/next:server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "ui:build",
+        "buildTarget": "dashboard-ui:build",
         "dev": true
       },
       "configurations": {
         "development": {
-          "buildTarget": "ui:build:development",
+          "buildTarget": "dashboard-ui:build:development",
           "dev": true
         },
         "production": {
-          "buildTarget": "ui:build:production",
+          "buildTarget": "dashboard-ui:build:production",
           "dev": false
         }
       }
@@ -40,22 +42,30 @@
     "export": {
       "executor": "@nx/next:export",
       "options": {
-        "buildTarget": "ui:build:production"
+        "buildTarget": "dashboard-ui:build:production"
       }
     },
     "test": {
       "executor": "@nx/vite:test",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
       "options": {
-        "config": "apps/ui/vitest.config.ts",
+        "config": "apps/dashboard-ui/vitest.config.ts",
         "passWithNoTests": false,
-        "reportsDirectory": "../../coverage/apps/ui"
+        "reportsDirectory": "coverage/apps/dashboard-ui"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "ultracite check apps/ui/src"
+        "command": "ultracite check apps/dashboard-ui/src"
+      }
+    },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ultracite fix apps/dashboard-ui/src"
       }
     }
   }

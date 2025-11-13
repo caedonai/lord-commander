@@ -64,6 +64,12 @@
       "options": {
         "command": "ultracite check apps/api/src"
       }
+    },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "ultracite fix apps/api/src"
+      }
     }
   },
   "tags": ["scope:api"]
