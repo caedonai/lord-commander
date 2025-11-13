@@ -9,10 +9,10 @@ echo "🔍 Running pre-commit checks..."
 
 # Run linting on affected projects using NX
 echo "📏 Running linting checks..."
-pnpm nx affected --target=lint --parallel=3 || exit 1
+pnpm run lint || exit 1
 
 # Run tests on affected projects using NX  
 echo "🧪 Running tests..."
-pnpm nx affected --target=test --parallel=2 || exit 1
+pnpm run test || exit 1
 
 echo "✅ Pre-commit checks passed!"
