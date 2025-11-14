@@ -1,0 +1,147 @@
+---
+title: "Quickstart"
+description: "Get started with Lord Commander CLI SDK in under 5 minutes"
+---
+
+## Installation
+
+Get Lord Commander installed and ready for use in your development workflow.
+
+### Step 1: Install Lord Commander
+
+<AccordionGroup>
+  <Accordion icon="download" title="Install via npm">
+    Install Lord Commander globally to use it across all your projects:
+    
+    ```bash
+    npm install -g @caedonai/lord-commander
+    ```
+    
+    Or install locally in your project:
+    
+    ```bash
+    npm install --save-dev @caedonai/lord-commander
+    ```
+  </Accordion>
+  <Accordion icon="box" title="Install via pnpm">
+    ```bash
+    pnpm add -g @caedonai/lord-commander
+    ```
+    
+    Or for local installation:
+    
+    ```bash
+    pnpm add -D @caedonai/lord-commander
+    ```
+  </Accordion>
+  <Accordion icon="yarn" title="Install via yarn">
+    ```bash
+    yarn global add @caedonai/lord-commander
+    ```
+    
+    Or for local installation:
+    
+    ```bash
+    yarn add -D @caedonai/lord-commander
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Step 2: Verify Installation
+
+<AccordionGroup>
+  <Accordion icon="terminal" title="Check version">
+    Verify that Lord Commander is installed correctly:
+    
+    ```bash
+    lord-commander --version
+    ```
+    
+    You should see the version number printed to the console.
+  </Accordion>
+  <Accordion icon="list" title="View available commands">
+    Get a full list of available commands:
+    
+    ```bash
+    lord-commander --help
+    ```
+    
+    <Tip>Use `lord-commander <command> --help` for detailed help on any specific command.</Tip>
+  </Accordion>
+</AccordionGroup>
+
+### Step 3: Initialize Your First Project
+
+<AccordionGroup>
+  <Accordion icon="folder-plus" title="Create a new project">
+    Initialize a new project with Lord Commander:
+    
+    ```bash
+    mkdir my-project
+    cd my-project
+    lord-commander init
+    ```
+    
+    Follow the interactive prompts to configure your project.
+  </Accordion>
+  <Accordion icon="wand-magic-sparkles" title="Scaffold components">
+    Generate components, pages, or other project assets:
+    
+    ```bash
+    lord-commander scaffold component MyComponent
+    lord-commander scaffold page HomePage
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Quick Commands Reference
+
+Here are the most commonly used commands to get you started:
+
+<CardGroup cols={2}>
+
+<Card title="Project Initialization" icon="rocket" href="/commands/init">
+  Bootstrap new projects with modern tooling and best practices.
+</Card>
+
+<Card title="Bundle Analysis" icon="chart-simple" href="/commands/analyze">
+  Analyze your bundle size and composition for optimization opportunities.
+</Card>
+
+<Card title="Smart Scaffolding" icon="wand-magic-sparkles" href="/commands/scaffold">
+  Generate components, pages, and features with intelligent templates.
+</Card>
+
+<Card title="Demo Mode" icon="play" href="/commands/demo">
+  Run interactive demos to explore Lord Commander features.
+</Card>
+
+</CardGroup>
+
+## Next Steps
+
+Now that you have Lord Commander installed, explore these key areas:
+
+<CardGroup cols={2}>
+
+<Card title="Core Concepts" icon="lightbulb" href="/core-concepts">
+  Understand the fundamental concepts behind Lord Commander.
+</Card>
+
+<Card title="Configuration" icon="gear" href="/guides/configuration">
+  Learn how to configure Lord Commander for your workflow.
+</Card>
+
+<Card title="Examples" icon="code" href="/examples">
+  Explore real-world examples and use cases.
+</Card>
+
+<Card title="API Reference" icon="terminal" href="/api-reference/introduction">
+  Complete command reference and API documentation.
+</Card>
+
+</CardGroup>
+
+<Note>
+  **Need help?** Check out our [GitHub issues](https://github.com/caedonai/lord-commander/issues) or see the [full documentation](/core-concepts).
+</Note>

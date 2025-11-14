@@ -1,0 +1,261 @@
+---
+title: "Core Concepts"
+description: "Understand the fundamental concepts and architecture behind Lord Commander CLI SDK"
+---
+
+## Overview
+
+Lord Commander is built around several key concepts that make modern web development more efficient and maintainable. Understanding these concepts will help you make the most of the CLI's capabilities.
+
+## Project Structure
+
+Lord Commander works with a standardized project structure that promotes consistency and best practices:
+
+```
+my-project/
+├── src/                    # Source code
+│   ├── components/         # Reusable components
+│   ├── pages/             # Application pages
+│   ├── utils/             # Utility functions
+│   └── types/             # TypeScript type definitions
+├── tests/                 # Test files
+├── docs/                  # Documentation
+├── .lordcommander/        # CLI configuration
+└── package.json
+```
+
+<Note>
+  Lord Commander adapts to existing project structures and doesn't enforce a rigid layout.
+</Note>
+
+## Commands
+
+### Initialization Commands
+
+<Card title="init" icon="rocket">
+  Bootstraps new projects with modern tooling, dependency management, and configuration files.
+  
+  **Key Features:**
+  - Interactive project setup
+  - Framework-specific templates
+  - Best practice configurations
+  - Dependency optimization
+</Card>
+
+### Analysis Commands
+
+<Card title="analyze" icon="chart-simple">
+  Provides deep insights into your application's bundle composition and performance characteristics.
+  
+  **Key Features:**
+  - Bundle size analysis
+  - Dependency visualization
+  - Performance bottleneck identification
+  - Optimization recommendations
+</Card>
+
+### Generation Commands
+
+<Card title="scaffold" icon="wand-magic-sparkles">
+  Generates code using intelligent templates that follow your project's patterns and conventions.
+  
+  **Key Features:**
+  - Component generation
+  - Page scaffolding
+  - API endpoint creation
+  - Test file generation
+</Card>
+
+## Configuration System
+
+### Configuration Files
+
+Lord Commander uses a hierarchical configuration system:
+
+1. **Global Config:** `~/.config/lord-commander/config.json`
+2. **Project Config:** `.lordcommander/config.json`
+3. **Command-line flags:** Override any configuration
+
+### Configuration Schema
+
+```json
+{
+  "framework": "react" | "vue" | "angular" | "svelte",
+  "language": "typescript" | "javascript",
+  "packageManager": "npm" | "pnpm" | "yarn",
+  "templates": {
+    "component": "./templates/component.hbs",
+    "page": "./templates/page.hbs"
+  },
+  "analysis": {
+    "bundleSize": {
+      "threshold": "500kb",
+      "showWarnings": true
+    }
+  }
+}
+```
+
+## Template System
+
+### Built-in Templates
+
+Lord Commander includes templates for common patterns:
+
+- **React Components:** Functional components with TypeScript
+- **Vue Components:** Single-file components with Composition API  
+- **API Routes:** RESTful endpoints with validation
+- **Test Files:** Comprehensive test suites
+
+### Custom Templates
+
+Create custom templates using Handlebars syntax:
+
+```handlebars
+// templates/component.hbs
+import React from 'react';
+{{#if typescript}}
+interface {{pascalCase name}}Props {
+  // Add your props here
+}
+
+const {{pascalCase name}}: React.FC<{{pascalCase name}}Props> = () => {
+{{else}}
+const {{pascalCase name}} = () => {
+{{/if}}
+  return (
+    <div className="{{kebabCase name}}">
+      <h1>{{titleCase name}}</h1>
+    </div>
+  );
+};
+
+export default {{pascalCase name}};
+```
+
+## Analysis Engine
+
+### Bundle Analysis
+
+The analysis engine examines your application at multiple levels:
+
+<Tabs>
+  <Tab title="File Level">
+    - Individual file sizes
+    - Import/export relationships
+    - Dead code detection
+    - Circular dependencies
+  </Tab>
+  <Tab title="Module Level">
+    - Third-party dependencies
+    - Internal modules
+    - Shared utilities
+    - Optimization opportunities
+  </Tab>
+  <Tab title="Application Level">
+    - Overall bundle size
+    - Loading performance
+    - Caching strategies
+    - Progressive enhancement
+  </Tab>
+</Tabs>
+
+### Performance Metrics
+
+Lord Commander tracks key performance indicators:
+
+- **Bundle Size:** Total JavaScript payload
+- **Load Time:** Time to interactive
+- **Tree Shaking:** Unused code elimination
+- **Code Splitting:** Route-based optimization
+
+## Plugin Architecture
+
+### Core Plugins
+
+Lord Commander's functionality is built on a plugin architecture:
+
+- **Framework Plugins:** React, Vue, Angular, Svelte support
+- **Build Plugins:** Webpack, Vite, Rollup integration
+- **Language Plugins:** TypeScript, JavaScript processing
+- **Testing Plugins:** Jest, Vitest, Cypress integration
+
+### Custom Plugins
+
+Create custom plugins to extend functionality:
+
+```typescript
+import { Plugin, PluginContext } from '@caedonai/lord-commander';
+
+export class MyPlugin implements Plugin {
+  name = 'my-plugin';
+  version = '1.0.0';
+
+  async initialize(context: PluginContext) {
+    // Plugin initialization logic
+  }
+
+  async execute(command: string, args: any[]) {
+    // Command execution logic
+  }
+}
+```
+
+## Workflow Integration
+
+### Development Workflow
+
+Lord Commander integrates seamlessly into development workflows:
+
+1. **Project Setup:** Initialize with `lord-commander init`
+2. **Development:** Use `scaffold` for rapid development
+3. **Analysis:** Run `analyze` for performance insights
+4. **Optimization:** Apply recommendations from analysis
+
+### CI/CD Integration
+
+Include Lord Commander in your CI/CD pipeline:
+
+```yaml
+# .github/workflows/ci.yml
+- name: Analyze Bundle
+  run: lord-commander analyze --ci --threshold 500kb
+  
+- name: Generate Performance Report
+  run: lord-commander analyze --report --output ./reports/
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion icon="lightbulb" title="Configuration Management">
+    - Use project-specific configurations for team consistency
+    - Version control your `.lordcommander/` directory
+    - Document custom templates and configurations
+  </Accordion>
+  
+  <Accordion icon="chart-line" title="Performance Monitoring">
+    - Run analysis regularly during development
+    - Set bundle size thresholds in CI/CD
+    - Monitor performance metrics over time
+  </Accordion>
+  
+  <Accordion icon="code" title="Code Generation">
+    - Customize templates to match your team's patterns
+    - Use consistent naming conventions
+    - Generate tests alongside components
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Now that you understand Lord Commander's core concepts:
+
+<CardGroup cols={2}>
+  <Card title="Commands Reference" icon="terminal" href="/api-reference/introduction">
+    Explore all available commands and their options
+  </Card>
+  <Card title="Examples" icon="code" href="/examples">
+    See Lord Commander in action with real-world examples
+  </Card>
+</CardGroup>

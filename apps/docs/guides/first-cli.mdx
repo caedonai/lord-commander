@@ -1,0 +1,207 @@
+---
+title: "Build Your First CLI"
+description: "Step-by-step tutorial for creating your first CLI application with Lord Commander"
+---
+
+# Build Your First CLI
+
+This tutorial walks you through creating your first CLI application using Lord Commander. You'll learn the fundamentals while building a practical tool.
+
+## Prerequisites
+
+- Node.js 18+ installed
+- Basic TypeScript/JavaScript knowledge
+- Familiarity with command-line interfaces
+
+## Step 1: Initialize Your CLI Project
+
+```bash
+# Create a new CLI project
+mkdir my-first-cli
+cd my-first-cli
+
+# Initialize with Lord Commander
+lord-commander init --template cli-typescript
+```
+
+## Step 2: Define Your First Command
+
+Create your first command in `src/commands/hello.ts`:
+
+```typescript
+import { Command } from '@caedonai/lord-commander';
+
+export const helloCommand: Command = {
+  name: 'hello',
+  description: 'Say hello to someone',
+  arguments: [
+    {
+      name: 'name',
+      description: 'Name to greet',
+      required: false,
+      defaultValue: 'World'
+    }
+  ],
+  options: [
+    {
+      name: 'enthusiastic',
+      alias: 'e',
+      description: 'Add enthusiasm to the greeting',
+      type: 'boolean',
+      defaultValue: false
+    }
+  ],
+  handler: async (args, options) => {
+    const greeting = `Hello, ${args.name}!`;
+    const output = options.enthusiastic ? `${greeting} 🎉` : greeting;
+    console.log(output);
+  }
+};
+```
+
+## Step 3: Register Your Command
+
+Update `src/cli.ts`:
+
+```typescript
+import { createCLI } from '@caedonai/lord-commander';
+import { helloCommand } from './commands/hello';
+
+const cli = createCLI({
+  name: 'my-cli',
+  description: 'My first CLI application',
+  version: '1.0.0',
+  commands: [helloCommand]
+});
+
+export default cli;
+```
+
+## Step 4: Test Your CLI
+
+```bash
+# Build your CLI
+npm run build
+
+# Test the hello command
+./bin/my-cli hello
+# Output: Hello, World!
+
+./bin/my-cli hello Alice --enthusiastic
+# Output: Hello, Alice! 🎉
+```
+
+## Step 5: Add More Features
+
+### Interactive Prompts
+
+```typescript
+import { prompt } from '@caedonai/lord-commander';
+
+export const interactiveHelloCommand: Command = {
+  name: 'hello-interactive',
+  description: 'Interactive greeting',
+  handler: async () => {
+    const name = await prompt.text({
+      message: 'What is your name?',
+      defaultValue: 'World'
+    });
+    
+    const enthusiastic = await prompt.confirm({
+      message: 'Should I be enthusiastic?',
+      defaultValue: false
+    });
+    
+    const greeting = `Hello, ${name}!`;
+    const output = enthusiastic ? `${greeting} 🎉` : greeting;
+    console.log(output);
+  }
+};
+```
+
+### Configuration Support
+
+```typescript
+import { loadConfig } from '@caedonai/lord-commander';
+
+export const configHelloCommand: Command = {
+  name: 'hello-config',
+  description: 'Greeting with configuration',
+  handler: async (args, options, context) => {
+    const config = await context.config.load({
+      defaultGreeting: 'Hello',
+      defaultName: 'World'
+    });
+    
+    const greeting = `${config.defaultGreeting}, ${config.defaultName}!`;
+    console.log(greeting);
+  }
+};
+```
+
+## Step 6: Package and Distribute
+
+### Update package.json
+
+```json
+{
+  "name": "my-first-cli",
+  "version": "1.0.0",
+  "bin": {
+    "my-cli": "./bin/my-cli"
+  },
+  "files": [
+    "bin/",
+    "dist/",
+    "README.md"
+  ]
+}
+```
+
+### Publish to npm
+
+```bash
+# Build for production
+npm run build
+
+# Publish to npm
+npm publish
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Configuration" icon="gear" href="/guides/configuration">
+  Learn configuration management
+</Card>
+
+<Card title="Configuration" icon="gear" href="/guides/configuration">
+  Master configuration management
+</Card>
+
+<Card title="Plugin Development" icon="puzzle-piece" href="/core/plugins">
+  Extend functionality with plugins
+</Card>
+
+<Card title="Examples" icon="code" href="/examples">
+  Explore real-world CLI examples
+</Card>
+
+</CardGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion icon="exclamation-triangle" title="Command not found">
+    Ensure your CLI is properly installed and the bin path is correct in package.json.
+  </Accordion>
+  
+  <Accordion icon="bug" title="TypeScript errors">
+    Check that all dependencies are properly installed and TypeScript is configured correctly.
+  </Accordion>
+  
+  <Accordion icon="gear" title="Build issues">
+    Verify your build script is working and all source files are included.
+  </Accordion>
+</AccordionGroup>

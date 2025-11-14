@@ -1,0 +1,195 @@
+---
+title: "Installation"
+description: "Complete installation guide for Lord Commander CLI SDK across different environments and package managers"
+---
+
+## System Requirements
+
+Before installing Lord Commander, ensure your system meets these requirements:
+
+<CardGroup cols={2}>
+  <Card title="Node.js" icon="node-js">
+    **Version:** 18.0.0 or higher
+    
+    Download from [nodejs.org](https://nodejs.org)
+  </Card>
+  <Card title="Package Manager" icon="box">
+    **Supported:** npm, pnpm, yarn
+    
+    Any modern package manager will work
+  </Card>
+</CardGroup>
+
+## Installation Methods
+
+### Global Installation (Recommended)
+
+Install Lord Commander globally to use it across all your projects:
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm install -g @caedonai/lord-commander
+    ```
+  </Tab>
+  <Tab title="pnpm">
+    ```bash
+    pnpm add -g @caedonai/lord-commander
+    ```
+  </Tab>
+  <Tab title="yarn">
+    ```bash
+    yarn global add @caedonai/lord-commander
+    ```
+  </Tab>
+</Tabs>
+
+### Local Installation
+
+Install Lord Commander as a development dependency in your project:
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm install --save-dev @caedonai/lord-commander
+    ```
+  </Tab>
+  <Tab title="pnpm">
+    ```bash
+    pnpm add -D @caedonai/lord-commander
+    ```
+  </Tab>
+  <Tab title="yarn">
+    ```bash
+    yarn add -D @caedonai/lord-commander
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  When installing locally, you'll need to run commands via `npx lord-commander` or add them to your package.json scripts.
+</Warning>
+
+## Verification
+
+### Check Installation
+
+Verify that Lord Commander is installed correctly:
+
+```bash
+lord-commander --version
+```
+
+You should see output similar to:
+```
+@caedonai/lord-commander v1.0.0
+```
+
+### Test Basic Functionality
+
+Run the help command to ensure everything is working:
+
+```bash
+lord-commander --help
+```
+
+This will display the available commands and options.
+
+## Environment Setup
+
+### Shell Completion (Optional)
+
+Enable shell completion for a better CLI experience:
+
+<Tabs>
+  <Tab title="bash">
+    ```bash
+    # Add to ~/.bashrc
+    eval "$(lord-commander completion bash)"
+    ```
+  </Tab>
+  <Tab title="zsh">
+    ```bash
+    # Add to ~/.zshrc
+    eval "$(lord-commander completion zsh)"
+    ```
+  </Tab>
+  <Tab title="fish">
+    ```bash
+    # Add to ~/.config/fish/config.fish
+    lord-commander completion fish | source
+    ```
+  </Tab>
+</Tabs>
+
+### Configuration Directory
+
+Lord Commander creates a configuration directory at:
+
+- **macOS/Linux:** `~/.config/lord-commander/`
+- **Windows:** `%APPDATA%\lord-commander\`
+
+This directory stores:
+- User preferences
+- Template cache
+- Plugin configurations
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion icon="triangle-exclamation" title="Permission Errors">
+    If you encounter permission errors during global installation:
+    
+    **On macOS/Linux:**
+    ```bash
+    sudo npm install -g @caedonai/lord-commander
+    ```
+    
+    **Better approach - Configure npm to use a different directory:**
+    ```bash
+    mkdir ~/.npm-global
+    npm config set prefix '~/.npm-global'
+    echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+    source ~/.bashrc
+    ```
+  </Accordion>
+  
+  <Accordion icon="network-wired" title="Network Issues">
+    If installation fails due to network issues:
+    
+    **Try a different registry:**
+    ```bash
+    npm install -g @caedonai/lord-commander --registry https://registry.npmjs.org/
+    ```
+    
+    **Or configure npm proxy (if behind corporate firewall):**
+    ```bash
+    npm config set proxy http://proxy.company.com:8080
+    npm config set https-proxy http://proxy.company.com:8080
+    ```
+  </Accordion>
+  
+  <Accordion icon="exclamation-circle" title="Command Not Found">
+    If `lord-commander` is not recognized after installation:
+    
+    1. **Check your PATH:** Ensure the npm global bin directory is in your PATH
+    2. **Restart your terminal:** Some changes require a fresh terminal session
+    3. **Check installation location:**
+       ```bash
+       npm list -g @caedonai/lord-commander
+       ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+Once Lord Commander is installed, you're ready to:
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Follow our quickstart guide to create your first project
+  </Card>
+  <Card title="Core Concepts" icon="lightbulb" href="/core-concepts">
+    Learn about Lord Commander's key concepts and workflow
+  </Card>
+</CardGroup>
