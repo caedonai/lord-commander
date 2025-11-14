@@ -21,6 +21,6 @@
   "author": "fabiomarcellusdev",
   "license": "ISC",
   "dependencies": {
-    "@lord-commander/cli-core": "workspace:*"
+    "@lord-commander/cli-core": "link:../../libs/cli-core"
   }
 }
