@@ -5,6 +5,46 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/marketing"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/marketing"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "marketing:build",
+        "dev": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "marketing:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "marketing:build:production",
+          "dev": false
+        }
+      }
+    },
+    "export": {
+      "executor": "@nx/next:export",
+      "options": {
+        "buildTarget": "marketing:build:production"
+      }
+    },
     "test": {
       "executor": "@nx/vite:test",
       "outputs": [

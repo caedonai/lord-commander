@@ -1,6 +1,5 @@
 packages:
   - apps/cli
-  - apps/marketing
   - libs/*
 
 onlyBuiltDependencies:
