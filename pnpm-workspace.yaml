@@ -1,5 +1,12 @@
+packages:
+  - apps/cli
+  - apps/marketing
+  - libs/*
+
 onlyBuiltDependencies:
-  - '@swc/core'
+  - "@nestjs/core"
+  - "@parcel/watcher"
+  - "@swc/core"
   - cypress
   - esbuild
   - nx
