@@ -1,0 +1,436 @@
+---
+title: "Security"
+description: "Security best practices and considerations for CLI applications"
+---
+
+# Security
+
+Security is paramount when building CLI tools that interact with file systems, networks, and sensitive data. Lord Commander provides built-in security features and follows industry best practices.
+
+## Security Principles
+
+<AccordionGroup>
+  <Accordion icon="shield-check" title="Principle of Least Privilege">
+    Request only the minimum permissions necessary:
+    
+    ```typescript
+    // Good: Specific file access
+    await context.fs.readFile('./config.json');
+    
+    // Avoid: Broad file system access
+    await context.fs.readFile(userProvidedPath); // Without validation
+    ```
+  </Accordion>
+  
+  <Accordion icon="lock" title="Input Validation">
+    Always validate and sanitize user inputs:
+    
+    ```typescript
+    import { validateFilePath, sanitizeInput } from '@caedonai/lord-commander/security';
+    
+    const handler: CommandHandler = async (args, options) => {
+      // Validate file path
+      const safePath = validateFilePath(args.filePath, {
+        allowAbsolute: false,
+        allowParentDirectory: false
+      });
+      
+      // Sanitize string input
+      const safeName = sanitizeInput(args.projectName, {
+        allowedChars: /^[a-zA-Z0-9-_]+$/,
+        maxLength: 50
+      });
+    };
+    ```
+  </Accordion>
+  
+  <Accordion icon="eye-slash" title="Secure Defaults">
+    Use secure configurations by default:
+    
+    ```typescript
+    const defaultConfig = {
+      network: {
+        timeout: 10000,
+        retries: 3,
+        followRedirects: false,  // Secure default
+        validateCerts: true      // Secure default
+      },
+      logging: {
+        level: 'info',           // Don't log sensitive data by default
+        sanitize: true           // Remove sensitive information
+      }
+    };
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## File System Security
+
+### Path Traversal Prevention
+
+```typescript
+import path from 'path';
+import { isPathSafe } from '@caedonai/lord-commander/security';
+
+const createFile = async (filePath: string, content: string) => {
+  // Resolve and normalize path
+  const resolvedPath = path.resolve(filePath);
+  const workingDir = process.cwd();
+  
+  // Ensure path is within working directory
+  if (!isPathSafe(resolvedPath, workingDir)) {
+    throw new Error('Invalid file path: cannot access files outside project directory');
+  }
+  
+  // Safe to proceed
+  await fs.writeFile(resolvedPath, content);
+};
+```
+
+### File Permission Management
+
+```typescript
+import { promises as fs } from 'fs';
+
+const createConfigFile = async (config: Config) => {
+  const configPath = './lord-commander.config.json';
+  
+  // Write config file with restricted permissions
+  await fs.writeFile(configPath, JSON.stringify(config, null, 2), {
+    mode: 0o600  // Read/write for owner only
+  });
+  
+  console.log('Config file created with secure permissions');
+};
+```
+
+### Temporary File Handling
+
+```typescript
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { randomBytes } from 'crypto';
+
+const createTempFile = async (content: string): Promise<string> => {
+  // Generate secure random filename
+  const randomName = randomBytes(16).toString('hex');
+  const tempPath = join(tmpdir(), `lord-commander-${randomName}.tmp`);
+  
+  // Create file with restricted permissions
+  await fs.writeFile(tempPath, content, { mode: 0o600 });
+  
+  // Schedule cleanup
+  process.on('exit', () => {
+    try {
+      fs.unlinkSync(tempPath);
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+  });
+  
+  return tempPath;
+};
+```
+
+## Network Security
+
+### HTTPS Enforcement
+
+```typescript
+import https from 'https';
+import { URL } from 'url';
+
+const makeSecureRequest = async (urlString: string, options: RequestOptions = {}) => {
+  const url = new URL(urlString);
+  
+  // Enforce HTTPS for external requests
+  if (url.protocol !== 'https:' && !isLocalhost(url.hostname)) {
+    throw new Error('Only HTTPS connections are allowed for external requests');
+  }
+  
+  const requestOptions = {
+    ...options,
+    rejectUnauthorized: true,  // Validate SSL certificates
+    timeout: 10000            // Reasonable timeout
+  };
+  
+  return makeRequest(url, requestOptions);
+};
+```
+
+### Certificate Validation
+
+```typescript
+const agent = new https.Agent({
+  rejectUnauthorized: true,
+  checkServerIdentity: (hostname: string, cert: any) => {
+    // Custom certificate validation if needed
+    return tls.checkServerIdentity(hostname, cert);
+  }
+});
+```
+
+## Credential Management
+
+### Environment Variables
+
+```typescript
+const getApiCredentials = (): ApiCredentials => {
+  const apiKey = process.env.LORD_COMMANDER_API_KEY;
+  const apiSecret = process.env.LORD_COMMANDER_API_SECRET;
+  
+  if (!apiKey || !apiSecret) {
+    throw new Error('API credentials not found in environment variables');
+  }
+  
+  return { apiKey, apiSecret };
+};
+```
+
+### Secure Storage
+
+```typescript
+import keytar from 'keytar';
+
+class CredentialStore {
+  private static SERVICE_NAME = 'lord-commander';
+  
+  static async store(account: string, password: string): Promise<void> {
+    await keytar.setPassword(this.SERVICE_NAME, account, password);
+  }
+  
+  static async retrieve(account: string): Promise<string | null> {
+    return await keytar.getPassword(this.SERVICE_NAME, account);
+  }
+  
+  static async delete(account: string): Promise<boolean> {
+    return await keytar.deletePassword(this.SERVICE_NAME, account);
+  }
+}
+```
+
+### Token Management
+
+```typescript
+interface Token {
+  access_token: string;
+  refresh_token: string;
+  expires_at: number;
+}
+
+class TokenManager {
+  private static isTokenValid(token: Token): boolean {
+    return Date.now() < token.expires_at;
+  }
+  
+  static async getValidToken(): Promise<string> {
+    const tokenJson = await CredentialStore.retrieve('api_token');
+    
+    if (!tokenJson) {
+      throw new Error('No authentication token found. Please run: lord-commander auth login');
+    }
+    
+    const token: Token = JSON.parse(tokenJson);
+    
+    if (!this.isTokenValid(token)) {
+      // Refresh token
+      const newToken = await this.refreshToken(token.refresh_token);
+      await CredentialStore.store('api_token', JSON.stringify(newToken));
+      return newToken.access_token;
+    }
+    
+    return token.access_token;
+  }
+}
+```
+
+## Process Security
+
+### Subprocess Execution
+
+```typescript
+import { spawn } from 'child_process';
+import { isValidCommand } from '@caedonai/lord-commander/security';
+
+const executeCommand = async (command: string, args: string[] = []): Promise<string> => {
+  // Validate command
+  if (!isValidCommand(command)) {
+    throw new Error(`Invalid command: ${command}`);
+  }
+  
+  // Sanitize arguments
+  const safeArgs = args.map(arg => sanitizeShellArg(arg));
+  
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, safeArgs, {
+      stdio: ['ignore', 'pipe', 'pipe'],
+      shell: false,  // Disable shell interpretation
+      timeout: 30000 // 30 second timeout
+    });
+    
+    let output = '';
+    child.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+    
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve(output);
+      } else {
+        reject(new Error(`Command failed with exit code ${code}`));
+      }
+    });
+  });
+};
+```
+
+### Environment Isolation
+
+```typescript
+const createIsolatedEnvironment = (): NodeJS.ProcessEnv => {
+  // Start with minimal environment
+  const safeEnv: NodeJS.ProcessEnv = {
+    PATH: process.env.PATH,
+    HOME: process.env.HOME,
+    USER: process.env.USER,
+    NODE_ENV: process.env.NODE_ENV || 'production'
+  };
+  
+  // Add only necessary variables
+  if (process.env.LORD_COMMANDER_CONFIG_PATH) {
+    safeEnv.LORD_COMMANDER_CONFIG_PATH = process.env.LORD_COMMANDER_CONFIG_PATH;
+  }
+  
+  return safeEnv;
+};
+```
+
+## Logging and Monitoring
+
+### Secure Logging
+
+```typescript
+import { createLogger, format, transports } from 'winston';
+
+const sensitiveFields = ['password', 'token', 'apikey', 'secret', 'authorization'];
+
+const sanitizeLogData = (data: any): any => {
+  if (typeof data === 'string') {
+    return data.replace(/\b(password|token|apikey|secret)=[\w-]+/gi, '$1=***');
+  }
+  
+  if (typeof data === 'object' && data !== null) {
+    const sanitized = { ...data };
+    for (const field of sensitiveFields) {
+      if (field in sanitized) {
+        sanitized[field] = '***';
+      }
+    }
+    return sanitized;
+  }
+  
+  return data;
+};
+
+const logger = createLogger({
+  level: 'info',
+  format: format.combine(
+    format.timestamp(),
+    format.printf(({ timestamp, level, message, ...meta }) => {
+      const sanitizedMeta = sanitizeLogData(meta);
+      return `${timestamp} [${level}] ${message} ${JSON.stringify(sanitizedMeta)}`;
+    })
+  ),
+  transports: [
+    new transports.File({ 
+      filename: 'lord-commander.log',
+      mode: 0o600  // Secure file permissions
+    })
+  ]
+});
+```
+
+## Vulnerability Management
+
+### Dependency Scanning
+
+```bash
+# Regular security audits
+npm audit
+pnpm audit
+yarn audit
+
+# Automated dependency updates
+npm install -g npm-check-updates
+ncu -u
+```
+
+### Security Headers
+
+For any HTTP servers or web interfaces:
+
+```typescript
+const securityHeaders = {
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Content-Security-Policy': "default-src 'self'",
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin'
+};
+```
+
+## Security Checklist
+
+<CardGroup cols={2}>
+
+<Card title="Input Validation" icon="check">
+  - ✅ Validate all file paths
+  - ✅ Sanitize user inputs
+  - ✅ Limit input lengths
+  - ✅ Validate command arguments
+</Card>
+
+<Card title="File System" icon="folder">
+  - ✅ Use secure file permissions
+  - ✅ Prevent path traversal
+  - ✅ Clean up temporary files
+  - ✅ Validate file types
+</Card>
+
+<Card title="Network" icon="globe">
+  - ✅ Enforce HTTPS
+  - ✅ Validate certificates
+  - ✅ Set request timeouts
+  - ✅ Limit redirects
+</Card>
+
+<Card title="Credentials" icon="key">
+  - ✅ Use secure storage
+  - ✅ Never log secrets
+  - ✅ Implement token refresh
+  - ✅ Clear sensitive data
+</Card>
+
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="CLI Creation" icon="plus" href="/core/cli-creation">
+  Learn secure CLI design patterns
+</Card>
+
+<Card title="Plugin Development" icon="plug" href="/core/plugins">
+  Build secure plugins
+</Card>
+
+<Card title="Configuration" icon="gear" href="/guides/configuration">
+  Secure configuration practices
+</Card>
+
+<Card title="CLI Creation" icon="plus" href="/core/cli-creation">
+  Learn secure CLI design patterns
+</Card>
+
+</CardGroup>

@@ -1,0 +1,51 @@
+{
+  "name": "docs",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/docs",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mint dev",
+        "cwd": "apps/docs"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands", 
+      "options": {
+        "command": "mint build",
+        "cwd": "apps/docs"
+      }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mint preview",
+        "cwd": "apps/docs"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mint broken-links && mint a11y",
+        "cwd": "apps/docs"
+      }
+    },
+    "check-links": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mint broken-links",
+        "cwd": "apps/docs"
+      }
+    },
+    "check-a11y": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mint a11y",
+        "cwd": "apps/docs"
+      }
+    }
+  },
+  "tags": ["type:app", "scope:docs"]
+}

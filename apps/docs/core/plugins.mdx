@@ -1,0 +1,359 @@
+---
+title: "Plugins"
+description: "Extend Lord Commander's functionality with a powerful plugin system"
+---
+
+# Plugin System
+
+Lord Commander's plugin architecture allows you to extend functionality, add custom commands, and integrate with external tools. The plugin system is designed to be both powerful and easy to use.
+
+## Plugin Architecture
+
+### Plugin Interface
+
+All plugins implement the standard plugin interface:
+
+```typescript
+interface Plugin {
+  name: string;
+  version: string;
+  description?: string;
+  commands?: Command[];
+  hooks?: PluginHooks;
+  dependencies?: string[];
+  install?: () => Promise<void>;
+  uninstall?: () => Promise<void>;
+}
+```
+
+### Plugin Lifecycle
+
+<AccordionGroup>
+  <Accordion icon="download" title="Registration">
+    Plugins are registered during CLI initialization:
+    
+    ```typescript
+    import { createCLI } from '@caedonai/lord-commander';
+    import { gitPlugin } from '@caedonai/lord-commander-git';
+    import { workspacePlugin } from './plugins/workspace';
+    
+    const cli = createCLI({
+      plugins: [gitPlugin, workspacePlugin]
+    });
+    ```
+  </Accordion>
+  
+  <Accordion icon="gear" title="Initialization">
+    Plugins can perform setup tasks:
+    
+    ```typescript
+    const myPlugin: Plugin = {
+      name: 'my-plugin',
+      version: '1.0.0',
+      install: async () => {
+        // Create config files
+        // Set up environment
+        // Download dependencies
+      }
+    };
+    ```
+  </Accordion>
+  
+  <Accordion icon="hook" title="Hook Execution">
+    Plugins can hook into various CLI lifecycle events:
+    
+    ```typescript
+    const hooks: PluginHooks = {
+      beforeCommand: async (command, args, options) => {
+        // Pre-command validation or setup
+      },
+      afterCommand: async (command, args, options, result) => {
+        // Post-command cleanup or logging
+      }
+    };
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Creating Plugins
+
+### Basic Plugin Structure
+
+```typescript
+import { Plugin, Command } from '@caedonai/lord-commander';
+
+export const myPlugin: Plugin = {
+  name: 'my-awesome-plugin',
+  version: '1.0.0',
+  description: 'Adds awesome functionality to Lord Commander',
+  
+  commands: [
+    {
+      name: 'awesome',
+      description: 'Do something awesome',
+      handler: async (args, options, context) => {
+        context.logger.info('Being awesome! 🚀');
+      }
+    }
+  ],
+  
+  hooks: {
+    beforeCommand: async (command) => {
+      console.log(`Running command: ${command.name}`);
+    }
+  }
+};
+```
+
+### Advanced Plugin Features
+
+```typescript
+export const advancedPlugin: Plugin = {
+  name: 'advanced-plugin',
+  version: '2.0.0',
+  
+  // Dependencies on other plugins
+  dependencies: ['git-plugin', 'workspace-plugin'],
+  
+  commands: [
+    {
+      name: 'advanced-command',
+      description: 'Advanced functionality',
+      options: [
+        {
+          name: 'config',
+          description: 'Configuration file',
+          type: 'string',
+          required: false
+        }
+      ],
+      handler: async (args, options, context) => {
+        // Access plugin configuration
+        const config = await context.config.get('advanced-plugin');
+        
+        // Use logger with custom formatting
+        context.logger.info('Starting advanced operation...');
+        context.logger.success('Operation completed!');
+        
+        // Access file system utilities
+        await context.fs.ensureDir('./output');
+        await context.fs.writeJson('./output/result.json', { success: true });
+      }
+    }
+  ],
+  
+  install: async () => {
+    // Plugin initialization
+    console.log('Installing advanced plugin...');
+  }
+};
+```
+
+## Built-in Plugins
+
+Lord Commander comes with several built-in plugins:
+
+### Git Plugin
+
+Provides Git integration and commands:
+
+```bash
+lord-commander git status
+lord-commander git commit -m "Update documentation"
+lord-commander git branch feature/new-feature
+```
+
+```typescript
+import { gitPlugin } from '@caedonai/lord-commander/plugins';
+
+const cli = createCLI({
+  plugins: [gitPlugin]
+});
+```
+
+### Workspace Plugin
+
+Manages project workspaces and monorepos:
+
+```bash
+lord-commander workspace list
+lord-commander workspace create my-workspace
+lord-commander workspace add-project frontend
+```
+
+### Updater Plugin
+
+Handles CLI and plugin updates:
+
+```bash
+lord-commander update check
+lord-commander update install
+lord-commander plugin update git-plugin
+```
+
+## Plugin Development Best Practices
+
+<AccordionGroup>
+  <Accordion icon="shield" title="Security">
+    - Validate all user inputs
+    - Sanitize file paths
+    - Use secure defaults
+    - Request minimal permissions
+  </Accordion>
+  
+  <Accordion icon="gauge" title="Performance">
+    - Lazy load heavy dependencies
+    - Cache expensive operations
+    - Use async/await properly
+    - Provide progress feedback
+  </Accordion>
+  
+  <Accordion icon="puzzle-piece" title="Compatibility">
+    - Follow semantic versioning
+    - Document breaking changes
+    - Test across platforms
+    - Handle graceful degradation
+  </Accordion>
+  
+  <Accordion icon="bug" title="Error Handling">
+    - Provide helpful error messages
+    - Handle edge cases gracefully
+    - Log errors appropriately
+    - Clean up on failure
+  </Accordion>
+</AccordionGroup>
+
+## Plugin Configuration
+
+### Configuration Schema
+
+```typescript
+interface PluginConfig {
+  enabled: boolean;
+  settings: Record<string, any>;
+  version?: string;
+}
+
+const pluginConfigSchema = {
+  type: 'object',
+  properties: {
+    enabled: { type: 'boolean', default: true },
+    settings: { type: 'object', default: {} },
+    apiKey: { type: 'string' },
+    endpoint: { type: 'string', format: 'uri' }
+  }
+};
+```
+
+### Reading Configuration
+
+```typescript
+const handler: CommandHandler = async (args, options, context) => {
+  const config = await context.config.get('my-plugin', {
+    apiKey: '',
+    endpoint: 'https://api.example.com'
+  });
+  
+  if (!config.apiKey) {
+    throw new Error('API key is required. Set it with: lord-commander config set my-plugin.apiKey YOUR_KEY');
+  }
+  
+  // Use configuration
+  const client = createClient(config.endpoint, config.apiKey);
+};
+```
+
+## Testing Plugins
+
+### Unit Testing
+
+```typescript
+import { testPlugin } from '@caedonai/lord-commander/testing';
+
+describe('MyPlugin', () => {
+  let plugin: Plugin;
+  
+  beforeEach(() => {
+    plugin = createMyPlugin();
+  });
+  
+  it('should register commands', () => {
+    expect(plugin.commands).toHaveLength(2);
+    expect(plugin.commands[0].name).toBe('my-command');
+  });
+  
+  it('should execute command successfully', async () => {
+    const result = await testPlugin(plugin, 'my-command', {
+      args: { target: 'test' },
+      options: { verbose: true }
+    });
+    
+    expect(result.success).toBe(true);
+  });
+});
+```
+
+### Integration Testing
+
+```typescript
+describe('Plugin Integration', () => {
+  it('should work with CLI', async () => {
+    const cli = createCLI({
+      plugins: [myPlugin]
+    });
+    
+    const result = await cli.run(['my-command', 'test-target']);
+    expect(result.exitCode).toBe(0);
+  });
+});
+```
+
+## Publishing Plugins
+
+### NPM Package Structure
+
+```json
+{
+  "name": "lord-commander-my-plugin",
+  "version": "1.0.0",
+  "description": "Awesome plugin for Lord Commander",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": ["lord-commander", "plugin", "cli"],
+  "peerDependencies": {
+    "@caedonai/lord-commander": "^1.0.0"
+  }
+}
+```
+
+### Plugin Registry
+
+Submit your plugin to the official registry:
+
+```bash
+lord-commander plugin publish
+lord-commander plugin search my-plugin
+lord-commander plugin install my-plugin
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="CLI Creation" icon="plus" href="/core/cli-creation">
+  Understanding CLI fundamentals
+</Card>
+
+<Card title="Commands" icon="terminal" href="/core/commands">
+  Learn about command implementation
+</Card>
+
+<Card title="Configuration" icon="gear" href="/guides/configuration">
+  Plugin configuration guide
+</Card>
+
+<Card title="CLI Creation" icon="plus" href="/core/cli-creation">
+  Understanding CLI fundamentals
+</Card>
+
+</CardGroup>
