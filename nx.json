@@ -101,18 +101,15 @@
         "componentTestingTargetName": "component-test",
         "ciTargetName": "e2e-ci"
       }
-    },
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint"
-      }
     }
-  ],
 
+  ],
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
-    "production": ["!{projectRoot}/**/*.spec.ts", "!{projectRoot}/**/*.test.ts"]
+    "production": [
+      "!{projectRoot}/**/*.spec.ts",
+      "!{projectRoot}/**/*.test.ts"
+    ]
   },
   "workspaceLayout": {
     "appsDir": "apps",
