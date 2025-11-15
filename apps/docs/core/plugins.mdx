@@ -80,28 +80,28 @@ interface Plugin {
 ### Basic Plugin Structure
 
 ```typescript
-import { Plugin, Command } from '@caedonai/lord-commander';
+import { Plugin, Command } from "@caedonai/lord-commander";
 
 export const myPlugin: Plugin = {
-  name: 'my-awesome-plugin',
-  version: '1.0.0',
-  description: 'Adds awesome functionality to Lord Commander',
-  
+  name: "my-awesome-plugin",
+  version: "1.0.0",
+  description: "Adds awesome functionality to Lord Commander",
+
   commands: [
     {
-      name: 'awesome',
-      description: 'Do something awesome',
+      name: "awesome",
+      description: "Do something awesome",
       handler: async (args, options, context) => {
-        context.logger.info('Being awesome! 🚀');
-      }
-    }
+        context.logger.info("Being awesome! 🚀");
+      },
+    },
   ],
-  
+
   hooks: {
     beforeCommand: async (command) => {
       console.log(`Running command: ${command.name}`);
-    }
-  }
+    },
+  },
 };
 ```
 
@@ -109,43 +109,43 @@ export const myPlugin: Plugin = {
 
 ```typescript
 export const advancedPlugin: Plugin = {
-  name: 'advanced-plugin',
-  version: '2.0.0',
-  
+  name: "advanced-plugin",
+  version: "2.0.0",
+
   // Dependencies on other plugins
-  dependencies: ['git-plugin', 'workspace-plugin'],
-  
+  dependencies: ["git-plugin", "workspace-plugin"],
+
   commands: [
     {
-      name: 'advanced-command',
-      description: 'Advanced functionality',
+      name: "advanced-command",
+      description: "Advanced functionality",
       options: [
         {
-          name: 'config',
-          description: 'Configuration file',
-          type: 'string',
-          required: false
-        }
+          name: "config",
+          description: "Configuration file",
+          type: "string",
+          required: false,
+        },
       ],
       handler: async (args, options, context) => {
         // Access plugin configuration
-        const config = await context.config.get('advanced-plugin');
-        
+        const config = await context.config.get("advanced-plugin");
+
         // Use logger with custom formatting
-        context.logger.info('Starting advanced operation...');
-        context.logger.success('Operation completed!');
-        
+        context.logger.info("Starting advanced operation...");
+        context.logger.success("Operation completed!");
+
         // Access file system utilities
-        await context.fs.ensureDir('./output');
-        await context.fs.writeJson('./output/result.json', { success: true });
-      }
-    }
+        await context.fs.ensureDir("./output");
+        await context.fs.writeJson("./output/result.json", { success: true });
+      },
+    },
   ],
-  
+
   install: async () => {
     // Plugin initialization
-    console.log('Installing advanced plugin...');
-  }
+    console.log("Installing advanced plugin...");
+  },
 };
 ```
 
@@ -164,10 +164,10 @@ lord-commander git branch feature/new-feature
 ```
 
 ```typescript
-import { gitPlugin } from '@caedonai/lord-commander/plugins';
+import { gitPlugin } from "@caedonai/lord-commander/plugins";
 
 const cli = createCLI({
-  plugins: [gitPlugin]
+  plugins: [gitPlugin],
 });
 ```
 
@@ -195,31 +195,23 @@ lord-commander plugin update git-plugin
 
 <AccordionGroup>
   <Accordion icon="shield" title="Security">
-    - Validate all user inputs
-    - Sanitize file paths
-    - Use secure defaults
-    - Request minimal permissions
+    - Validate all user inputs - Sanitize file paths - Use secure defaults -
+    Request minimal permissions
   </Accordion>
-  
+
   <Accordion icon="gauge" title="Performance">
-    - Lazy load heavy dependencies
-    - Cache expensive operations
-    - Use async/await properly
-    - Provide progress feedback
+    - Lazy load heavy dependencies - Cache expensive operations - Use
+    async/await properly - Provide progress feedback
   </Accordion>
-  
+
   <Accordion icon="puzzle-piece" title="Compatibility">
-    - Follow semantic versioning
-    - Document breaking changes
-    - Test across platforms
-    - Handle graceful degradation
+    - Follow semantic versioning - Document breaking changes - Test across
+    platforms - Handle graceful degradation
   </Accordion>
-  
+
   <Accordion icon="bug" title="Error Handling">
-    - Provide helpful error messages
-    - Handle edge cases gracefully
-    - Log errors appropriately
-    - Clean up on failure
+    - Provide helpful error messages - Handle edge cases gracefully - Log errors
+    appropriately - Clean up on failure
   </Accordion>
 </AccordionGroup>
 
@@ -235,13 +227,13 @@ interface PluginConfig {
 }
 
 const pluginConfigSchema = {
-  type: 'object',
+  type: "object",
   properties: {
-    enabled: { type: 'boolean', default: true },
-    settings: { type: 'object', default: {} },
-    apiKey: { type: 'string' },
-    endpoint: { type: 'string', format: 'uri' }
-  }
+    enabled: { type: "boolean", default: true },
+    settings: { type: "object", default: {} },
+    apiKey: { type: "string" },
+    endpoint: { type: "string", format: "uri" },
+  },
 };
 ```
 
@@ -249,15 +241,17 @@ const pluginConfigSchema = {
 
 ```typescript
 const handler: CommandHandler = async (args, options, context) => {
-  const config = await context.config.get('my-plugin', {
-    apiKey: '',
-    endpoint: 'https://api.example.com'
+  const config = await context.config.get("my-plugin", {
+    apiKey: "",
+    endpoint: "https://api.example.com",
   });
-  
+
   if (!config.apiKey) {
-    throw new Error('API key is required. Set it with: lord-commander config set my-plugin.apiKey YOUR_KEY');
+    throw new Error(
+      "API key is required. Set it with: lord-commander config set my-plugin.apiKey YOUR_KEY"
+    );
   }
-  
+
   // Use configuration
   const client = createClient(config.endpoint, config.apiKey);
 };
@@ -268,26 +262,26 @@ const handler: CommandHandler = async (args, options, context) => {
 ### Unit Testing
 
 ```typescript
-import { testPlugin } from '@caedonai/lord-commander/testing';
+import { testPlugin } from "@caedonai/lord-commander/testing";
 
-describe('MyPlugin', () => {
+describe("MyPlugin", () => {
   let plugin: Plugin;
-  
+
   beforeEach(() => {
     plugin = createMyPlugin();
   });
-  
-  it('should register commands', () => {
+
+  it("should register commands", () => {
     expect(plugin.commands).toHaveLength(2);
-    expect(plugin.commands[0].name).toBe('my-command');
+    expect(plugin.commands[0].name).toBe("my-command");
   });
-  
-  it('should execute command successfully', async () => {
-    const result = await testPlugin(plugin, 'my-command', {
-      args: { target: 'test' },
-      options: { verbose: true }
+
+  it("should execute command successfully", async () => {
+    const result = await testPlugin(plugin, "my-command", {
+      args: { target: "test" },
+      options: { verbose: true },
     });
-    
+
     expect(result.success).toBe(true);
   });
 });
@@ -296,13 +290,13 @@ describe('MyPlugin', () => {
 ### Integration Testing
 
 ```typescript
-describe('Plugin Integration', () => {
-  it('should work with CLI', async () => {
+describe("Plugin Integration", () => {
+  it("should work with CLI", async () => {
     const cli = createCLI({
-      plugins: [myPlugin]
+      plugins: [myPlugin],
     });
-    
-    const result = await cli.run(['my-command', 'test-target']);
+
+    const result = await cli.run(["my-command", "test-target"]);
     expect(result.exitCode).toBe(0);
   });
 });

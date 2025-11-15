@@ -26,32 +26,32 @@ interface Command {
 
 ```typescript
 export const initCommand: Command = {
-  name: 'init',
-  description: 'Initialize a new project',
+  name: "init",
+  description: "Initialize a new project",
   arguments: [
     {
-      name: 'projectName',
-      description: 'Name of the project to create',
+      name: "projectName",
+      description: "Name of the project to create",
       required: false,
-      defaultValue: '.'
-    }
+      defaultValue: ".",
+    },
   ],
   options: [
     {
-      name: 'template',
-      alias: 't',
-      description: 'Project template to use',
-      type: 'string',
-      choices: ['react', 'vue', 'angular', 'vanilla']
-    }
+      name: "template",
+      alias: "t",
+      description: "Project template to use",
+      type: "string",
+      choices: ["react", "vue", "angular", "vanilla"],
+    },
   ],
   handler: async (args, options, context) => {
     // Command implementation
     const projectName = args.projectName;
-    const template = options.template || 'react';
-    
+    const template = options.template || "react";
+
     await createProject(projectName, template);
-  }
+  },
 };
 ```
 
@@ -59,40 +59,22 @@ export const initCommand: Command = {
 
 <AccordionGroup>
   <Accordion icon="terminal" title="Action Commands">
-    Commands that perform specific actions:
-    
-    ```bash
-    lord-commander init my-app
-    lord-commander build --production
-    lord-commander deploy --environment staging
-    ```
-    
-    These commands typically:
-    - Modify the file system
-    - Make network requests
-    - Transform data
+    Commands that perform specific actions: ```bash lord-commander init my-app
+    lord-commander build --production lord-commander deploy --environment
+    staging ``` These commands typically: - Modify the file system - Make
+    network requests - Transform data
   </Accordion>
-  
+
   <Accordion icon="info" title="Information Commands">
-    Commands that display information:
-    
-    ```bash
-    lord-commander --version
-    lord-commander list templates
-    lord-commander status
-    ```
-    
-    These commands are usually read-only and fast to execute.
+    Commands that display information: ```bash lord-commander --version
+    lord-commander list templates lord-commander status ``` These commands are
+    usually read-only and fast to execute.
   </Accordion>
-  
+
   <Accordion icon="wrench" title="Configuration Commands">
-    Commands that manage configuration:
-    
-    ```bash
-    lord-commander config set api.endpoint https://api.example.com
-    lord-commander config get api.endpoint
-    lord-commander config reset
-    ```
+    Commands that manage configuration: ```bash lord-commander config set
+    api.endpoint https://api.example.com lord-commander config get api.endpoint
+    lord-commander config reset ```
   </Accordion>
 </AccordionGroup>
 
@@ -104,25 +86,25 @@ Organize related functionality under parent commands:
 
 ```typescript
 const scaffoldCommand: Command = {
-  name: 'scaffold',
-  description: 'Generate code from templates',
+  name: "scaffold",
+  description: "Generate code from templates",
   subcommands: [
     {
-      name: 'component',
-      description: 'Generate a component',
-      handler: generateComponent
+      name: "component",
+      description: "Generate a component",
+      handler: generateComponent,
     },
     {
-      name: 'page',
-      description: 'Generate a page',
-      handler: generatePage
+      name: "page",
+      description: "Generate a page",
+      handler: generatePage,
     },
     {
-      name: 'service',
-      description: 'Generate a service',
-      handler: generateService
-    }
-  ]
+      name: "service",
+      description: "Generate a service",
+      handler: generateService,
+    },
+  ],
 };
 ```
 
@@ -143,22 +125,24 @@ lord-commander build
 
 ```typescript
 const command: Command = {
-  name: 'deploy',
+  name: "deploy",
   arguments: [
     {
-      name: 'environment',
+      name: "environment",
       required: true,
       validate: (value) => {
-        const validEnvs = ['dev', 'staging', 'production'];
+        const validEnvs = ["dev", "staging", "production"];
         if (!validEnvs.includes(value)) {
-          throw new Error(`Environment must be one of: ${validEnvs.join(', ')}`);
+          throw new Error(
+            `Environment must be one of: ${validEnvs.join(", ")}`
+          );
         }
-      }
-    }
+      },
+    },
   ],
   handler: async (args) => {
     // Deploy logic
-  }
+  },
 };
 ```
 
@@ -169,7 +153,7 @@ const handler: CommandHandler = async (args, options, context) => {
   try {
     await performOperation(args.target);
   } catch (error) {
-    if (error.code === 'ENOENT') {
+    if (error.code === "ENOENT") {
       context.logger.error(`File not found: ${args.target}`);
       context.logger.info('Run "lord-commander init" to create a new project');
       process.exit(1);
@@ -184,17 +168,17 @@ const handler: CommandHandler = async (args, options, context) => {
 ### Unit Testing
 
 ```typescript
-import { testCommand } from '@caedonai/lord-commander/testing';
+import { testCommand } from "@caedonai/lord-commander/testing";
 
-describe('init command', () => {
-  it('should create a new project', async () => {
+describe("init command", () => {
+  it("should create a new project", async () => {
     const result = await testCommand(initCommand, {
-      arguments: { projectName: 'test-project' },
-      options: { template: 'react' }
+      arguments: { projectName: "test-project" },
+      options: { template: "react" },
     });
-    
+
     expect(result.success).toBe(true);
-    expect(fs.existsSync('test-project/package.json')).toBe(true);
+    expect(fs.existsSync("test-project/package.json")).toBe(true);
   });
 });
 ```
@@ -202,15 +186,15 @@ describe('init command', () => {
 ### Integration Testing
 
 ```typescript
-import { execSync } from 'child_process';
+import { execSync } from "child_process";
 
-describe('CLI integration', () => {
-  it('should work end-to-end', () => {
-    const output = execSync('lord-commander init test-app --template vue', {
-      encoding: 'utf8'
+describe("CLI integration", () => {
+  it("should work end-to-end", () => {
+    const output = execSync("lord-commander init test-app --template vue", {
+      encoding: "utf8",
     });
-    
-    expect(output).toContain('Project created successfully');
+
+    expect(output).toContain("Project created successfully");
   });
 });
 ```
@@ -220,31 +204,23 @@ describe('CLI integration', () => {
 <CardGroup cols={2}>
 
 <Card title="Performance" icon="gauge-high">
-  - Lazy load dependencies
-  - Cache expensive operations
-  - Provide progress indicators
-  - Use streaming for large data
+  - Lazy load dependencies - Cache expensive operations - Provide progress
+  indicators - Use streaming for large data
 </Card>
 
 <Card title="User Experience" icon="user">
-  - Clear, consistent naming
-  - Helpful error messages
-  - Interactive prompts when needed
-  - Respect user's terminal preferences
+  - Clear, consistent naming - Helpful error messages - Interactive prompts when
+  needed - Respect user's terminal preferences
 </Card>
 
 <Card title="Maintainability" icon="code">
-  - Single responsibility per command
-  - Consistent error handling
-  - Comprehensive testing
-  - Clear documentation
+  - Single responsibility per command - Consistent error handling -
+  Comprehensive testing - Clear documentation
 </Card>
 
 <Card title="Compatibility" icon="puzzle-piece">
-  - Follow POSIX conventions
-  - Support common flags (--help, --version)
-  - Handle different terminal capabilities
-  - Cross-platform file paths
+  - Follow POSIX conventions - Support common flags (--help, --version) - Handle
+  different terminal capabilities - Cross-platform file paths
 </Card>
 
 </CardGroup>

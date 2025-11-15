@@ -69,19 +69,21 @@ Security is paramount when building CLI tools that interact with file systems, n
 ### Path Traversal Prevention
 
 ```typescript
-import path from 'path';
-import { isPathSafe } from '@caedonai/lord-commander/security';
+import path from "path";
+import { isPathSafe } from "@caedonai/lord-commander/security";
 
 const createFile = async (filePath: string, content: string) => {
   // Resolve and normalize path
   const resolvedPath = path.resolve(filePath);
   const workingDir = process.cwd();
-  
+
   // Ensure path is within working directory
   if (!isPathSafe(resolvedPath, workingDir)) {
-    throw new Error('Invalid file path: cannot access files outside project directory');
+    throw new Error(
+      "Invalid file path: cannot access files outside project directory"
+    );
   }
-  
+
   // Safe to proceed
   await fs.writeFile(resolvedPath, content);
 };
@@ -90,44 +92,44 @@ const createFile = async (filePath: string, content: string) => {
 ### File Permission Management
 
 ```typescript
-import { promises as fs } from 'fs';
+import { promises as fs } from "fs";
 
 const createConfigFile = async (config: Config) => {
-  const configPath = './lord-commander.config.json';
-  
+  const configPath = "./lord-commander.config.json";
+
   // Write config file with restricted permissions
   await fs.writeFile(configPath, JSON.stringify(config, null, 2), {
-    mode: 0o600  // Read/write for owner only
+    mode: 0o600, // Read/write for owner only
   });
-  
-  console.log('Config file created with secure permissions');
+
+  console.log("Config file created with secure permissions");
 };
 ```
 
 ### Temporary File Handling
 
 ```typescript
-import { tmpdir } from 'os';
-import { join } from 'path';
-import { randomBytes } from 'crypto';
+import { tmpdir } from "os";
+import { join } from "path";
+import { randomBytes } from "crypto";
 
 const createTempFile = async (content: string): Promise<string> => {
   // Generate secure random filename
-  const randomName = randomBytes(16).toString('hex');
+  const randomName = randomBytes(16).toString("hex");
   const tempPath = join(tmpdir(), `lord-commander-${randomName}.tmp`);
-  
+
   // Create file with restricted permissions
   await fs.writeFile(tempPath, content, { mode: 0o600 });
-  
+
   // Schedule cleanup
-  process.on('exit', () => {
+  process.on("exit", () => {
     try {
       fs.unlinkSync(tempPath);
     } catch (error) {
       // Ignore cleanup errors
     }
   });
-  
+
   return tempPath;
 };
 ```
@@ -137,23 +139,26 @@ const createTempFile = async (content: string): Promise<string> => {
 ### HTTPS Enforcement
 
 ```typescript
-import https from 'https';
-import { URL } from 'url';
+import https from "https";
+import { URL } from "url";
 
-const makeSecureRequest = async (urlString: string, options: RequestOptions = {}) => {
+const makeSecureRequest = async (
+  urlString: string,
+  options: RequestOptions = {}
+) => {
   const url = new URL(urlString);
-  
+
   // Enforce HTTPS for external requests
-  if (url.protocol !== 'https:' && !isLocalhost(url.hostname)) {
-    throw new Error('Only HTTPS connections are allowed for external requests');
+  if (url.protocol !== "https:" && !isLocalhost(url.hostname)) {
+    throw new Error("Only HTTPS connections are allowed for external requests");
   }
-  
+
   const requestOptions = {
     ...options,
-    rejectUnauthorized: true,  // Validate SSL certificates
-    timeout: 10000            // Reasonable timeout
+    rejectUnauthorized: true, // Validate SSL certificates
+    timeout: 10000, // Reasonable timeout
   };
-  
+
   return makeRequest(url, requestOptions);
 };
 ```
@@ -166,7 +171,7 @@ const agent = new https.Agent({
   checkServerIdentity: (hostname: string, cert: any) => {
     // Custom certificate validation if needed
     return tls.checkServerIdentity(hostname, cert);
-  }
+  },
 });
 ```
 
@@ -178,11 +183,11 @@ const agent = new https.Agent({
 const getApiCredentials = (): ApiCredentials => {
   const apiKey = process.env.LORD_COMMANDER_API_KEY;
   const apiSecret = process.env.LORD_COMMANDER_API_SECRET;
-  
+
   if (!apiKey || !apiSecret) {
-    throw new Error('API credentials not found in environment variables');
+    throw new Error("API credentials not found in environment variables");
   }
-  
+
   return { apiKey, apiSecret };
 };
 ```
@@ -190,19 +195,19 @@ const getApiCredentials = (): ApiCredentials => {
 ### Secure Storage
 
 ```typescript
-import keytar from 'keytar';
+import keytar from "keytar";
 
 class CredentialStore {
-  private static SERVICE_NAME = 'lord-commander';
-  
+  private static SERVICE_NAME = "lord-commander";
+
   static async store(account: string, password: string): Promise<void> {
     await keytar.setPassword(this.SERVICE_NAME, account, password);
   }
-  
+
   static async retrieve(account: string): Promise<string | null> {
     return await keytar.getPassword(this.SERVICE_NAME, account);
   }
-  
+
   static async delete(account: string): Promise<boolean> {
     return await keytar.deletePassword(this.SERVICE_NAME, account);
   }
@@ -222,23 +227,25 @@ class TokenManager {
   private static isTokenValid(token: Token): boolean {
     return Date.now() < token.expires_at;
   }
-  
+
   static async getValidToken(): Promise<string> {
-    const tokenJson = await CredentialStore.retrieve('api_token');
-    
+    const tokenJson = await CredentialStore.retrieve("api_token");
+
     if (!tokenJson) {
-      throw new Error('No authentication token found. Please run: lord-commander auth login');
+      throw new Error(
+        "No authentication token found. Please run: lord-commander auth login"
+      );
     }
-    
+
     const token: Token = JSON.parse(tokenJson);
-    
+
     if (!this.isTokenValid(token)) {
       // Refresh token
       const newToken = await this.refreshToken(token.refresh_token);
-      await CredentialStore.store('api_token', JSON.stringify(newToken));
+      await CredentialStore.store("api_token", JSON.stringify(newToken));
       return newToken.access_token;
     }
-    
+
     return token.access_token;
   }
 }
@@ -249,31 +256,34 @@ class TokenManager {
 ### Subprocess Execution
 
 ```typescript
-import { spawn } from 'child_process';
-import { isValidCommand } from '@caedonai/lord-commander/security';
+import { spawn } from "child_process";
+import { isValidCommand } from "@caedonai/lord-commander/security";
 
-const executeCommand = async (command: string, args: string[] = []): Promise<string> => {
+const executeCommand = async (
+  command: string,
+  args: string[] = []
+): Promise<string> => {
   // Validate command
   if (!isValidCommand(command)) {
     throw new Error(`Invalid command: ${command}`);
   }
-  
+
   // Sanitize arguments
-  const safeArgs = args.map(arg => sanitizeShellArg(arg));
-  
+  const safeArgs = args.map((arg) => sanitizeShellArg(arg));
+
   return new Promise((resolve, reject) => {
     const child = spawn(command, safeArgs, {
-      stdio: ['ignore', 'pipe', 'pipe'],
-      shell: false,  // Disable shell interpretation
-      timeout: 30000 // 30 second timeout
+      stdio: ["ignore", "pipe", "pipe"],
+      shell: false, // Disable shell interpretation
+      timeout: 30000, // 30 second timeout
     });
-    
-    let output = '';
-    child.stdout.on('data', (data) => {
+
+    let output = "";
+    child.stdout.on("data", (data) => {
       output += data.toString();
     });
-    
-    child.on('close', (code) => {
+
+    child.on("close", (code) => {
       if (code === 0) {
         resolve(output);
       } else {
@@ -293,14 +303,14 @@ const createIsolatedEnvironment = (): NodeJS.ProcessEnv => {
     PATH: process.env.PATH,
     HOME: process.env.HOME,
     USER: process.env.USER,
-    NODE_ENV: process.env.NODE_ENV || 'production'
+    NODE_ENV: process.env.NODE_ENV || "production",
   };
-  
+
   // Add only necessary variables
   if (process.env.LORD_COMMANDER_CONFIG_PATH) {
     safeEnv.LORD_COMMANDER_CONFIG_PATH = process.env.LORD_COMMANDER_CONFIG_PATH;
   }
-  
+
   return safeEnv;
 };
 ```
@@ -310,43 +320,51 @@ const createIsolatedEnvironment = (): NodeJS.ProcessEnv => {
 ### Secure Logging
 
 ```typescript
-import { createLogger, format, transports } from 'winston';
+import { createLogger, format, transports } from "winston";
 
-const sensitiveFields = ['password', 'token', 'apikey', 'secret', 'authorization'];
+const sensitiveFields = [
+  "password",
+  "token",
+  "apikey",
+  "secret",
+  "authorization",
+];
 
 const sanitizeLogData = (data: any): any => {
-  if (typeof data === 'string') {
-    return data.replace(/\b(password|token|apikey|secret)=[\w-]+/gi, '$1=***');
+  if (typeof data === "string") {
+    return data.replace(/\b(password|token|apikey|secret)=[\w-]+/gi, "$1=***");
   }
-  
-  if (typeof data === 'object' && data !== null) {
+
+  if (typeof data === "object" && data !== null) {
     const sanitized = { ...data };
     for (const field of sensitiveFields) {
       if (field in sanitized) {
-        sanitized[field] = '***';
+        sanitized[field] = "***";
       }
     }
     return sanitized;
   }
-  
+
   return data;
 };
 
 const logger = createLogger({
-  level: 'info',
+  level: "info",
   format: format.combine(
     format.timestamp(),
     format.printf(({ timestamp, level, message, ...meta }) => {
       const sanitizedMeta = sanitizeLogData(meta);
-      return `${timestamp} [${level}] ${message} ${JSON.stringify(sanitizedMeta)}`;
+      return `${timestamp} [${level}] ${message} ${JSON.stringify(
+        sanitizedMeta
+      )}`;
     })
   ),
   transports: [
-    new transports.File({ 
-      filename: 'lord-commander.log',
-      mode: 0o600  // Secure file permissions
-    })
-  ]
+    new transports.File({
+      filename: "lord-commander.log",
+      mode: 0o600, // Secure file permissions
+    }),
+  ],
 });
 ```
 
@@ -371,11 +389,11 @@ For any HTTP servers or web interfaces:
 
 ```typescript
 const securityHeaders = {
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  'Content-Security-Policy': "default-src 'self'",
-  'X-Frame-Options': 'DENY',
-  'X-Content-Type-Options': 'nosniff',
-  'Referrer-Policy': 'strict-origin-when-cross-origin'
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+  "Content-Security-Policy": "default-src 'self'",
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
 };
 ```
 
@@ -384,31 +402,23 @@ const securityHeaders = {
 <CardGroup cols={2}>
 
 <Card title="Input Validation" icon="check">
-  - ✅ Validate all file paths
-  - ✅ Sanitize user inputs
-  - ✅ Limit input lengths
-  - ✅ Validate command arguments
+  - ✅ Validate all file paths - ✅ Sanitize user inputs - ✅ Limit input
+  lengths - ✅ Validate command arguments
 </Card>
 
 <Card title="File System" icon="folder">
-  - ✅ Use secure file permissions
-  - ✅ Prevent path traversal
-  - ✅ Clean up temporary files
-  - ✅ Validate file types
+  - ✅ Use secure file permissions - ✅ Prevent path traversal - ✅ Clean up
+  temporary files - ✅ Validate file types
 </Card>
 
 <Card title="Network" icon="globe">
-  - ✅ Enforce HTTPS
-  - ✅ Validate certificates
-  - ✅ Set request timeouts
-  - ✅ Limit redirects
+  - ✅ Enforce HTTPS - ✅ Validate certificates - ✅ Set request timeouts - ✅
+  Limit redirects
 </Card>
 
 <Card title="Credentials" icon="key">
-  - ✅ Use secure storage
-  - ✅ Never log secrets
-  - ✅ Implement token refresh
-  - ✅ Clear sensitive data
+  - ✅ Use secure storage - ✅ Never log secrets - ✅ Implement token refresh -
+  ✅ Clear sensitive data
 </Card>
 
 </CardGroup>

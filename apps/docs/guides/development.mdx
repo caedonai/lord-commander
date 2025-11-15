@@ -57,27 +57,27 @@ npx tsx watch src/cli.ts hello --name "Developer"
 
 ```typescript
 // tests/commands/hello.test.ts
-import { testCommand } from '@caedonai/lord-commander/testing';
-import { helloCommand } from '../src/commands/hello';
+import { testCommand } from "@caedonai/lord-commander/testing";
+import { helloCommand } from "../src/commands/hello";
 
-describe('hello command', () => {
-  it('should greet with default name', async () => {
+describe("hello command", () => {
+  it("should greet with default name", async () => {
     const result = await testCommand(helloCommand, {
       arguments: {},
-      options: {}
+      options: {},
     });
-    
-    expect(result.output).toContain('Hello, World!');
+
+    expect(result.output).toContain("Hello, World!");
     expect(result.exitCode).toBe(0);
   });
-  
-  it('should greet with custom name', async () => {
+
+  it("should greet with custom name", async () => {
     const result = await testCommand(helloCommand, {
-      arguments: { name: 'Alice' },
-      options: { enthusiastic: true }
+      arguments: { name: "Alice" },
+      options: { enthusiastic: true },
     });
-    
-    expect(result.output).toContain('Hello, Alice! 🎉');
+
+    expect(result.output).toContain("Hello, Alice! 🎉");
   });
 });
 ```
@@ -86,15 +86,15 @@ describe('hello command', () => {
 
 ```typescript
 // tests/integration/cli.test.ts
-import { execSync } from 'child_process';
+import { execSync } from "child_process";
 
-describe('CLI Integration', () => {
-  it('should work end-to-end', () => {
-    const output = execSync('./bin/my-cli hello Alice', {
-      encoding: 'utf8'
+describe("CLI Integration", () => {
+  it("should work end-to-end", () => {
+    const output = execSync("./bin/my-cli hello Alice", {
+      encoding: "utf8",
     });
-    
-    expect(output.trim()).toBe('Hello, Alice!');
+
+    expect(output.trim()).toBe("Hello, Alice!");
   });
 });
 ```
@@ -128,20 +128,20 @@ Create `.vscode/launch.json`:
 Add debug logging:
 
 ```typescript
-import debug from 'debug';
+import debug from "debug";
 
-const log = debug('my-cli:hello');
+const log = debug("my-cli:hello");
 
 export const helloCommand: Command = {
-  name: 'hello',
+  name: "hello",
   handler: async (args, options) => {
-    log('Executing hello command with args:', args);
-    log('Options:', options);
-    
+    log("Executing hello command with args:", args);
+    log("Options:", options);
+
     // Command logic
     const greeting = `Hello, ${args.name}!`;
     console.log(greeting);
-  }
+  },
 };
 ```
 
@@ -152,37 +152,37 @@ export const helloCommand: Command = {
 ```typescript
 // Lazy load heavy dependencies
 export const analyzeCommand: Command = {
-  name: 'analyze',
+  name: "analyze",
   handler: async (args, options) => {
-    const { performAnalysis } = await import('./heavy-analysis');
+    const { performAnalysis } = await import("./heavy-analysis");
     return performAnalysis(args, options);
-  }
+  },
 };
 ```
 
 ### Caching
 
 ```typescript
-import { createCache } from '@caedonai/lord-commander';
+import { createCache } from "@caedonai/lord-commander";
 
 const cache = createCache({
   ttl: 3600000, // 1 hour
-  directory: '.cache'
+  directory: ".cache",
 });
 
 export const fetchCommand: Command = {
-  name: 'fetch',
+  name: "fetch",
   handler: async (args) => {
     const cacheKey = `fetch-${args.url}`;
-    
+
     let data = await cache.get(cacheKey);
     if (!data) {
       data = await fetchData(args.url);
       await cache.set(cacheKey, data);
     }
-    
+
     console.log(data);
-  }
+  },
 };
 ```
 

@@ -24,13 +24,13 @@ lord-commander analyze --report
 
 ### Analysis Types
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--bundle` | Bundle size analysis | `true` |
-| `--deps` | Dependency analysis | `true` |
-| `--perf` | Performance metrics | `false` |
+| Option       | Description              | Default |
+| ------------ | ------------------------ | ------- |
+| `--bundle`   | Bundle size analysis     | `true`  |
+| `--deps`     | Dependency analysis      | `true`  |
+| `--perf`     | Performance metrics      | `false` |
 | `--security` | Security vulnerabilities | `false` |
-| `--quality` | Code quality metrics | `false` |
+| `--quality`  | Code quality metrics     | `false` |
 
 ```bash
 # Full analysis with all options
@@ -45,12 +45,12 @@ lord-commander analyze --perf --lighthouse
 
 ### Output Options
 
-| Option | Description | Output |
-|--------|-------------|---------|
-| `--verbose` | Detailed output | Console with details |
-| `--json` | JSON format | Structured data |
-| `--report` | HTML report | Interactive report |
-| `--ci` | CI-friendly output | Machine-readable |
+| Option      | Description        | Output               |
+| ----------- | ------------------ | -------------------- |
+| `--verbose` | Detailed output    | Console with details |
+| `--json`    | JSON format        | Structured data      |
+| `--report`  | HTML report        | Interactive report   |
+| `--ci`      | CI-friendly output | Machine-readable     |
 
 ```bash
 # JSON output for processing
@@ -65,12 +65,12 @@ lord-commander analyze --ci --threshold 500kb
 
 ### Filtering Options
 
-| Option | Description | Example |
-|--------|-------------|---------|
-| `--include` | Include patterns | `--include "src/**/*.ts"` |
-| `--exclude` | Exclude patterns | `--exclude "**/*.test.js"` |
-| `--entry` | Entry points | `--entry src/main.ts` |
-| `--chunks` | Analyze specific chunks | `--chunks vendor,main` |
+| Option      | Description             | Example                    |
+| ----------- | ----------------------- | -------------------------- |
+| `--include` | Include patterns        | `--include "src/**/*.ts"`  |
+| `--exclude` | Exclude patterns        | `--exclude "**/*.test.js"` |
+| `--entry`   | Entry points            | `--entry src/main.ts`      |
+| `--chunks`  | Analyze specific chunks | `--chunks vendor,main`     |
 
 ## Bundle Analysis
 
@@ -83,6 +83,7 @@ lord-commander analyze --bundle --verbose
 ```
 
 **Output:**
+
 ```
 📊 Bundle Analysis Results
 
@@ -106,6 +107,7 @@ lord-commander analyze --deps --top 10
 ```
 
 **Output:**
+
 ```
 📋 Dependency Analysis
 
@@ -134,6 +136,7 @@ lord-commander analyze --tree-shaking --unused
 ```
 
 **Output:**
+
 ```
 🌳 Tree Shaking Analysis
 
@@ -161,6 +164,7 @@ lord-commander analyze --perf --cwv
 ```
 
 **Output:**
+
 ```
 🚀 Performance Metrics (Core Web Vitals)
 
@@ -188,6 +192,7 @@ lord-commander analyze --lighthouse --mobile
 ```
 
 **Output:**
+
 ```
 🔍 Lighthouse Audit Results
 
@@ -216,6 +221,7 @@ lord-commander analyze --security --audit
 ```
 
 **Output:**
+
 ```
 🛡️  Security Analysis
 
@@ -228,7 +234,7 @@ Vulnerability Scan Results:
 🔴 High Severity Issues:
 1. lodash <4.17.12 (Prototype Pollution)
    Fix: npm update lodash@^4.17.21
-   
+
 2. axios <0.21.2 (Server-Side Request Forgery)
    Fix: npm update axios@^1.4.0
 
@@ -246,6 +252,7 @@ lord-commander analyze --security --deps-check
 ```
 
 **Output:**
+
 ```
 🔍 Dependency Security Check
 
@@ -274,6 +281,7 @@ lord-commander analyze --quality --complexity
 ```
 
 **Output:**
+
 ```
 📏 Code Quality Metrics
 
@@ -289,7 +297,7 @@ Technical Debt:
 
 🔍 Maintainability Index:
 ├── Excellent (>85): 67 files
-├── Good (70-85): 23 files  
+├── Good (70-85): 23 files
 ├── Fair (50-70): 8 files
 └── Poor (<50): 2 files ⚠️
 ```
@@ -301,6 +309,7 @@ lord-commander analyze --quality --duplication
 ```
 
 **Output:**
+
 ```
 📋 Code Duplication Analysis
 
@@ -312,7 +321,7 @@ Duplication Summary:
 🔍 Major Duplications:
 1. UserForm validation logic (45 lines)
    Files: UserCreate.tsx, UserEdit.tsx
-   
+
 2. API error handling (23 lines)
    Files: api/users.ts, api/products.ts, api/orders.ts
 
@@ -328,12 +337,12 @@ Duplication Summary:
 
 Lord Commander uses standard exit codes for CI/CD integration:
 
-| Exit Code | Meaning |
-|-----------|---------|
-| `0` | Analysis successful, no issues |
-| `1` | Analysis failed (technical error) |
-| `2` | Thresholds exceeded |
-| `3` | Security vulnerabilities found |
+| Exit Code | Meaning                           |
+| --------- | --------------------------------- |
+| `0`       | Analysis successful, no issues    |
+| `1`       | Analysis failed (technical error) |
+| `2`       | Thresholds exceeded               |
+| `3`       | Security vulnerabilities found    |
 
 ### Threshold Configuration
 
@@ -362,18 +371,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          
+          node-version: "18"
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Build project
         run: npm run build
-        
+
       - name: Analyze bundle
         run: |
           lord-commander analyze \
@@ -382,29 +391,29 @@ jobs:
             --threshold 500kb \
             --report \
             --output ./reports/
-            
+
       - name: Upload reports
         uses: actions/upload-artifact@v3
         with:
           name: analysis-reports
           path: ./reports/
-          
+
       - name: Comment PR
         uses: actions/github-script@v6
         with:
           script: |
             const fs = require('fs');
             const analysis = JSON.parse(fs.readFileSync('./reports/analysis.json', 'utf8'));
-            
+
             const comment = `
             ## Bundle Analysis Results
-            
+
             **Total Size:** ${analysis.bundleSize}
             **Change:** ${analysis.sizeChange > 0 ? '+' : ''}${analysis.sizeChange}
-            
+
             ${analysis.recommendations.map(rec => `• ${rec}`).join('\n')}
             `;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -422,6 +431,7 @@ lord-commander analyze --report --output ./reports/
 ```
 
 Generated HTML report includes:
+
 - Interactive bundle visualization
 - Dependency tree explorer
 - Performance metrics dashboard
@@ -434,6 +444,7 @@ lord-commander analyze --json --output analysis.json
 ```
 
 **JSON Schema:**
+
 ```json
 {
   "timestamp": "2023-12-07T10:30:00Z",
@@ -482,6 +493,7 @@ lord-commander analyze --config ./analysis.config.json
 ```
 
 **Configuration:**
+
 ```json
 {
   "thresholds": {
@@ -503,11 +515,7 @@ lord-commander analyze --config ./analysis.config.json
       "libraries": ["lodash", "moment"]
     }
   },
-  "ignore": [
-    "**/*.test.js",
-    "**/node_modules/**",
-    "dist/**"
-  ]
+  "ignore": ["**/*.test.js", "**/node_modules/**", "dist/**"]
 }
 ```
 
@@ -522,6 +530,7 @@ lord-commander analyze --compare baseline.json
 ```
 
 **Comparison Output:**
+
 ```
 📊 Baseline Comparison
 
