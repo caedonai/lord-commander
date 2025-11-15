@@ -35,8 +35,8 @@ Commands can be either `.ts` (TypeScript) or `.mjs` (JavaScript) files that expo
 
 ```typescript
 // TypeScript command pattern (recommended for type safety)
-import type { CommandContext } from '@lord-commander/cli-core';
-import type { Command } from 'commander';
+import type { CommandContext } from "@lord-commander/cli-core";
+import type { Command } from "commander";
 
 export default function (program: Command, context: CommandContext) {
   const { logger, prompts, fs, execa } = context;
@@ -249,7 +249,7 @@ pnpx nx lint cli
 
 1. Create new `.ts` or `.mjs` file in `apps/cli/commands/`
 2. For TypeScript: Import `CommandContext` and `Command` types
-3. Export default function that receives `(program, context)` 
+3. Export default function that receives `(program, context)`
 4. Use Commander.js patterns with SDK utilities
 5. Update `project.json` assets if not already configured
 6. Build and test from correct working directory
@@ -258,8 +258,8 @@ pnpx nx lint cli
 
 ```typescript
 // apps/cli/commands/deploy.ts
-import type { CommandContext } from '@lord-commander/cli-core';
-import type { Command } from 'commander';
+import type { CommandContext } from "@lord-commander/cli-core";
+import type { Command } from "commander";
 
 export default function (program: Command, context: CommandContext) {
   const { logger, prompts, execa } = context;
@@ -404,7 +404,7 @@ libs/cli-core/
 │       └── cli.ts             # TypeScript interfaces
 
 dist/apps/cli/                   # Build output
-├── commands/                    # Commands copied from source  
+├── commands/                    # Commands copied from source
 │   └── status.js               # Compiled TypeScript commands
 └── main.js                     # Bundled CLI executable
 ```
