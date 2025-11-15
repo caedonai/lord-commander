@@ -2,200 +2,350 @@
 
 ## Context
 
-This is the main CLI application for Lord Commander SDK. When working on this app, focus on creating excellent developer experience through intuitive commands, helpful output, and robust error handling.
+This is the main CLI application for Lord Commander SDK. It uses the `@lord-commander/cli-core` library and loads commands from `libs/cli-core/commands/`. When working on this app, focus on leveraging the SDK's powerful CLI framework for excellent developer experience.
+
+## Architecture Overview
+
+**CLI Structure:**
+- `apps/cli/src/main.ts`: Thin wrapper using `createCLI` from cli-core
+- `apps/cli/commands/`: Custom command implementations (.mjs files) - auto-loaded
+- `libs/cli-core/`: SDK library with built-in commands and example commands
+- Auto-discovery: Commands auto-loaded from `./commands` relative to CLI working directory
+
+**Available Commands:**
+- Built-in commands from SDK: `completion`, `hello`, `version`
+- Custom commands: Add `.mjs` files to `apps/cli/commands/`
+- CLI-core examples: `init`, `scaffold`, `analyze`, `demo` (in `libs/cli-core/commands/` - for reference)
 
 ## CLI-Specific Guidelines
 
 ### Command Design Philosophy
 
-- **Discoverability**: Commands should be intuitive and self-documenting
-- **Consistency**: Use consistent patterns across all commands
-- **Helpfulness**: Provide clear help text and examples
-- **Safety**: Include confirmations for destructive operations
-- **Performance**: Optimize for fast startup and execution
+- **SDK-First**: Leverage cli-core utilities (logger, prompts, fs, execa)
+- **Interactive**: Use `@clack/prompts` for excellent UX
+- **Consistent**: Follow established patterns in cli-core commands
+- **Safe**: Validate inputs and confirm destructive operations
+- **Fast**: Optimize for quick startup using SDK features
 
-### Command Structure
+### Command Implementation Pattern
 
-**Base Commands:**
-- `init` - Initialize new CLI projects
-- `create` - Generate components and files
-- `build` - Compile and bundle CLI applications
-- `dev` - Development mode with hot reloading
-- `test` - Run test suites
+Commands are `.mjs` files that export a default function:
 
-**Command Patterns:**
-```typescript
-// Use Commander.js patterns consistently
-program
-  .command('init [projectName]')
-  .description('Initialize a new CLI project')
-  .option('-t, --template <type>', 'Project template', 'basic')
-  .option('-f, --force', 'Overwrite existing files')
-  .action(async (projectName, options) => {
-    // Implementation
-  });
+```javascript
+// Standard command pattern (from cli-core/commands/*.mjs)
+import { Command } from 'commander';
+
+export default function(program, context) {
+  const { logger, prompts, fs, execa } = context;
+  
+  program
+    .command('command-name')
+    .description('Command description')
+    .argument('[arg]', 'Optional argument')
+    .option('-f, --flag', 'Option flag')
+    .action(async (arg, options) => {
+      logger.intro('Command Title');
+      
+      // Interactive prompts with validation
+      const input = await prompts.text({
+        message: 'Enter value:',
+        validate: (value) => value ? true : 'Value required'
+      });
+      
+      // Handle cancellation
+      if (prompts.isCancel(input)) {
+        prompts.cancel('Operation cancelled.');
+        process.exit(0);
+      }
+      
+      // Show progress
+      const spinner = logger.spinner('Processing...');
+      // ... async work
+      spinner.success('Complete!');
+      
+      logger.outro('✨ Done!');
+    });
+}
 ```
 
-### User Experience Guidelines
+### SDK Context Utilities
 
-**Output Standards:**
-- Use colors and symbols for visual hierarchy
-- Show progress indicators for long operations
-- Provide clear success/error messages
-- Include helpful next steps in output
+All commands receive a `context` object with powerful utilities:
 
-**Interactive Prompts:**
-- Use inquirer.js for consistent prompt experience
-- Validate user input properly
-- Provide sensible defaults
-- Allow keyboard navigation
+**Logger (from @clack/prompts):**
+```javascript
+const { logger } = context;
 
-**Error Handling:**
-- Show user-friendly error messages
-- Include actionable troubleshooting steps
-- Log detailed errors for debugging
-- Exit with appropriate codes (0 = success, 1+ = error)
+logger.intro('🚀 Starting operation');          // Beautiful intro
+logger.info('Processing files...');              // Info message  
+logger.success('✅ Files processed!');           // Success message
+logger.error('❌ Operation failed');             // Error message
+logger.warn('⚠️ Warning message');               // Warning message
+logger.debug('Debug info');                      // Debug (if verbose)
 
-### Output Formatting
+const spinner = logger.spinner('Loading...');    // Progress spinner
+spinner.success('Done!');                        // Complete spinner
+spinner.error('Failed!');                        // Error spinner
 
-**Terminal Output:**
-```typescript
-// Use consistent styling
-import { success, error, info, warning } from '../lib/logger';
-
-success('✅ Project created successfully!');
-error('❌ Failed to create project');
-info('ℹ️  Running initial setup...');
-warning('⚠️  This will overwrite existing files');
+logger.outro('✨ Operation complete!');          // Beautiful outro
 ```
 
-**Progress Indicators:**
-- Use spinners for network operations
-- Show progress bars for file operations
-- Display step-by-step progress for multi-stage commands
+**Prompts (from @clack/prompts):**
+```javascript
+const { prompts } = context;
 
-### File System Operations
+// Text input with validation
+const name = await prompts.text({
+  message: 'Project name?',
+  placeholder: 'my-project',
+  validate: (value) => value ? true : 'Name required'
+});
 
-**Path Handling:**
-- Always use `path.resolve()` for absolute paths
-- Handle Windows/Unix path differences
-- Validate paths before operations
-- Use proper error handling for file operations
+// Select from options
+const framework = await prompts.select({
+  message: 'Choose framework:',
+  options: [
+    { value: 'ts', label: 'TypeScript' },
+    { value: 'js', label: 'JavaScript' }
+  ]
+});
 
-**Template Processing:**
-- Support multiple template engines (handlebars, ejs)
-- Allow dynamic variable replacement
-- Maintain file permissions during copying
-- Handle binary files appropriately
+// Multi-select
+const features = await prompts.multiselect({
+  message: 'Features to include:',
+  options: [
+    { value: 'git', label: 'Git repository' },
+    { value: 'tests', label: 'Testing setup' }
+  ],
+  initialValues: ['git']
+});
 
-### Configuration Management
+// Confirmation
+const confirm = await prompts.confirm({
+  message: 'Proceed?'
+});
 
-**Config Files:**
-- Support both JSON and YAML configuration
-- Provide schema validation for config files
-- Use sensible defaults for missing config
-- Allow environment variable overrides
+// Always handle cancellation
+if (prompts.isCancel(name)) {
+  prompts.cancel('Operation cancelled.');
+  process.exit(0);
+}
+```
 
-**Global vs Local Config:**
-- Global: `~/.lord-commander/config.json`
-- Local: `./lord-commander.config.json`
-- Merge configurations with proper precedence
+**File System (enhanced fs utilities):**
+```javascript
+const { fs } = context;
 
-### Testing CLI Applications
+await fs.ensureDir('path/to/dir');               // Create directory
+await fs.writeFile('file.json', JSON.stringify(data, null, 2));
+const content = await fs.readFile('file.txt');   
+const exists = fs.exists('path/to/file');        // Sync check
+await fs.copy('src', 'dest');                    // Copy files/dirs
+await fs.remove('path');                         // Remove files/dirs
+```
 
-**Testing Strategies:**
-- Mock file system operations
-- Test command parsing and validation
-- Verify output formatting and colors
-- Test interactive prompts programmatically
+**Command Execution (execa wrapper):**
+```javascript
+const { execa } = context;
 
-**Integration Tests:**
-- Test complete workflows end-to-end
-- Verify generated files and structure
-- Test error scenarios and recovery
-- Validate cross-platform compatibility
+// Execute commands safely
+const result = await execa('npm', ['--version']);
+console.log(result.stdout); // Command output
 
-### Performance Considerations
+// With options
+await execa('git', ['init'], { cwd: projectDir });
+```
 
-**Startup Time:**
-- Lazy-load heavy dependencies
-- Cache expensive computations
-- Minimize initial imports
-- Use dynamic imports where possible
+### Main CLI Configuration
 
-**Memory Usage:**
-- Stream large files instead of loading in memory
-- Clean up temporary files and resources
-- Avoid memory leaks in long-running operations
+The main CLI is configured in `apps/cli/src/main.ts` using `createCLI`:
 
-### Cross-Platform Support
+```typescript
+// Actual configuration from main.ts
+import { createCLI } from '@lord-commander/cli-core';
 
-**Platform Differences:**
-- Handle different shell environments (bash, zsh, PowerShell)
-- Support Windows, macOS, and Linux file systems
-- Test on multiple Node.js versions
-- Handle different terminal capabilities
+const program = await createCLI({
+  name: 'lord-commander',
+  version: '1.0.0',
+  description: 'Professional CLI SDK Framework for building advanced command-line tools',
+  commandsPath: './commands',        // Loads from apps/cli/commands/
+  builtinCommands: {
+    completion: true,                // Enable shell completion management
+    hello: true,                    // Enable demo command  
+    version: true                   // Enable version command
+  },
+  autocomplete: {
+    enabled: true,                  // Enable shell completion
+    autoInstall: true,             // Auto-install completion on first run
+    shells: ['bash', 'zsh', 'fish', 'powershell'],
+    enableFileCompletion: true
+  },
+  autoStart: true                   // Start immediately (default)
+});
+```
+
+### Command Location and Loading
+
+**Command Discovery:**
+- Commands auto-load from `apps/cli/commands/` directory (via `./commands` path)
+- Built-in commands from SDK: `completion`, `hello`, `version`  
+- Commands must be `.mjs` files (ES modules) for dynamic import
+- Must be copied to build output via assets configuration in `project.json`
+
+**Command Registration:**
+- Each command file exports a default function: `export default function(program, context)`
+- Function receives `(program, context)` parameters
+- Uses Commander.js for command definition  
+- Context provides logger, prompts, fs, execa utilities from SDK
+
+**Build Configuration:**
+Commands directory must be included in build assets:
+```json
+// apps/cli/project.json
+"assets": [
+  {
+    "glob": "**/*",
+    "input": "apps/cli/commands", 
+    "output": "./commands"
+  }
+]
+```
 
 ### Development Workflow
 
 **Local Development:**
+
 ```bash
-# Link CLI for testing
-pnpx nx run cli:build
-npm link dist/apps/cli
+# Build the CLI
+pnpx nx build cli
 
-# Test commands locally
-lord-commander init test-project
+# Run CLI commands locally (after build)
+node dist/apps/cli/main.js init --help
+node dist/apps/cli/main.js scaffold my-project
 
-# Run tests
+# Run in development mode
+pnpx nx dev cli
+
+# Test the CLI
 pnpx nx test cli
 
-# Build for distribution
-pnpx nx build cli --prod
+# Lint the CLI code
+pnpx nx lint cli
 ```
 
-### Command Implementation Pattern
+**Adding New Commands:**
 
-```typescript
-// Standard command structure
-export async function initCommand(
-  projectName: string,
-  options: InitOptions
-): Promise<void> {
-  try {
-    // 1. Validate input
-    validateProjectName(projectName);
-    
-    // 2. Show progress
-    const spinner = createSpinner('Initializing project...');
-    
-    // 3. Perform operations
-    await createProject(projectName, options);
-    
-    // 4. Show success
-    spinner.succeed('Project created successfully!');
-    
-    // 5. Show next steps
-    showNextSteps(projectName);
-  } catch (error) {
-    // 6. Handle errors gracefully
-    handleError(error);
-  }
+1. Create new `.mjs` file in `apps/cli/commands/`
+2. Export default function that receives `(program, context)`
+3. Use Commander.js patterns with SDK utilities
+4. Update `project.json` assets if not already configured
+5. Build and test from correct working directory
+
+**Example New Command:**
+```javascript
+// apps/cli/commands/deploy.mjs
+export default function(program, context) {
+  const { logger, prompts, execa } = context;
+  
+  program
+    .command('deploy')
+    .description('Deploy application')  
+    .option('-e, --env <env>', 'Environment', 'production')
+    .action(async (options) => {
+      logger.intro('🚀 Deploying Application');
+      
+      const confirm = await prompts.confirm({
+        message: `Deploy to ${options.env}?`
+      });
+      
+      if (prompts.isCancel(confirm) || !confirm) {
+        prompts.cancel('Deployment cancelled.');
+        return;
+      }
+      
+      const spinner = logger.spinner('Deploying...');
+      await execa('npm', ['run', 'deploy']);
+      spinner.success('Deployed successfully!');
+      
+      logger.outro('✨ Deployment complete!');
+    });
 }
 ```
 
-### Help and Documentation
+### Testing and Quality
 
-**Help Text:**
-- Include usage examples in help output
-- Show common option combinations
-- Provide links to full documentation
-- Include troubleshooting tips
+**Testing Strategy:**
+- Use the SDK's built-in testing utilities
+- Mock context utilities (logger, prompts, fs, execa)
+- Test command logic separately from Commander.js registration
+- Verify interactive prompts and user flows
 
-**Auto-completion:**
-- Support shell auto-completion
-- Include command and option completion
-- Provide context-aware suggestions
+**Quality Standards:**
+- Follow cli-core patterns consistently
+- Use SDK context utilities exclusively
+- Handle user cancellation gracefully
+- Provide clear progress feedback
+- Validate inputs thoroughly
+
+### Error Handling Best Practices
+
+```javascript
+// Proper error handling in commands
+export default function(program, context) {
+  const { logger, prompts } = context;
+  
+  program
+    .command('risky-operation')
+    .action(async () => {
+      try {
+        logger.intro('Risky Operation');
+        
+        // Validate prerequisites
+        if (!someCondition) {
+          logger.error('Prerequisites not met');
+          process.exit(1);
+        }
+        
+        // Confirm destructive operations
+        const confirm = await prompts.confirm({
+          message: 'This will modify files. Continue?'
+        });
+        
+        if (prompts.isCancel(confirm) || !confirm) {
+          prompts.cancel('Operation cancelled.');
+          return; // Exit gracefully
+        }
+        
+        // Show progress for long operations
+        const spinner = logger.spinner('Processing...');
+        
+        // Perform operation
+        await performRiskyOperation();
+        
+        spinner.success('Operation completed!');
+        logger.outro('✨ All done!');
+        
+      } catch (error) {
+        logger.error(`Operation failed: ${error.message}`);
+        logger.info('Please check the logs and try again.');
+        process.exit(1);
+      }
+    });
+}
+```
+
+### Built-in Features
+
+**Shell Completion:**
+- Enabled by default via `builtinCommands.completion: true`
+- Users can install with `lord-commander completion install`
+- Supports bash, zsh, fish, and PowerShell
+
+**Plugin System:**
+- Git operations: Enable with `plugins.git: true`
+- Workspace management: Enable with `plugins.workspace: true`  
+- Auto-updater: Enable with `plugins.updater: true`
+- Plugins add utilities to command context
 
 ## Code Quality Standards
 
@@ -210,21 +360,44 @@ export async function initCommand(
 
 ```
 apps/cli/
+├── .github/
+│   └── copilot-instructions.md  # This file
+├── commands/                    # Custom CLI command implementations
+│   └── status.mjs              # Example custom command
 ├── src/
-│   ├── commands/     # Command implementations
-│   ├── lib/          # Shared utilities
-│   ├── templates/    # Project templates
-│   └── main.ts       # CLI entry point
-└── package.json      # CLI-specific dependencies
+│   └── main.ts                  # CLI entry point (uses createCLI)
+├── package.json                 # CLI app dependencies  
+└── project.json                 # NX project configuration (with assets config)
+
+libs/cli-core/
+├── commands/                    # Example command implementations (for reference)
+│   ├── init.mjs                # Interactive project wizard example
+│   ├── scaffold.mjs            # Project scaffolding example
+│   ├── analyze.mjs             # Project analysis example
+│   └── demo.mjs                # Demo command example
+├── src/
+│   ├── core/
+│   │   └── createCLI.ts        # Main CLI factory function
+│   ├── commands/               # Built-in SDK commands
+│   │   ├── completion.ts       # Shell completion (built-in)
+│   │   ├── hello.ts           # Demo command (built-in)
+│   │   └── version.ts         # Version command (built-in)
+│   └── types/
+│       └── cli.ts             # TypeScript interfaces
+
+dist/apps/cli/                   # Build output
+├── commands/                    # Commands copied from source
+│   └── status.mjs              # Copied custom commands
+└── main.js                     # Bundled CLI executable
 ```
 
 ## Quality Checklist
 
-- [ ] Commands have clear help text and examples
-- [ ] Error messages are user-friendly and actionable
-- [ ] Interactive prompts validate input properly
-- [ ] Output uses consistent formatting and colors
-- [ ] File operations handle errors gracefully
-- [ ] Commands work across different platforms
-- [ ] Performance is optimized for quick startup
-- [ ] Auto-completion works in supported shells
+- [ ] Use SDK context utilities exclusively (logger, prompts, fs, execa)
+- [ ] Follow `.mjs` command file pattern with default export
+- [ ] Handle user cancellation gracefully with `prompts.isCancel()`
+- [ ] Provide clear progress feedback with intro/outro/spinners
+- [ ] Validate inputs with proper error messages
+- [ ] Use consistent @clack/prompts patterns
+- [ ] Test commands work with SDK auto-discovery
+- [ ] Commands integrate well with built-in completion system

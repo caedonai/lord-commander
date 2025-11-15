@@ -57,6 +57,8 @@
       "apps/*/src/**/*.tsx",
       "apps/*/src/**/*.js",
       "apps/*/src/**/*.jsx",
+      "apps/*/commands/**/*.ts",
+      "apps/*/commands/**/*.js",
       "*.ts",
       "*.js"
     ],

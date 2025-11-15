@@ -69,10 +69,11 @@ Follow this sequence for each feature or bug fix:
 This is an NX monorepo with multiple applications and libraries:
 
 **Project Structure:**
+
 - `apps/api/` - Backend API server
 - `apps/cli/` - Command-line interface
 - `apps/dashboard-ui/` - Admin dashboard (Next.js)
-- `apps/docs/` - Documentation (Mintlify) 
+- `apps/docs/` - Documentation (Mintlify)
 - `apps/marketing/` - Marketing website (Next.js)
 - `libs/cli-core/` - Shared CLI utilities
 
@@ -80,6 +81,7 @@ This is an NX monorepo with multiple applications and libraries:
 Before working on any app, **always check if there's an app-specific `.github/copilot-instructions.md` file** in that app's directory. If it exists, follow those instructions in addition to these workspace-wide guidelines.
 
 **NX Commands:**
+
 - Use `pnpx nx <target> <project>` for single projects
 - Use `pnpm <script>` for workspace-wide operations
 - Always run tests and lint checks before committing

@@ -28,7 +28,7 @@ async function main(): Promise<void> {
       },
       autocomplete: {
         enabled: true,
-        autoInstall: true,
+        autoInstall: false, // Don't auto-install on every run
         shells: ['bash', 'zsh', 'fish', 'powershell'],
         enableFileCompletion: true,
       },
