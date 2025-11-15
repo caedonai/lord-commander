@@ -64,15 +64,37 @@ Follow this sequence for each feature or bug fix:
 
 ---
 
-## 5. AI/Copilot Behavior
+## 5. NX Monorepo Context
+
+This is an NX monorepo with multiple applications and libraries:
+
+**Project Structure:**
+- `apps/api/` - Backend API server
+- `apps/cli/` - Command-line interface
+- `apps/dashboard-ui/` - Admin dashboard (Next.js)
+- `apps/docs/` - Documentation (Mintlify) 
+- `apps/marketing/` - Marketing website (Next.js)
+- `libs/cli-core/` - Shared CLI utilities
+
+**App-Specific Instructions:**
+Before working on any app, **always check if there's an app-specific `.github/copilot-instructions.md` file** in that app's directory. If it exists, follow those instructions in addition to these workspace-wide guidelines.
+
+**NX Commands:**
+- Use `pnpx nx <target> <project>` for single projects
+- Use `pnpm <script>` for workspace-wide operations
+- Always run tests and lint checks before committing
+
+## 6. AI/Copilot Behavior
 
 When generating or refactoring code:
 
+- **Check for app-specific instructions first** (e.g., `apps/docs/.github/copilot-instructions.md`)
 - Write **tests before implementation**.
 - Suggest meaningful test names and assertions.
 - Propose **refactors only if they simplify logic or improve performance**.
 - Never skip type checks, error handling, or lint rules.
 - Maintain consistency with existing patterns and naming conventions.
+- Use appropriate NX project structure and naming conventions.
 
 ---
 
