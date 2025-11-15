@@ -24,10 +24,10 @@ lord-commander init --framework vue --language typescript --package-manager pnpm
 
 ### Framework Selection
 
-| Option | Description | Supported Values |
-|--------|-------------|------------------|
-| `--framework` | Target framework | `react`, `vue`, `angular`, `svelte`, `node` |
-| `--version` | Framework version | Auto-detected or specified |
+| Option        | Description       | Supported Values                            |
+| ------------- | ----------------- | ------------------------------------------- |
+| `--framework` | Target framework  | `react`, `vue`, `angular`, `svelte`, `node` |
+| `--version`   | Framework version | Auto-detected or specified                  |
 
 ```bash
 # React with latest version
@@ -42,11 +42,11 @@ lord-commander init --framework angular --standalone
 
 ### Language Configuration
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--language` | Primary language | `typescript` |
-| `--strict` | TypeScript strict mode | `true` |
-| `--jsx` | JSX transform | `react-jsx` |
+| Option       | Description            | Default      |
+| ------------ | ---------------------- | ------------ |
+| `--language` | Primary language       | `typescript` |
+| `--strict`   | TypeScript strict mode | `true`       |
+| `--jsx`      | JSX transform          | `react-jsx`  |
 
 ```bash
 # JavaScript project
@@ -61,10 +61,10 @@ lord-commander init --framework react --jsx react-jsx
 
 ### Package Management
 
-| Option | Description | Auto-detected |
-|--------|-------------|---------------|
+| Option              | Description     | Auto-detected                  |
+| ------------------- | --------------- | ------------------------------ |
 | `--package-manager` | Package manager | From lockfile or global config |
-| `--registry` | npm registry | `https://registry.npmjs.org/` |
+| `--registry`        | npm registry    | `https://registry.npmjs.org/`  |
 
 ```bash
 # Use pnpm
@@ -76,11 +76,11 @@ lord-commander init --registry https://npm.company.com/
 
 ### Project Structure
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--structure` | Directory layout | `standard` |
-| `--src-dir` | Source directory | `src` |
-| `--public-dir` | Public assets | `public` |
+| Option         | Description      | Default    |
+| -------------- | ---------------- | ---------- |
+| `--structure`  | Directory layout | `standard` |
+| `--src-dir`    | Source directory | `src`      |
+| `--public-dir` | Public assets    | `public`   |
 
 ```bash
 # Custom structure
@@ -101,11 +101,13 @@ lord-commander init
 ### Interactive Prompts
 
 1. **Project Name**
+
    ```
    ? What is your project name? (my-app)
    ```
 
 2. **Framework Selection**
+
    ```
    ? Which framework would you like to use?
    ❯ React
@@ -116,11 +118,13 @@ lord-commander init
    ```
 
 3. **Language Preference**
+
    ```
    ? Do you want to use TypeScript? (Y/n)
    ```
 
 4. **Package Manager**
+
    ```
    ? Which package manager do you prefer?
    ❯ pnpm (recommended)
@@ -147,6 +151,7 @@ lord-commander init --template react-typescript
 ```
 
 **Generated structure:**
+
 ```
 my-react-app/
 ├── src/
@@ -179,6 +184,7 @@ lord-commander init --template vue-composition
 ```
 
 **Generated structure:**
+
 ```
 my-vue-app/
 ├── src/
@@ -210,6 +216,7 @@ lord-commander init --template node-api
 ```
 
 **Generated structure:**
+
 ```
 my-api/
 ├── src/
@@ -236,18 +243,19 @@ my-api/
 ### Build Tools Configuration
 
 **Vite Configuration (vite.config.ts):**
+
 ```typescript
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { resolve } from "path";
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
-      '@components': resolve(__dirname, 'src/components'),
-      '@utils': resolve(__dirname, 'src/utils'),
+      "@": resolve(__dirname, "src"),
+      "@components": resolve(__dirname, "src/components"),
+      "@utils": resolve(__dirname, "src/utils"),
     },
   },
   server: {
@@ -255,13 +263,14 @@ export default defineConfig({
     open: true,
   },
   build: {
-    outDir: 'dist',
+    outDir: "dist",
     sourcemap: true,
   },
 });
 ```
 
 **TypeScript Configuration (tsconfig.json):**
+
 ```json
 {
   "compilerOptions": {
@@ -295,19 +304,20 @@ export default defineConfig({
 ### Testing Configuration
 
 **Vitest Configuration (vitest.config.ts):**
+
 ```typescript
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import { resolve } from "path";
 
 export default defineConfig({
   plugins: [react()],
   test: {
-    environment: 'jsdom',
-    setupFiles: ['./tests/setup.ts'],
+    environment: "jsdom",
+    setupFiles: ["./tests/setup.ts"],
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      provider: "v8",
+      reporter: ["text", "json", "html"],
       threshold: {
         global: {
           branches: 80,
@@ -320,7 +330,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, 'src'),
+      "@": resolve(__dirname, "src"),
     },
   },
 });
@@ -329,6 +339,7 @@ export default defineConfig({
 ### Linting Configuration
 
 **ESLint Configuration (.eslintrc.json):**
+
 ```json
 {
   "extends": [
@@ -428,30 +439,21 @@ Additional commands:
 
 <AccordionGroup>
   <Accordion icon="folder" title="Directory Not Empty">
-    **Error:** `Directory './my-app' is not empty`
-    
-    **Solutions:**
-    - Use `--force` to initialize in non-empty directory
-    - Choose a different directory name
-    - Clean the directory first
+    **Error:** `Directory './my-app' is not empty` **Solutions:** - Use
+    `--force` to initialize in non-empty directory - Choose a different
+    directory name - Clean the directory first
   </Accordion>
-  
+
   <Accordion icon="network-wired" title="Network Issues">
-    **Error:** `Failed to download template`
-    
-    **Solutions:**
-    - Check internet connection
-    - Use `--offline` mode with cached templates
-    - Configure proxy settings if behind firewall
+    **Error:** `Failed to download template` **Solutions:** - Check internet
+    connection - Use `--offline` mode with cached templates - Configure proxy
+    settings if behind firewall
   </Accordion>
-  
+
   <Accordion icon="exclamation-triangle" title="Permission Errors">
-    **Error:** `Permission denied`
-    
-    **Solutions:**
-    - Check directory permissions
-    - Run with appropriate user permissions
-    - Use `sudo` if necessary (not recommended)
+    **Error:** `Permission denied` **Solutions:** - Check directory permissions
+    - Run with appropriate user permissions - Use `sudo` if necessary (not
+    recommended)
   </Accordion>
 </AccordionGroup>
 
@@ -468,7 +470,7 @@ Additional commands:
       --linting eslint
     ```
   </Tab>
-  
+
   <Tab title="Vue 3 + Composition API">
     ```bash
     lord-commander init \
@@ -479,7 +481,7 @@ Additional commands:
       --state-management pinia
     ```
   </Tab>
-  
+
   <Tab title="Node.js API">
     ```bash
     lord-commander init \

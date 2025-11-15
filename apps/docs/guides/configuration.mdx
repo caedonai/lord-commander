@@ -19,6 +19,7 @@ Lord Commander uses a flexible configuration system that allows you to customize
 ### Location
 
 Global configuration is stored at:
+
 - **macOS/Linux:** `~/.config/lord-commander/config.json`
 - **Windows:** `%APPDATA%\lord-commander\config.json`
 
@@ -49,7 +50,10 @@ lord-commander config --global set packageManager pnpm
   },
   "plugins": {
     "directory": "~/.config/lord-commander/plugins",
-    "enabled": ["@lordcommander/react-plugin", "@lordcommander/typescript-plugin"]
+    "enabled": [
+      "@lordcommander/react-plugin",
+      "@lordcommander/typescript-plugin"
+    ]
   },
   "editor": {
     "command": "code",
@@ -226,32 +230,32 @@ lord-commander templates create component --name my-component-template
 
 Templates support various built-in variables:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `name` | Original name | `userProfile` |
-| `pascalCase` | PascalCase | `UserProfile` |
-| `camelCase` | camelCase | `userProfile` |
-| `kebabCase` | kebab-case | `user-profile` |
-| `snakeCase` | snake_case | `user_profile` |
-| `titleCase` | Title Case | `User Profile` |
-| `upperCase` | UPPER_CASE | `USER_PROFILE` |
+| Variable     | Description   | Example        |
+| ------------ | ------------- | -------------- |
+| `name`       | Original name | `userProfile`  |
+| `pascalCase` | PascalCase    | `UserProfile`  |
+| `camelCase`  | camelCase     | `userProfile`  |
+| `kebabCase`  | kebab-case    | `user-profile` |
+| `snakeCase`  | snake_case    | `user_profile` |
+| `titleCase`  | Title Case    | `User Profile` |
+| `upperCase`  | UPPER_CASE    | `USER_PROFILE` |
 
 ### Template Helpers
 
 ```handlebars
-{{!-- Conditional rendering --}}
+{{! Conditional rendering }}
 {{#if typescript}}
-interface {{pascalCase name}}Props {
-  // Props interface
-}
+  interface
+  {{pascalCase name}}Props { // Props interface }
 {{/if}}
 
-{{!-- Loops --}}
+{{! Loops }}
 {{#each props}}
-  {{this.name}}: {{this.type}};
+  {{this.name}}:
+  {{this.type}};
 {{/each}}
 
-{{!-- Custom helpers --}}
+{{! Custom helpers }}
 {{formatDate createdAt}}
 {{pluralize name}}
 ```
@@ -471,21 +475,19 @@ lord-commander config validate --verbose
 
 <AccordionGroup>
   <Accordion icon="triangle-exclamation" title="Invalid Framework">
-    **Error:** `Invalid framework 'reactjs'. Must be one of: react, vue, angular, svelte`
-    
-    **Solution:** Use the correct framework name from the supported list.
+    **Error:** `Invalid framework 'reactjs'. Must be one of: react, vue,
+    angular, svelte` **Solution:** Use the correct framework name from the
+    supported list.
   </Accordion>
-  
+
   <Accordion icon="triangle-exclamation" title="Invalid Path">
-    **Error:** `Path './src/components' does not exist`
-    
-    **Solution:** Ensure all configured paths exist or use relative paths from project root.
+    **Error:** `Path './src/components' does not exist` **Solution:** Ensure all
+    configured paths exist or use relative paths from project root.
   </Accordion>
-  
+
   <Accordion icon="triangle-exclamation" title="Plugin Not Found">
-    **Error:** `Plugin '@lordcommander/unknown-plugin' not found`
-    
-    **Solution:** Install the plugin or remove it from the enabled plugins list.
+    **Error:** `Plugin '@lordcommander/unknown-plugin' not found` **Solution:**
+    Install the plugin or remove it from the enabled plugins list.
   </Accordion>
 </AccordionGroup>
 
@@ -493,24 +495,24 @@ lord-commander config validate --verbose
 
 <Tabs>
   <Tab title="Team Configuration">
-    - **Version control:** Include `.lordcommander/config.json` in your repository
-    - **Documentation:** Document custom configurations in your README
-    - **Consistency:** Use shared configuration across team members
-    - **Validation:** Set up CI checks for configuration validation
+    - **Version control:** Include `.lordcommander/config.json` in your
+    repository - **Documentation:** Document custom configurations in your
+    README - **Consistency:** Use shared configuration across team members -
+    **Validation:** Set up CI checks for configuration validation
   </Tab>
-  
+
   <Tab title="Performance">
-    - **Minimal config:** Only configure what you need to change from defaults
-    - **Environment-specific:** Use different configurations for dev/prod
-    - **Plugin management:** Only enable plugins you actively use
-    - **Template caching:** Keep custom templates in version control
+    - **Minimal config:** Only configure what you need to change from defaults -
+    **Environment-specific:** Use different configurations for dev/prod -
+    **Plugin management:** Only enable plugins you actively use - **Template
+    caching:** Keep custom templates in version control
   </Tab>
-  
+
   <Tab title="Maintenance">
-    - **Regular updates:** Keep configuration in sync with Lord Commander updates
-    - **Backup:** Export important configurations before major changes
-    - **Testing:** Test configuration changes in development first
-    - **Migration:** Use configuration migration tools for major version updates
+    - **Regular updates:** Keep configuration in sync with Lord Commander
+    updates - **Backup:** Export important configurations before major changes -
+    **Testing:** Test configuration changes in development first -
+    **Migration:** Use configuration migration tools for major version updates
   </Tab>
 </Tabs>
 

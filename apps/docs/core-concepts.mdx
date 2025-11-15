@@ -25,7 +25,8 @@ my-project/
 ```
 
 <Note>
-  Lord Commander adapts to existing project structures and doesn't enforce a rigid layout.
+  Lord Commander adapts to existing project structures and doesn't enforce a
+  rigid layout.
 </Note>
 
 ## Commands
@@ -33,37 +34,27 @@ my-project/
 ### Initialization Commands
 
 <Card title="init" icon="rocket">
-  Bootstraps new projects with modern tooling, dependency management, and configuration files.
-  
-  **Key Features:**
-  - Interactive project setup
-  - Framework-specific templates
-  - Best practice configurations
-  - Dependency optimization
+  Bootstraps new projects with modern tooling, dependency management, and
+  configuration files. **Key Features:** - Interactive project setup -
+  Framework-specific templates - Best practice configurations - Dependency
+  optimization
 </Card>
 
 ### Analysis Commands
 
 <Card title="analyze" icon="chart-simple">
-  Provides deep insights into your application's bundle composition and performance characteristics.
-  
-  **Key Features:**
-  - Bundle size analysis
-  - Dependency visualization
-  - Performance bottleneck identification
-  - Optimization recommendations
+  Provides deep insights into your application's bundle composition and
+  performance characteristics. **Key Features:** - Bundle size analysis -
+  Dependency visualization - Performance bottleneck identification -
+  Optimization recommendations
 </Card>
 
 ### Generation Commands
 
 <Card title="scaffold" icon="wand-magic-sparkles">
-  Generates code using intelligent templates that follow your project's patterns and conventions.
-  
-  **Key Features:**
-  - Component generation
-  - Page scaffolding
-  - API endpoint creation
-  - Test file generation
+  Generates code using intelligent templates that follow your project's patterns
+  and conventions. **Key Features:** - Component generation - Page scaffolding -
+  API endpoint creation - Test file generation
 </Card>
 
 ## Configuration System
@@ -103,7 +94,7 @@ Lord Commander uses a hierarchical configuration system:
 Lord Commander includes templates for common patterns:
 
 - **React Components:** Functional components with TypeScript
-- **Vue Components:** Single-file components with Composition API  
+- **Vue Components:** Single-file components with Composition API
 - **API Routes:** RESTful endpoints with validation
 - **Test Files:** Comprehensive test suites
 
@@ -141,22 +132,16 @@ The analysis engine examines your application at multiple levels:
 
 <Tabs>
   <Tab title="File Level">
-    - Individual file sizes
-    - Import/export relationships
-    - Dead code detection
+    - Individual file sizes - Import/export relationships - Dead code detection
     - Circular dependencies
   </Tab>
   <Tab title="Module Level">
-    - Third-party dependencies
-    - Internal modules
-    - Shared utilities
-    - Optimization opportunities
+    - Third-party dependencies - Internal modules - Shared utilities -
+    Optimization opportunities
   </Tab>
   <Tab title="Application Level">
-    - Overall bundle size
-    - Loading performance
-    - Caching strategies
-    - Progressive enhancement
+    - Overall bundle size - Loading performance - Caching strategies -
+    Progressive enhancement
   </Tab>
 </Tabs>
 
@@ -185,11 +170,11 @@ Lord Commander's functionality is built on a plugin architecture:
 Create custom plugins to extend functionality:
 
 ```typescript
-import { Plugin, PluginContext } from '@caedonai/lord-commander';
+import { Plugin, PluginContext } from "@caedonai/lord-commander";
 
 export class MyPlugin implements Plugin {
-  name = 'my-plugin';
-  version = '1.0.0';
+  name = "my-plugin";
+  version = "1.0.0";
 
   async initialize(context: PluginContext) {
     // Plugin initialization logic
@@ -220,7 +205,7 @@ Include Lord Commander in your CI/CD pipeline:
 # .github/workflows/ci.yml
 - name: Analyze Bundle
   run: lord-commander analyze --ci --threshold 500kb
-  
+
 - name: Generate Performance Report
   run: lord-commander analyze --report --output ./reports/
 ```
@@ -229,21 +214,19 @@ Include Lord Commander in your CI/CD pipeline:
 
 <AccordionGroup>
   <Accordion icon="lightbulb" title="Configuration Management">
-    - Use project-specific configurations for team consistency
-    - Version control your `.lordcommander/` directory
-    - Document custom templates and configurations
+    - Use project-specific configurations for team consistency - Version control
+    your `.lordcommander/` directory - Document custom templates and
+    configurations
   </Accordion>
-  
+
   <Accordion icon="chart-line" title="Performance Monitoring">
-    - Run analysis regularly during development
-    - Set bundle size thresholds in CI/CD
-    - Monitor performance metrics over time
+    - Run analysis regularly during development - Set bundle size thresholds in
+    CI/CD - Monitor performance metrics over time
   </Accordion>
-  
+
   <Accordion icon="code" title="Code Generation">
-    - Customize templates to match your team's patterns
-    - Use consistent naming conventions
-    - Generate tests alongside components
+    - Customize templates to match your team's patterns - Use consistent naming
+    conventions - Generate tests alongside components
   </Accordion>
 </AccordionGroup>
 
@@ -252,7 +235,11 @@ Include Lord Commander in your CI/CD pipeline:
 Now that you understand Lord Commander's core concepts:
 
 <CardGroup cols={2}>
-  <Card title="Commands Reference" icon="terminal" href="/api-reference/introduction">
+  <Card
+    title="Commands Reference"
+    icon="terminal"
+    href="/api-reference/introduction"
+  >
     Explore all available commands and their options
   </Card>
   <Card title="Examples" icon="code" href="/examples">

@@ -1,497 +1,303 @@
-import styles from './page.module.css';
+// import { Hero, Features, Testimonials, FAQ, BlogList } from '../components'
+// import { sanityClient, queries } from '../lib/sanity'
 
-export default function Index() {
-  /*
-   * Replace the elements below with your own.
-   *
-   * Note: The corresponding styles are in the ./index.css file.
-   */
+// Temporary mock data until Sanity client is properly configured
+const mockHero = {
+  headline: 'Welcome to Lord Commander',
+  subheadline: 'The modern CLI SDK framework for building powerful command-line tools',
+  ctaButton: {
+    text: 'Get Started',
+    url: '/docs',
+  },
+  features: [
+    {
+      title: 'Type-Safe',
+      description: 'Built with TypeScript for better developer experience',
+      icon: '🛡️',
+    },
+    {
+      title: 'Modular',
+      description: 'Composable architecture for maximum flexibility',
+      icon: '🧩',
+    },
+    {
+      title: 'Fast',
+      description: 'Optimized for performance and developer productivity',
+      icon: '⚡',
+    },
+  ],
+};
+
+const mockFeatures = [
+  {
+    title: 'Command Composition',
+    description: 'Build complex CLI tools with simple, reusable commands',
+    icon: '⚙️',
+    benefits: ['Modular design', 'Easy testing', 'Reusable components'],
+  },
+  {
+    title: 'Auto-completion',
+    description: 'Built-in shell completion for better user experience',
+    icon: '✨',
+    benefits: ['Bash support', 'Zsh support', 'Fish support'],
+  },
+  {
+    title: 'Rich Output',
+    description: 'Beautiful terminal output with colors, spinners, and progress bars',
+    icon: '🎨',
+    benefits: ['Colored output', 'Progress indicators', 'Interactive prompts'],
+  },
+];
+
+const mockTestimonials = [
+  {
+    quote:
+      'Lord Commander has transformed how we build CLI tools. The type safety and modular architecture are game changers.',
+    author: 'Jane Developer',
+    company: 'Tech Corp',
+    position: 'Senior Engineer',
+    rating: 5,
+  },
+  {
+    quote:
+      "Finally, a CLI framework that doesn't get in the way. The auto-completion feature alone saves us hours.",
+    author: 'John Smith',
+    company: 'DevTools Inc',
+    position: 'Team Lead',
+    rating: 5,
+  },
+  {
+    quote:
+      'The documentation and examples are excellent. We were up and running in minutes, not hours.',
+    author: 'Sarah Wilson',
+    company: 'StartupXYZ',
+    position: 'CTO',
+    rating: 5,
+  },
+];
+
+// async function getHomePageData() {
+//   try {
+//     const [hero, features, testimonials, faqs, recentPosts] = await Promise.all([
+//       sanityClient.fetch(queries.heroContent),
+//       sanityClient.fetch(queries.allFeatures),
+//       sanityClient.fetch(queries.allTestimonials),
+//       sanityClient.fetch(queries.allFAQs),
+//       sanityClient.fetch(queries.recentPosts)
+//     ])
+//
+//     return { hero, features, testimonials, faqs, recentPosts }
+//   } catch (error) {
+//     console.error('Error fetching home page data:', error)
+//     return null
+//   }
+// }
+
+export default function HomePage() {
+  // Uncomment when Sanity is fully configured:
+  // const data = await getHomePageData()
+  //
+  // if (!data) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <p>Error loading content. Please try again later.</p>
+  //     </div>
+  //   )
+  // }
+
   return (
-    <div className={styles.page}>
-      <div className="wrapper">
-        <div className="container">
-          <div id="welcome">
-            <h1>
-              <span> Hello there, </span>
-              Welcome marketing 👋
-            </h1>
-          </div>
+    <>
+      <main className="min-h-screen">
+        {/* Hero Section */}
+        <section className="relative bg-gradient-to-br from-blue-600 to-purple-700 text-white">
+          <div className="container mx-auto px-6 py-20">
+            <div className="max-w-4xl mx-auto text-center">
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">{mockHero.headline}</h1>
+              <p className="text-xl md:text-2xl mb-8 text-blue-100">{mockHero.subheadline}</p>
+              <a
+                href={mockHero.ctaButton.url}
+                className="inline-block bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition-colors"
+              >
+                {mockHero.ctaButton.text}
+              </a>
 
-          <div id="hero" className="rounded">
-            <div className="text-container">
-              <h2>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Success checkmark"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                  />
-                </svg>
-                <span>You&apos;re up and running</span>
-              </h2>
-              <a href="#commands"> What&apos;s next? </a>
-            </div>
-            <div className="logo-container">
-              <svg
-                fill="currentColor"
-                role="img"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-label="NX logo"
-              >
-                <path d="M11.987 14.138l-3.132 4.923-5.193-8.427-.012 8.822H0V4.544h3.691l5.247 8.833.005-3.998 3.044 4.759zm.601-5.761c.024-.048 0-3.784.008-3.833h-3.65c.002.059-.005 3.776-.003 3.833h3.645zm5.634 4.134a2.061 2.061 0 0 0-1.969 1.336 1.963 1.963 0 0 1 2.343-.739c.396.161.917.422 1.33.283a2.1 2.1 0 0 0-1.704-.88zm3.39 1.061c-.375-.13-.8-.277-1.109-.681-.06-.08-.116-.17-.176-.265a2.143 2.143 0 0 0-.533-.642c-.294-.216-.68-.322-1.18-.322a2.482 2.482 0 0 0-2.294 1.536 2.325 2.325 0 0 1 4.002.388.75.75 0 0 0 .836.334c.493-.105.46.36 1.203.518v-.133c-.003-.446-.246-.55-.75-.733zm2.024 1.266a.723.723 0 0 0 .347-.638c-.01-2.957-2.41-5.487-5.37-5.487a5.364 5.364 0 0 0-4.487 2.418c-.01-.026-1.522-2.39-1.538-2.418H8.943l3.463 5.423-3.379 5.32h3.54l1.54-2.366 1.568 2.366h3.541l-3.21-5.052a.7.7 0 0 1-.084-.32 2.69 2.69 0 0 1 2.69-2.691h.001c1.488 0 1.736.89 2.057 1.308.634.826 1.9.464 1.9 1.541a.707.707 0 0 0 1.066.596zm.35.133c-.173.372-.56.338-.755.639-.176.271.114.412.114.412s.337.156.538-.311c.104-.231.14-.488.103-.74z" />
-              </svg>
-            </div>
-          </div>
-
-          <div id="middle-content">
-            <div id="learning-materials" className="rounded shadow">
-              <h2>Learning materials</h2>
-              <a
-                href="https://nx.dev/getting-started/intro?utm_source=nx-project"
-                target="_blank"
-                rel="noreferrer"
-                className="list-item-link"
-              >
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Documentation book icon"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-                <span>
-                  Documentation
-                  <span> Everything is in there </span>
-                </span>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Right arrow"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </a>
-              <a
-                href="https://nx.dev/blog/?utm_source=nx-project"
-                target="_blank"
-                rel="noreferrer"
-                className="list-item-link"
-              >
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Blog icon"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
-                  />
-                </svg>
-                <span>
-                  Blog
-                  <span> Changelog, features & events </span>
-                </span>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Right arrow"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </a>
-              <a
-                href="https://www.youtube.com/@NxDevtools/videos?utm_source=nx-project&sub_confirmation=1"
-                target="_blank"
-                rel="noreferrer"
-                className="list-item-link"
-              >
-                <svg
-                  role="img"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
-                >
-                  <title>YouTube</title>
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-                </svg>
-                <span>
-                  YouTube channel
-                  <span> Nx Show, talks & tutorials </span>
-                </span>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </a>
-              <a
-                href="https://nx.dev/react-tutorial/1-code-generation?utm_source=nx-project"
-                target="_blank"
-                rel="noreferrer"
-                className="list-item-link"
-              >
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
-                  />
-                </svg>
-                <span>
-                  Interactive tutorials
-                  <span> Create an app, step-by-step </span>
-                </span>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </a>
-              <a
-                href="https://nxplaybook.com/?utm_source=nx-project"
-                target="_blank"
-                rel="noreferrer"
-                className="list-item-link"
-              >
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
-                  role="img"
-                >
-                  <path d="M12 14l9-5-9-5-9 5 9 5z" />
-                  <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
-                  />
-                </svg>
-                <span>
-                  Video courses
-                  <span> Nx custom courses </span>
-                </span>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </a>
-            </div>
-            <div id="other-links">
-              <a
-                id="nx-console"
-                className="button-pill rounded shadow"
-                href="https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console&utm_source=nx-project"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <svg
-                  fill="currentColor"
-                  role="img"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
-                >
-                  <title>Visual Studio Code</title>
-                  <path d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zm-5.146 14.861L10.826 12l7.178-5.448v10.896z" />
-                </svg>
-                <span>
-                  Install Nx Console for VSCode
-                  <span>The official VSCode extension for Nx.</span>
-                </span>
-              </a>
-              <a
-                id="nx-console-jetbrains"
-                className="button-pill rounded shadow"
-                href="https://plugins.jetbrains.com/plugin/21060-nx-console"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <svg
-                  height="48"
-                  width="48"
-                  viewBox="20 20 60 60"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
-                  role="img"
-                >
-                  <path d="m22.5 22.5h60v60h-60z" />
-                  <g fill="#fff">
-                    <path d="m29.03 71.25h22.5v3.75h-22.5z" />
-                    <path d="m28.09 38 1.67-1.58a1.88 1.88 0 0 0 1.47.87c.64 0 1.06-.44 1.06-1.31v-5.98h2.58v6a3.48 3.48 0 0 1 -.87 2.6 3.56 3.56 0 0 1 -2.57.95 3.84 3.84 0 0 1 -3.34-1.55z" />
-                    <path d="m36 30h7.53v2.19h-5v1.44h4.49v2h-4.42v1.49h5v2.21h-7.6z" />
-                    <path d="m47.23 32.29h-2.8v-2.29h8.21v2.27h-2.81v7.1h-2.6z" />
-                    <path d="m29.13 43.08h4.42a3.53 3.53 0 0 1 2.55.83 2.09 2.09 0 0 1 .6 1.53 2.16 2.16 0 0 1 -1.44 2.09 2.27 2.27 0 0 1 1.86 2.29c0 1.61-1.31 2.59-3.55 2.59h-4.44zm5 2.89c0-.52-.42-.8-1.18-.8h-1.29v1.64h1.24c.79 0 1.25-.26 1.25-.81zm-.9 2.66h-1.57v1.73h1.62c.8 0 1.24-.31 1.24-.86 0-.5-.4-.87-1.27-.87z" />
-                    <path d="m38 43.08h4.1a4.19 4.19 0 0 1 3 1 2.93 2.93 0 0 1 .9 2.19 3 3 0 0 1 -1.93 2.89l2.24 3.27h-3l-1.88-2.84h-.87v2.84h-2.56zm4 4.5c.87 0 1.39-.43 1.39-1.11 0-.75-.54-1.12-1.4-1.12h-1.44v2.26z" />
-                    <path d="m49.59 43h2.5l4 9.44h-2.79l-.67-1.69h-3.63l-.67 1.69h-2.71zm2.27 5.73-1-2.65-1.06 2.65z" />
-                    <path d="m56.46 43.05h2.6v9.37h-2.6z" />
-                    <path d="m60.06 43.05h2.42l3.37 5v-5h2.57v9.37h-2.26l-3.53-5.14v5.14h-2.57z" />
-                    <path d="m68.86 51 1.45-1.73a4.84 4.84 0 0 0 3 1.13c.71 0 1.08-.24 1.08-.65 0-.4-.31-.6-1.59-.91-2-.46-3.53-1-3.53-2.93 0-1.74 1.37-3 3.62-3a5.89 5.89 0 0 1 3.86 1.25l-1.26 1.84a4.63 4.63 0 0 0 -2.62-.92c-.63 0-.94.25-.94.6 0 .42.32.61 1.63.91 2.14.46 3.44 1.16 3.44 2.91 0 1.91-1.51 3-3.79 3a6.58 6.58 0 0 1 -4.35-1.5z" />
-                  </g>
-                </svg>
-                <span>
-                  Install Nx Console for JetBrains
-                  <span>Available for WebStorm, Intellij IDEA Ultimate and more!</span>
-                </span>
-              </a>
-              <div id="nx-cloud" className="rounded shadow">
-                <div>
-                  <svg
-                    id="nx-cloud-logo"
-                    role="img"
-                    xmlns="http://www.w3.org/2000/svg"
-                    stroke="currentColor"
-                    fill="transparent"
-                    viewBox="0 0 24 24"
-                    aria-label="Icon"
-                  >
-                    <path
-                      strokeWidth="2"
-                      d="M23 3.75V6.5c-3.036 0-5.5 2.464-5.5 5.5s-2.464 5.5-5.5 5.5-5.5 2.464-5.5 5.5H3.75C2.232 23 1 21.768 1 20.25V3.75C1 2.232 2.232 1 3.75 1h16.5C21.768 1 23 2.232 23 3.75Z"
-                    />
-                    <path
-                      strokeWidth="2"
-                      d="M23 6v14.1667C23 21.7307 21.7307 23 20.1667 23H6c0-3.128 2.53867-5.6667 5.6667-5.6667 3.128 0 5.6666-2.5386 5.6666-5.6666C17.3333 8.53867 19.872 6 23 6Z"
-                    />
-                  </svg>
-                  <h2>
-                    Nx Cloud
-                    <span>Enable faster CI & better DX</span>
-                  </h2>
-                </div>
-                <p>You can activate distributed tasks executions and caching by running:</p>
-                <pre>nx connect</pre>
-                <a href="https://nx.app/?utm_source=nx-project" target="_blank" rel="noreferrer">
-                  {' '}
-                  What is Nx Cloud?{' '}
-                </a>
+              <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+                {mockHero.features.map((feature) => (
+                  <div key={feature.title} className="text-center">
+                    <div className="text-4xl mb-4">{feature.icon}</div>
+                    <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                    <p className="text-blue-100">{feature.description}</p>
+                  </div>
+                ))}
               </div>
-              <a
-                id="nx-repo"
-                className="button-pill rounded shadow"
-                href="https://github.com/nrwl/nx?utm_source=nx-project"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <svg
-                  fill="currentColor"
-                  role="img"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="py-20 bg-gray-50">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Powerful Features
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Everything you need to build professional command-line applications
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {mockFeatures.map((feature) => (
+                <div
+                  key={feature.title}
+                  className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-8"
                 >
-                  <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
-                </svg>
-                <span>
-                  Nx is open source
-                  <span> Love Nx? Give us a star! </span>
-                </span>
+                  <div className="text-4xl mb-6">{feature.icon}</div>
+                  <h3 className="text-xl font-semibold mb-4 text-gray-900">{feature.title}</h3>
+                  <p className="text-gray-600 mb-6">{feature.description}</p>
+                  <ul className="space-y-2">
+                    {feature.benefits.map((benefit) => (
+                      <li key={benefit} className="flex items-center text-sm text-gray-700">
+                        <svg
+                          className="w-4 h-4 text-green-500 mr-2 flex-shrink-0"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          role="img"
+                          aria-label="Check mark"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        {benefit}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials Section */}
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                What Developers Say
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Trusted by developers and teams worldwide
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {mockTestimonials.map((testimonial) => (
+                <div key={testimonial.author} className="bg-gray-50 rounded-lg p-8 relative">
+                  <div className="text-blue-500 mb-4">
+                    <svg
+                      width="24"
+                      height="24"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                      role="img"
+                      aria-label="Quote icon"
+                    >
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                    </svg>
+                  </div>
+
+                  <blockquote className="text-gray-700 mb-6 italic">
+                    &ldquo;{testimonial.quote}&rdquo;
+                  </blockquote>
+
+                  <div className="flex items-center mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <svg
+                        key={`star-${testimonial.author}-${i}`}
+                        className={`w-5 h-5 ${
+                          i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'
+                        }`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                        role="img"
+                        aria-label={`${i < testimonial.rating ? 'Filled' : 'Empty'} star`}
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+
+                  <div>
+                    <div className="font-semibold text-gray-900">{testimonial.author}</div>
+                    <div className="text-sm text-gray-600">
+                      {testimonial.position} at {testimonial.company}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+          <div className="container mx-auto px-6 text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">
+              Ready to Build Amazing CLI Tools?
+            </h2>
+            <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+              Join thousands of developers who are already building the next generation of
+              command-line applications
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href="/docs"
+                className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+              >
+                Get Started
+              </a>
+              <a
+                href="/blog"
+                className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors"
+              >
+                Read the Blog
               </a>
             </div>
           </div>
+        </section>
+      </main>
 
-          <div id="commands" className="rounded shadow">
-            <h2>Next steps</h2>
-            <p>Here are some things you can do with Nx:</p>
-            <details>
-              <summary>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                Add UI library
-              </summary>
-              <pre>
-                <span># Generate UI lib</span>
-                nx g @nx/next:library ui
-                <span># Add a component</span>
-                nx g @nx/next:component ui/src/lib/button
-              </pre>
-            </details>
-            <details>
-              <summary>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                View project details
-              </summary>
-              <pre>nx show project marketing --web</pre>
-            </details>
-            <details>
-              <summary>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                View interactive project graph
-              </summary>
-              <pre>nx graph</pre>
-            </details>
-            <details>
-              <summary>
-                <svg
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-label="Icon"
-                  role="img"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                Run affected commands
-              </summary>
-              <pre>
-                <span># see what&apos;s been affected by changes</span>
-                nx affected:graph
-                <span># run tests for current changes</span>
-                nx affected:test
-                <span># run e2e tests for current changes</span>
-                nx affected:e2e
-              </pre>
-            </details>
-          </div>
-
-          <p id="love">
-            Carefully crafted with
+      {/* Sanity CMS Integration Note */}
+      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8">
+        <div className="flex">
+          <div className="flex-shrink-0">
             <svg
+              className="h-5 w-5 text-yellow-400"
+              viewBox="0 0 20 20"
               fill="currentColor"
-              stroke="none"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-label="Icon"
               role="img"
+              aria-label="Warning icon"
             >
               <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                fillRule="evenodd"
+                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
               />
             </svg>
-          </p>
+          </div>
+          <div className="ml-3">
+            <p className="text-sm text-yellow-700">
+              <strong>Sanity CMS Integration Ready:</strong> This page is currently using mock data.
+              Once you configure your Sanity project credentials in <code>.env.local</code>,
+              uncomment the Sanity client code to use dynamic content from your CMS. Visit{' '}
+              <code>/studio</code> to access the Sanity Studio for content management.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
