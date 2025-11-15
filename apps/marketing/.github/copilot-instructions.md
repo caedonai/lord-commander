@@ -18,6 +18,7 @@ This is the marketing website for Lord Commander CLI SDK, built with Next.js 15 
 **Current State**: Mock data with Sanity infrastructure ready
 
 **When Working with Sanity:**
+
 - Use proper TypeScript interfaces for all Sanity schema types
 - Implement graceful fallbacks for missing CMS content
 - Follow the established schema patterns in `sanity/schemas/`
@@ -25,8 +26,9 @@ This is the marketing website for Lord Commander CLI SDK, built with Next.js 15 
 - Test both with and without Sanity Studio connection
 
 **Key Components:**
+
 - `Hero` - Main landing section with CTA
-- `Features` - Product capabilities showcase  
+- `Features` - Product capabilities showcase
 - `Testimonials` - Social proof with ratings
 - `FAQ` - Common questions with expandable answers
 - `BlogComponents` - Article display and listing
@@ -42,12 +44,14 @@ This is the marketing website for Lord Commander CLI SDK, built with Next.js 15 
 ### Component Patterns
 
 **Reusable Components:**
+
 - Keep components modular and composable
 - Use proper TypeScript interfaces
 - Include loading and error states
 - Support both light/dark themes if applicable
 
 **Layout Standards:**
+
 - Mobile-first responsive design
 - Consistent spacing using Tailwind utilities
 - Accessible color contrast ratios
@@ -59,6 +63,7 @@ This is the marketing website for Lord Commander CLI SDK, built with Next.js 15 
 **Future CMS Content:** Will replace mock data with Sanity queries
 
 **Content Types:**
+
 - Hero sections with headlines and CTAs
 - Feature lists with benefits and icons
 - Testimonials with ratings and author info
@@ -68,6 +73,7 @@ This is the marketing website for Lord Commander CLI SDK, built with Next.js 15 
 ### Testing Guidelines
 
 **Marketing-Specific Tests:**
+
 - Verify all CTAs render and have proper links
 - Test responsive behavior across viewports
 - Validate marketing copy appears correctly
@@ -75,6 +81,7 @@ This is the marketing website for Lord Commander CLI SDK, built with Next.js 15 
 - Check SEO meta tags are properly generated
 
 **Content Testing:**
+
 - Mock Sanity data responses appropriately
 - Test graceful degradation when CMS is unavailable
 - Verify image optimization and alt text
@@ -83,6 +90,7 @@ This is the marketing website for Lord Commander CLI SDK, built with Next.js 15 
 ### Development Workflow
 
 **Local Development:**
+
 ```bash
 # Start marketing app
 pnpx nx serve marketing
@@ -90,7 +98,7 @@ pnpx nx serve marketing
 # Run tests
 pnpx nx test marketing
 
-# Build for production  
+# Build for production
 pnpx nx build marketing
 
 # Lint and format
@@ -98,6 +106,7 @@ pnpx nx lint marketing
 ```
 
 **Sanity Integration:**
+
 - Check `SANITY_INTEGRATION.md` for setup details
 - Use `.env.local.example` as template for environment variables
 - Test with Sanity Studio at `/studio` route when configured
