@@ -110,7 +110,7 @@ const _portableTextComponents = {
   types: {
     image: ({ value }: { value: PortableTextImageValue }) => (
       <div className="my-8">
-        <img
+        <Image
           src={value.asset?.url || ''}
           alt={value.alt || 'Blog post image'}
           width={800}

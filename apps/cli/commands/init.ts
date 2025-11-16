@@ -106,6 +106,11 @@ export default function (program: Command, context: CommandContext) {
 
   /**
    * Resolve project structure paths based on configuration
+   *
+   * README.md placement strategy:
+   * - Project folder mode: README goes in the new project folder (recommended)
+   * - Current directory mode: README goes in current directory
+   * - Custom paths mode: README goes in current directory (acts as project root)
    */
   function resolveProjectPaths(config: InitConfig) {
     const currentDir = cwd();
@@ -125,7 +130,7 @@ export default function (program: Command, context: CommandContext) {
       };
     }
 
-    // If custom paths are specified, use them
+    // If custom paths are specified, use them - README goes in current directory (project root)
     if (config.structureType === 'custom-paths') {
       return {
         root: currentDir,
@@ -643,10 +648,8 @@ export default function (program: Command, context: CommandContext) {
         await verifyPackageInstallation(packageName, config, logger);
         spinner.stop('Package installed successfully!', 0);
 
-        // Create basic project structure if local installation
-        if (config.installLocation === 'local') {
-          await createLibraryProjectStructure(config, logger);
-        }
+        // Library mode should only install the package, not create project structure
+        // Users can import and use the SDK in their existing projects
       } else {
         // Development: Show what would be installed
         logger.info('🚧 Development Mode: Package not yet published');
@@ -688,89 +691,6 @@ export default function (program: Command, context: CommandContext) {
     } catch (error) {
       logger.warn(
         `Could not verify installation of ${packageName}: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
-  }
-
-  /**
-   * Create basic project structure for library mode local installations
-   */
-  async function createLibraryProjectStructure(
-    config: InitConfig,
-    logger: CommandContext['logger']
-  ) {
-    if (!fs?.writeFile || !fs?.ensureDir) {
-      logger.warn('File system utilities not available, skipping project structure creation');
-      return;
-    }
-
-    const spinner = logger.spinner('Creating project structure...');
-
-    try {
-      // Create package.json if it doesn't exist
-      const packageJsonPath = join(cwd(), 'package.json');
-      const packageJsonExists = fs.exists ? fs.exists(packageJsonPath) : false;
-
-      if (!packageJsonExists) {
-        const packageJson = {
-          name: config.projectName,
-          version: '1.0.0',
-          type: 'module',
-          description: 'CLI project built with Lord Commander SDK',
-          main: 'index.js',
-          scripts: {
-            start: 'node index.js',
-            dev: 'node --watch index.js',
-          },
-          dependencies: {
-            '@lord-commander/cli-core': '^1.0.0',
-          },
-          keywords: ['cli', 'lord-commander'],
-          author: '',
-          license: 'ISC',
-        };
-
-        await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
-      }
-
-      // Create basic CLI entry point
-      const indexPath = join(cwd(), 'index.js');
-      const indexExists = fs.exists ? fs.exists(indexPath) : false;
-
-      if (!indexExists) {
-        const cliTemplate = `#!/usr/bin/env node
-
-import { createCLI } from '@lord-commander/cli-core';
-
-await createCLI({
-  name: '${config.projectName}',
-  version: '1.0.0',
-  description: 'CLI built with Lord Commander SDK',
-  commandsPath: './commands',
-  builtinCommands: {
-    completion: true,
-    hello: true,
-    version: true,
-  },
-  autocomplete: {
-    enabled: true,
-    autoInstall: false,
-    shells: ['bash', 'zsh', 'fish', 'powershell'],
-    enableFileCompletion: true,
-  },
-});
-`;
-        await fs.writeFile(indexPath, cliTemplate);
-      }
-
-      // Create commands directory
-      await fs.ensureDir(join(cwd(), 'commands'));
-
-      spinner.stop('Project structure created!', 0);
-    } catch (error) {
-      spinner.stop('Failed to create project structure', 1);
-      logger.warn(
-        `Structure creation error: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }
@@ -1287,9 +1207,10 @@ await createCLI({
 
     if (config.installLocation === 'local') {
       logger.info('• Start building:');
-      logger.info('  - Add your commands in the "./commands" directory');
-      logger.info('  - Run "node index.js --help" to test your CLI');
-      logger.info('  - Use "npm run dev" for development mode');
+      logger.info('  - The CLI SDK is now available in your project');
+      logger.info('  - Import it: import { createCLI } from "@lord-commander/cli-core"');
+      logger.info('  - Create your CLI entry point file');
+      logger.info('  - Add commands and configure as needed');
       logger.info('');
     }
 

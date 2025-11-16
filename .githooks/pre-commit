@@ -5,6 +5,9 @@
 export CI=true
 export NODE_ENV=test
 
+# Unset FORCE_COLOR to avoid conflicts with NO_COLOR
+unset FORCE_COLOR
+
 echo "🔍 Running pre-commit checks..."
 
 # Run linting on affected projects using NX
