@@ -16,34 +16,80 @@ Before installing Lord Commander, ensure your system meets these requirements:
   </Card>
 </CardGroup>
 
-## Installation Methods
+## Installation Options
 
-### Global Installation (Recommended)
+Lord Commander offers different installation methods depending on your needs:
 
-Install Lord Commander globally to use it across all your projects:
+### 1. Library Mode (SDK Integration)
 
-<Tabs>
-  <Tab title="npm">```bash npm install -g @caedonai/lord-commander ```</Tab>
-  <Tab title="pnpm">```bash pnpm add -g @caedonai/lord-commander ```</Tab>
-  <Tab title="yarn">```bash yarn global add @caedonai/lord-commander ```</Tab>
-</Tabs>
-
-### Local Installation
-
-Install Lord Commander as a development dependency in your project:
+Install the CLI SDK for use in existing projects:
 
 <Tabs>
   <Tab title="npm">
-    ```bash npm install --save-dev @caedonai/lord-commander ```
+    ```bash
+    npm install @lord-commander/cli-core
+    ```
   </Tab>
-  <Tab title="pnpm">```bash pnpm add -D @caedonai/lord-commander ```</Tab>
-  <Tab title="yarn">```bash yarn add -D @caedonai/lord-commander ```</Tab>
+  <Tab title="pnpm">
+    ```bash  
+    pnpm add @lord-commander/cli-core
+    ```
+  </Tab>
+  <Tab title="yarn">
+    ```bash
+    yarn add @lord-commander/cli-core
+    ```
+  </Tab>
 </Tabs>
 
-<Warning>
-  When installing locally, you'll need to run commands via `npx lord-commander`
-  or add them to your package.json scripts.
-</Warning>
+### 2. CLI Application Setup
+
+Use the `init` command to create complete CLI applications:
+
+<Tabs>
+  <Tab title="CLI-Only">
+    ```bash
+    # Install CLI globally first
+    npm install -g lord-commander
+    
+    # Initialize CLI-only project
+    lord-commander init --quick --type=cli-only
+    ```
+  </Tab>
+  <Tab title="CLI + API">
+    ```bash
+    lord-commander init --quick --type=cli-api
+    ```
+  </Tab>
+  <Tab title="Full-Stack">
+    ```bash
+    lord-commander init --quick --type=full-stack
+    ```
+  </Tab>
+</Tabs>
+
+## Quick Setup with Init Command
+
+The easiest way to get started is using the `init` command:
+
+### Interactive Setup
+```bash
+lord-commander init
+```
+
+Follow the prompts to choose your setup type and configuration.
+
+### Quick Setup Examples
+```bash
+# Library mode - just the SDK
+lord-commander init --quick --type=library
+
+# CLI-only application  
+lord-commander init --quick --type=cli-only --pm=pnpm
+
+# Full-stack with dashboard
+lord-commander init --quick --type=full-stack --pm=pnpm --global
+```
 
 ## Verification
 
@@ -53,13 +99,10 @@ Verify that Lord Commander is installed correctly:
 
 ```bash
 lord-commander --version
+lord-commander status
 ```
 
-You should see output similar to:
-
-```
-@caedonai/lord-commander v1.0.0
-```
+You should see output showing the CLI SDK version and system information.
 
 ### Test Basic Functionality
 
@@ -70,6 +113,30 @@ lord-commander --help
 ```
 
 This will display the available commands and options.
+
+## Installation Flags
+
+The `init` command supports several flags for customization:
+
+| Flag        | Description                    | Values                                        | Default    |
+| ----------- | ------------------------------ | --------------------------------------------- | ---------- |
+| `--type`    | Setup type                     | `library`, `cli-only`, `cli-api`, `full-stack` | `cli-only` |
+| `--quick`   | Skip interactive mode          | `true`, `false`                               | `false`    |
+| `--global`  | Install globally               | `true`, `false`                               | `false`    |
+| `--pm`      | Package manager                | `npm`, `pnpm`, `yarn`                         | `npm`      |
+
+### Examples with Flags
+
+```bash
+# Library mode with pnpm, installed globally
+lord-commander init --quick --type=library --pm=pnpm --global
+
+# CLI-only with yarn, local installation  
+lord-commander init --quick --type=cli-only --pm=yarn
+
+# Full-stack interactive setup
+lord-commander init --type=full-stack
+```
 
 ## Environment Setup
 
@@ -86,7 +153,7 @@ Enable shell completion for a better CLI experience:
   </Tab>
   <Tab title="zsh">
     ```bash
-    # Add to ~/.zshrc
+    # Add to ~/.zshrc  
     eval "$(lord-commander completion zsh)"
     ```
   </Tab>
@@ -108,21 +175,37 @@ Lord Commander creates a configuration directory at:
 This directory stores:
 
 - User preferences
-- Template cache
+- Template cache  
 - Plugin configurations
 
 ## Troubleshooting
 
 <AccordionGroup>
+  <Accordion icon="package" title="Package Installation Failed">
+    If `init` command fails to install packages:
+    
+    **Check internet connection and try different package manager:**
+    ```bash
+    lord-commander init --quick --type=library --pm=pnpm
+    ```
+    
+    **Verify npm registry access:**
+    ```bash
+    npm config get registry
+    npm ping
+    ```
+  </Accordion>
+
   <Accordion icon="triangle-exclamation" title="Permission Errors">
     If you encounter permission errors during global installation:
     
-    **On macOS/Linux:**
+    **Use local installation instead:**
     ```bash
-    sudo npm install -g @caedonai/lord-commander
+    lord-commander init --quick --type=library
+    # (Installs locally, no global permissions needed)
     ```
     
-    **Better approach - Configure npm to use a different directory:**
+    **Or configure npm properly (better approach):**
     ```bash
     mkdir ~/.npm-global
     npm config set prefix '~/.npm-global'
@@ -136,7 +219,7 @@ This directory stores:
     
     **Try a different registry:**
     ```bash
-    npm install -g @caedonai/lord-commander --registry https://registry.npmjs.org/
+    lord-commander init --quick --type=library --pm=npm --registry https://registry.npmjs.org/
     ```
     
     **Or configure npm proxy (if behind corporate firewall):**
@@ -147,13 +230,18 @@ This directory stores:
   </Accordion>
 
   <Accordion icon="exclamation-circle" title="Command Not Found">
-    If `lord-commander` is not recognized after installation:
+    If `lord-commander` is not recognized:
     
-    1. **Check your PATH:** Ensure the npm global bin directory is in your PATH
-    2. **Restart your terminal:** Some changes require a fresh terminal session  
-    3. **Check installation location:**
+    1. **Install the CLI globally first:**
     ```bash
-    npm list -g @caedonai/lord-commander
+    npm install -g lord-commander
+    ```
+    
+    2. **Check your PATH and restart terminal**
+    
+    3. **Use npx as alternative:**
+    ```bash
+    npx lord-commander init
     ```
   </Accordion>
 </AccordionGroup>
