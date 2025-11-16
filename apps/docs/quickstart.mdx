@@ -3,92 +3,164 @@ title: "Quickstart"
 description: "Get started with Lord Commander CLI SDK in under 5 minutes"
 ---
 
-## Installation
+## Choose Your Path
 
-Get Lord Commander installed and ready for use in your development workflow.
+Lord Commander offers different setup modes depending on your needs:
 
-### Step 1: Install Lord Commander
+<CardGroup cols={2}>
+  <Card title="Library Mode" icon="package">
+    Install the CLI SDK for use in existing projects
+  </Card>
+  <Card title="New CLI Project" icon="rocket">
+    Create a complete CLI application from scratch
+  </Card>
+</CardGroup>
 
-<AccordionGroup>
-  <Accordion icon="download" title="Install via npm">
-    Install Lord Commander globally to use it across all your projects: ```bash
-    npm install -g @caedonai/lord-commander ``` Or install locally in your
-    project: ```bash npm install --save-dev @caedonai/lord-commander ```
-  </Accordion>
-  <Accordion icon="box" title="Install via pnpm">
-    ```bash pnpm add -g @caedonai/lord-commander ``` Or for local installation:
-    ```bash pnpm add -D @caedonai/lord-commander ```
-  </Accordion>
-  <Accordion icon="yarn" title="Install via yarn">
-    ```bash yarn global add @caedonai/lord-commander ``` Or for local
-    installation: ```bash yarn add -D @caedonai/lord-commander ```
-  </Accordion>
-</AccordionGroup>
+## Option 1: Library Mode (Existing Project)
 
-### Step 2: Verify Installation
+Add Lord Commander SDK to your existing project:
 
-<AccordionGroup>
-  <Accordion icon="terminal" title="Check version">
-    Verify that Lord Commander is installed correctly:
-    
+### Install the CLI globally
+```bash
+npm install -g lord-commander
+```
+
+### Add CLI SDK to your project  
+```bash
+lord-commander init --quick --type=library --pm=pnpm
+```
+
+### Start using the SDK
+```typescript
+import { createCLI } from '@lord-commander/cli-core';
+
+const cli = await createCLI({
+  name: 'my-cli',
+  version: '1.0.0',
+  description: 'My awesome CLI',
+  commandsPath: './commands'
+});
+```
+
+## Option 2: New CLI Application
+
+Create a complete CLI application with scaffolding:
+
+### Step 1: Install CLI globally
+```bash
+npm install -g lord-commander
+```
+
+### Step 2: Initialize project
+<Tabs>
+  <Tab title="CLI-Only">
     ```bash
-    lord-commander --version
+    lord-commander init --quick --type=cli-only --pm=pnpm
     ```
-    
-    You should see the version number printed to the console.
-  </Accordion>
-  <Accordion icon="list" title="View available commands">
-    Get a full list of available commands:
-    
+  </Tab>
+  <Tab title="CLI + API">
+    ```bash  
+    lord-commander init --quick --type=cli-api --pm=pnpm
+    ```
+  </Tab>
+  <Tab title="Full-Stack">
     ```bash
-    lord-commander --help
+    lord-commander init --quick --type=full-stack --pm=pnpm  
     ```
-    
-    <Tip>Use `lord-commander <command> --help` for detailed help on any specific command.</Tip>
-  </Accordion>
-</AccordionGroup>
+  </Tab>
+  <Tab title="Interactive">
+    ```bash
+    lord-commander init
+    # Follow the prompts for custom setup
+    ```
+  </Tab>
+</Tabs>
 
-### Step 3: Initialize Your First Project
+### Step 3: Start building
+```bash
+cd my-cli-project
+pnpm install  
+pnpm dev
+```
 
-<AccordionGroup>
-  <Accordion icon="folder-plus" title="Create a new project">
-    Initialize a new project with Lord Commander: ```bash mkdir my-project cd
-    my-project lord-commander init ``` Follow the interactive prompts to
-    configure your project.
-  </Accordion>
-  <Accordion icon="wand-magic-sparkles" title="Scaffold components">
-    Generate components, pages, or other project assets: ```bash lord-commander
-    scaffold component MyComponent lord-commander scaffold page HomePage ```
-  </Accordion>
-</AccordionGroup>
+## Verification
 
-## Quick Commands Reference
+### Check installation and status
+```bash
+lord-commander --version
+lord-commander status
+lord-commander --help
+```
 
-Here are the most commonly used commands to get you started:
+You should see the CLI version, system info, and available commands.
+
+### Test your setup
+```bash
+# Test a simple command
+lord-commander hello
+
+# View available commands  
+lord-commander --help
+
+# Check system status
+lord-commander status
+```
+
+## Essential Commands
+
+Master these core commands to get the most out of Lord Commander:
 
 <CardGroup cols={2}>
 
-<Card title="Project Initialization" icon="rocket" href="/commands/init">
-  Bootstrap new projects with modern tooling and best practices.
+<Card title="init" icon="rocket" href="/commands/init">
+  Initialize CLI projects in library, cli-only, cli-api, or full-stack modes.
 </Card>
 
-<Card title="Bundle Analysis" icon="chart-simple" href="/commands/analyze">
+<Card title="status" icon="info">
+  Check CLI version, SDK version, and system information.
+</Card>
+
+<Card title="scaffold" icon="wand-magic-sparkles" href="/commands/scaffold">
+  Generate components, commands, and features with intelligent templates.
+</Card>
+
+<Card title="analyze" icon="chart-simple" href="/commands/analyze">
   Analyze your bundle size and composition for optimization opportunities.
 </Card>
 
-<Card
-  title="Smart Scaffolding"
-  icon="wand-magic-sparkles"
-  href="/commands/scaffold"
->
-  Generate components, pages, and features with intelligent templates.
-</Card>
-
-<Card title="Demo Mode" icon="play" href="/commands/demo">
-  Run interactive demos to explore Lord Commander features.
-</Card>
-
 </CardGroup>
+
+## Quick Examples
+
+### Library Mode Integration
+```bash
+# Add to existing project  
+lord-commander init --quick --type=library --pm=pnpm
+
+# Use in your code
+import { createCLI } from '@lord-commander/cli-core';
+```
+
+### New CLI Project
+```bash
+# Create CLI-only app
+lord-commander init --quick --type=cli-only --pm=pnpm
+
+# Create with API backend  
+lord-commander init --quick --type=cli-api --pm=pnpm
+
+# Create full-stack with dashboard
+lord-commander init --quick --type=full-stack --pm=pnpm
+```
+
+### Interactive Setup
+```bash  
+# Full interactive setup with all options
+lord-commander init
+
+# Check what was installed
+lord-commander status
+```
 
 ## Next Steps
 
