@@ -86,6 +86,15 @@ graph.html
 project-graph.html
 static/
 
+# Init command test scaffolding (development testing only)
+apps/cli/my-cli-project/
+apps/cli/*-test-project/
+**/scaffolded-*/
+**/test-scaffold-*/
+# Test projects created by init command in root directory
+my-cli-project/
+*-cli-project/
+
 # Next.js
 .next
 out
