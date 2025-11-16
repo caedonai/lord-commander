@@ -75,6 +75,14 @@
       "options": {
         "command": "ultracite fix apps/cli/src apps/cli/commands"
       }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "passWithNoTests": true,
+        "reportsDirectory": "../../coverage/apps/cli"
+      }
     }
   }
 }

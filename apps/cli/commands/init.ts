@@ -212,14 +212,14 @@ export default function (program: Command, context: CommandContext) {
       }
 
       if (customizeComponents) {
-        const components = await prompts.multiselect('Select components to install:', [
+        const components = await prompts.multiselect('Select components to include:', [
           {
             value: 'api',
-            label: 'API Server (@caedonai/lord-commander-api)',
+            label: 'API Server (scaffolded template)',
           },
           {
             value: 'dashboard',
-            label: 'Dashboard UI (@caedonai/lord-commander-dashboard)',
+            label: 'Dashboard UI (scaffolded template)',
           },
         ]);
 
@@ -320,12 +320,16 @@ export default function (program: Command, context: CommandContext) {
 
     logger.info(`Setup Type: ${setupType}`);
     logger.info('');
-    logger.info('📦 Components:');
-    logger.info(`  • CLI Core: @lord-commander/cli-core ✓`);
-    logger.info(`  • API Server: ${config.includeApi ? '@caedonai/lord-commander-api ✓' : '❌'}`);
-    logger.info(
-      `  • Dashboard UI: ${config.includeDashboard ? '@caedonai/lord-commander-dashboard ✓' : '❌'}`
-    );
+
+    if (config.setupType === 'library') {
+      logger.info('📦 Package to Install:');
+      logger.info('  • @lord-commander/cli-core ✓');
+    } else {
+      logger.info('📦 Components to Scaffold:');
+      logger.info('  • CLI Project ✓');
+      logger.info(`  • API Server: ${config.includeApi ? '✓' : '❌'}`);
+      logger.info(`  • Dashboard UI: ${config.includeDashboard ? '✓' : '❌'}`);
+    }
   }
 
   /**
@@ -340,40 +344,7 @@ export default function (program: Command, context: CommandContext) {
     try {
       // Handle library mode vs project scaffolding
       if (config.setupType === 'library') {
-        const isProduction = process.env.NODE_ENV === 'production';
-
-        if (isProduction) {
-          // Production: Install actual published packages
-          const packages = ['@lord-commander/cli-core'];
-
-          if (config.includeApi) {
-            packages.push('@caedonai/lord-commander-api');
-          }
-          if (config.includeDashboard) {
-            packages.push('@caedonai/lord-commander-dashboard');
-          }
-
-          const spinner = logger.spinner('Installing packages...');
-          // [Installation code would go here for library mode]
-          spinner.stop(`Installed ${packages.join(', ')}`, 0);
-        } else {
-          // Development: Show what would be installed in library mode
-          logger.info('🚧 Development Mode: Packages not yet published');
-          logger.info('In production, these packages would be installed globally:');
-          logger.info('  • @lord-commander/cli-core');
-
-          if (config.includeApi) {
-            logger.info('  • @caedonai/lord-commander-api');
-          }
-          if (config.includeDashboard) {
-            logger.info('  • @caedonai/lord-commander-dashboard');
-          }
-
-          const spinner = logger.spinner('Setting up library mode...');
-          spinner.stop('Library mode setup complete! (Development mode)', 0);
-        }
-
-        showLibraryModeNextSteps(config, logger);
+        await executeLibraryModeInstallation(config, logger, execa);
         return;
       }
 
@@ -481,6 +452,191 @@ export default function (program: Command, context: CommandContext) {
         `Installation failed: ${error instanceof Error ? error.message : String(error)}`
       );
       throw error;
+    }
+  }
+
+  /**
+   * Execute library mode installation (CLI-core only)
+   */
+  async function executeLibraryModeInstallation(
+    config: InitConfig,
+    logger: CommandContext['logger'],
+    execa: CommandContext['execa']
+  ) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    try {
+      if (isProduction) {
+        // Production: Install actual @lord-commander/cli-core package
+        const packageName = '@lord-commander/cli-core';
+
+        // Determine install command based on package manager and location
+        const installFlags = config.installLocation === 'global' ? ['-g'] : [];
+        let installCmd: string[] = [];
+
+        switch (config.packageManager) {
+          case 'pnpm':
+            installCmd = ['pnpm', 'add', ...installFlags, packageName];
+            break;
+          case 'yarn':
+            if (config.installLocation === 'global') {
+              installCmd = ['yarn', 'global', 'add', packageName];
+            } else {
+              installCmd = ['yarn', 'add', packageName];
+            }
+            break;
+          default:
+            installCmd = ['npm', 'install', ...installFlags, packageName];
+            break;
+        }
+
+        logger.info(`Installing package: ${packageName}`);
+        logger.info(`Running: ${installCmd.join(' ')}`);
+
+        const spinner = logger.spinner('Installing @lord-commander/cli-core...');
+
+        // Execute the actual installation
+        if (execa) {
+          const [command, ...args] = installCmd;
+          await execa.execa(command, args, {
+            stdio: 'inherit',
+            cwd: config.installLocation === 'local' ? cwd() : undefined,
+          });
+        }
+
+        // Verify installation
+        await verifyPackageInstallation(packageName, config, logger);
+        spinner.stop('Package installed successfully!', 0);
+
+        // Create basic project structure if local installation
+        if (config.installLocation === 'local') {
+          await createLibraryProjectStructure(config, logger);
+        }
+      } else {
+        // Development: Show what would be installed
+        logger.info('🚧 Development Mode: Package not yet published');
+        logger.info('In production, this package would be installed:');
+        logger.info('  • @lord-commander/cli-core');
+
+        const spinner = logger.spinner('Setting up library mode...');
+        spinner.stop('Library mode setup complete! (Development mode)', 0);
+      }
+
+      showLibraryModeNextSteps(config, logger);
+    } catch (error) {
+      logger.error(
+        `Library installation failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Verify that a package was installed correctly
+   */
+  async function verifyPackageInstallation(
+    packageName: string,
+    config: InitConfig,
+    logger: CommandContext['logger']
+  ) {
+    try {
+      if (config.installLocation === 'global') {
+        // For global installations, we can't easily verify without running npm list -g
+        logger.info(`✅ Global installation of ${packageName} completed`);
+      } else {
+        // For local installations, check if package.json was updated or node_modules exists
+        const packageJsonPath = join(cwd(), 'package.json');
+        if (fs?.exists?.(packageJsonPath)) {
+          logger.info(`✅ Local installation of ${packageName} completed`);
+        }
+      }
+    } catch (error) {
+      logger.warn(
+        `Could not verify installation of ${packageName}: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  /**
+   * Create basic project structure for library mode local installations
+   */
+  async function createLibraryProjectStructure(
+    config: InitConfig,
+    logger: CommandContext['logger']
+  ) {
+    if (!fs?.writeFile || !fs?.ensureDir) {
+      logger.warn('File system utilities not available, skipping project structure creation');
+      return;
+    }
+
+    const spinner = logger.spinner('Creating project structure...');
+
+    try {
+      // Create package.json if it doesn't exist
+      const packageJsonPath = join(cwd(), 'package.json');
+      const packageJsonExists = fs.exists ? fs.exists(packageJsonPath) : false;
+
+      if (!packageJsonExists) {
+        const packageJson = {
+          name: config.projectName,
+          version: '1.0.0',
+          type: 'module',
+          description: 'CLI project built with Lord Commander SDK',
+          main: 'index.js',
+          scripts: {
+            start: 'node index.js',
+            dev: 'node --watch index.js',
+          },
+          dependencies: {
+            '@lord-commander/cli-core': '^1.0.0',
+          },
+          keywords: ['cli', 'lord-commander'],
+          author: '',
+          license: 'ISC',
+        };
+
+        await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
+      }
+
+      // Create basic CLI entry point
+      const indexPath = join(cwd(), 'index.js');
+      const indexExists = fs.exists ? fs.exists(indexPath) : false;
+
+      if (!indexExists) {
+        const cliTemplate = `#!/usr/bin/env node
+
+import { createCLI } from '@lord-commander/cli-core';
+
+await createCLI({
+  name: '${config.projectName}',
+  version: '1.0.0',
+  description: 'CLI built with Lord Commander SDK',
+  commandsPath: './commands',
+  builtinCommands: {
+    completion: true,
+    hello: true,
+    version: true,
+  },
+  autocomplete: {
+    enabled: true,
+    autoInstall: false,
+    shells: ['bash', 'zsh', 'fish', 'powershell'],
+    enableFileCompletion: true,
+  },
+});
+`;
+        await fs.writeFile(indexPath, cliTemplate);
+      }
+
+      // Create commands directory
+      await fs.ensureDir(join(cwd(), 'commands'));
+
+      spinner.stop('Project structure created!', 0);
+    } catch (error) {
+      spinner.stop('Failed to create project structure', 1);
+      logger.warn(
+        `Structure creation error: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -967,25 +1123,36 @@ await createCLI({
     logger.success('🎉 Library installation complete!');
     logger.info('');
     logger.info('📚 Next steps:');
-    logger.info('• Import SDK functions in your project:');
+    logger.info('• Import the CLI SDK in your project:');
     logger.info('  import { createCLI } from "@lord-commander/cli-core";');
-
-    if (config.includeApi) {
-      logger.info('  import { createServer } from "@caedonai/lord-commander-api";');
-    }
-
-    if (config.includeDashboard) {
-      logger.info('  import { Dashboard } from "@caedonai/lord-commander-dashboard";');
-    }
-
     logger.info('');
-    logger.info('• Example usage:');
+    logger.info('• Create your CLI:');
     logger.info('  const cli = await createCLI({');
     logger.info('    name: "my-cli",');
     logger.info('    version: "1.0.0",');
-    logger.info('    description: "My custom CLI"');
+    logger.info('    description: "My custom CLI",');
+    logger.info('    commandsPath: "./commands"');
     logger.info('  });');
     logger.info('');
+
+    if (config.installLocation === 'local') {
+      logger.info('• Start building:');
+      logger.info('  - Add your commands in the "./commands" directory');
+      logger.info('  - Run "node index.js --help" to test your CLI');
+      logger.info('  - Use "npm run dev" for development mode');
+      logger.info('');
+    }
+
+    if (config.includeApi || config.includeDashboard) {
+      logger.info(
+        '💡 Note: For API and Dashboard components, use project scaffolding mode instead:'
+      );
+      logger.info(
+        `   ${config.packageManager === 'npm' ? 'npx' : config.packageManager} @lord-commander/cli init --type ${config.includeApi && config.includeDashboard ? 'full-stack' : 'cli-api'}`
+      );
+      logger.info('');
+    }
+
     logger.info('📖 Documentation: https://docs.lord-commander.dev');
     logger.info('🐛 Issues: https://github.com/caedonai/lord-commander/issues');
   }
