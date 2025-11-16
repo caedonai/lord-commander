@@ -219,38 +219,22 @@ This directory stores:
 {" "}
 
 <Accordion icon="triangle-exclamation" title="Permission Errors">
-  If you encounter permission errors during global installation:
-  
-  **Use local installation instead:**
-  ```bash
-  lord-commander init --quick --type=library
-  # (Installs locally, no global permissions needed)
-  ```
-  
-  **Or configure npm properly (better approach):**
-  ```bash
-  mkdir ~/.npm-global
-  npm config set prefix '~/.npm-global'
-  echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
-  source ~/.bashrc
-  ```
+  If you encounter permission errors during global installation: **Use local
+  installation instead:** ```bash lord-commander init --quick --type=library #
+  (Installs locally, no global permissions needed) ``` **Or configure npm
+  properly (better approach):** ```bash mkdir ~/.npm-global npm config set
+  prefix '~/.npm-global' echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+  source ~/.bashrc ```
 </Accordion>
 
 {" "}
 
 <Accordion icon="network-wired" title="Network Issues">
-  If installation fails due to network issues:
-  
-  **Try a different registry:**
-  ```bash
-  lord-commander init --quick --type=library --pm=npm --registry https://registry.npmjs.org/
-  ```
-  
-  **Or configure npm proxy (if behind corporate firewall):**
-  ```bash
-  npm config set proxy http://proxy.company.com:8080
-  npm config set https-proxy http://proxy.company.com:8080
-  ```
+  If installation fails due to network issues: **Try a different registry:**
+  ```bash lord-commander init --quick --type=library --pm=npm --registry
+  https://registry.npmjs.org/ ``` **Or configure npm proxy (if behind corporate
+  firewall):** ```bash npm config set proxy http://proxy.company.com:8080 npm
+  config set https-proxy http://proxy.company.com:8080 ```
 </Accordion>
 
   <Accordion icon="exclamation-circle" title="Command Not Found">

@@ -12,8 +12,10 @@ interface InitConfig {
   installLocation: 'global' | 'local';
   // New path configuration options
   outputPath?: string; // Main project directory (--output)
+  cliPath?: string; // Custom CLI location (--cli-path)
   dashboardPath?: string; // Custom dashboard location (--dashboard-path)
   apiPath?: string; // Custom API location (--api-path)
+  readmePath?: string; // Custom README location (--readme-path)
   structureType: 'project-folder' | 'current-dir' | 'custom-paths'; // How to organize files
 }
 
@@ -30,8 +32,10 @@ export default function (program: Command, context: CommandContext) {
     .option('--type <setup>', 'Setup type: library, cli-only, cli-api, or full-stack', 'cli-only')
     .option('--pm <manager>', 'Package manager to use (npm, pnpm, yarn)', 'npm')
     .option('--output <path>', 'Output directory for the project (creates project folder)')
+    .option('--cli-path <path>', 'Custom path for CLI component (default: ./cli or <output>/cli)')
     .option('--dashboard-path <path>', 'Custom path for dashboard-ui component')
     .option('--api-path <path>', 'Custom path for API component')
+    .option('--readme-path <path>', 'Custom path for README.md file (default: project root)')
     .action(async (options) => {
       logger.intro('🚀 Lord Commander CLI Initialization');
 
@@ -63,7 +67,7 @@ export default function (program: Command, context: CommandContext) {
 
         // Determine structure type based on options
         let structureType: 'project-folder' | 'current-dir' | 'custom-paths' = 'project-folder';
-        if (options.dashboardPath || options.apiPath) {
+        if (options.dashboardPath || options.apiPath || options.cliPath) {
           structureType = 'custom-paths';
         } else if (!options.output) {
           structureType = 'current-dir';
@@ -77,8 +81,10 @@ export default function (program: Command, context: CommandContext) {
           packageManager: options.pm,
           installLocation: options.global ? 'global' : 'local',
           outputPath: options.output,
+          cliPath: options.cliPath,
           dashboardPath: options.dashboardPath,
           apiPath: options.apiPath,
+          readmePath: options.readmePath,
           structureType,
         };
         logger.info(`Using quick setup: ${options.type} configuration...`);
@@ -107,52 +113,58 @@ export default function (program: Command, context: CommandContext) {
   /**
    * Resolve project structure paths based on configuration
    *
-   * README.md placement strategy:
+   * Enhanced README.md placement strategy:
    * - Project folder mode: README goes in the new project folder (recommended)
    * - Current directory mode: README goes in current directory
-   * - Custom paths mode: README goes in current directory (acts as project root)
+   * - Custom paths mode: README goes where specified, or intelligently determined
+   * - Explicit readme-path: README goes exactly where specified
    */
   function resolveProjectPaths(config: InitConfig) {
     const currentDir = cwd();
 
-    // If output path is specified, use it as the project root
+    // Determine the logical "project root" based on configuration
+    let projectRoot: string;
+    let defaultReadmeLocation: string;
+
     if (config.outputPath) {
-      const projectRoot = join(currentDir, config.outputPath);
-      return {
-        root: projectRoot,
-        dashboard: config.dashboardPath
-          ? join(currentDir, config.dashboardPath)
-          : join(projectRoot, 'dashboard-ui'),
-        api: config.apiPath ? join(currentDir, config.apiPath) : join(projectRoot, 'api'),
-        cli: join(projectRoot, 'cli'),
-        packageJson: join(projectRoot, 'package.json'),
-        readme: join(projectRoot, 'README.md'),
-      };
+      // Project folder mode: everything centers around the output directory
+      projectRoot = join(currentDir, config.outputPath);
+      defaultReadmeLocation = projectRoot;
+    } else if (config.structureType === 'custom-paths') {
+      // Custom paths mode: current directory acts as project root
+      projectRoot = currentDir;
+      defaultReadmeLocation = currentDir;
+    } else {
+      // Current directory mode: use current directory as root
+      projectRoot = currentDir;
+      defaultReadmeLocation = currentDir;
     }
 
-    // If custom paths are specified, use them - README goes in current directory (project root)
-    if (config.structureType === 'custom-paths') {
-      return {
-        root: currentDir,
-        dashboard: config.dashboardPath
-          ? join(currentDir, config.dashboardPath)
-          : join(currentDir, 'dashboard-ui'),
-        api: config.apiPath ? join(currentDir, config.apiPath) : join(currentDir, 'api'),
-        cli: join(currentDir, 'cli'),
-        packageJson: join(currentDir, 'package.json'),
-        readme: join(currentDir, 'README.md'),
-      };
-    }
+    // Resolve individual component paths with smart defaults
+    const resolvedPaths = {
+      root: projectRoot,
 
-    // Default: current directory structure
-    return {
-      root: currentDir,
-      dashboard: join(currentDir, 'dashboard-ui'),
-      api: join(currentDir, 'api'),
-      cli: join(currentDir, 'cli'),
-      packageJson: join(currentDir, 'package.json'),
-      readme: join(currentDir, 'README.md'),
+      // CLI path resolution
+      cli: config.cliPath ? join(currentDir, config.cliPath) : join(projectRoot, 'cli'),
+
+      // Dashboard path resolution
+      dashboard: config.dashboardPath
+        ? join(currentDir, config.dashboardPath)
+        : join(projectRoot, 'dashboard-ui'),
+
+      // API path resolution
+      api: config.apiPath ? join(currentDir, config.apiPath) : join(projectRoot, 'api'),
+
+      // Package.json always goes in project root
+      packageJson: join(projectRoot, 'package.json'),
+
+      // README path resolution with explicit override
+      readme: config.readmePath
+        ? join(currentDir, config.readmePath)
+        : join(defaultReadmeLocation, 'README.md'),
     };
+
+    return resolvedPaths;
   }
 
   /**
@@ -350,12 +362,28 @@ export default function (program: Command, context: CommandContext) {
 
       // Handle custom paths if selected
       let outputPath: string | undefined;
+      let cliPath: string | undefined;
       let dashboardPath: string | undefined;
       let apiPath: string | undefined;
+      let readmePath: string | undefined;
 
       if (structureChoice === 'project-folder') {
         outputPath = projectName as string;
       } else if (structureChoice === 'custom-paths') {
+        // Always ask for CLI path in custom mode since CLI is always created
+        cliPath = (await prompts.text('CLI path:', {
+          placeholder: './cli',
+        })) as string;
+
+        if (prompts.clack.isCancel(cliPath)) {
+          logger.outro('Operation cancelled.');
+          process.exit(0);
+        }
+
+        if (!cliPath.trim()) {
+          cliPath = './cli';
+        }
+
         if (includeDashboard) {
           dashboardPath = (await prompts.text('Dashboard UI path:', {
             placeholder: './dashboard-ui',
@@ -387,6 +415,31 @@ export default function (program: Command, context: CommandContext) {
             apiPath = './api';
           }
         }
+
+        // Ask where to put README.md
+        const customReadme = await prompts.confirm(
+          'Would you like to specify a custom location for README.md?'
+        );
+
+        if (prompts.clack.isCancel(customReadme)) {
+          logger.outro('Operation cancelled.');
+          process.exit(0);
+        }
+
+        if (customReadme) {
+          readmePath = (await prompts.text('README.md path:', {
+            placeholder: './README.md',
+          })) as string;
+
+          if (prompts.clack.isCancel(readmePath)) {
+            logger.outro('Operation cancelled.');
+            process.exit(0);
+          }
+
+          if (!readmePath.trim()) {
+            readmePath = './README.md';
+          }
+        }
       }
 
       return {
@@ -397,8 +450,10 @@ export default function (program: Command, context: CommandContext) {
         packageManager: packageManager as 'npm' | 'pnpm' | 'yarn',
         installLocation: installLocation as 'global' | 'local',
         outputPath,
+        cliPath,
         dashboardPath,
         apiPath,
+        readmePath,
         structureType: structureChoice as 'project-folder' | 'current-dir' | 'custom-paths',
       };
     } catch (error) {
@@ -469,6 +524,30 @@ export default function (program: Command, context: CommandContext) {
       logger.info('  • CLI Project ✓');
       logger.info(`  • API Server: ${config.includeApi ? '✓' : '❌'}`);
       logger.info(`  • Dashboard UI: ${config.includeDashboard ? '✓' : '❌'}`);
+
+      // Show path configuration if using custom paths or output folder
+      if (config.outputPath || config.structureType === 'custom-paths') {
+        logger.info('');
+        logger.info('📂 Project Structure:');
+
+        const paths = resolveProjectPaths(config);
+
+        if (config.outputPath) {
+          logger.info(`   Project Root: ${paths.root}`);
+        }
+
+        logger.info(`   CLI: ${paths.cli}`);
+
+        if (config.includeApi) {
+          logger.info(`   API: ${paths.api}`);
+        }
+
+        if (config.includeDashboard) {
+          logger.info(`   Dashboard: ${paths.dashboard}`);
+        }
+
+        logger.info(`   README.md: ${paths.readme}`);
+      }
     }
   }
 
@@ -829,7 +908,6 @@ export default function (program: Command, context: CommandContext) {
       },
       dependencies: {
         '@lord-commander/cli-core': '^1.0.0', // Published version
-        commander: '^12.0.0',
         tsx: '^4.0.0',
       },
       devDependencies: {
