@@ -86,11 +86,17 @@ Follow the prompts to choose your setup type and configuration.
 # Library mode - just the SDK
 lord-commander init --quick --type=library
 
-# CLI-only application
-lord-commander init --quick --type=cli-only --pm=pnpm
+# Library mode in project folder
+lord-commander init --quick --type=library --output my-sdk
 
-# Full-stack with dashboard
-lord-commander init --quick --type=full-stack --pm=pnpm --global
+# CLI-only application (recommended approach)
+lord-commander init --quick --type=cli-only --output my-cli --pm=pnpm
+
+# Full-stack with dashboard in project folder (recommended)
+lord-commander init --quick --type=full-stack --output my-project --pm=pnpm
+
+# Full-stack with custom paths
+lord-commander init --quick --type=full-stack --dashboard-path ./admin --api-path ./backend
 ```
 
 ## Verification
@@ -120,12 +126,15 @@ This will display the available commands and options.
 
 The `init` command supports several flags for customization:
 
-| Flag       | Description           | Values                                         | Default    |
-| ---------- | --------------------- | ---------------------------------------------- | ---------- |
-| `--type`   | Setup type            | `library`, `cli-only`, `cli-api`, `full-stack` | `cli-only` |
-| `--quick`  | Skip interactive mode | `true`, `false`                                | `false`    |
-| `--global` | Install globally      | `true`, `false`                                | `false`    |
-| `--pm`     | Package manager       | `npm`, `pnpm`, `yarn`                          | `npm`      |
+| Flag               | Description                               | Values                                         | Default    |
+| ------------------ | ----------------------------------------- | ---------------------------------------------- | ---------- |
+| `--type`           | Setup type                                | `library`, `cli-only`, `cli-api`, `full-stack` | `cli-only` |
+| `--quick`          | Skip interactive mode                     | `true`, `false`                                | `false`    |
+| `--global`         | Install globally                          | `true`, `false`                                | `false`    |
+| `--pm`             | Package manager                           | `npm`, `pnpm`, `yarn`                          | `npm`      |
+| `--output`         | Output directory (creates project folder) | `string`                                       | -          |
+| `--dashboard-path` | Custom path for dashboard-ui component    | `string`                                       | -          |
+| `--api-path`       | Custom path for API component             | `string`                                       | -          |
 
 ### Examples with Flags
 
@@ -133,10 +142,19 @@ The `init` command supports several flags for customization:
 # Library mode with pnpm, installed globally
 lord-commander init --quick --type=library --pm=pnpm --global
 
-# CLI-only with yarn, local installation
-lord-commander init --quick --type=cli-only --pm=yarn
+# CLI-only with yarn in project folder (recommended)
+lord-commander init --quick --type=cli-only --output my-cli --pm=yarn
 
-# Full-stack interactive setup
+# Full-stack in project folder with pnpm (recommended)
+lord-commander init --quick --type=full-stack --output my-project --pm=pnpm
+
+# Full-stack with custom component paths
+lord-commander init --quick --type=full-stack --dashboard-path ./admin --api-path ./server
+
+# CLI+API in current directory
+lord-commander init --quick --type=cli-api --pm=pnpm
+
+# Interactive setup with project structure options
 lord-commander init --type=full-stack
 ```
 

@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { cwd } from 'node:process';
 import type { CommandContext } from '@lord-commander/cli-core';
 import type { Command } from 'commander';
@@ -10,6 +10,11 @@ interface InitConfig {
   includeDashboard: boolean;
   packageManager: 'npm' | 'pnpm' | 'yarn';
   installLocation: 'global' | 'local';
+  // New path configuration options
+  outputPath?: string; // Main project directory (--output)
+  dashboardPath?: string; // Custom dashboard location (--dashboard-path)
+  apiPath?: string; // Custom API location (--api-path)
+  structureType: 'project-folder' | 'current-dir' | 'custom-paths'; // How to organize files
 }
 
 export default function (program: Command, context: CommandContext) {
@@ -22,8 +27,11 @@ export default function (program: Command, context: CommandContext) {
     )
     .option('--quick', 'Skip interactive mode and install CLI-only setup', false)
     .option('--global', 'Install globally instead of in current directory', false)
-    .option('--type <setup>', 'Setup type: cli-only, cli-api, or full-stack', 'cli-only')
+    .option('--type <setup>', 'Setup type: library, cli-only, cli-api, or full-stack', 'cli-only')
     .option('--pm <manager>', 'Package manager to use (npm, pnpm, yarn)', 'npm')
+    .option('--output <path>', 'Output directory for the project (creates project folder)')
+    .option('--dashboard-path <path>', 'Custom path for dashboard-ui component')
+    .option('--api-path <path>', 'Custom path for API component')
     .action(async (options) => {
       logger.intro('🚀 Lord Commander CLI Initialization');
 
@@ -53,13 +61,25 @@ export default function (program: Command, context: CommandContext) {
             break;
         }
 
+        // Determine structure type based on options
+        let structureType: 'project-folder' | 'current-dir' | 'custom-paths' = 'project-folder';
+        if (options.dashboardPath || options.apiPath) {
+          structureType = 'custom-paths';
+        } else if (!options.output) {
+          structureType = 'current-dir';
+        }
+
         config = {
-          projectName: 'my-cli-project',
+          projectName: options.output ? basename(options.output) : 'my-cli-project',
           setupType: options.type,
           includeApi,
           includeDashboard,
           packageManager: options.pm,
           installLocation: options.global ? 'global' : 'local',
+          outputPath: options.output,
+          dashboardPath: options.dashboardPath,
+          apiPath: options.apiPath,
+          structureType,
         };
         logger.info(`Using quick setup: ${options.type} configuration...`);
       } else {
@@ -83,6 +103,52 @@ export default function (program: Command, context: CommandContext) {
 
       logger.outro('✨ Lord Commander CLI setup complete!');
     });
+
+  /**
+   * Resolve project structure paths based on configuration
+   */
+  function resolveProjectPaths(config: InitConfig) {
+    const currentDir = cwd();
+
+    // If output path is specified, use it as the project root
+    if (config.outputPath) {
+      const projectRoot = join(currentDir, config.outputPath);
+      return {
+        root: projectRoot,
+        dashboard: config.dashboardPath
+          ? join(currentDir, config.dashboardPath)
+          : join(projectRoot, 'dashboard-ui'),
+        api: config.apiPath ? join(currentDir, config.apiPath) : join(projectRoot, 'api'),
+        cli: join(projectRoot, 'cli'),
+        packageJson: join(projectRoot, 'package.json'),
+        readme: join(projectRoot, 'README.md'),
+      };
+    }
+
+    // If custom paths are specified, use them
+    if (config.structureType === 'custom-paths') {
+      return {
+        root: currentDir,
+        dashboard: config.dashboardPath
+          ? join(currentDir, config.dashboardPath)
+          : join(currentDir, 'dashboard-ui'),
+        api: config.apiPath ? join(currentDir, config.apiPath) : join(currentDir, 'api'),
+        cli: join(currentDir, 'cli'),
+        packageJson: join(currentDir, 'package.json'),
+        readme: join(currentDir, 'README.md'),
+      };
+    }
+
+    // Default: current directory structure
+    return {
+      root: currentDir,
+      dashboard: join(currentDir, 'dashboard-ui'),
+      api: join(currentDir, 'api'),
+      cli: join(currentDir, 'cli'),
+      packageJson: join(currentDir, 'package.json'),
+      readme: join(currentDir, 'README.md'),
+    };
+  }
 
   /**
    * Detect if we're being run during npm install (postinstall script)
@@ -253,6 +319,71 @@ export default function (program: Command, context: CommandContext) {
         }
       }
 
+      // Determine project structure
+      const structureChoice = await prompts.select('How should we organize your project?', [
+        {
+          value: 'project-folder',
+          label: 'Create in new project folder (recommended)',
+          hint: `Creates: ./${projectName}/dashboard-ui and ./${projectName}/api`,
+        },
+        {
+          value: 'current-dir',
+          label: 'Create in current directory',
+          hint: 'Creates: ./dashboard-ui and ./api here',
+        },
+        {
+          value: 'custom-paths',
+          label: 'Custom paths for each component',
+          hint: 'Specify exactly where each component goes',
+        },
+      ]);
+
+      if (prompts.clack.isCancel(structureChoice)) {
+        logger.outro('Operation cancelled.');
+        process.exit(0);
+      }
+
+      // Handle custom paths if selected
+      let outputPath: string | undefined;
+      let dashboardPath: string | undefined;
+      let apiPath: string | undefined;
+
+      if (structureChoice === 'project-folder') {
+        outputPath = projectName as string;
+      } else if (structureChoice === 'custom-paths') {
+        if (includeDashboard) {
+          dashboardPath = (await prompts.text('Dashboard UI path:', {
+            placeholder: './dashboard-ui',
+          })) as string;
+
+          if (prompts.clack.isCancel(dashboardPath)) {
+            logger.outro('Operation cancelled.');
+            process.exit(0);
+          }
+
+          // Use default if empty
+          if (!dashboardPath.trim()) {
+            dashboardPath = './dashboard-ui';
+          }
+        }
+
+        if (includeApi) {
+          apiPath = (await prompts.text('API path:', {
+            placeholder: './api',
+          })) as string;
+
+          if (prompts.clack.isCancel(apiPath)) {
+            logger.outro('Operation cancelled.');
+            process.exit(0);
+          }
+
+          // Use default if empty
+          if (!apiPath.trim()) {
+            apiPath = './api';
+          }
+        }
+      }
+
       return {
         projectName: projectName as string,
         setupType: setupType as 'library' | 'cli-only' | 'cli-api' | 'full-stack',
@@ -260,6 +391,10 @@ export default function (program: Command, context: CommandContext) {
         includeDashboard,
         packageManager: packageManager as 'npm' | 'pnpm' | 'yarn',
         installLocation: installLocation as 'global' | 'local',
+        outputPath,
+        dashboardPath,
+        apiPath,
+        structureType: structureChoice as 'project-folder' | 'current-dir' | 'custom-paths',
       };
     } catch (error) {
       logger.error(`Setup failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -656,63 +791,78 @@ await createCLI({
     const spinner = logger.spinner('Scaffolding project templates...');
 
     try {
-      const projectDir = join(cwd(), config.projectName);
-      await fs.ensureDir(projectDir);
+      // Resolve project paths based on configuration
+      const paths = resolveProjectPaths(config);
+
+      // Create project root directory
+      await fs.ensureDir(paths.root);
 
       // Always create CLI structure (but clean it up for standalone use)
-      await createStandaloneCLI(projectDir, config, fs);
+      await createStandaloneCLI(paths, config, fs);
 
       // Conditionally copy API
       if (config.includeApi) {
-        await createStandaloneAPI(projectDir, config, fs);
+        await createStandaloneAPI(paths, config, fs);
       }
 
       // Conditionally copy Dashboard
       if (config.includeDashboard) {
-        await createStandaloneDashboard(projectDir, config, fs);
+        await createStandaloneDashboard(paths, config, fs);
       }
 
-      // Create workspace configuration
-      const workspacePackageJson = {
-        name: config.projectName,
-        version: '1.0.0',
-        private: true,
-        workspaces: [
-          'cli',
-          ...(config.includeApi ? ['api'] : []),
-          ...(config.includeDashboard ? ['dashboard-ui'] : []),
-        ],
-        scripts: {
-          'dev:cli': 'cd cli && npm run dev',
-          'build:cli': 'cd cli && npm run build',
-          'test:cli': 'cd cli && npm test',
-          ...(config.includeApi && {
-            'dev:api': 'cd api && npm run dev',
-            'build:api': 'cd api && npm run build',
-            'test:api': 'cd api && npm test',
-          }),
-          ...(config.includeDashboard && {
-            'dev:dashboard': 'cd dashboard-ui && npm run dev',
-            'build:dashboard': 'cd dashboard-ui && npm run build',
-            'test:dashboard': 'cd dashboard-ui && npm test',
-          }),
-          'install:all': 'npm install && npm run install:workspaces',
-          'install:workspaces': 'npm install --workspaces',
-          'build:all': 'npm run build --workspaces',
-          'test:all': 'npm run test --workspaces',
-        },
-      };
+      // Create workspace configuration (only if using project folder structure)
+      if (config.structureType === 'project-folder') {
+        const workspacePackageJson = {
+          name: config.projectName,
+          version: '1.0.0',
+          private: true,
+          workspaces: [
+            'cli',
+            ...(config.includeApi ? ['api'] : []),
+            ...(config.includeDashboard ? ['dashboard-ui'] : []),
+          ],
+          scripts: {
+            'dev:cli': 'cd cli && npm run dev',
+            'build:cli': 'cd cli && npm run build',
+            'test:cli': 'cd cli && npm test',
+            ...(config.includeApi && {
+              'dev:api': 'cd api && npm run dev',
+              'build:api': 'cd api && npm run build',
+              'test:api': 'cd api && npm test',
+            }),
+            ...(config.includeDashboard && {
+              'dev:dashboard': 'cd dashboard-ui && npm run dev',
+              'build:dashboard': 'cd dashboard-ui && npm run build',
+              'test:dashboard': 'cd dashboard-ui && npm test',
+            }),
+            'install:all': 'npm install && npm run install:workspaces',
+            'install:workspaces': 'npm install --workspaces',
+            'build:all': 'npm run build --workspaces',
+            'test:all': 'npm run test --workspaces',
+          },
+        };
 
-      await fs.writeFile(
-        join(projectDir, 'package.json'),
-        JSON.stringify(workspacePackageJson, null, 2)
-      );
+        await fs.writeFile(paths.packageJson, JSON.stringify(workspacePackageJson, null, 2));
+      }
 
       // Create README for the scaffolded project
-      await createProjectReadme(projectDir, config, fs);
+      await createProjectReadme(paths, config, fs);
 
       spinner.stop('Templates scaffolded successfully!', 0);
-      logger.success(`📁 Project created at: ${projectDir}`);
+      logger.success(`📁 Project created at: ${paths.root}`);
+
+      // Show created components and their locations
+      logger.info('📂 Project structure:');
+      logger.info(`   Root: ${paths.root}`);
+      if (config.setupType !== 'library') {
+        logger.info(`   CLI: ${paths.cli}`);
+      }
+      if (config.includeApi) {
+        logger.info(`   API: ${paths.api}`);
+      }
+      if (config.includeDashboard) {
+        logger.info(`   Dashboard: ${paths.dashboard}`);
+      }
     } catch (error) {
       spinner.stop('Failed to scaffold templates', 1);
       logger.warn(`Scaffolding error: ${error instanceof Error ? error.message : String(error)}`);
@@ -723,13 +873,13 @@ await createCLI({
    * Create standalone CLI project (without NX dependencies)
    */
   async function createStandaloneCLI(
-    projectDir: string,
+    paths: { root: string; cli: string; [key: string]: string },
     config: InitConfig,
     fs: CommandContext['fs']
   ) {
     if (!fs) throw new Error('File system operations not available');
 
-    const cliDir = join(projectDir, 'cli');
+    const cliDir = paths.cli;
     await fs.ensureDir(cliDir);
 
     // Copy source files (excluding NX configs)
@@ -807,13 +957,13 @@ await createCLI({
    * Create standalone API project
    */
   async function createStandaloneAPI(
-    projectDir: string,
+    paths: { root: string; api: string; [key: string]: string },
     config: InitConfig,
     fs: CommandContext['fs']
   ) {
     if (!fs) throw new Error('File system operations not available');
 
-    const apiDir = join(projectDir, 'api');
+    const apiDir = paths.api;
 
     // Copy API source (excluding NX configs)
     const sourceFiles = ['src/', 'apps/', 'webpack.config.js'];
@@ -863,13 +1013,13 @@ await createCLI({
    * Create standalone Dashboard project
    */
   async function createStandaloneDashboard(
-    projectDir: string,
+    paths: { root: string; dashboard: string; [key: string]: string },
     config: InitConfig,
     fs: CommandContext['fs']
   ) {
     if (!fs) throw new Error('File system operations not available');
 
-    const dashboardDir = join(projectDir, 'dashboard-ui');
+    const dashboardDir = paths.dashboard;
 
     // Copy Dashboard source (excluding NX configs)
     const sourceFiles = ['src/', 'public/', 'next.config.mjs', 'tailwind.config.js'];
@@ -924,7 +1074,7 @@ await createCLI({
    * Create project README with setup instructions
    */
   async function createProjectReadme(
-    projectDir: string,
+    paths: { root: string; readme: string; [key: string]: string },
     config: InitConfig,
     fs: CommandContext['fs']
   ) {
@@ -1020,7 +1170,7 @@ npm run test       # Run tests
 - [Documentation](https://docs.lord-commander.dev)
 `;
 
-    await fs.writeFile(join(projectDir, 'README.md'), readme);
+    await fs.writeFile(paths.readme, readme);
   }
 
   /**

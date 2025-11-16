@@ -58,27 +58,93 @@ npm install -g lord-commander
 ### Step 2: Initialize project
 
 <Tabs>
-  <Tab title="CLI-Only">
-    ```bash lord-commander init --quick --type=cli-only --pm=pnpm ```
+  <Tab title="Project Folder (Recommended)">
+    ```bash
+    lord-commander init my-cli-project --type=cli-only --pm=pnpm
+    # Creates: my-cli-project/
+    ```
   </Tab>
-  <Tab title="CLI + API">
-    ```bash lord-commander init --quick --type=cli-api --pm=pnpm ```
+  <Tab title="Current Directory">
+    ```bash
+    mkdir my-project && cd my-project
+    lord-commander init . --type=cli-only --pm=pnpm
+    # Uses current directory
+    ```
   </Tab>
-  <Tab title="Full-Stack">
-    ```bash lord-commander init --quick --type=full-stack --pm=pnpm ```
+  <Tab title="Custom Paths">
+    ```bash
+    lord-commander init --output=./projects/cli --type=cli-api --pm=pnpm
+    # Creates: projects/cli/
+    ```
   </Tab>
   <Tab title="Interactive">
-    ```bash lord-commander init # Follow the prompts for custom setup ```
+    ```bash
+    lord-commander init
+    # Follow the prompts for custom setup
+    ```
   </Tab>
 </Tabs>
+
+<Note>
+  **Recommended:** Use the project folder approach (first tab) as it creates a
+  clean, isolated project structure similar to `create-next-app` or
+  `create-react-app`.
+</Note>
 
 ### Step 3: Start building
 
 ```bash
-cd my-cli-project
+cd my-cli-project  # or your chosen directory
 pnpm install
 pnpm dev
 ```
+
+## Project Structure Options
+
+Lord Commander offers flexible project structure approaches:
+
+<CardGroup cols={3}>
+  <Card title="Project Folder" icon="folder" color="#10B981">
+    **Recommended** - Creates `my-project/` with all files inside (like
+    create-next-app)
+  </Card>
+  <Card title="Current Directory" icon="location-dot" color="#F59E0B">
+    Uses current directory - good for existing folders
+  </Card>
+  <Card title="Custom Paths" icon="route" color="#8B5CF6">
+    Specify exact paths for each component with `--output`, `--dashboard-path`,
+    `--api-path`
+  </Card>
+</CardGroup>
+
+### Example Directory Structures
+
+<CodeGroup>
+```bash Project Folder (Recommended)
+my-cli-project/
+├── src/
+├── commands/
+├── package.json
+└── README.md
+```
+
+```bash Current Directory
+./
+├── src/
+├── commands/
+├── package.json
+└── README.md
+```
+
+```bash Custom Paths
+./
+├── my-cli/          # --output=./my-cli
+├── web-dashboard/   # --dashboard-path=./web-dashboard
+├── backend-api/     # --api-path=./backend-api
+└── other-files...
+```
+
+</CodeGroup>
 
 ## Verification
 
@@ -141,17 +207,21 @@ lord-commander init --quick --type=library --pm=pnpm
 import { createCLI } from '@lord-commander/cli-core';
 ```
 
-### New CLI Project
+### New CLI Project - Recommended Patterns
 
 ```bash
-# Create CLI-only app
-lord-commander init --quick --type=cli-only --pm=pnpm
+# Create CLI-only app (recommended project folder approach)
+lord-commander init my-cli-app --type=cli-only --pm=pnpm
 
 # Create with API backend
-lord-commander init --quick --type=cli-api --pm=pnpm
+lord-commander init my-fullstack-app --type=cli-api --pm=pnpm
 
-# Create full-stack with dashboard
-lord-commander init --quick --type=full-stack --pm=pnpm
+# Create full-stack with custom paths
+lord-commander init my-project \
+  --type=full-stack \
+  --dashboard-path=./web \
+  --api-path=./backend \
+  --pm=pnpm
 ```
 
 ### Interactive Setup
@@ -159,6 +229,9 @@ lord-commander init --quick --type=full-stack --pm=pnpm
 ```bash
 # Full interactive setup with all options
 lord-commander init
+
+# Interactive setup in a project folder (recommended)
+lord-commander init my-new-project
 
 # Check what was installed
 lord-commander status
