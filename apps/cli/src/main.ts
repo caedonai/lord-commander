@@ -20,7 +20,7 @@ async function main(): Promise<void> {
       name: 'lord-commander',
       version: '1.0.0',
       description: 'Professional CLI SDK Framework for building advanced command-line tools',
-      commandsPath: './commands',
+      commandsPath: 'apps/cli/commands',
       builtinCommands: {
         completion: true,
         hello: true,
