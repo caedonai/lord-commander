@@ -59,13 +59,13 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "ultracite check apps/marketing/src"
+        "command": "NO_COLOR=1 ultracite check apps/marketing/src"
       }
     },
     "lint:fix": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "ultracite fix apps/marketing/src"
+        "command": "NO_COLOR=1 ultracite fix apps/marketing/src"
       }
     }
   }

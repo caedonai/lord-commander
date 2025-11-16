@@ -10,15 +10,19 @@ The `init` command initializes your Lord Commander CLI setup. It supports multip
 ## Setup Modes
 
 ### Library Mode
+
 Install only the `@lord-commander/cli-core` package for SDK usage in existing projects.
 
-### CLI-Only Mode  
+### CLI-Only Mode
+
 Create a standalone CLI application with the Lord Commander framework.
 
 ### CLI+API Mode
+
 Create a CLI application with a companion REST API backend.
 
 ### Full-Stack Mode
+
 Create a complete setup with CLI, API backend, and admin dashboard.
 
 ## Basic Usage
@@ -39,12 +43,12 @@ lord-commander init --quick --type=full-stack
 
 ## Command Options
 
-| Option      | Description                                      | Values                                        | Default    |
-| ----------- | ------------------------------------------------ | --------------------------------------------- | ---------- |
-| `--type`    | Setup type                                       | `library`, `cli-only`, `cli-api`, `full-stack` | `cli-only` |
-| `--quick`   | Skip interactive mode                            | `true`, `false`                               | `false`    |
-| `--global`  | Install globally instead of current directory   | `true`, `false`                               | `false`    |
-| `--pm`      | Package manager to use                           | `npm`, `pnpm`, `yarn`                         | `npm`      |
+| Option     | Description                                   | Values                                         | Default    |
+| ---------- | --------------------------------------------- | ---------------------------------------------- | ---------- |
+| `--type`   | Setup type                                    | `library`, `cli-only`, `cli-api`, `full-stack` | `cli-only` |
+| `--quick`  | Skip interactive mode                         | `true`, `false`                                | `false`    |
+| `--global` | Install globally instead of current directory | `true`, `false`                                | `false`    |
+| `--pm`     | Package manager to use                        | `npm`, `pnpm`, `yarn`                          | `npm`      |
 
 ## Examples
 
@@ -76,20 +80,23 @@ lord-commander init
 ### Interactive Prompts
 
 1. **Project Name**
+
    ```
    ? What is your project name? (my-awesome-cli)
    ```
 
 2. **Setup Type**
+
    ```
    ? What type of setup do you want?
    ❯ Library Mode (SDK only)
-     CLI-only Application  
+     CLI-only Application
      CLI + API Backend
      Full-stack (CLI + API + Dashboard)
    ```
 
 3. **Installation Location**
+
    ```
    ? Where would you like to install?
    ❯ Current directory
@@ -97,21 +104,23 @@ lord-commander init
    ```
 
 4. **Package Manager**
+
    ```
    ? Which package manager do you prefer?
    ❯ npm
-     pnpm  
+     pnpm
      yarn
    ```
 
 5. **Confirmation**
+
    ```
    📋 Configuration Summary:
    Project Name: my-awesome-cli
    Setup Type: CLI-only Application
    Installation: local
    Package Manager: npm
-   
+
    ? Proceed with this configuration? (Y/n)
    ```
 
@@ -126,6 +135,7 @@ lord-commander init --quick --type=library
 ```
 
 **What it installs:**
+
 - `@lord-commander/cli-core` npm package
 - Basic project structure for CLI development
 - Example usage files
@@ -136,11 +146,12 @@ lord-commander init --quick --type=library
 
 Creates a standalone CLI application with the Lord Commander framework.
 
-```bash  
+```bash
 lord-commander init --quick --type=cli-only
 ```
 
 **Generated structure:**
+
 ```
 my-cli-project/
 ├── commands/
@@ -160,10 +171,11 @@ my-cli-project/
 Creates a CLI application with a companion REST API backend.
 
 ```bash
-lord-commander init --quick --type=cli-api  
+lord-commander init --quick --type=cli-api
 ```
 
 **Generated structure:**
+
 ```
 my-project/
 ├── cli/
@@ -190,6 +202,7 @@ lord-commander init --quick --type=full-stack
 ```
 
 **Generated structure:**
+
 ```
 my-fullstack-project/
 ├── apps/
@@ -210,22 +223,27 @@ my-fullstack-project/
 Lord Commander automatically detects and supports multiple package managers:
 
 ### NPM (Default)
+
 ```bash
 lord-commander init --pm=npm
 ```
 
 ### PNPM (Recommended)
+
 ```bash
 lord-commander init --pm=pnpm
 ```
 
 ### Yarn
+
 ```bash
 lord-commander init --pm=yarn
 ```
 
 ### Auto-Detection
+
 If no package manager is specified, Lord Commander will:
+
 1. Check for existing lockfiles (`pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`)
 2. Use the detected package manager
 3. Fall back to `npm` if none detected
@@ -233,15 +251,19 @@ If no package manager is specified, Lord Commander will:
 ## Installation Locations
 
 ### Local Installation (Default)
+
 ```bash
 lord-commander init --type=library
 ```
+
 Installs in the current directory for project-specific usage.
 
 ### Global Installation
+
 ```bash
 lord-commander init --type=library --global
 ```
+
 Installs globally for system-wide CLI usage.
 
 ## Library Mode Usage
@@ -249,37 +271,40 @@ Installs globally for system-wide CLI usage.
 After installing in library mode, you can use the CLI SDK in your project:
 
 ### Import the CLI Core
+
 ```typescript
-import { createCLI } from '@lord-commander/cli-core';
+import { createCLI } from "@lord-commander/cli-core";
 
 // Create your CLI instance
 const cli = await createCLI({
-  name: 'my-cli',
-  version: '1.0.0', 
-  description: 'My custom CLI tool',
-  commandsPath: './commands'
+  name: "my-cli",
+  version: "1.0.0",
+  description: "My custom CLI tool",
+  commandsPath: "./commands",
 });
 ```
 
 ### Create Commands
+
 ```typescript
 // commands/hello.ts
-import type { Command } from 'commander';
-import type { CommandContext } from '@lord-commander/cli-core';
+import type { Command } from "commander";
+import type { CommandContext } from "@lord-commander/cli-core";
 
-export default function(program: Command, context: CommandContext) {
+export default function (program: Command, context: CommandContext) {
   const { logger } = context;
-  
+
   program
-    .command('hello')
-    .description('Say hello')
+    .command("hello")
+    .description("Say hello")
     .action(() => {
-      logger.info('Hello from Lord Commander!');
+      logger.info("Hello from Lord Commander!");
     });
 }
 ```
 
 ### Run Your CLI
+
 ```bash
 node index.js hello
 ```
@@ -289,6 +314,7 @@ node index.js hello
 After initialization, Lord Commander provides setup completion and next steps:
 
 ### Library Mode
+
 ```bash
 🎉 Library installation complete!
 
@@ -299,7 +325,7 @@ After initialization, Lord Commander provides setup completion and next steps:
 • Create your CLI:
   const cli = await createCLI({
     name: "my-cli",
-    version: "1.0.0", 
+    version: "1.0.0",
     description: "My custom CLI",
     commandsPath: "./commands"
   });
@@ -311,6 +337,7 @@ After initialization, Lord Commander provides setup completion and next steps:
 ```
 
 ### CLI-Only/API/Full-Stack Modes
+
 ```bash
 ✨ Lord Commander CLI setup complete!
 
@@ -325,7 +352,7 @@ Next steps:
 
 Additional commands:
   • lord-commander scaffold component MyComponent
-  • lord-commander analyze  
+  • lord-commander analyze
   • lord-commander build
 ```
 
@@ -342,24 +369,19 @@ Additional commands:
     - Check package manager permissions
   </Accordion>
 
-  <Accordion icon="folder" title="Directory Not Empty">
-    **Error:** `Directory is not empty`
-    
-    **Solutions:**
-    - Choose a different directory name
-    - Navigate to an empty directory
-    - Use library mode in existing projects: `--type=library`
-  </Accordion>
+{" "}
+<Accordion icon="folder" title="Directory Not Empty">
+  **Error:** `Directory is not empty` **Solutions:** - Choose a different
+  directory name - Navigate to an empty directory - Use library mode in existing
+  projects: `--type=library`
+</Accordion>
 
-  <Accordion icon="exclamation-triangle" title="Permission Errors">
-    **Error:** `Permission denied during global installation`
-    
-    **Solutions:**
-    - Use local installation (default)
-    - Configure npm permissions properly
-    - Use a Node version manager (nvm, fnm)
-    - Avoid using `sudo` with npm
-  </Accordion>
+{" "}
+<Accordion icon="exclamation-triangle" title="Permission Errors">
+  **Error:** `Permission denied during global installation` **Solutions:** - Use
+  local installation (default) - Configure npm permissions properly - Use a Node
+  version manager (nvm, fnm) - Avoid using `sudo` with npm
+</Accordion>
 
   <Accordion icon="network-wired" title="Network Issues">
     **Error:** `Network timeout or connection refused`
@@ -385,15 +407,11 @@ Additional commands:
     ```
   </Tab>
 
-  <Tab title="New CLI Project">
-    ```bash
-    # Simple CLI application
-    lord-commander init --quick --type=cli-only --pm=pnpm
-    
-    # Interactive setup for custom configuration
-    lord-commander init
-    ```
-  </Tab>
+{" "}
+<Tab title="New CLI Project">
+  ```bash # Simple CLI application lord-commander init --quick --type=cli-only
+  --pm=pnpm # Interactive setup for custom configuration lord-commander init ```
+</Tab>
 
   <Tab title="Full-Stack Setup">
     ```bash

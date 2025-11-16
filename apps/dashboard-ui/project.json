@@ -59,13 +59,13 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "ultracite check apps/dashboard-ui/src"
+        "command": "NO_COLOR=1 ultracite check apps/dashboard-ui/src"
       }
     },
     "lint:fix": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "ultracite fix apps/dashboard-ui/src"
+        "command": "NO_COLOR=1 ultracite fix apps/dashboard-ui/src"
       }
     }
   }

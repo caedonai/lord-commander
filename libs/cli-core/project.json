@@ -32,13 +32,13 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "ultracite check libs/cli-core/src"
+        "command": "NO_COLOR=1 ultracite check libs/cli-core/src"
       }
     },
     "lint:fix": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "ultracite fix libs/cli-core/src"
+        "command": "NO_COLOR=1 ultracite fix libs/cli-core/src"
       }
     }
   }

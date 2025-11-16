@@ -31,7 +31,7 @@ Install the CLI SDK for use in existing projects:
     ```
   </Tab>
   <Tab title="pnpm">
-    ```bash  
+    ```bash
     pnpm add @lord-commander/cli-core
     ```
   </Tab>
@@ -73,6 +73,7 @@ Use the `init` command to create complete CLI applications:
 The easiest way to get started is using the `init` command:
 
 ### Interactive Setup
+
 ```bash
 lord-commander init
 ```
@@ -80,11 +81,12 @@ lord-commander init
 Follow the prompts to choose your setup type and configuration.
 
 ### Quick Setup Examples
+
 ```bash
 # Library mode - just the SDK
 lord-commander init --quick --type=library
 
-# CLI-only application  
+# CLI-only application
 lord-commander init --quick --type=cli-only --pm=pnpm
 
 # Full-stack with dashboard
@@ -118,12 +120,12 @@ This will display the available commands and options.
 
 The `init` command supports several flags for customization:
 
-| Flag        | Description                    | Values                                        | Default    |
-| ----------- | ------------------------------ | --------------------------------------------- | ---------- |
-| `--type`    | Setup type                     | `library`, `cli-only`, `cli-api`, `full-stack` | `cli-only` |
-| `--quick`   | Skip interactive mode          | `true`, `false`                               | `false`    |
-| `--global`  | Install globally               | `true`, `false`                               | `false`    |
-| `--pm`      | Package manager                | `npm`, `pnpm`, `yarn`                         | `npm`      |
+| Flag       | Description           | Values                                         | Default    |
+| ---------- | --------------------- | ---------------------------------------------- | ---------- |
+| `--type`   | Setup type            | `library`, `cli-only`, `cli-api`, `full-stack` | `cli-only` |
+| `--quick`  | Skip interactive mode | `true`, `false`                                | `false`    |
+| `--global` | Install globally      | `true`, `false`                                | `false`    |
+| `--pm`     | Package manager       | `npm`, `pnpm`, `yarn`                          | `npm`      |
 
 ### Examples with Flags
 
@@ -131,7 +133,7 @@ The `init` command supports several flags for customization:
 # Library mode with pnpm, installed globally
 lord-commander init --quick --type=library --pm=pnpm --global
 
-# CLI-only with yarn, local installation  
+# CLI-only with yarn, local installation
 lord-commander init --quick --type=cli-only --pm=yarn
 
 # Full-stack interactive setup
@@ -153,7 +155,7 @@ Enable shell completion for a better CLI experience:
   </Tab>
   <Tab title="zsh">
     ```bash
-    # Add to ~/.zshrc  
+    # Add to ~/.zshrc
     eval "$(lord-commander completion zsh)"
     ```
   </Tab>
@@ -175,7 +177,7 @@ Lord Commander creates a configuration directory at:
 This directory stores:
 
 - User preferences
-- Template cache  
+- Template cache
 - Plugin configurations
 
 ## Troubleshooting
@@ -196,38 +198,42 @@ This directory stores:
     ```
   </Accordion>
 
-  <Accordion icon="triangle-exclamation" title="Permission Errors">
-    If you encounter permission errors during global installation:
-    
-    **Use local installation instead:**
-    ```bash
-    lord-commander init --quick --type=library
-    # (Installs locally, no global permissions needed)
-    ```
-    
-    **Or configure npm properly (better approach):**
-    ```bash
-    mkdir ~/.npm-global
-    npm config set prefix '~/.npm-global'
-    echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
-    source ~/.bashrc
-    ```
-  </Accordion>
+{" "}
 
-  <Accordion icon="network-wired" title="Network Issues">
-    If installation fails due to network issues:
-    
-    **Try a different registry:**
-    ```bash
-    lord-commander init --quick --type=library --pm=npm --registry https://registry.npmjs.org/
-    ```
-    
-    **Or configure npm proxy (if behind corporate firewall):**
-    ```bash
-    npm config set proxy http://proxy.company.com:8080
-    npm config set https-proxy http://proxy.company.com:8080
-    ```
-  </Accordion>
+<Accordion icon="triangle-exclamation" title="Permission Errors">
+  If you encounter permission errors during global installation:
+  
+  **Use local installation instead:**
+  ```bash
+  lord-commander init --quick --type=library
+  # (Installs locally, no global permissions needed)
+  ```
+  
+  **Or configure npm properly (better approach):**
+  ```bash
+  mkdir ~/.npm-global
+  npm config set prefix '~/.npm-global'
+  echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
+  source ~/.bashrc
+  ```
+</Accordion>
+
+{" "}
+
+<Accordion icon="network-wired" title="Network Issues">
+  If installation fails due to network issues:
+  
+  **Try a different registry:**
+  ```bash
+  lord-commander init --quick --type=library --pm=npm --registry https://registry.npmjs.org/
+  ```
+  
+  **Or configure npm proxy (if behind corporate firewall):**
+  ```bash
+  npm config set proxy http://proxy.company.com:8080
+  npm config set https-proxy http://proxy.company.com:8080
+  ```
+</Accordion>
 
   <Accordion icon="exclamation-circle" title="Command Not Found">
     If `lord-commander` is not recognized:

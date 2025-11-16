@@ -21,24 +21,27 @@ Lord Commander offers different setup modes depending on your needs:
 Add Lord Commander SDK to your existing project:
 
 ### Install the CLI globally
+
 ```bash
 npm install -g lord-commander
 ```
 
-### Add CLI SDK to your project  
+### Add CLI SDK to your project
+
 ```bash
 lord-commander init --quick --type=library --pm=pnpm
 ```
 
 ### Start using the SDK
+
 ```typescript
-import { createCLI } from '@lord-commander/cli-core';
+import { createCLI } from "@lord-commander/cli-core";
 
 const cli = await createCLI({
-  name: 'my-cli',
-  version: '1.0.0',
-  description: 'My awesome CLI',
-  commandsPath: './commands'
+  name: "my-cli",
+  version: "1.0.0",
+  description: "My awesome CLI",
+  commandsPath: "./commands",
 });
 ```
 
@@ -47,45 +50,40 @@ const cli = await createCLI({
 Create a complete CLI application with scaffolding:
 
 ### Step 1: Install CLI globally
+
 ```bash
 npm install -g lord-commander
 ```
 
 ### Step 2: Initialize project
+
 <Tabs>
   <Tab title="CLI-Only">
-    ```bash
-    lord-commander init --quick --type=cli-only --pm=pnpm
-    ```
+    ```bash lord-commander init --quick --type=cli-only --pm=pnpm ```
   </Tab>
   <Tab title="CLI + API">
-    ```bash  
-    lord-commander init --quick --type=cli-api --pm=pnpm
-    ```
+    ```bash lord-commander init --quick --type=cli-api --pm=pnpm ```
   </Tab>
   <Tab title="Full-Stack">
-    ```bash
-    lord-commander init --quick --type=full-stack --pm=pnpm  
-    ```
+    ```bash lord-commander init --quick --type=full-stack --pm=pnpm ```
   </Tab>
   <Tab title="Interactive">
-    ```bash
-    lord-commander init
-    # Follow the prompts for custom setup
-    ```
+    ```bash lord-commander init # Follow the prompts for custom setup ```
   </Tab>
 </Tabs>
 
 ### Step 3: Start building
+
 ```bash
 cd my-cli-project
-pnpm install  
+pnpm install
 pnpm dev
 ```
 
 ## Verification
 
 ### Check installation and status
+
 ```bash
 lord-commander --version
 lord-commander status
@@ -95,11 +93,12 @@ lord-commander --help
 You should see the CLI version, system info, and available commands.
 
 ### Test your setup
+
 ```bash
 # Test a simple command
 lord-commander hello
 
-# View available commands  
+# View available commands
 lord-commander --help
 
 # Check system status
@@ -133,8 +132,9 @@ Master these core commands to get the most out of Lord Commander:
 ## Quick Examples
 
 ### Library Mode Integration
+
 ```bash
-# Add to existing project  
+# Add to existing project
 lord-commander init --quick --type=library --pm=pnpm
 
 # Use in your code
@@ -142,11 +142,12 @@ import { createCLI } from '@lord-commander/cli-core';
 ```
 
 ### New CLI Project
+
 ```bash
 # Create CLI-only app
 lord-commander init --quick --type=cli-only --pm=pnpm
 
-# Create with API backend  
+# Create with API backend
 lord-commander init --quick --type=cli-api --pm=pnpm
 
 # Create full-stack with dashboard
@@ -154,7 +155,8 @@ lord-commander init --quick --type=full-stack --pm=pnpm
 ```
 
 ### Interactive Setup
-```bash  
+
+```bash
 # Full interactive setup with all options
 lord-commander init
 
