@@ -237,7 +237,7 @@ describe('Init Command - Library Mode Integration Tests', () => {
       });
     });
 
-    it('should create project structure for local installations', async () => {
+    it('should only install package for local installations without creating project structure', async () => {
       initCommand(mockProgram, mockContext);
       const actionCallback = mockProgram.action.mock.calls[0][0];
       
@@ -248,18 +248,24 @@ describe('Init Command - Library Mode Integration Tests', () => {
         global: false
       });
 
-      // Verify project structure creation
-      expect(mockFs.writeFile).toHaveBeenCalledWith(
+      // Verify package installation only
+      expect(mockExeca.execa).toHaveBeenCalledWith('npm', ['install', '@lord-commander/cli-core'], {
+        stdio: 'inherit',
+        cwd: expect.any(String)
+      });
+
+      // Verify NO project structure creation for library mode
+      expect(mockFs.writeFile).not.toHaveBeenCalledWith(
         expect.stringContaining('package.json'),
-        expect.stringContaining('@lord-commander/cli-core')
+        expect.any(String)
       );
       
-      expect(mockFs.writeFile).toHaveBeenCalledWith(
+      expect(mockFs.writeFile).not.toHaveBeenCalledWith(
         expect.stringContaining('index.js'),
-        expect.stringContaining("import { createCLI } from '@lord-commander/cli-core'")
+        expect.any(String)
       );
 
-      expect(mockFs.ensureDir).toHaveBeenCalledWith(expect.stringContaining('commands'));
+      expect(mockFs.ensureDir).not.toHaveBeenCalledWith(expect.stringContaining('commands'));
     });
 
     it('should not create project structure for global installations', async () => {
