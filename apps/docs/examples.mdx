@@ -12,10 +12,9 @@ These examples show common Lord Commander workflows for different project types 
 ### Initialize a React Project
 
 ```bash
-# Create a new React project with TypeScript
-mkdir my-react-app
-cd my-react-app
-lord-commander init --framework react --language typescript
+# Create a new CLI project with TypeScript (recommended project folder approach)
+lord-commander init my-react-cli --type=cli-only --pm=pnpm
+cd my-react-cli
 ```
 
 **What this does:**
@@ -64,8 +63,8 @@ src/
 ### Initialize a Vue Project
 
 ```bash
-# Create a Vue 3 project with Composition API
-lord-commander init --framework vue --version 3 --composition-api
+# Create a Vue CLI project (project folder approach)
+lord-commander init my-vue-cli --type=cli-only --pm=pnpm
 ```
 
 ### Generate Vue Components
@@ -258,16 +257,14 @@ src/
 
 ```bash
 # Initialize a monorepo with multiple frameworks
-lord-commander init --workspace monorepo
+lord-commander init my-monorepo --type=full-stack --pm=pnpm
 
-# Add React app
-lord-commander scaffold app frontend --framework react --location apps/
+# Navigate to the monorepo
+cd my-monorepo
 
-# Add Node.js API
-lord-commander scaffold app api --framework node --location apps/
-
-# Add shared library
-lord-commander scaffold lib shared-utils --location libs/
+# Use scaffold commands to add additional components
+lord-commander scaffold component UserProfile
+lord-commander scaffold command deploy
 ```
 
 ### Cross-Framework Analysis
@@ -330,13 +327,13 @@ lord-commander scaffold tests --type e2e --user-flows
 
 ```bash
 # Set up testing environment
-lord-commander init --testing jest,cypress
+lord-commander init my-test-project --type=cli-only --pm=pnpm
 
-# Configure test coverage
-lord-commander configure --coverage-threshold 80
+# Navigate and set up testing
+cd my-test-project
 
-# Generate test data factories
-lord-commander scaffold factories --models User,Product,Order
+# Use scaffold commands to add test utilities
+lord-commander scaffold command test-runner
 ```
 
 ## Deployment Examples

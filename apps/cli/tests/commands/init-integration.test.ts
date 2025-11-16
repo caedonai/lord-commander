@@ -86,7 +86,7 @@ describe('Init Command - Integration Tests (Simplified)', () => {
       expect(mockProgram.description).toHaveBeenCalledWith(
         'Initialize Lord Commander setup (CLI-only, CLI+API, or Full-stack with Dashboard)'
       );
-      expect(mockProgram.option).toHaveBeenCalledTimes(4); // --quick, --global, --type, --pm
+      expect(mockProgram.option).toHaveBeenCalledTimes(7); // --quick, --global, --type, --pm, --output, --dashboard-path, --api-path
       expect(mockProgram.action).toHaveBeenCalledWith(expect.any(Function));
     });
   });

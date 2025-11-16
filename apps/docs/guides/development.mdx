@@ -12,12 +12,12 @@ This guide covers the development workflow and best practices for building CLI a
 ### Development Environment
 
 ```bash
-# Clone or initialize your project
-lord-commander init my-cli --template typescript
+# Initialize your project (recommended project folder approach)
+lord-commander init my-cli --type=cli-only --pm=pnpm
 
-# Install dependencies
+# Navigate to project and install dependencies
 cd my-cli
-npm install
+pnpm install
 
 # Start development mode
 npm run dev
