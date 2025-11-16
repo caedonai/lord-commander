@@ -10,6 +10,8 @@
 export * as core from './core';
 // Main CLI creation function (for convenience)
 export { createCLI } from './core/createCLI.js';
+// Command type for building commands (re-exported from commander)
+export { Command } from './core/index.js';
 
 // Plugin SDK modules - Extended functionality
 export * as plugins from './plugins';

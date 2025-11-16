@@ -73,8 +73,8 @@ describe('CLI Commands Integration Tests', () => {
         'Initialize Lord Commander setup (CLI-only, CLI+API, or Full-stack with Dashboard)'
       );
       
-      // Should have 7 options: --quick, --global, --type, --pm, --output, --dashboard-path, --api-path
-      expect(mockProgram.option).toHaveBeenCalledTimes(7);
+      // Should have 9 options: --quick, --global, --type, --pm, --output, --cli-path, --dashboard-path, --api-path, --readme-path
+      expect(mockProgram.option).toHaveBeenCalledTimes(9);
       expect(mockProgram.action).toHaveBeenCalledWith(expect.any(Function));
     });
 
