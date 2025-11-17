@@ -5,7 +5,7 @@ The Lord Commander SDK is optimized for tree-shaking through modern ESM exports 
 ## Bundle Size Analysis
 
 - **Full SDK**: ~267.5KB (includes all core + plugins + commands)
-- **Core Implementation**: ~253.5KB (essential CLI functionality) 
+- **Core Implementation**: ~253.5KB (essential CLI functionality)
 - **Commands**: ~14KB (individual command implementations)
 - **Tree-shaking Savings**: 5.2% (14KB reduction from selective imports)
 - **Build Optimization**: 64% (from ~742KB TypeScript source to 267.5KB bundle - separate from tree-shaking)
@@ -214,15 +214,15 @@ The SDK achieves **64% size reduction** from TypeScript source (~742KB) to produ
 
 ## 🏆 Competitor Bundle Size Comparison
 
-| CLI SDK/Framework | Core Bundle Size | Full Bundle Size | Source-to-Bundle Reduction |
-|-------------------|------------------|------------------|---------------------------|
-| **Lord Commander** | **253.5KB** | **267.5KB** | **64% (742KB→267KB)** |
-| Commander.js | ~8KB | ~8KB | Limited (single module) |
-| Oclif | ~180KB | ~350KB | ~48% reduction |
-| Yargs | ~45KB | ~85KB | ~47% reduction |
-| Inquirer.js | ~120KB | ~200KB | ~40% reduction |
-| Gluegun | ~250KB | ~400KB | ~38% reduction |
-| Caporal.js | ~65KB | ~120KB | ~46% reduction |
+| CLI SDK/Framework  | Core Bundle Size | Full Bundle Size | Source-to-Bundle Reduction |
+| ------------------ | ---------------- | ---------------- | -------------------------- |
+| **Lord Commander** | **253.5KB**      | **267.5KB**      | **64% (742KB→267KB)**      |
+| Commander.js       | ~8KB             | ~8KB             | Limited (single module)    |
+| Oclif              | ~180KB           | ~350KB           | ~48% reduction             |
+| Yargs              | ~45KB            | ~85KB            | ~47% reduction             |
+| Inquirer.js        | ~120KB           | ~200KB           | ~40% reduction             |
+| Gluegun            | ~250KB           | ~400KB           | ~38% reduction             |
+| Caporal.js         | ~65KB            | ~120KB           | ~46% reduction             |
 
 ### Analysis
 
@@ -234,8 +234,8 @@ The SDK achieves **64% size reduction** from TypeScript source (~742KB) to produ
 
 ### Use Case Recommendations
 
-| Bundle Size Preference | Recommended SDK | Use Case |
-|------------------------|-----------------|----------|
-| **Minimal (< 50KB)** | Commander.js, Yargs | Simple CLIs, basic commands |
-| **Balanced (50-150KB)** | Oclif, Caporal.js | Feature-rich CLIs without enterprise needs |
+| Bundle Size Preference  | Recommended SDK             | Use Case                                              |
+| ----------------------- | --------------------------- | ----------------------------------------------------- |
+| **Minimal (< 50KB)**    | Commander.js, Yargs         | Simple CLIs, basic commands                           |
+| **Balanced (50-150KB)** | Oclif, Caporal.js           | Feature-rich CLIs without enterprise needs            |
 | **Enterprise (150KB+)** | **Lord Commander**, Gluegun | Production CLIs with security, performance monitoring |
