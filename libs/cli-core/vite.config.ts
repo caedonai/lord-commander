@@ -35,12 +35,24 @@ export default defineConfig(() => ({
       transformMixedEsModules: true,
     },
     lib: {
-      // Could also be a dictionary or array of multiple entry points.
-      entry: 'src/index.ts',
-      name: 'cli-core',
-      fileName: 'index',
-      // Change this to the formats you want to support.
-      // Don't forget to update your package.json as well.
+      // Multiple entry points for Phase 2 granular tree-shaking
+      entry: {
+        index: 'src/index.ts',
+        // Core modules for individual imports
+        'core/execution/execa': 'src/core/execution/execa.ts',
+        'core/execution/fs': 'src/core/execution/fs.ts',
+        'core/ui/logger': 'src/core/ui/logger.ts',
+        'core/ui/prompts': 'src/core/ui/prompts.ts',
+        'core/ui/icons': 'src/core/ui/icons.ts',
+        'core/foundation/errors/errors': 'src/core/foundation/errors/errors.ts',
+        'core/foundation/security/patterns': 'src/core/foundation/security/patterns.ts',
+        'core/foundation/security/validation': 'src/core/foundation/security/validation.ts',
+        'core/foundation/core/constants': 'src/core/foundation/core/constants.ts',
+        // Legacy namespace support
+        'core/index': 'src/core/index.ts',
+        'plugins/index': 'src/plugins/index.ts',
+        'types/index': 'src/types/index.ts',
+      },
       formats: ['es' as const],
     },
     rollupOptions: {

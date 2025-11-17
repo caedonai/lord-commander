@@ -14,6 +14,42 @@
       "import": "./dist/core/index.js",
       "types": "./dist/core/index.d.ts"
     },
+    "./execa": {
+      "import": "./dist/core/execution/execa.js",
+      "types": "./dist/core/execution/execa.d.ts"
+    },
+    "./fs": {
+      "import": "./dist/core/execution/fs.js",
+      "types": "./dist/core/execution/fs.d.ts"
+    },
+    "./logger": {
+      "import": "./dist/core/ui/logger.js",
+      "types": "./dist/core/ui/logger.d.ts"
+    },
+    "./prompts": {
+      "import": "./dist/core/ui/prompts.js",
+      "types": "./dist/core/ui/prompts.d.ts"
+    },
+    "./icons": {
+      "import": "./dist/core/ui/icons.js",
+      "types": "./dist/core/ui/icons.d.ts"
+    },
+    "./errors": {
+      "import": "./dist/core/foundation/errors/errors.js",
+      "types": "./dist/core/foundation/errors/errors.d.ts"
+    },
+    "./security": {
+      "import": "./dist/core/foundation/security/patterns.js",
+      "types": "./dist/core/foundation/security/patterns.d.ts"
+    },
+    "./validation": {
+      "import": "./dist/core/foundation/security/validation.js",
+      "types": "./dist/core/foundation/security/validation.d.ts"
+    },
+    "./constants": {
+      "import": "./dist/core/foundation/core/constants.js",
+      "types": "./dist/core/foundation/core/constants.d.ts"
+    },
     "./commands": {
       "import": "./dist/commands/index.js", 
       "types": "./dist/commands/index.d.ts"
@@ -25,11 +61,8 @@
     "./types": {
       "import": "./dist/types/index.js",
       "types": "./dist/types/index.d.ts"
-    },
-    "./utils": {
-      "import": "./dist/utils/index.js",
-      "types": "./dist/utils/index.d.ts"
     }
+
   },
   "files": [
     "dist",
