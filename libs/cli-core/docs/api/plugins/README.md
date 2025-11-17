@@ -19,7 +19,7 @@ No description available
 ## add
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function add(files: string | string[], cwd: string = process.cwd()): Promise<void>
@@ -32,7 +32,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## applyUpdate
 
 **Type**: `function`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ```typescript
 export async function applyUpdate(
@@ -48,21 +48,21 @@ Updater Plugin - Version comparison and patch application engine Provides semant
 ## BatchOperationOptions
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## ChangeDetectionOptions
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## checkout
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function checkout(ref: string, cwd: string = process.cwd()): Promise<void>
@@ -75,7 +75,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## clone
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function clone(
@@ -91,14 +91,14 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## CloneOptions
 
 **Type**: `interface`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ---
 
 ## commit
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function commit(options: CommitOptions, cwd: string = process.cwd()): Promise<string>
@@ -111,14 +111,14 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## CommitOptions
 
 **Type**: `interface`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ---
 
 ## compareVersions
 
 **Type**: `function`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ```typescript
 export function compareVersions(a: SemanticVersion, b: SemanticVersion): number
@@ -131,7 +131,7 @@ Updater Plugin - Version comparison and patch application engine Provides semant
 ## createBranch
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function createBranch(
@@ -148,7 +148,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## createTag
 
 **Type**: `function`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ```typescript
 export async function createTag(
@@ -165,7 +165,7 @@ Updater Plugin - Version comparison and patch application engine Provides semant
 ## createUpdatePlan
 
 **Type**: `function`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ```typescript
 export async function createUpdatePlan(
@@ -182,28 +182,28 @@ Updater Plugin - Version comparison and patch application engine Provides semant
 ## DependencyEdge
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## DependencyGraph
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## DependencyNode
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## detectPackageManager
 
 **Type**: `function`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ```typescript
 export async function detectPackageManager(cwd: string = process.cwd()): Promise<PackageManager>
@@ -216,7 +216,7 @@ Workspace Plugin - Monorepo detection and management utilities Provides comprehe
 ## detectWorkspaceType
 
 **Type**: `function`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ```typescript
 export async function detectWorkspaceType(cwd: string = process.cwd()): Promise<WorkspaceType>
@@ -229,7 +229,7 @@ Workspace Plugin - Monorepo detection and management utilities Provides comprehe
 ## discoverPackages
 
 **Type**: `function`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ```typescript
 export async function discoverPackages(
@@ -245,14 +245,14 @@ Workspace Plugin - Monorepo detection and management utilities Provides comprehe
 ## FileDiff
 
 **Type**: `interface`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ---
 
 ## filterPackages
 
 **Type**: `function`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ```typescript
 export function filterPackages(
@@ -268,7 +268,7 @@ Workspace Plugin - Monorepo detection and management utilities Provides comprehe
 ## getAffectedPackages
 
 **Type**: `function`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ```typescript
 export async function getAffectedPackages(
@@ -283,7 +283,7 @@ Workspace Plugin - Monorepo detection and management utilities Provides comprehe
 ## getAllTags
 
 **Type**: `function`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ```typescript
 export async function getAllTags(cwd: string = process.cwd()): Promise<string[]>
@@ -296,7 +296,7 @@ Updater Plugin - Version comparison and patch application engine Provides semant
 ## getBranches
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function getBranches(
@@ -312,7 +312,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## getChangeType
 
 **Type**: `function`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ```typescript
 export function getChangeType(
@@ -328,7 +328,7 @@ Updater Plugin - Version comparison and patch application engine Provides semant
 ## getCommits
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function getCommits(
@@ -344,7 +344,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## getCurrentCommit
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function getCurrentCommit(cwd: string = process.cwd()): Promise<string>
@@ -357,7 +357,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## getDiff
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function getDiff(
@@ -374,7 +374,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## getLatestTag
 
 **Type**: `function`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ```typescript
 export async function getLatestTag(cwd: string = process.cwd()): Promise<string | null>
@@ -387,7 +387,7 @@ Updater Plugin - Version comparison and patch application engine Provides semant
 ## getRepositoryRoot
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function getRepositoryRoot(cwd: string = process.cwd()): Promise<string>
@@ -400,7 +400,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## getStatus
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function getStatus(cwd: string = process.cwd()): Promise<GitStatus>
@@ -413,7 +413,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## getVersionDiff
 
 **Type**: `function`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ```typescript
 export async function getVersionDiff(
@@ -430,7 +430,7 @@ Updater Plugin - Version comparison and patch application engine Provides semant
 ## getWorkspaceSummary
 
 **Type**: `function`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ```typescript
 export function getWorkspaceSummary(workspace: WorkspaceConfiguration):
@@ -443,14 +443,14 @@ Workspace Plugin - Monorepo detection and management utilities Provides comprehe
 ## GitCommit
 
 **Type**: `interface`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ---
 
 ## GitModule
 
 **Type**: `interface`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 Git Plugin - Repository operations and version control utilities Provides essential git functionality for CLI tools including: - Repository status and validation - Basic operations (init, clone, add, commit) - Branch and remote management - Utility functions for version control workflows / import { execa, execaStream } from '../core/execution/execa.js'; import { CLIError } from '../core/foundation/errors/errors.js'; export interface GitStatus { branch: string; ahead: number; behind: number; staged: string[]; unstaged: string[]; untracked: string[]; clean: boolean; } export interface GitCommit { hash: string; shortHash: string; author: string; email: string; date: Date; message: string; } export interface CloneOptions { branch?: string; depth?: number; recursive?: boolean; progress?: boolean; } export interface CommitOptions { message: string; amend?: boolean; signOff?: boolean; allowEmpty?: boolean; } // Helper function to execute git commands with proper error handling async function gitExeca( args: string[], options: { cwd?: string; stream?: boolean } = {} ): Promise<{ stdout: string; stderr: string }> { try { if (options.stream) { await execaStream('git', args, { cwd: options.cwd }); return { stdout: '', stderr: '' }; } else { return await execa('git', args, { cwd: options.cwd }); } } catch (error) { throw new CLIError(`Git command failed: git ${args.join(' ')}`, { code: 'GIT_COMMAND_FAILED', cause: error instanceof Error ? error : undefined, context: { args, options }, }); } } /** Check if the current directory is a git repository / export async function isGitRepository(cwd: string = process.cwd()): Promise<boolean> { try { await execa('git', ['rev-parse', '--git-dir'], { cwd }); return true; } catch { return false; } } /** Check if git is installed and available / export async function isGitAvailable(): Promise<boolean> { try { await execa('git', ['--version']); return true; } catch { return false; } } /** Get the git repository root directory / export async function getRepositoryRoot(cwd: string = process.cwd()): Promise<string> { try { const result = await execa('git', ['rev-parse', '--show-toplevel'], { cwd }); return result.stdout.trim(); } catch (error) { throw new CLIError('Not in a git repository', { code: 'NOT_GIT_REPOSITORY', suggestion: 'Run this command from within a git repository', context: { cwd }, cause: error instanceof Error ? error : undefined, }); } } /** Initialize a new git repository / export async function init( directory: string = process.cwd(), options: { bare?: boolean; defaultBranch?: string } = {} ): Promise<void> { const args = ['init']; if (options.bare) { args.push('--bare'); } if (options.defaultBranch) { args.push('--initial-branch', options.defaultBranch); } args.push(directory); try { await execa('git', args, { cwd: directory }); } catch (error) { throw new CLIError( `Failed to initialize git repository: ${error instanceof Error ? error.message : String(error)}`, { code: 'GIT_INIT_FAILED', cause: error instanceof Error ? error : undefined, context: { directory, options }, } ); } } /** Clone a git repository / export async function clone( url: string, directory: string, options: CloneOptions = {} ): Promise<void> { const args = ['clone']; if (options.branch) { args.push('--branch', options.branch); } if (options.depth) { args.push('--depth', options.depth.toString()); } if (options.recursive) { args.push('--recursive'); } if (options.progress) { args.push('--progress'); } args.push(url, directory); try { if (options.progress) { await execaStream('git', args); } else { await execa('git', args); } } catch (error) { throw new CLIError( `Failed to clone repository: ${error instanceof Error ? error.message : String(error)}`, { code: 'GIT_CLONE_FAILED', cause: error instanceof Error ? error : undefined, context: { url, directory, options }, } ); } } /** Get the current repository status / export async function getStatus(cwd: string = process.cwd()): Promise<GitStatus> { try { // Get current branch and tracking info const branchResult = await execa('git', ['branch', '--show-current'], { cwd }); const branch = branchResult.stdout.trim(); // Get ahead/behind counts let ahead = 0; let behind = 0; try { const trackingResult = await execa( 'git', ['rev-list', '--count', '--left-right', '@{upstream}...HEAD'], { cwd } ); const [behindStr, aheadStr] = trackingResult.stdout.trim().split('\t'); behind = parseInt(behindStr, 10) || 0; ahead = parseInt(aheadStr, 10) || 0; } catch { // No upstream branch } // Get file status const statusResult = await execa('git', ['status', '--porcelain'], { cwd }); const lines = statusResult.stdout .trim() .split('\n') .filter((line) => line); const staged: string[] = []; const unstaged: string[] = []; const untracked: string[] = []; for (const line of lines) { const statusCode = line.substring(0, 2); const fileName = line.substring(3); if (statusCode[0] !== ' ' && statusCode[0] !== '?') { staged.push(fileName); } if (statusCode[1] !== ' ' && statusCode[1] !== '?') { unstaged.push(fileName); } if (statusCode === '??') { untracked.push(fileName); } } return { branch, ahead, behind, staged, unstaged, untracked, clean: staged.length === 0 && unstaged.length === 0 && untracked.length === 0, }; } catch (error) { throw new CLIError( `Failed to get git status: ${error instanceof Error ? error.message : String(error)}`, { code: 'GIT_STATUS_FAILED', cause: error instanceof Error ? error : undefined, context: { cwd }, } ); } } /** Add files to the staging area / export async function add(files: string | string[], cwd: string = process.cwd()): Promise<void> { const fileList = Array.isArray(files) ? files : [files]; const args = ['add', ...fileList]; try { await gitExeca(args, { cwd }); } catch (error) { throw new CLIError(`Failed to add files`, { code: 'GIT_ADD_FAILED', cause: error instanceof Error ? error : undefined, context: { files, cwd }, }); } } /** Create a commit / export async function commit(options: CommitOptions, cwd: string = process.cwd()): Promise<string> { const args = ['commit', '-m', options.message]; if (options.amend) { args.push('--amend'); } if (options.signOff) { args.push('--signoff'); } if (options.allowEmpty) { args.push('--allow-empty'); } try { const result = await gitExeca(args, { cwd }); // Extract commit hash from output const match = result.stdout.match(/\[.+ ([a-f0-9]+)\]/); return match ? match[1] : ''; } catch (error) { throw new CLIError(`Failed to create commit`, { code: 'GIT_COMMIT_FAILED', cause: error instanceof Error ? error : undefined, context: { options, cwd }, }); } } /** Get commit history / export async function getCommits( count: number = 10, cwd: string = process.cwd() ): Promise<GitCommit[]> { try { const format = '--pretty=format:%H|%h|%an|%ae|%ai|%s'; const result = await gitExeca(['log', `-${count}`, format], { cwd }); return result.stdout .trim() .split('\n') .filter((line) => line) .map((line) => { const [hash, shortHash, author, email, date, message] = line.split('|'); return { hash, shortHash, author, email, date: new Date(date), message, }; }); } catch (error) { throw new CLIError(`Failed to get commits`, { code: 'GIT_LOG_FAILED', cause: error instanceof Error ? error : undefined, context: { count, cwd }, }); } } /** Get basic diff information / export async function getDiff( from?: string, to?: string, cwd: string = process.cwd() ): Promise<string> { const args = ['diff']; if (from) { args.push(from); if (to) { args.push(to); } } try { const result = await gitExeca(args, { cwd }); return result.stdout; } catch (error) { throw new CLIError(`Failed to get diff`, { code: 'GIT_DIFF_FAILED', cause: error instanceof Error ? error : undefined, context: { from, to, cwd }, }); } } /** Get branches / export async function getBranches( cwd: string = process.cwd(), includeRemote: boolean = false ): Promise<string[]> { const args = ['branch']; if (includeRemote) { args.push('-a'); } try { const result = await gitExeca(args, { cwd }); return result.stdout .trim() .split('\n') .map((line) => line.replace(/^\*?\s+/, '').trim()) .filter((line) => line && !line.startsWith('->')); } catch (error) { throw new CLIError(`Failed to list branches`, { code: 'GIT_BRANCH_FAILED', cause: error instanceof Error ? error : undefined, context: { cwd, includeRemote }, }); } } /** Create a new branch / export async function createBranch( name: string, cwd: string = process.cwd(), checkout: boolean = false ): Promise<void> { const args = checkout ? ['checkout', '-b', name] : ['branch', name]; try { await gitExeca(args, { cwd }); } catch (error) { throw new CLIError(`Failed to create branch`, { code: 'GIT_BRANCH_CREATE_FAILED', cause: error instanceof Error ? error : undefined, context: { name, cwd, checkout }, }); } } /** Checkout a branch or commit / export async function checkout(ref: string, cwd: string = process.cwd()): Promise<void> { try { await gitExeca(['checkout', ref], { cwd }); } catch (error) { throw new CLIError(`Failed to checkout`, { code: 'GIT_CHECKOUT_FAILED', cause: error instanceof Error ? error : undefined, context: { ref, cwd }, }); } } /** Get the current commit hash / export async function getCurrentCommit(cwd: string = process.cwd()): Promise<string> { try { const result = await gitExeca(['rev-parse', 'HEAD'], { cwd }); return result.stdout.trim(); } catch (error) { throw new CLIError(`Failed to get current commit`, { code: 'GIT_COMMIT_HASH_FAILED', cause: error instanceof Error ? error : undefined, context: { cwd }, }); } } /** Check if the working directory is clean (no uncommitted changes) / export async function isClean(cwd: string = process.cwd()): Promise<boolean> { try { const status = await getStatus(cwd); return status.clean; } catch (error) { throw new CLIError(`Failed to check if repository is clean`, { code: 'GIT_CLEAN_CHECK_FAILED', cause: error instanceof Error ? error : undefined, context: { cwd }, }); } } /** Git module interface for CommandContext
 
@@ -459,14 +459,14 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## GitStatus
 
 **Type**: `interface`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ---
 
 ## init
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function init(
@@ -481,7 +481,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## installDependencies
 
 **Type**: `function`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ```typescript
 export async function installDependencies(
@@ -497,7 +497,7 @@ Workspace Plugin - Monorepo detection and management utilities Provides comprehe
 ## isClean
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function isClean(cwd: string = process.cwd()): Promise<boolean>
@@ -510,7 +510,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## isGitAvailable
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function isGitAvailable(): Promise<boolean>
@@ -523,7 +523,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## isGitRepository
 
 **Type**: `function`  
-**Source**: [`src/plugins/git.ts`](../../../src/plugins/git.ts)
+**Source**: [`src/plugins/git.ts`](../../src/plugins/git.ts)
 
 ```typescript
 export async function isGitRepository(cwd: string = process.cwd()): Promise<boolean>
@@ -536,7 +536,7 @@ Git Plugin - Repository operations and version control utilities Provides essent
 ## isWorkspace
 
 **Type**: `function`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ```typescript
 export async function isWorkspace(cwd: string = process.cwd()): Promise<boolean>
@@ -549,14 +549,14 @@ Workspace Plugin - Monorepo detection and management utilities Provides comprehe
 ## LernaConfiguration
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## loadWorkspace
 
 **Type**: `function`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ```typescript
 export async function loadWorkspace(cwd: string = process.cwd()): Promise<WorkspaceConfiguration>
@@ -569,35 +569,35 @@ Workspace Plugin - Monorepo detection and management utilities Provides comprehe
 ## NxConfiguration
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## PackageFilter
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## PackageJson
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## PackageManager
 
 **Type**: `type`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## parseVersion
 
 **Type**: `function`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ```typescript
 export function parseVersion(versionString: string): SemanticVersion
@@ -610,42 +610,42 @@ Updater Plugin - Version comparison and patch application engine Provides semant
 ## PLACEHOLDER_CONFIG_LOADER
 
 **Type**: `constant`  
-**Source**: [`src/plugins/placeholders.ts`](../../../src/plugins/placeholders.ts)
+**Source**: [`src/plugins/placeholders.ts`](../../src/plugins/placeholders.ts)
 
 ---
 
 ## PLACEHOLDER_GIT
 
 **Type**: `constant`  
-**Source**: [`src/plugins/placeholders.ts`](../../../src/plugins/placeholders.ts)
+**Source**: [`src/plugins/placeholders.ts`](../../src/plugins/placeholders.ts)
 
 ---
 
 ## PLACEHOLDER_TELEMETRY
 
 **Type**: `constant`  
-**Source**: [`src/plugins/placeholders.ts`](../../../src/plugins/placeholders.ts)
+**Source**: [`src/plugins/placeholders.ts`](../../src/plugins/placeholders.ts)
 
 ---
 
 ## PLACEHOLDER_UPDATER
 
 **Type**: `constant`  
-**Source**: [`src/plugins/placeholders.ts`](../../../src/plugins/placeholders.ts)
+**Source**: [`src/plugins/placeholders.ts`](../../src/plugins/placeholders.ts)
 
 ---
 
 ## PLACEHOLDER_WORKSPACE
 
 **Type**: `constant`  
-**Source**: [`src/plugins/placeholders.ts`](../../../src/plugins/placeholders.ts)
+**Source**: [`src/plugins/placeholders.ts`](../../src/plugins/placeholders.ts)
 
 ---
 
 ## runScript
 
 **Type**: `function`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ```typescript
 export async function runScript(
@@ -661,14 +661,14 @@ Workspace Plugin - Monorepo detection and management utilities Provides comprehe
 ## RushConfiguration
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## satisfiesRange
 
 **Type**: `function`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ```typescript
 export function satisfiesRange(version: SemanticVersion, range: string): boolean
@@ -681,14 +681,14 @@ Updater Plugin - Version comparison and patch application engine Provides semant
 ## SemanticVersion
 
 **Type**: `interface`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ---
 
 ## tagExists
 
 **Type**: `function`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ```typescript
 export async function tagExists(tag: string, cwd: string = process.cwd()): Promise<boolean>
@@ -701,42 +701,42 @@ Updater Plugin - Version comparison and patch application engine Provides semant
 ## TurboConfiguration
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## UpdateConflict
 
 **Type**: `interface`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ---
 
 ## UpdateOptions
 
 **Type**: `interface`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ---
 
 ## UpdatePlan
 
 **Type**: `interface`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ---
 
 ## UpdateStrategy
 
 **Type**: `interface`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ---
 
 ## validateWorkspace
 
 **Type**: `function`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ```typescript
 export async function validateWorkspace(
@@ -751,50 +751,50 @@ Workspace Plugin - Monorepo detection and management utilities Provides comprehe
 ## VersionDiff
 
 **Type**: `interface`  
-**Source**: [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
+**Source**: [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
 
 ---
 
 ## WorkspaceConfiguration
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## WorkspacePackage
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## WorkspacesConfiguration
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## WorkspaceTools
 
 **Type**: `interface`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ---
 
 ## WorkspaceType
 
 **Type**: `type`  
-**Source**: [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
+**Source**: [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
 
 ## 📁 Source Files
 
-- [`src/plugins/git.ts`](../../../src/plugins/git.ts)
-- [`src/plugins/updater.ts`](../../../src/plugins/updater.ts)
-- [`src/plugins/workspace.ts`](../../../src/plugins/workspace.ts)
-- [`src/plugins/placeholders.ts`](../../../src/plugins/placeholders.ts)
+- [`src/plugins/git.ts`](../../src/plugins/git.ts)
+- [`src/plugins/updater.ts`](../../src/plugins/updater.ts)
+- [`src/plugins/workspace.ts`](../../src/plugins/workspace.ts)
+- [`src/plugins/placeholders.ts`](../../src/plugins/placeholders.ts)
 
 ---
 
-*Generated on 2025-11-17T03:51:25.273Z*
+*Generated on 2025-11-17T21:48:01.817Z*

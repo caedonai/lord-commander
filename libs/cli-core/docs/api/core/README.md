@@ -20,7 +20,7 @@ No description available
 ## ADVANCED_ATTACK_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files / export const FILE_SYSTEM_PATTERNS = { // Sensitive system files (Unix) UNIX_SENSITIVE_FILES: /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|proc\/|sys\/|dev\/)/i, // Sensitive system files (Windows) WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i, // Windows reserved device names WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s.]|$)/i, // Fixed: device names at end or followed by space/dot // Windows filename edge cases (trailing dots/spaces that Windows strips) WINDOWS_FILENAME_EDGE_CASES: /[\s.]+$/, // Configuration files CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i, // Backup and temporary files BACKUP_FILES: /\.(bak|backup|tmp|temp|old|orig|save)$/i, // Executable files EXECUTABLE_FILES: /\.(exe|bat|cmd|com|scr|pif|msi|dll|so|dylib)$/i, } as const; /** Network attack patterns Detects attempts to make unauthorized network connections / export const NETWORK_PATTERNS = { // URLs with suspicious protocols SUSPICIOUS_PROTOCOLS: /^(file|ftp|gopher|ldap|dict|telnet|ssh):/i, // Private IP addresses (RFC 1918) PRIVATE_IPS: /\b(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/, // Localhost variations LOCALHOST_VARIANTS: /\b(localhost|127\.|0\.0\.0\.0|::1)/i, // Suspicious ports SUSPICIOUS_PORTS: /:(22|23|53|135|139|445|1433|1521|3306|3389|5432|5900|6379)\b/, } as const; /** Advanced security attack patterns Detects sophisticated attacks and bypass attempts
 
@@ -29,7 +29,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## AdvancedObjectSanitizer
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -337,7 +337,7 @@ Advanced object sanitizer with comprehensive security and performance features
 ## analyzeErrorContextSecurity
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 ```typescript
 export function analyzeErrorContextSecurity(
@@ -1011,7 +1011,7 @@ console.log(analysis.recommendations); // ['Remove user credentials', 'Redact AP
 ## analyzeInputSecurity
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 ```typescript
 export function analyzeInputSecurity(input: string): SecurityAnalysisResult
@@ -1036,7 +1036,7 @@ const safe = analyzeInputSecurity("my-project-name");
 ## analyzeLogSecurity
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/logging/security.ts`](../../../src/core/foundation/logging/security.ts)
+**Source**: [`src/core/foundation/logging/security.ts`](../../src/core/foundation/logging/security.ts)
 
 ```typescript
 export function analyzeLogSecurity(message: string): LogSecurityAnalysis
@@ -1049,7 +1049,7 @@ Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.
 ## analyzeProgram
 
 **Type**: `function`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ```typescript
 export function analyzeProgram(program: Command, cliName?: string): CompletionContext
@@ -1060,7 +1060,7 @@ export function analyzeProgram(program: Command, cliName?: string): CompletionCo
 ## analyzeStackTraceSecurity
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 ```typescript
 export function analyzeStackTraceSecurity(stack: string):
@@ -1589,7 +1589,7 @@ if (analysis.riskLevel === 'high') {
 ## AttackCorrelation
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -1598,7 +1598,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## AUDIT_SECURITY_LIMITS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1607,7 +1607,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditEntry
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1616,7 +1616,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditEventBuilder
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1625,7 +1625,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditEventBuilderImpl
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1634,7 +1634,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditExportOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1643,14 +1643,14 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditHelpers
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 ---
 
 ## AuditImportResult
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1659,7 +1659,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditQueryFilter
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1668,7 +1668,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditQueryResult
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1677,7 +1677,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditResourceContext
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1686,14 +1686,14 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditSecurityValidator
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 ---
 
 ## AuditStorageBackend
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1702,7 +1702,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditSystemContext
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1711,7 +1711,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## auditTrail
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1720,7 +1720,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditTrail
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1729,7 +1729,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditTrailConfig
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1738,7 +1738,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditTrailManager
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1747,7 +1747,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditTrailMetadata
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1756,7 +1756,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## AuditUserContext
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -1765,7 +1765,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## batchSanitizeObjects
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ```typescript
 export async function batchSanitizeObjects(
@@ -2080,7 +2080,7 @@ Advanced object sanitizer with comprehensive security and performance features
 ## BRANDING
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 Core constants and configuration for the CLI SDK These constants define the supported technologies, file patterns, and framework detection logic used throughout the SDK. / import { homedir } from 'node:os'; import { join } from 'node:path'; /** Supported package managers for project detection and commands / export const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const; export type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]; /** Default file and directory patterns to ignore during operations / export const DEFAULT_IGNORE_PATTERNS = [ // Version control '.git', '.gitignore', // Dependencies 'node_modules', '.pnpm-store', '.yarn', // Build outputs 'dist', 'build', '.next', '.nuxt', '.output', '.vercel', '.netlify', // Cache and temp files '.cache', '.temp', '.tmp', 'coverage', // IDE and editor files '.vscode', '.idea', '*.log', '.DS_Store', 'Thumbs.db', // Environment and config '.env', '.env.local', '.env.*.local', ] as const; /** Prefix for temporary directories created by the SDK / export const TEMP_DIR_PREFIX = 'lord-commander-'; /** Paths where CLI configuration files can be found / export const CLI_CONFIG_PATHS = [ 'lord.config.js', 'lord.config.ts', join(homedir(), '.lord', 'config.json'), ] as const; /** Framework detection patterns for smart project detection Each framework has file indicators and optional package.json dependencies / export const FRAMEWORK_PATTERNS = { 'next.js': { files: ['next.config.js', 'next.config.ts', 'next.config.mjs'], dependencies: ['next'], devDependencies: ['@next/env'], directories: ['pages', 'app'], }, remix: { files: ['remix.config.js', 'remix.config.ts'], dependencies: ['@remix-run/node', '@remix-run/react', '@remix-run/serve'], directories: ['app/routes'], }, astro: { files: ['astro.config.js', 'astro.config.ts', 'astro.config.mjs'], dependencies: ['astro'], directories: ['src/pages'], }, vite: { files: ['vite.config.js', 'vite.config.ts'], dependencies: ['vite'], devDependencies: ['vite'], }, nuxt: { files: ['nuxt.config.js', 'nuxt.config.ts'], dependencies: ['nuxt', 'nuxt3'], directories: ['pages', 'components'], }, sveltekit: { files: ['svelte.config.js'], dependencies: ['@sveltejs/kit'], directories: ['src/routes'], }, express: { files: ['server.js', 'app.js', 'index.js'], dependencies: ['express'], }, fastify: { dependencies: ['fastify'], }, react: { dependencies: ['react'], devDependencies: ['@types/react'], }, vue: { dependencies: ['vue'], devDependencies: ['@vue/cli-service'], }, angular: { files: ['angular.json'], dependencies: ['@angular/core'], devDependencies: ['@angular/cli'], }, } as const; export type Framework = keyof typeof FRAMEWORK_PATTERNS; /** Common file extensions for different file types / export const FILE_EXTENSIONS = { typescript: ['.ts', '.tsx'], javascript: ['.js', '.jsx', '.mjs'], config: ['.json', '.yaml', '.yml', '.toml'], template: ['.hbs', '.ejs', '.mustache'], style: ['.css', '.scss', '.sass', '.less'], } as const; /** Default ports commonly used by development servers / export const DEFAULT_PORTS = { next: 3000, remix: 3000, astro: 3000, vite: 5173, nuxt: 3000, sveltekit: 5173, express: 3000, fastify: 3000, } as const; /** Package manager specific commands and configurations / export const PACKAGE_MANAGER_COMMANDS = { npm: { install: 'npm install', installDev: 'npm install --save-dev', run: 'npm run', create: 'npm create', lockFile: 'package-lock.json', }, pnpm: { install: 'pnpm install', installDev: 'pnpm install --save-dev', run: 'pnpm run', create: 'pnpm create', lockFile: 'pnpm-lock.yaml', }, yarn: { install: 'yarn install', installDev: 'yarn add --dev', run: 'yarn run', create: 'yarn create', lockFile: 'yarn.lock', }, bun: { install: 'bun install', installDev: 'bun add --dev', run: 'bun run', create: 'bun create', lockFile: 'bun.lockb', }, } as const; /** Git configuration and patterns / export const GIT_PATTERNS = { defaultBranch: 'main', commonBranches: ['main', 'master', 'develop', 'dev'], ignorePatterns: DEFAULT_IGNORE_PATTERNS, defaultCommitMessage: '✨ Initial commit from Lord Commander', } as const; /** Telemetry and analytics configuration / export const TELEMETRY_CONFIG = { defaultEndpoint: 'https://analytics.lordcommander.dev', optOutFile: join(homedir(), '.lordcommander', 'telemetry-opt-out'), sessionTimeout: 30 * 60 * 1000, // 30 minutes } as const; /** Error message constants for consistent error handling across the SDK These functions provide type-safe, parameterized error messages that maintain consistency across the entire CLI framework. Each function returns a formatted string with contextual information to help developers debug issues.
 
@@ -2114,7 +2114,7 @@ Error message for invalid or unsafe command directory paths
 ## cancel
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function cancel(message: string = 'Operation cancelled'): never
@@ -2127,7 +2127,7 @@ Display an introductory message at the start of a CLI flow / export function int
 ## checkCompletionStatus
 
 **Type**: `function`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ```typescript
 export async function checkCompletionStatus(
@@ -2143,7 +2143,7 @@ Shell Autocomplete Core Module Provides comprehensive shell completion support f
 ## cleanDir
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function cleanDir(dirPath: string): Promise<void>
@@ -2156,7 +2156,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## CLI_CONFIG_PATHS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 Core constants and configuration for the CLI SDK These constants define the supported technologies, file patterns, and framework detection logic used throughout the SDK. / import { homedir } from 'node:os'; import { join } from 'node:path'; /** Supported package managers for project detection and commands / export const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const; export type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]; /** Default file and directory patterns to ignore during operations / export const DEFAULT_IGNORE_PATTERNS = [ // Version control '.git', '.gitignore', // Dependencies 'node_modules', '.pnpm-store', '.yarn', // Build outputs 'dist', 'build', '.next', '.nuxt', '.output', '.vercel', '.netlify', // Cache and temp files '.cache', '.temp', '.tmp', 'coverage', // IDE and editor files '.vscode', '.idea', '*.log', '.DS_Store', 'Thumbs.db', // Environment and config '.env', '.env.local', '.env.*.local', ] as const; /** Prefix for temporary directories created by the SDK / export const TEMP_DIR_PREFIX = 'lord-commander-'; /** Paths where CLI configuration files can be found
 
@@ -2165,7 +2165,7 @@ Core constants and configuration for the CLI SDK These constants define the supp
 ## CLIError
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 Error handling and cancellation utilities for the CLI SDK Provides graceful error management, user-friendly messages, and proper cleanup for CLI operations. / import { isCancel as clackIsCancel } from '@clack/prompts'; import colors from 'picocolors'; /** Custom CLI error class with enhanced error information
 
@@ -2174,7 +2174,7 @@ Error handling and cancellation utilities for the CLI SDK Provides graceful erro
 ## COMMAND_INJECTION_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code
 
@@ -2183,7 +2183,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## commandExists
 
 **Type**: `function`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 ```typescript
 export async function commandExists(command: string): Promise<boolean>
@@ -2196,21 +2196,21 @@ Process execution wrapper with async/await support and error handling Provides s
 ## CompletionContext
 
 **Type**: `interface`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ---
 
 ## CompletionOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ---
 
 ## CompletionResult
 
 **Type**: `interface`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 Shell Autocomplete Core Module Provides comprehensive shell completion support for CLI applications built with the SDK. Supports bash, zsh, fish, and PowerShell with command, option, and argument completion. / import type { Command } from 'commander'; import { execa } from '../execution/execa.js'; import { createLogger } from '../ui/logger.js'; export interface CompletionOptions { /** Custom completion function for command arguments / argumentCompletion?: (partial: string, command: string) => Promise<string[]> | string[]; /** Custom completion function for option values / optionCompletion?: ( partial: string, option: string, command: string ) => Promise<string[]> | string[]; /** Enable file/directory completion for arguments / enableFileCompletion?: boolean; /** Shell-specific completion customizations / shellCustomizations?: { bash?: string; zsh?: string; fish?: string; powershell?: string; }; } export interface CompletionContext { /** The CLI program instance / program: Command; /** CLI name for completion scripts / cliName: string; /** Analyzed commands / commands: Array<{ name: string; aliases: string[]; description: string; options: Array<{ flags: string; description: string; required: boolean; }>; arguments: Array<{ name: string; required: boolean; variadic: boolean; }>; }>; /** Global options available to all commands / globalOptions: Array<{ flags: string; description: string; }>; /** Completion options / options?: CompletionOptions; } /** Extract all commands, options, and arguments from a Commander program / interface CommandInfo { name: string; aliases: string[]; description: string; options: { flags: string; description: string; required: boolean; }[]; arguments: { name: string; required: boolean; variadic: boolean; }[]; } export function analyzeProgram(program: Command, cliName?: string): CompletionContext { const commands: CommandInfo[] = []; const globalOptions: { flags: string; description: string; required: boolean }[] = []; // Extract global options program.options.forEach((option) => { globalOptions.push({ flags: option.flags, description: option.description || '', required: option.required || false, }); }); // Extract commands recursively function extractCommands(cmd: Command, parentName = '') { cmd.commands.forEach((subCmd) => { const fullName = parentName ? `${parentName} ${subCmd.name()}` : subCmd.name(); const cmdInfo = { name: fullName, aliases: (subCmd as unknown as { _aliases?: string[] })._aliases || [], description: subCmd.description() || '', options: [] as { flags: string; description: string; required: boolean }[], arguments: [] as { name: string; required: boolean; variadic: boolean }[], }; // Extract command options subCmd.options.forEach((option) => { cmdInfo.options.push({ flags: option.flags, description: option.description || '', required: option.required || false, }); }); // Extract command arguments subCmd.registeredArguments?.forEach((arg) => { cmdInfo.arguments.push({ name: arg.name(), required: arg.required, variadic: arg.variadic, }); }); commands.push(cmdInfo); // Recursively extract subcommands if (subCmd.commands.length > 0) { extractCommands(subCmd, fullName); } }); } extractCommands(program); return { program, cliName: cliName || program.name() || 'cli', commands, globalOptions, }; } /** Generate bash completion script / export function generateBashCompletion(context: CompletionContext): string { const { cliName, options, commands, globalOptions } = context; const commandNames = commands.map((cmd) => cmd.name).join(' '); const globalOptionFlags = globalOptions.map((opt) => opt.flags.split(',')[0].trim()).join(' '); const bashScript = `#!/bin/bash # ${cliName} bash completion script # Generated by Lord Commander SDK _${cliName}_completion() { local cur prev opts commands COMPREPLY=() cur="\${COMP_WORDS[COMP_CWORD]}" prev="\${COMP_WORDS[COMP_CWORD-1]}" # Available commands commands="${commandNames}" # Global options opts="${globalOptionFlags} help version" # Complete commands if [[ \${COMP_CWORD} == 1 ]]; then COMPREPLY=( $(compgen -W "\${commands} \${opts}" -- \${cur}) ) return 0 fi # Complete command-specific options case "\${COMP_WORDS[1]}" in ${commands .map((cmd) => { const cmdOptions = cmd.options.map((opt) => opt.flags.split(',')[0].trim()).join(' '); return `        "${cmd.name}") COMPREPLY=( $(compgen -W "${cmdOptions} ${globalOptionFlags}" -- \${cur}) ) return 0 ;;`; }) .join('\n')} esac ${ options?.enableFileCompletion ? ` # File/directory completion for arguments if [[ "\${cur}" != -* ]]; then COMPREPLY=( $(compgen -f -- \${cur}) ) return 0 fi` : '' } ${options?.shellCustomizations?.bash || ''} } complete -F _${cliName}_completion ${cliName} `; return bashScript; } /** Generate zsh completion script / export function generateZshCompletion(context: CompletionContext): string { const { cliName, options, commands, globalOptions } = context; const zshScript = `#compdef ${cliName} # ${cliName} zsh completion script # Generated by Lord Commander SDK _${cliName}() { local context curcontext="$curcontext" state line typeset -A opt_args _arguments -C \\ ${globalOptions .map((opt) => { const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1]; const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; const flags = [shortFlag && `-${shortFlag}`, longFlag && `--${longFlag}`] .filter(Boolean) .join(','); return `        '${flags}[${opt.description}]' \\`; }) .join('\n')} '1: :_${cliName}_commands' \\ '*::arg:->args' case $line[1] in ${commands .map((cmd) => { return `        ${cmd.name}) _${cliName}_${cmd.name.replace(/[^a-zA-Z0-9]/g, '_')}_args ;;`; }) .join('\n')} esac } _${cliName}_commands() { local commands; commands=( ${commands.map((cmd) => `        '${cmd.name}:${cmd.description}'`).join('\n')} ) _describe 'command' commands } ${commands .map((cmd) => { const funcName = `_${cliName}_${cmd.name.replace(/[^a-zA-Z0-9]/g, '_')}_args`; const cmdOptions = cmd.options .map((opt) => { const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1]; const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; const flags = [shortFlag && `-${shortFlag}`, longFlag && `--${longFlag}`] .filter(Boolean) .join(','); return `        '${flags}[${opt.description}]' \\`; }) .join('\n'); return `${funcName}() { _arguments \\ ${cmdOptions} ${options?.enableFileCompletion ? "'*:file:_files'" : "'*:argument:'"} }`; }) .join('\n\n')} ${options?.shellCustomizations?.zsh || ''} _${cliName} "$@" `; return zshScript; } /** Generate fish completion script / export function generateFishCompletion(context: CompletionContext): string { const { cliName, options, commands, globalOptions } = context; let fishScript = `# ${cliName} fish completion script # Generated by Lord Commander SDK `; // Global options globalOptions.forEach((opt) => { const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1]; const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; if (shortFlag) { fishScript += `complete -c ${cliName} -s ${shortFlag} -d "${opt.description}"\n`; } if (longFlag) { fishScript += `complete -c ${cliName} -l ${longFlag} -d "${opt.description}"\n`; } }); fishScript += '\n'; // Commands commands.forEach((cmd) => { fishScript += `complete -c ${cliName} -f -a "${cmd.name}" -d "${cmd.description}"\n`; // Command-specific options cmd.options.forEach((opt) => { const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1]; const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; const condition = `__fish_seen_subcommand_from ${cmd.name}`; if (shortFlag) { fishScript += `complete -c ${cliName} -s ${shortFlag} -n "${condition}" -d "${opt.description}"\n`; } if (longFlag) { fishScript += `complete -c ${cliName} -l ${longFlag} -n "${condition}" -d "${opt.description}"\n`; } }); }); if (options?.enableFileCompletion) { fishScript += `\n# Enable file completion for arguments\n`; fishScript += `complete -c ${cliName} -f\n`; } if (options?.shellCustomizations?.fish) { fishScript += `\n${options.shellCustomizations.fish}\n`; } return fishScript; } /** Generate PowerShell completion script / export function generatePowerShellCompletion(context: CompletionContext): string { const { program, cliName, options } = context; const { commands, globalOptions } = analyzeProgram(program); const powershellScript = `# ${cliName} PowerShell completion script # Generated by Lord Commander SDK Register-ArgumentCompleter -Native -CommandName ${cliName} -ScriptBlock { param($commandName, $wordToComplete, $cursorPosition) $commands = @( ${commands.map((cmd) => `        "${cmd.name}"`).join(',\n')} ) $globalOptions = @( ${globalOptions .map((opt) => { const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; return longFlag ? `        "--${longFlag}"` : null; }) .filter(Boolean) .join(',\n')} ) # Get the current command line $commandElements = $wordToComplete.Split(' ') $lastElement = $commandElements[-1] # Complete commands if ($commandElements.Length -le 2) { $completions = $commands + $globalOptions | Where-Object { $_ -like "$lastElement*" } $completions | ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) } return } # Complete command-specific options $command = $commandElements[1] switch ($command) { ${commands .map((cmd) => { const cmdOptions = cmd.options .map((opt) => opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]) .filter(Boolean) .map((flag) => `"--${flag}"`); return `        "${cmd.name}" { $options = @(${cmdOptions.join(', ')}) $completions = $options + $globalOptions | Where-Object { $_ -like "$lastElement*" } $completions | ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) } }`; }) .join('\n        ')} } ${ options?.enableFileCompletion ? ` # File completion for arguments if ($lastElement -notmatch '^-') { Get-ChildItem -Path "$lastElement*" | ForEach-Object { [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, 'ProviderItem', $_.Name) } }` : '' } ${options?.shellCustomizations?.powershell || ''} } `; return powershellScript; } /** Result of completion installation/uninstallation
 
@@ -2219,7 +2219,7 @@ Shell Autocomplete Core Module Provides comprehensive shell completion support f
 ## CompletionStatus
 
 **Type**: `interface`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 Shell Autocomplete Core Module Provides comprehensive shell completion support for CLI applications built with the SDK. Supports bash, zsh, fish, and PowerShell with command, option, and argument completion. / import type { Command } from 'commander'; import { execa } from '../execution/execa.js'; import { createLogger } from '../ui/logger.js'; export interface CompletionOptions { /** Custom completion function for command arguments / argumentCompletion?: (partial: string, command: string) => Promise<string[]> | string[]; /** Custom completion function for option values / optionCompletion?: ( partial: string, option: string, command: string ) => Promise<string[]> | string[]; /** Enable file/directory completion for arguments / enableFileCompletion?: boolean; /** Shell-specific completion customizations / shellCustomizations?: { bash?: string; zsh?: string; fish?: string; powershell?: string; }; } export interface CompletionContext { /** The CLI program instance / program: Command; /** CLI name for completion scripts / cliName: string; /** Analyzed commands / commands: Array<{ name: string; aliases: string[]; description: string; options: Array<{ flags: string; description: string; required: boolean; }>; arguments: Array<{ name: string; required: boolean; variadic: boolean; }>; }>; /** Global options available to all commands / globalOptions: Array<{ flags: string; description: string; }>; /** Completion options / options?: CompletionOptions; } /** Extract all commands, options, and arguments from a Commander program / interface CommandInfo { name: string; aliases: string[]; description: string; options: { flags: string; description: string; required: boolean; }[]; arguments: { name: string; required: boolean; variadic: boolean; }[]; } export function analyzeProgram(program: Command, cliName?: string): CompletionContext { const commands: CommandInfo[] = []; const globalOptions: { flags: string; description: string; required: boolean }[] = []; // Extract global options program.options.forEach((option) => { globalOptions.push({ flags: option.flags, description: option.description || '', required: option.required || false, }); }); // Extract commands recursively function extractCommands(cmd: Command, parentName = '') { cmd.commands.forEach((subCmd) => { const fullName = parentName ? `${parentName} ${subCmd.name()}` : subCmd.name(); const cmdInfo = { name: fullName, aliases: (subCmd as unknown as { _aliases?: string[] })._aliases || [], description: subCmd.description() || '', options: [] as { flags: string; description: string; required: boolean }[], arguments: [] as { name: string; required: boolean; variadic: boolean }[], }; // Extract command options subCmd.options.forEach((option) => { cmdInfo.options.push({ flags: option.flags, description: option.description || '', required: option.required || false, }); }); // Extract command arguments subCmd.registeredArguments?.forEach((arg) => { cmdInfo.arguments.push({ name: arg.name(), required: arg.required, variadic: arg.variadic, }); }); commands.push(cmdInfo); // Recursively extract subcommands if (subCmd.commands.length > 0) { extractCommands(subCmd, fullName); } }); } extractCommands(program); return { program, cliName: cliName || program.name() || 'cli', commands, globalOptions, }; } /** Generate bash completion script / export function generateBashCompletion(context: CompletionContext): string { const { cliName, options, commands, globalOptions } = context; const commandNames = commands.map((cmd) => cmd.name).join(' '); const globalOptionFlags = globalOptions.map((opt) => opt.flags.split(',')[0].trim()).join(' '); const bashScript = `#!/bin/bash # ${cliName} bash completion script # Generated by Lord Commander SDK _${cliName}_completion() { local cur prev opts commands COMPREPLY=() cur="\${COMP_WORDS[COMP_CWORD]}" prev="\${COMP_WORDS[COMP_CWORD-1]}" # Available commands commands="${commandNames}" # Global options opts="${globalOptionFlags} help version" # Complete commands if [[ \${COMP_CWORD} == 1 ]]; then COMPREPLY=( $(compgen -W "\${commands} \${opts}" -- \${cur}) ) return 0 fi # Complete command-specific options case "\${COMP_WORDS[1]}" in ${commands .map((cmd) => { const cmdOptions = cmd.options.map((opt) => opt.flags.split(',')[0].trim()).join(' '); return `        "${cmd.name}") COMPREPLY=( $(compgen -W "${cmdOptions} ${globalOptionFlags}" -- \${cur}) ) return 0 ;;`; }) .join('\n')} esac ${ options?.enableFileCompletion ? ` # File/directory completion for arguments if [[ "\${cur}" != -* ]]; then COMPREPLY=( $(compgen -f -- \${cur}) ) return 0 fi` : '' } ${options?.shellCustomizations?.bash || ''} } complete -F _${cliName}_completion ${cliName} `; return bashScript; } /** Generate zsh completion script / export function generateZshCompletion(context: CompletionContext): string { const { cliName, options, commands, globalOptions } = context; const zshScript = `#compdef ${cliName} # ${cliName} zsh completion script # Generated by Lord Commander SDK _${cliName}() { local context curcontext="$curcontext" state line typeset -A opt_args _arguments -C \\ ${globalOptions .map((opt) => { const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1]; const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; const flags = [shortFlag && `-${shortFlag}`, longFlag && `--${longFlag}`] .filter(Boolean) .join(','); return `        '${flags}[${opt.description}]' \\`; }) .join('\n')} '1: :_${cliName}_commands' \\ '*::arg:->args' case $line[1] in ${commands .map((cmd) => { return `        ${cmd.name}) _${cliName}_${cmd.name.replace(/[^a-zA-Z0-9]/g, '_')}_args ;;`; }) .join('\n')} esac } _${cliName}_commands() { local commands; commands=( ${commands.map((cmd) => `        '${cmd.name}:${cmd.description}'`).join('\n')} ) _describe 'command' commands } ${commands .map((cmd) => { const funcName = `_${cliName}_${cmd.name.replace(/[^a-zA-Z0-9]/g, '_')}_args`; const cmdOptions = cmd.options .map((opt) => { const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1]; const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; const flags = [shortFlag && `-${shortFlag}`, longFlag && `--${longFlag}`] .filter(Boolean) .join(','); return `        '${flags}[${opt.description}]' \\`; }) .join('\n'); return `${funcName}() { _arguments \\ ${cmdOptions} ${options?.enableFileCompletion ? "'*:file:_files'" : "'*:argument:'"} }`; }) .join('\n\n')} ${options?.shellCustomizations?.zsh || ''} _${cliName} "$@" `; return zshScript; } /** Generate fish completion script / export function generateFishCompletion(context: CompletionContext): string { const { cliName, options, commands, globalOptions } = context; let fishScript = `# ${cliName} fish completion script # Generated by Lord Commander SDK `; // Global options globalOptions.forEach((opt) => { const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1]; const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; if (shortFlag) { fishScript += `complete -c ${cliName} -s ${shortFlag} -d "${opt.description}"\n`; } if (longFlag) { fishScript += `complete -c ${cliName} -l ${longFlag} -d "${opt.description}"\n`; } }); fishScript += '\n'; // Commands commands.forEach((cmd) => { fishScript += `complete -c ${cliName} -f -a "${cmd.name}" -d "${cmd.description}"\n`; // Command-specific options cmd.options.forEach((opt) => { const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1]; const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; const condition = `__fish_seen_subcommand_from ${cmd.name}`; if (shortFlag) { fishScript += `complete -c ${cliName} -s ${shortFlag} -n "${condition}" -d "${opt.description}"\n`; } if (longFlag) { fishScript += `complete -c ${cliName} -l ${longFlag} -n "${condition}" -d "${opt.description}"\n`; } }); }); if (options?.enableFileCompletion) { fishScript += `\n# Enable file completion for arguments\n`; fishScript += `complete -c ${cliName} -f\n`; } if (options?.shellCustomizations?.fish) { fishScript += `\n${options.shellCustomizations.fish}\n`; } return fishScript; } /** Generate PowerShell completion script / export function generatePowerShellCompletion(context: CompletionContext): string { const { program, cliName, options } = context; const { commands, globalOptions } = analyzeProgram(program); const powershellScript = `# ${cliName} PowerShell completion script # Generated by Lord Commander SDK Register-ArgumentCompleter -Native -CommandName ${cliName} -ScriptBlock { param($commandName, $wordToComplete, $cursorPosition) $commands = @( ${commands.map((cmd) => `        "${cmd.name}"`).join(',\n')} ) $globalOptions = @( ${globalOptions .map((opt) => { const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; return longFlag ? `        "--${longFlag}"` : null; }) .filter(Boolean) .join(',\n')} ) # Get the current command line $commandElements = $wordToComplete.Split(' ') $lastElement = $commandElements[-1] # Complete commands if ($commandElements.Length -le 2) { $completions = $commands + $globalOptions | Where-Object { $_ -like "$lastElement*" } $completions | ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) } return } # Complete command-specific options $command = $commandElements[1] switch ($command) { ${commands .map((cmd) => { const cmdOptions = cmd.options .map((opt) => opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]) .filter(Boolean) .map((flag) => `"--${flag}"`); return `        "${cmd.name}" { $options = @(${cmdOptions.join(', ')}) $completions = $options + $globalOptions | Where-Object { $_ -like "$lastElement*" } $completions | ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) } }`; }) .join('\n        ')} } ${ options?.enableFileCompletion ? ` # File completion for arguments if ($lastElement -notmatch '^-') { Get-ChildItem -Path "$lastElement*" | ForEach-Object { [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, 'ProviderItem', $_.Name) } }` : '' } ${options?.shellCustomizations?.powershell || ''} } `; return powershellScript; } /** Result of completion installation/uninstallation / export interface CompletionResult { success: boolean; error?: string; restartRequired?: boolean; activationCommand?: string; } /** Options for completion installation / export interface InstallationOptions { shell?: 'bash' | 'zsh' | 'fish' | 'powershell'; global?: boolean; force?: boolean; } /** Status information for completion installation
 
@@ -2228,7 +2228,7 @@ Shell Autocomplete Core Module Provides comprehensive shell completion support f
 ## ComplianceAssessment
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -2237,7 +2237,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## ComplianceGap
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -2246,7 +2246,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## ComplianceMapping
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -2255,14 +2255,14 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## ConfigurationError
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 ---
 
 ## confirm
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export async function confirm(
@@ -2277,14 +2277,14 @@ Display an introductory message at the start of a CLI flow / export function int
 ## ConfirmPromptOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ---
 
 ## copy
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function copy(src: string, dest: string, options: CopyOptions =
@@ -2297,7 +2297,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## copyDir
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function copyDir(
@@ -2313,7 +2313,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## copyFile
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function copyFile(
@@ -2329,7 +2329,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## CopyOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 File system utilities with safe operations and error handling Provides secure file system operations with proper error handling, progress tracking, and integration with the CLI logger system. / import { existsSync } from 'node:fs'; import fsPromises from 'node:fs/promises'; import path from 'node:path'; import type { JsonValue } from '../../types/common.js'; import { DEFAULT_IGNORE_PATTERNS } from '../foundation/core/constants.js'; import { FileSystemError } from '../foundation/errors/errors.js'; import { createLogger } from '../ui/logger.js'; // Create a logger instance for internal file operations const fsLogger = createLogger({ prefix: 'fs' }); /** Options for file operations / export interface FileOperationOptions { overwrite?: boolean; // Allow overwriting existing files/directories createDirs?: boolean; // Create parent directories if they don't exist recursive?: boolean; // Apply operation recursively to subdirectories ignorePatterns?: readonly string[]; // File patterns to skip (e.g., 'node_modules', '*.log') onProgress?: (current: number, total: number, file: string) => void; // Progress callback for long operations } /** Options for copy operations
 
@@ -2338,7 +2338,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## createCancellableExecution
 
 **Type**: `function`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 ```typescript
 export function createCancellableExecution():
@@ -2351,7 +2351,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## createCLI
 
 **Type**: `function`  
-**Source**: [`src/core/createCLI.ts`](../../../src/core/createCLI.ts)
+**Source**: [`src/core/createCLI.ts`](../../src/core/createCLI.ts)
 
 ```typescript
 export async function createCLI(options: CreateCliOptions): Promise<EnhancedCommand>
@@ -2364,7 +2364,7 @@ Custom error class for error handler validation failures / export class ErrorHan
 ## createEnvironmentConfig
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 ```typescript
 export function createEnvironmentConfig(
@@ -2837,7 +2837,7 @@ const stagingConfig = createEnvironmentConfig('staging', {
 ## CreateLogEntryResult
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/structured.ts`](../../../src/core/foundation/logging/structured.ts)
+**Source**: [`src/core/foundation/logging/structured.ts`](../../src/core/foundation/logging/structured.ts)
 
 Task 1.4.2: Structured Logging with Security Comprehensive structured logging system with automatic sanitization and security features. Builds on Task 1.4.1 (Log Injection Protection) to provide enterprise-grade structured logging. Features: - Structured log entries with consistent formatting - Automatic sanitization of log data using existing security framework - Security metadata and violation tracking - Performance-optimized serialization - Multiple output formats (JSON, text, structured) - Contextual logging with security-aware field handling - Integration with existing Logger and log injection protection
 
@@ -2846,7 +2846,7 @@ Task 1.4.2: Structured Logging with Security Comprehensive structured logging sy
 ## createLogger
 
 **Type**: `function`  
-**Source**: [`src/core/ui/logger.ts`](../../../src/core/ui/logger.ts)
+**Source**: [`src/core/ui/logger.ts`](../../src/core/ui/logger.ts)
 
 ```typescript
 export function createLogger(options: LoggerOptions =
@@ -2859,7 +2859,7 @@ Unified logging system with colors, spinners, and progress indicators Provides c
 ## createMemoryGuard
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ```typescript
 export function createMemoryGuard(
@@ -2923,7 +2923,7 @@ const result = await memoryGuard.protectOperation(() => processData(input));
 ## createObjectSanitizer
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ```typescript
 export function createObjectSanitizer(
@@ -3237,7 +3237,7 @@ Advanced object sanitizer with comprehensive security and performance features
 ## createSafeErrorForForwarding
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 ```typescript
 export function createSafeErrorForForwarding(
@@ -3897,7 +3897,7 @@ const safeError = createSafeErrorForForwarding(error, context, {
 ## createStructuredLogger
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/logging/structured.ts`](../../../src/core/foundation/logging/structured.ts)
+**Source**: [`src/core/foundation/logging/structured.ts`](../../src/core/foundation/logging/structured.ts)
 
 ```typescript
 export function createStructuredLogger(
@@ -3912,7 +3912,7 @@ Task 1.4.2: Structured Logging with Security Comprehensive structured logging sy
 ## CSV_INJECTION_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files / export const FILE_SYSTEM_PATTERNS = { // Sensitive system files (Unix) UNIX_SENSITIVE_FILES: /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|proc\/|sys\/|dev\/)/i, // Sensitive system files (Windows) WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i, // Windows reserved device names WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s.]|$)/i, // Fixed: device names at end or followed by space/dot // Windows filename edge cases (trailing dots/spaces that Windows strips) WINDOWS_FILENAME_EDGE_CASES: /[\s.]+$/, // Configuration files CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i, // Backup and temporary files BACKUP_FILES: /\.(bak|backup|tmp|temp|old|orig|save)$/i, // Executable files EXECUTABLE_FILES: /\.(exe|bat|cmd|com|scr|pif|msi|dll|so|dylib)$/i, } as const; /** Network attack patterns Detects attempts to make unauthorized network connections / export const NETWORK_PATTERNS = { // URLs with suspicious protocols SUSPICIOUS_PROTOCOLS: /^(file|ftp|gopher|ldap|dict|telnet|ssh):/i, // Private IP addresses (RFC 1918) PRIVATE_IPS: /\b(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/, // Localhost variations LOCALHOST_VARIANTS: /\b(localhost|127\.|0\.0\.0\.0|::1)/i, // Suspicious ports SUSPICIOUS_PORTS: /:(22|23|53|135|139|445|1433|1521|3306|3389|5432|5900|6379)\b/, } as const; /** Advanced security attack patterns Detects sophisticated attacks and bypass attempts / export const ADVANCED_ATTACK_PATTERNS = { // Homograph attacks using similar-looking characters HOMOGRAPH_CYRILLIC: /[а-яё]/gi, // Cyrillic characters HOMOGRAPH_GREEK: /[α-ωΑ-Ω]/g, // Greek characters HOMOGRAPH_MIXED: /[а-яёα-ωΑ-Ω]/g, // Mixed homograph scripts // Bidirectional text attacks BIDI_OVERRIDE: /[\u202A-\u202E\u2066-\u2069\u061C]/g, // Prototype pollution attempts PROTOTYPE_POLLUTION: /__proto__|constructor\.prototype|\.prototype\.|\.constructor/gi, // Zero-width and invisible characters ZERO_WIDTH_CHARS: /[\u200B-\u200D\uFEFF\u2060]/g, } as const; /** Deserialization attack patterns Detects attempts to inject malicious serialized objects / export const DESERIALIZATION_PATTERNS = { // Java serialization JAVA_SERIALIZED: /\xac\xed\x00\x05|rO0AB/g, JAVA_GADGETS: /\b(Runtime|ProcessBuilder|InvokerTransformer|CommonsCollections|JRMP|LDAP)\b/gi, // .NET serialization DOTNET_BINARY: /\x00\x01\x00\x00\x00\xff\xff\xff\xff/g, DOTNET_GADGETS: /\b(ObjectStateFormatter|LosFormatter|BinaryFormatter|TypeConfuseDelegate)\b/gi, // Python pickle PYTHON_PICKLE: /\x80[\x02-\x04]|c__builtin__|cos\nsystem/g, PYTHON_REDUCE: /__reduce__|__reduce_ex__/g, // PHP serialization PHP_SERIALIZED: /[Oo]:[0-9]+:"/g, PHP_GADGETS: /\b(POP|Monolog|Doctrine|Guzzle|Symfony)\b/gi, // Node.js serialization NODEJS_SERIALIZE: /"__js_function"|"__js_date"|"__js_regexp"/g, // Generic dangerous patterns DANGEROUS_CLASSES: /\b(eval|exec|system|shell_exec|file_get_contents|fopen|include|require)\b/gi, } as const; /** XXE (XML External Entity) attack patterns Detects XML external entity injection attempts / export const XXE_PATTERNS = { // External entity declarations EXTERNAL_ENTITY: /<!ENTITY[^>]+SYSTEM[^>]+>/gi, PUBLIC_ENTITY: /<!ENTITY[^>]+PUBLIC[^>]+>/gi, // Parameter entities PARAMETER_ENTITY: /<!ENTITY\s+%[^>]+>/gi, // Entity references ENTITY_REFERENCE: /&[a-zA-Z_][a-zA-Z0-9_]*;/g, // DOCTYPE declarations with external references DOCTYPE_EXTERNAL: /<!DOCTYPE[^>]+SYSTEM[^>]*>/gi, DOCTYPE_PUBLIC: /<!DOCTYPE[^>]+PUBLIC[^>]*>/gi, // XML inclusion XML_INCLUSION: /<xi:include[^>]*>/gi, // Suspicious protocols in XML XML_PROTOCOLS: /\b(file|ftp|http|https|gopher|jar|netdoc):/gi, // XML bomb patterns (billion laughs) XML_BOMB: /&lol[0-9]*;|&lol[0-9]*lol[0-9]*;/gi, } as const; /** SSTI (Server-Side Template Injection) attack patterns Detects template injection attempts in various template engines / export const SSTI_PATTERNS = { // Jinja2/Django templates JINJA2_INJECTION: /\{\{.*?(\.|_|config|request|session|g).*?\}\}/gi, JINJA2_DANGEROUS: /\{\{.*?(popen|system|eval|exec|import|builtins|globals).*?\}\}/gi, // Twig templates TWIG_INJECTION: /\{\{.*?(\.|_self|app).*?\}\}/gi, TWIG_DANGEROUS: /\{\{.*?(system|exec|shell_exec|passthru).*?\}\}/gi, // Handlebars templates HANDLEBARS_INJECTION: /\{\{.*?(constructor|prototype|process|require).*?\}\}/gi, // FreeMarker templates FREEMARKER_INJECTION: /<#assign|<#import|<#include|\$\{.*?new.*?\}/gi, FREEMARKER_DANGEROUS: /\$\{.*?(freemarker\.template\.utility\.Execute|ObjectConstructor).*?\}/gi, // Velocity templates VELOCITY_INJECTION: /#set\s*\(\s*\$.*?=|#evaluate|\$\{.*?Class.*?\}/gi, // Smarty templates SMARTY_INJECTION: /\{php\}|\{\/php\}|\{literal\}|\{\/literal\}/gi, // Generic template patterns TEMPLATE_EXECUTION: /\{\{.*?(eval|exec|system|import|require|constructor).*?\}\}/gi, TEMPLATE_OBJECT_ACCESS: /\{\{.*?(__.*__|prototype|constructor|process).*?\}\}/gi, } as const; /** LDAP injection attack patterns Detects LDAP injection attempts in search filters / export const LDAP_PATTERNS = { // LDAP filter injection LDAP_FILTER_INJECTION: /[()&|!*\\]/g, // LDAP special characters that need escaping LDAP_SPECIAL_CHARS: /[\\*()\\0]/g, // LDAP search operators LDAP_OPERATORS: /[&|!]|\*.*\*/g, // LDAP attribute injection LDAP_ATTRIBUTE_INJECTION: /[=<>~]/g, // Common LDAP attributes used in attacks LDAP_DANGEROUS_ATTRIBUTES: /\b(objectClass|cn|uid|userPassword|memberOf|dn)\s*[=]/gi, // LDAP DN injection LDAP_DN_INJECTION: /[,+=\\#<>;]/g, } as const; /** XPath injection attack patterns Detects XPath injection attempts in XML queries / export const XPATH_PATTERNS = { // XPath injection operators XPATH_OPERATORS: /['"]\s*or\s*['"]/gi, XPATH_AND_OR: /\b(and|or)\s+['"]/gi, // XPath functions that can be dangerous XPATH_FUNCTIONS: /\b(substring|contains|starts-with|string-length|position|last|count)\s*\(/gi, // XPath axes that can be used for traversal XPATH_AXES: /\b(parent|ancestor|descendant|following|preceding|child|attribute)::/gi, // XPath comment injection XPATH_COMMENTS: /\(:.*?:\)/g, // Boolean-based XPath injection XPATH_BOOLEAN: /['"]\s*(=|!=)\s*['"]/gi, XPATH_TRUE_FALSE: /\b(true|false)\s*\(\s*\)/gi, // XPath string manipulation for injection XPATH_CONCAT: /concat\s*\(/gi, XPATH_NORMALIZE: /normalize-space\s*\(/gi, } as const; /** Expression Language (EL) injection patterns Detects EL injection in Java/JSP environments / export const EXPRESSION_LANGUAGE_PATTERNS = { // JSP EL injection JSP_EL: /\$\{.*?\}/g, JSP_EL_DANGEROUS: /\$\{.*?(Runtime|ProcessBuilder|System|Class|Method).*?\}/gi, // Spring EL injection SPRING_EL: /#\{.*?\}/g, SPRING_EL_DANGEROUS: /#\{.*?(T\(|new |Runtime|ProcessBuilder|System\.getProperty).*?\}/gi, // OGNL (Struts) injection OGNL_INJECTION: /%\{.*?\}|@.*?@/g, OGNL_DANGEROUS: /%\{.*?(Runtime|ProcessBuilder|System|@java\.lang).*?\}/gi, // MVEL injection MVEL_INJECTION: /\$\{.*?\}|@\{.*?\}/g, // Unified EL dangerous patterns EL_EXECUTION: /\$\{.*?(Runtime\.getRuntime\(\)|ProcessBuilder|System\.exit).*?\}/gi, EL_REFLECTION: /\$\{.*?(Class\.forName|getClass\(\)|getDeclaredMethod).*?\}/gi, } as const; /** CSV injection attack patterns Detects formula injection in CSV/spreadsheet exports
 
@@ -3921,7 +3921,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## DANGEROUS_SCRIPT_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
+**Source**: [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
 
 Enhanced Framework Detection with Security Validation This module extends the basic framework patterns with comprehensive security validation to prevent attacks through malicious framework configurations.
 
@@ -4092,7 +4092,7 @@ Object.entries(scripts).forEach(([name, script]) => {
 ## DEFAULT_AUDIT_TRAIL_CONFIG
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -4101,7 +4101,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## DEFAULT_ERROR_CONTEXT_CONFIG
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 Enhanced Error Sanitization for Information Disclosure Protection This module provides comprehensive error sanitization to prevent sensitive information disclosure in error messages, stack traces, and error context. Implements Task 1.3.1: Information Disclosure Protection requirements.
 
@@ -4659,7 +4659,7 @@ maintaining sufficient debugging context for troubleshooting.
 ## DEFAULT_ERROR_SANITIZATION_CONFIG
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 Enhanced Error Sanitization for Information Disclosure Protection This module provides comprehensive error sanitization to prevent sensitive information disclosure in error messages, stack traces, and error context. Implements Task 1.3.1: Information Disclosure Protection requirements.
 
@@ -4725,7 +4725,7 @@ disclosure vectors while maintaining debugging capabilities.
 ## DEFAULT_IGNORE_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 Core constants and configuration for the CLI SDK These constants define the supported technologies, file patterns, and framework detection logic used throughout the SDK. / import { homedir } from 'node:os'; import { join } from 'node:path'; /** Supported package managers for project detection and commands / export const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const; export type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]; /** Default file and directory patterns to ignore during operations
 
@@ -4734,7 +4734,7 @@ Core constants and configuration for the CLI SDK These constants define the supp
 ## DEFAULT_MEMORY_CONFIG
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -4784,7 +4784,7 @@ Comprehensive memory protection configuration following SOLID principles
 ## DEFAULT_OBJECT_SANITIZATION_CONFIG
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -5047,7 +5047,7 @@ Default object sanitization configuration
 ## DEFAULT_PORTS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 Core constants and configuration for the CLI SDK These constants define the supported technologies, file patterns, and framework detection logic used throughout the SDK. / import { homedir } from 'node:os'; import { join } from 'node:path'; /** Supported package managers for project detection and commands / export const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const; export type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]; /** Default file and directory patterns to ignore during operations / export const DEFAULT_IGNORE_PATTERNS = [ // Version control '.git', '.gitignore', // Dependencies 'node_modules', '.pnpm-store', '.yarn', // Build outputs 'dist', 'build', '.next', '.nuxt', '.output', '.vercel', '.netlify', // Cache and temp files '.cache', '.temp', '.tmp', 'coverage', // IDE and editor files '.vscode', '.idea', '*.log', '.DS_Store', 'Thumbs.db', // Environment and config '.env', '.env.local', '.env.*.local', ] as const; /** Prefix for temporary directories created by the SDK / export const TEMP_DIR_PREFIX = 'lord-commander-'; /** Paths where CLI configuration files can be found / export const CLI_CONFIG_PATHS = [ 'lord.config.js', 'lord.config.ts', join(homedir(), '.lord', 'config.json'), ] as const; /** Framework detection patterns for smart project detection Each framework has file indicators and optional package.json dependencies / export const FRAMEWORK_PATTERNS = { 'next.js': { files: ['next.config.js', 'next.config.ts', 'next.config.mjs'], dependencies: ['next'], devDependencies: ['@next/env'], directories: ['pages', 'app'], }, remix: { files: ['remix.config.js', 'remix.config.ts'], dependencies: ['@remix-run/node', '@remix-run/react', '@remix-run/serve'], directories: ['app/routes'], }, astro: { files: ['astro.config.js', 'astro.config.ts', 'astro.config.mjs'], dependencies: ['astro'], directories: ['src/pages'], }, vite: { files: ['vite.config.js', 'vite.config.ts'], dependencies: ['vite'], devDependencies: ['vite'], }, nuxt: { files: ['nuxt.config.js', 'nuxt.config.ts'], dependencies: ['nuxt', 'nuxt3'], directories: ['pages', 'components'], }, sveltekit: { files: ['svelte.config.js'], dependencies: ['@sveltejs/kit'], directories: ['src/routes'], }, express: { files: ['server.js', 'app.js', 'index.js'], dependencies: ['express'], }, fastify: { dependencies: ['fastify'], }, react: { dependencies: ['react'], devDependencies: ['@types/react'], }, vue: { dependencies: ['vue'], devDependencies: ['@vue/cli-service'], }, angular: { files: ['angular.json'], dependencies: ['@angular/core'], devDependencies: ['@angular/cli'], }, } as const; export type Framework = keyof typeof FRAMEWORK_PATTERNS; /** Common file extensions for different file types / export const FILE_EXTENSIONS = { typescript: ['.ts', '.tsx'], javascript: ['.js', '.jsx', '.mjs'], config: ['.json', '.yaml', '.yml', '.toml'], template: ['.hbs', '.ejs', '.mustache'], style: ['.css', '.scss', '.sass', '.less'], } as const; /** Default ports commonly used by development servers
 
@@ -5056,7 +5056,7 @@ Core constants and configuration for the CLI SDK These constants define the supp
 ## DEFAULT_RISK_SCORING_CONFIG
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -5065,7 +5065,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## DEFAULT_SECURITY_LOGGER
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/logging/security.ts`](../../../src/core/foundation/logging/security.ts)
+**Source**: [`src/core/foundation/logging/security.ts`](../../src/core/foundation/logging/security.ts)
 
 Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.1: Log Injection Protection Enhancement - Comprehensive Security Framework Provides enterprise-grade protection against advanced log injection attacks including: - ANSI escape sequences and terminal manipulation - Control characters and terminal reset commands - Carriage return/line feed injection and log spoofing - Terminal bell, cursor manipulation, and screen clearing - Unicode bidirectional override and homograph attacks - Format string attacks and command execution attempts - Terminal title manipulation and window control - OSC (Operating System Command) sequence attacks - Device control string attacks and screen buffer manipulation - Hyperlink injection and clickjacking attempts
 
@@ -5074,7 +5074,7 @@ Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.
 ## DEFAULT_STRUCTURED_LOGGING_CONFIG
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/logging/structured.ts`](../../../src/core/foundation/logging/structured.ts)
+**Source**: [`src/core/foundation/logging/structured.ts`](../../src/core/foundation/logging/structured.ts)
 
 Task 1.4.2: Structured Logging with Security Comprehensive structured logging system with automatic sanitization and security features. Builds on Task 1.4.1 (Log Injection Protection) to provide enterprise-grade structured logging. Features: - Structured log entries with consistent formatting - Automatic sanitization of log data using existing security framework - Security metadata and violation tracking - Performance-optimized serialization - Multiple output formats (JSON, text, structured) - Contextual logging with security-aware field handling - Integration with existing Logger and log injection protection
 
@@ -5083,14 +5083,14 @@ Task 1.4.2: Structured Logging with Security Comprehensive structured logging sy
 ## DEFAULT_THEME
 
 **Type**: `constant`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ---
 
 ## DEFAULT_VALIDATION_CONFIG
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 Comprehensive Input Validation Framework This module provides secure input validation, sanitization, and normalization utilities to prevent injection attacks, validate user inputs, and ensure safe operations throughout the CLI SDK.
 
@@ -5114,7 +5114,7 @@ const custom = validateProjectName('my-project', {
 ## defaultAuditTrailManager
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -5123,7 +5123,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## defaultSecurityViolationDetector
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -5132,7 +5132,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## DESERIALIZATION_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files / export const FILE_SYSTEM_PATTERNS = { // Sensitive system files (Unix) UNIX_SENSITIVE_FILES: /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|proc\/|sys\/|dev\/)/i, // Sensitive system files (Windows) WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i, // Windows reserved device names WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s.]|$)/i, // Fixed: device names at end or followed by space/dot // Windows filename edge cases (trailing dots/spaces that Windows strips) WINDOWS_FILENAME_EDGE_CASES: /[\s.]+$/, // Configuration files CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i, // Backup and temporary files BACKUP_FILES: /\.(bak|backup|tmp|temp|old|orig|save)$/i, // Executable files EXECUTABLE_FILES: /\.(exe|bat|cmd|com|scr|pif|msi|dll|so|dylib)$/i, } as const; /** Network attack patterns Detects attempts to make unauthorized network connections / export const NETWORK_PATTERNS = { // URLs with suspicious protocols SUSPICIOUS_PROTOCOLS: /^(file|ftp|gopher|ldap|dict|telnet|ssh):/i, // Private IP addresses (RFC 1918) PRIVATE_IPS: /\b(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/, // Localhost variations LOCALHOST_VARIANTS: /\b(localhost|127\.|0\.0\.0\.0|::1)/i, // Suspicious ports SUSPICIOUS_PORTS: /:(22|23|53|135|139|445|1433|1521|3306|3389|5432|5900|6379)\b/, } as const; /** Advanced security attack patterns Detects sophisticated attacks and bypass attempts / export const ADVANCED_ATTACK_PATTERNS = { // Homograph attacks using similar-looking characters HOMOGRAPH_CYRILLIC: /[а-яё]/gi, // Cyrillic characters HOMOGRAPH_GREEK: /[α-ωΑ-Ω]/g, // Greek characters HOMOGRAPH_MIXED: /[а-яёα-ωΑ-Ω]/g, // Mixed homograph scripts // Bidirectional text attacks BIDI_OVERRIDE: /[\u202A-\u202E\u2066-\u2069\u061C]/g, // Prototype pollution attempts PROTOTYPE_POLLUTION: /__proto__|constructor\.prototype|\.prototype\.|\.constructor/gi, // Zero-width and invisible characters ZERO_WIDTH_CHARS: /[\u200B-\u200D\uFEFF\u2060]/g, } as const; /** Deserialization attack patterns Detects attempts to inject malicious serialized objects
 
@@ -5141,7 +5141,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## detectFrameworkSecurely
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
+**Source**: [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
 
 ```typescript
 export async function detectFrameworkSecurely(
@@ -5329,7 +5329,7 @@ if (framework && framework.isValid) {
 ## detectPackageManager
 
 **Type**: `function`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 ```typescript
 export async function detectPackageManager(
@@ -5344,7 +5344,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## detectShell
 
 **Type**: `function`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ```typescript
 export async function detectShell(): Promise<'bash' | 'zsh' | 'fish' | 'powershell'>
@@ -5357,7 +5357,7 @@ Shell Autocomplete Core Module Provides comprehensive shell completion support f
 ## DirectoryEntry
 
 **Type**: `interface`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 File system utilities with safe operations and error handling Provides secure file system operations with proper error handling, progress tracking, and integration with the CLI logger system. / import { existsSync } from 'node:fs'; import fsPromises from 'node:fs/promises'; import path from 'node:path'; import type { JsonValue } from '../../types/common.js'; import { DEFAULT_IGNORE_PATTERNS } from '../foundation/core/constants.js'; import { FileSystemError } from '../foundation/errors/errors.js'; import { createLogger } from '../ui/logger.js'; // Create a logger instance for internal file operations const fsLogger = createLogger({ prefix: 'fs' }); /** Options for file operations / export interface FileOperationOptions { overwrite?: boolean; // Allow overwriting existing files/directories createDirs?: boolean; // Create parent directories if they don't exist recursive?: boolean; // Apply operation recursively to subdirectories ignorePatterns?: readonly string[]; // File patterns to skip (e.g., 'node_modules', '*.log') onProgress?: (current: number, total: number, file: string) => void; // Progress callback for long operations } /** Options for copy operations / export interface CopyOptions extends FileOperationOptions { filter?: (src: string, dest: string) => boolean | Promise<boolean>; // Custom function to decide which files to copy preserveTimestamps?: boolean; // Keep original file modification/creation times dereference?: boolean; // Follow symbolic links instead of copying them as links } /** File system statistics interface / export interface FileStats { isFile: boolean; // True if path points to a regular file isDirectory: boolean; // True if path points to a directory/folder isSymbolicLink: boolean; // True if path is a symbolic link (shortcut) size: number; // File size in bytes modified: Date; // Last modification timestamp created: Date; // Creation timestamp (birth time) } /** Directory listing result
 
@@ -5366,7 +5366,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## EnhancedCommand
 
 **Type**: `interface`  
-**Source**: [`src/core/createCLI.ts`](../../../src/core/createCLI.ts)
+**Source**: [`src/core/createCLI.ts`](../../src/core/createCLI.ts)
 
 Custom error class for error handler validation failures / export class ErrorHandlerValidationError extends Error { public violations: string[] = []; constructor(message: string, violations: string[] = []) { super(message); this.name = 'ErrorHandlerValidationError'; this.violations = violations; } } /** Security configuration for error handler validation / interface ErrorHandlerSecurityOptions { strict?: boolean; timeout?: number; allowedModules?: string[]; maxFunctionLength?: number; } /** Default security configuration for error handler validation / const DEFAULT_ERROR_HANDLER_CONFIG: ErrorHandlerSecurityOptions = { timeout: 5000, // 5 seconds timeout allowedModules: ['util', 'path', 'node:util', 'node:path'], // Only safe Node.js modules (both legacy and protocol forms) maxFunctionLength: 10000, // Maximum function size in characters }; /** Validate error handler for security issues before execution This function performs comprehensive security validation including: - Function type verification - Source code analysis for dangerous operations - Module usage validation - Size and complexity limits
 
@@ -5375,7 +5375,7 @@ Custom error class for error handler validation failures / export class ErrorHan
 ## enhancedConfirm
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export async function enhancedConfirm(
@@ -5388,14 +5388,14 @@ export async function enhancedConfirm(
 ## EnhancedPromptOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ---
 
 ## EnhancedSecurityViolation
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -5404,7 +5404,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## enhancedSelect
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export async function enhancedSelect<T = string>(
@@ -5419,7 +5419,7 @@ export async function enhancedSelect<T = string>(
 ## enhancedText
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export async function enhancedText(
@@ -5432,7 +5432,7 @@ export async function enhancedText(
 ## ensureDir
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function ensureDir(dirPath: string): Promise<void>
@@ -5445,7 +5445,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## ERROR_MESSAGES
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 Core constants and configuration for the CLI SDK These constants define the supported technologies, file patterns, and framework detection logic used throughout the SDK. / import { homedir } from 'node:os'; import { join } from 'node:path'; /** Supported package managers for project detection and commands / export const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const; export type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]; /** Default file and directory patterns to ignore during operations / export const DEFAULT_IGNORE_PATTERNS = [ // Version control '.git', '.gitignore', // Dependencies 'node_modules', '.pnpm-store', '.yarn', // Build outputs 'dist', 'build', '.next', '.nuxt', '.output', '.vercel', '.netlify', // Cache and temp files '.cache', '.temp', '.tmp', 'coverage', // IDE and editor files '.vscode', '.idea', '*.log', '.DS_Store', 'Thumbs.db', // Environment and config '.env', '.env.local', '.env.*.local', ] as const; /** Prefix for temporary directories created by the SDK / export const TEMP_DIR_PREFIX = 'lord-commander-'; /** Paths where CLI configuration files can be found / export const CLI_CONFIG_PATHS = [ 'lord.config.js', 'lord.config.ts', join(homedir(), '.lord', 'config.json'), ] as const; /** Framework detection patterns for smart project detection Each framework has file indicators and optional package.json dependencies / export const FRAMEWORK_PATTERNS = { 'next.js': { files: ['next.config.js', 'next.config.ts', 'next.config.mjs'], dependencies: ['next'], devDependencies: ['@next/env'], directories: ['pages', 'app'], }, remix: { files: ['remix.config.js', 'remix.config.ts'], dependencies: ['@remix-run/node', '@remix-run/react', '@remix-run/serve'], directories: ['app/routes'], }, astro: { files: ['astro.config.js', 'astro.config.ts', 'astro.config.mjs'], dependencies: ['astro'], directories: ['src/pages'], }, vite: { files: ['vite.config.js', 'vite.config.ts'], dependencies: ['vite'], devDependencies: ['vite'], }, nuxt: { files: ['nuxt.config.js', 'nuxt.config.ts'], dependencies: ['nuxt', 'nuxt3'], directories: ['pages', 'components'], }, sveltekit: { files: ['svelte.config.js'], dependencies: ['@sveltejs/kit'], directories: ['src/routes'], }, express: { files: ['server.js', 'app.js', 'index.js'], dependencies: ['express'], }, fastify: { dependencies: ['fastify'], }, react: { dependencies: ['react'], devDependencies: ['@types/react'], }, vue: { dependencies: ['vue'], devDependencies: ['@vue/cli-service'], }, angular: { files: ['angular.json'], dependencies: ['@angular/core'], devDependencies: ['@angular/cli'], }, } as const; export type Framework = keyof typeof FRAMEWORK_PATTERNS; /** Common file extensions for different file types / export const FILE_EXTENSIONS = { typescript: ['.ts', '.tsx'], javascript: ['.js', '.jsx', '.mjs'], config: ['.json', '.yaml', '.yml', '.toml'], template: ['.hbs', '.ejs', '.mustache'], style: ['.css', '.scss', '.sass', '.less'], } as const; /** Default ports commonly used by development servers / export const DEFAULT_PORTS = { next: 3000, remix: 3000, astro: 3000, vite: 5173, nuxt: 3000, sveltekit: 5173, express: 3000, fastify: 3000, } as const; /** Package manager specific commands and configurations / export const PACKAGE_MANAGER_COMMANDS = { npm: { install: 'npm install', installDev: 'npm install --save-dev', run: 'npm run', create: 'npm create', lockFile: 'package-lock.json', }, pnpm: { install: 'pnpm install', installDev: 'pnpm install --save-dev', run: 'pnpm run', create: 'pnpm create', lockFile: 'pnpm-lock.yaml', }, yarn: { install: 'yarn install', installDev: 'yarn add --dev', run: 'yarn run', create: 'yarn create', lockFile: 'yarn.lock', }, bun: { install: 'bun install', installDev: 'bun add --dev', run: 'bun run', create: 'bun create', lockFile: 'bun.lockb', }, } as const; /** Git configuration and patterns / export const GIT_PATTERNS = { defaultBranch: 'main', commonBranches: ['main', 'master', 'develop', 'dev'], ignorePatterns: DEFAULT_IGNORE_PATTERNS, defaultCommitMessage: '✨ Initial commit from Lord Commander', } as const; /** Telemetry and analytics configuration / export const TELEMETRY_CONFIG = { defaultEndpoint: 'https://analytics.lordcommander.dev', optOutFile: join(homedir(), '.lordcommander', 'telemetry-opt-out'), sessionTimeout: 30 * 60 * 1000, // 30 minutes } as const; /** Error message constants for consistent error handling across the SDK These functions provide type-safe, parameterized error messages that maintain consistency across the entire CLI framework. Each function returns a formatted string with contextual information to help developers debug issues.
 
@@ -5475,7 +5475,7 @@ throw new Error(ERROR_MESSAGES.COMMAND_NAME_CONFLICT(
 ## ERROR_RECOVERY_SUGGESTIONS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 Error handling and cancellation utilities for the CLI SDK Provides graceful error management, user-friendly messages, and proper cleanup for CLI operations. / import { isCancel as clackIsCancel } from '@clack/prompts'; import colors from 'picocolors'; /** Custom CLI error class with enhanced error information / export class CLIError extends Error { public readonly code: string; public readonly suggestion?: string; public readonly recoverable: boolean; public readonly context?: Record<string, unknown>; public override readonly cause?: Error; constructor( message: string, options: { code?: string; suggestion?: string; recoverable?: boolean; context?: Record<string, unknown>; cause?: Error; } = {} ) { super(message); this.name = 'CLIError'; this.code = options.code || 'CLI_ERROR'; this.suggestion = options.suggestion; this.recoverable = options.recoverable ?? false; this.context = options.context; this.cause = options.cause; // Maintain proper stack trace if (Error.captureStackTrace) { Error.captureStackTrace(this, CLIError); } } } /** Specific error types for different CLI operations / export class FileSystemError extends CLIError { constructor(message: string, filePath: string, cause?: Error) { super(message, { code: 'FS_ERROR', suggestion: `Check if the path exists and you have the necessary permissions: ${filePath}`, recoverable: true, context: { filePath }, cause, }); } } export class ProcessError extends CLIError { constructor(message: string, command: string, exitCode?: number, cause?: Error) { super(message, { code: 'PROCESS_ERROR', suggestion: exitCode === 127 ? `Command not found: ${command}. Make sure it's installed and in your PATH.` : `Command failed: ${command}. Check the command syntax and try again.`, recoverable: true, context: { command, exitCode }, cause, }); } } export class NetworkError extends CLIError { constructor(message: string, url?: string, cause?: Error) { super(message, { code: 'NETWORK_ERROR', suggestion: 'Check your internet connection and try again.', recoverable: true, context: { url }, cause, }); } } export class ConfigurationError extends CLIError { constructor(message: string, configPath?: string, cause?: Error) { super(message, { code: 'CONFIG_ERROR', suggestion: configPath ? `Check the configuration file format: ${configPath}` : 'Verify your configuration settings and try again.', recoverable: true, context: { configPath }, cause, }); } } export class ValidationError extends CLIError { constructor(message: string, field?: string, value?: unknown) { super(message, { code: 'VALIDATION_ERROR', suggestion: field ? `Please provide a valid value for: ${field}` : 'Please check your input and try again.', recoverable: true, context: { field, value }, }); } } /** User cancellation error for @clack/prompts integration / export class UserCancelledError extends CLIError { constructor(operation?: string) { super(`Operation cancelled by user${operation ? `: ${operation}` : ''}`, { code: 'USER_CANCELLED', recoverable: false, context: { operation }, }); } } /** Error recovery suggestions map for common error patterns
 
@@ -5484,7 +5484,7 @@ Error handling and cancellation utilities for the CLI SDK Provides graceful erro
 ## ErrorContextConfig
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 Enhanced Error Sanitization for Information Disclosure Protection This module provides comprehensive error sanitization to prevent sensitive information disclosure in error messages, stack traces, and error context. Implements Task 1.3.1: Information Disclosure Protection requirements.
 
@@ -6013,7 +6013,7 @@ const config: ErrorContextConfig = {
 ## ErrorHandlerValidationError
 
 **Type**: `class`  
-**Source**: [`src/core/createCLI.ts`](../../../src/core/createCLI.ts)
+**Source**: [`src/core/createCLI.ts`](../../src/core/createCLI.ts)
 
 Custom error class for error handler validation failures
 
@@ -6022,7 +6022,7 @@ Custom error class for error handler validation failures
 ## ErrorSanitizationConfig
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 Enhanced Error Sanitization for Information Disclosure Protection This module provides comprehensive error sanitization to prevent sensitive information disclosure in error messages, stack traces, and error context. Implements Task 1.3.1: Information Disclosure Protection requirements.
 
@@ -6049,7 +6049,7 @@ const config: ErrorSanitizationConfig = {
 ## execa
 
 **Type**: `function`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 ```typescript
 export async function execa(
@@ -6065,7 +6065,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## ExecaModule
 
 **Type**: `interface`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 Process execution wrapper with async/await support and error handling Provides secure command execution with proper error handling, output capture, streaming, and cancellation support using execa. / import { mkdir } from 'node:fs/promises'; import { tmpdir } from 'node:os'; import { join } from 'node:path'; import type { ExecaError, ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa'; // Note: execa package needs to be installed as a dependency // npm install execa@^8.0.1 import { execa as execaLib, execaSync as execaSyncLib } from 'execa'; import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/core/constants.js'; import { ProcessError } from '../foundation/errors/errors.js'; import { createLogger } from '../ui/logger.js'; // Create a logger instance for internal execa operations const execaLogger = createLogger({ prefix: 'execa' }); /** Result of a command execution / export interface ExecResult { stdout: string; // Standard output from the command stderr: string; // Standard error output exitCode: number; // Exit code (0 = success, non-zero = error) command: string; // The full command that was executed failed: boolean; // True if the command failed (exitCode !== 0) timedOut: boolean; // True if the command timed out killed: boolean; // True if the command was forcibly terminated duration: number; // Execution time in milliseconds } /** Sandboxing configuration for command execution / export interface SandboxConfig { enabled?: boolean; // Enable/disable sandboxing (default: true) isolateWorkingDirectory?: boolean; // Create isolated temp directory (default: true) restrictEnvironment?: boolean; // Use minimal safe environment (default: true) allowedEnvVars?: string[]; // Additional env vars to preserve (default: ['PATH', 'NODE_ENV']) customSandboxDir?: string; // Use custom sandbox directory instead of temp sandboxPrefix?: string; // Prefix for sandbox directory names (default: 'lord-commander-sandbox') } /** Options for command execution / export interface ExecOptions { cwd?: string; // Working directory to execute command in env?: Record<string, string>; // Environment variables to set timeout?: number; // Timeout in milliseconds (0 = no timeout) input?: string; // Input to send to the command's stdin stdio?: 'inherit' | 'pipe' | 'ignore'; // How to handle stdio streams silent?: boolean; // Suppress output logging shell?: boolean | string; // Run command in shell (true, false, or shell path) - security: defaults to false windowsHide?: boolean; // Hide console window on Windows reject?: boolean; // Whether to reject promise on non-zero exit code stripFinalNewline?: boolean; // Remove trailing newline from output preferLocal?: boolean; // Prefer locally installed binaries localDir?: string; // Directory to look for local binaries cleanup?: boolean; // Kill spawned process on parent process exit encoding?: BufferEncoding; // Output encoding maxBuffer?: number; // Max buffer size for stdout/stderr signal?: AbortSignal; // AbortController signal for cancellation sandbox?: SandboxConfig; // Sandboxing configuration for security } /** Options for streaming command execution / export interface ExecStreamOptions extends ExecOptions { onStdout?: (data: string) => void; // Callback for stdout data chunks onStderr?: (data: string) => void; // Callback for stderr data chunks onProgress?: (progress: { type: 'stdout' | 'stderr'; data: string }) => void; // Generic progress callback } /** Package manager detection result / export interface PackageManagerInfo { manager: PackageManager; lockFile: string; commands: (typeof PACKAGE_MANAGER_COMMANDS)[PackageManager]; } /** Default sandbox configuration / const DEFAULT_SANDBOX_CONFIG: Required<SandboxConfig> = { enabled: true, isolateWorkingDirectory: true, restrictEnvironment: true, allowedEnvVars: ['PATH', 'NODE_ENV', 'HOME', 'USERPROFILE', 'TEMP', 'TMP'], customSandboxDir: '', sandboxPrefix: 'lord-commander-sandbox', }; /** Create secure environment configuration (synchronous version) / function createSandboxEnv(config: SandboxConfig = {}): Record<string, string> { const sandboxConfig = { ...DEFAULT_SANDBOX_CONFIG, ...config }; let sandboxEnv: Record<string, string> = {}; execaLogger.debug(`createSandboxEnv called with config:`, { enabled: sandboxConfig.enabled, restrictEnvironment: sandboxConfig.restrictEnvironment, allowedEnvVars: sandboxConfig.allowedEnvVars, }); // Create restricted environment if enabled if (sandboxConfig.enabled && sandboxConfig.restrictEnvironment) { // Start with minimal environment sandboxEnv = { NODE_ENV: 'production', // Safe default }; // Add allowed environment variables for (const envVar of sandboxConfig.allowedEnvVars) { const envValue = process.env[envVar]; if (envValue) { sandboxEnv[envVar] = envValue; } } execaLogger.debug( `Created restricted environment with ${Object.keys(sandboxEnv).length} variables:`, Object.keys(sandboxEnv) ); } else { // Use current environment if not restricting sandboxEnv = Object.fromEntries( Object.entries(process.env).filter(([, value]) => value !== undefined) ) as Record<string, string>; execaLogger.debug(`Using full environment with ${Object.keys(sandboxEnv).length} variables`); } return sandboxEnv; } /** Create a secure sandbox environment for command execution / async function createSandbox( config: SandboxConfig = {} ): Promise<{ cwd: string; env: Record<string, string> }> { const sandboxConfig = { ...DEFAULT_SANDBOX_CONFIG, ...config }; let sandboxCwd = process.cwd(); // Create isolated working directory if enabled if (sandboxConfig.enabled && sandboxConfig.isolateWorkingDirectory) { try { const sandboxDir = sandboxConfig.customSandboxDir || join( tmpdir(), `${sandboxConfig.sandboxPrefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}` ); await mkdir(sandboxDir, { recursive: true }); sandboxCwd = sandboxDir; execaLogger.debug(`Created sandbox directory: ${sandboxDir}`); } catch (error) { execaLogger.warn(`Failed to create sandbox directory, using current directory: ${error}`); } } const sandboxEnv = createSandboxEnv(config); return { cwd: sandboxCwd, env: sandboxEnv }; } /** Validate and secure command execution options / function secureExecOptions(options: ExecOptions): ExecOptions { const securedOptions = { ...options }; // Force shell to false for security unless explicitly overridden if (securedOptions.shell === undefined) { securedOptions.shell = false; } // Add security warnings for shell usage if (securedOptions.shell === true || typeof securedOptions.shell === 'string') { execaLogger.warn('⚠️  Shell execution enabled - this may introduce security risks'); } // Set secure defaults securedOptions.cleanup = securedOptions.cleanup ?? true; securedOptions.windowsHide = securedOptions.windowsHide ?? true; return securedOptions; } /** Execute a command and return the result / export async function execa( command: string, args: string[] = [], options: ExecOptions = {} ): Promise<ExecResult> { const startTime = Date.now(); const fullCommand = `${command} ${args.join(' ')}`.trim(); try { // Apply security defaults and extract options const securedOptions = secureExecOptions(options); const { silent = false, reject = true, cwd: originalCwd, timeout = 0, sandbox, env: userEnv, ...execaOptions } = securedOptions; // Create sandbox environment const sandboxResult = await createSandbox(sandbox); const finalCwd = originalCwd || sandboxResult.cwd; // Always use sandboxed environment, with user env overrides if provided const finalEnv = userEnv ? { ...sandboxResult.env, ...userEnv } : sandboxResult.env; if (!silent) { execaLogger.debug(`Executing: ${fullCommand}`, { cwd: finalCwd, sandbox: sandbox?.enabled !== false ? 'enabled' : 'disabled', envVars: Object.keys(finalEnv).length, }); } const execaResult: ExecaReturnValue = await execaLib(command, args, { cwd: finalCwd, env: finalEnv, // Always pass explicit environment extendEnv: false, // Don't inherit parent environment when using sandboxed env timeout: timeout || undefined, reject, shell: false, // Force secure default ...execaOptions, } as Options); const duration = Date.now() - startTime; const result: ExecResult = { stdout: execaResult.stdout, stderr: execaResult.stderr, exitCode: execaResult.exitCode, command: fullCommand, failed: execaResult.failed, timedOut: execaResult.timedOut, killed: execaResult.killed, duration, }; if (!silent) { if (result.failed) { execaLogger.warn(`Command failed: ${fullCommand} (exit code: ${result.exitCode})`); } else { execaLogger.debug(`Command completed: ${fullCommand} (${duration}ms)`); } } return result; } catch (error: unknown) { const duration = Date.now() - startTime; interface ExecaError { exitCode?: number; stdout?: string; stderr?: string; signal?: string; killed?: boolean; timedOut?: boolean; } const execError = error as unknown as ExecaError; // Handle execa-specific errors if (execError.exitCode !== undefined) { const result: ExecResult = { stdout: execError.stdout || '', stderr: execError.stderr || '', exitCode: execError.exitCode, command: fullCommand, failed: true, timedOut: execError.timedOut || false, killed: execError.killed || false, duration, }; if (!options.silent) { execaLogger.error(`Command failed: ${fullCommand} (exit code: ${execError.exitCode})`); } if (options.reject !== false) { throw new ProcessError( (execError as Error).message || `Command failed: ${fullCommand}`, fullCommand, execError.exitCode, execError as Error ); } return result; } // Handle other errors (e.g., command not found) throw new ProcessError( `Failed to execute command: ${fullCommand}`, fullCommand, undefined, error as Error ); } } /** Execute a command synchronously / export function execaSync( command: string, args: string[] = [], options: ExecOptions = {} ): ExecResult { const startTime = Date.now(); const fullCommand = `${command} ${args.join(' ')}`.trim(); try { // Apply security defaults and extract options const securedOptions = secureExecOptions(options); const { silent = false, reject = true, cwd: originalCwd = process.cwd(), timeout = 0, sandbox, env: userEnv, ...execaOptions } = securedOptions; // Create secure environment (sync version - no directory isolation) const sandboxEnv = createSandboxEnv(sandbox); // Always use sandboxed environment, with user env overrides if provided const finalEnv = userEnv ? { ...sandboxEnv, ...userEnv } : sandboxEnv; if (!silent) { execaLogger.debug(`Executing sync: ${fullCommand}`, { cwd: originalCwd, sandbox: sandbox?.enabled !== false ? 'enabled' : 'disabled', envVars: Object.keys(finalEnv).length, }); } // Filter out options that don't apply to sync execution and handle type compatibility const { signal: _signal, encoding, ...syncOptions } = execaOptions; const execaResult: ExecaSyncReturnValue = execaSyncLib(command, args, { cwd: originalCwd, env: finalEnv, // Always pass explicit environment extendEnv: false, // Don't inherit parent environment when using sandboxed env timeout: timeout || undefined, reject, shell: false, // Force secure default encoding: encoding === 'utf8' ? encoding : 'utf8', ...syncOptions, }); const duration = Date.now() - startTime; const result: ExecResult = { stdout: execaResult.stdout, stderr: execaResult.stderr, exitCode: execaResult.exitCode, command: fullCommand, failed: execaResult.failed, timedOut: execaResult.timedOut, killed: execaResult.killed, duration, }; if (!silent) { if (result.failed) { execaLogger.warn(`Sync command failed: ${fullCommand} (exit code: ${result.exitCode})`); } else { execaLogger.debug(`Sync command completed: ${fullCommand} (${duration}ms)`); } } return result; } catch (error: unknown) { const duration = Date.now() - startTime; const execError = error as unknown as ExecaError; if (execError.exitCode !== undefined) { const result: ExecResult = { stdout: execError.stdout || '', stderr: execError.stderr || '', exitCode: execError.exitCode, command: fullCommand, failed: true, timedOut: execError.timedOut || false, killed: execError.killed || false, duration, }; if (options.reject !== false) { throw new ProcessError( execError.message || `Sync command failed: ${fullCommand}`, fullCommand, execError.exitCode, execError ); } return result; } throw new ProcessError( `Failed to execute sync command: ${fullCommand}`, fullCommand, undefined, error as Error ); } } /** Execute a command with real-time output streaming / export async function execaStream( command: string, args: string[] = [], options: ExecStreamOptions = {} ): Promise<ExecResult> { const startTime = Date.now(); const fullCommand = `${command} ${args.join(' ')}`.trim(); try { // Extract stream-specific options first const { onStdout, onStderr, onProgress, ...baseOptions } = options; // Apply security defaults and extract options const securedOptions = secureExecOptions(baseOptions); const { silent = false, cwd: originalCwd, timeout = 0, sandbox, env: userEnv, ...execaOptions } = securedOptions; // Create sandbox environment const sandboxResult = await createSandbox(sandbox); const finalCwd = originalCwd || sandboxResult.cwd; // Always use sandboxed environment, with user env overrides if provided const finalEnv = userEnv ? { ...sandboxResult.env, ...userEnv } : sandboxResult.env; if (!silent) { execaLogger.debug(`Streaming: ${fullCommand}`, { cwd: finalCwd, sandbox: sandbox?.enabled !== false ? 'enabled' : 'disabled', envVars: Object.keys(finalEnv).length, }); } // Force pipe stdio for streaming const subprocess = execaLib(command, args, { cwd: finalCwd, env: finalEnv, // Always pass explicit environment extendEnv: false, // Don't inherit parent environment when using sandboxed env timeout: timeout || undefined, stdio: 'pipe', shell: false, // Force secure default ...execaOptions, } as Options); // Handle stdout streaming if (subprocess.stdout && (onStdout || onProgress)) { subprocess.stdout.on('data', (chunk: Buffer) => { const data = chunk.toString(); if (onStdout) onStdout(data); if (onProgress) onProgress({ type: 'stdout', data }); }); } // Handle stderr streaming if (subprocess.stderr && (onStderr || onProgress)) { subprocess.stderr.on('data', (chunk: Buffer) => { const data = chunk.toString(); if (onStderr) onStderr(data); if (onProgress) onProgress({ type: 'stderr', data }); }); } const execaResult = await subprocess; const duration = Date.now() - startTime; const result: ExecResult = { stdout: execaResult.stdout, stderr: execaResult.stderr, exitCode: execaResult.exitCode, command: fullCommand, failed: execaResult.failed, timedOut: execaResult.timedOut, killed: execaResult.killed, duration, }; if (!silent) { execaLogger.debug(`Streaming completed: ${fullCommand} (${duration}ms)`); } return result; } catch (error: unknown) { const execError = error as unknown as ExecaError; if (execError.exitCode !== undefined) { throw new ProcessError( (execError as Error).message || `Streaming command failed: ${fullCommand}`, fullCommand, execError.exitCode, execError as Error ); } throw new ProcessError( `Failed to stream command: ${fullCommand}`, fullCommand, undefined, error as Error ); } } /** Execute a command and capture only the output (no error throwing) / export async function execaWithOutput( command: string, args: string[] = [], options: ExecOptions = {} ): Promise<ExecResult> { return execa(command, args, { ...options, reject: false, // Don't throw on non-zero exit codes silent: options.silent ?? true, // Default to silent for output capture }); } /** Check if a command exists and is executable / export async function commandExists(command: string): Promise<boolean> { try { const isWindows = process.platform === 'win32'; const checkCommand = isWindows ? 'where' : 'which'; const result = await execaWithOutput(checkCommand, [command]); return result.exitCode === 0 && result.stdout.trim().length > 0; } catch { return false; } } /** Detect the package manager used in a project / export async function detectPackageManager( cwd: string = process.cwd() ): Promise<PackageManagerInfo | null> { try { // Check for lock files in order of preference const { exists } = await import('./fs'); const { join } = await import('node:path'); for (const [manager, config] of Object.entries(PACKAGE_MANAGER_COMMANDS)) { const lockFilePath = join(cwd, config.lockFile); if (exists(lockFilePath)) { return { manager: manager as PackageManager, lockFile: config.lockFile, commands: config, }; } } // If no lock file found, check if package managers are available for (const manager of ['pnpm', 'yarn', 'bun', 'npm'] as PackageManager[]) { if (await commandExists(manager)) { return { manager, lockFile: PACKAGE_MANAGER_COMMANDS[manager].lockFile, commands: PACKAGE_MANAGER_COMMANDS[manager], }; } } return null; } catch (error) { execaLogger.debug('Failed to detect package manager', error); return null; } } /** Run a package manager command (install, run, etc.) / export async function runPackageManagerExeca( action: 'install' | 'installDev' | 'run' | 'create', packageOrScript?: string, options: ExecOptions = {} ): Promise<ExecResult> { const pmInfo = await detectPackageManager(options.cwd); if (!pmInfo) { throw new ProcessError( 'No package manager detected. Please install npm, pnpm, yarn, or bun.', 'package-manager-detection' ); } let command: string; const args: string[] = []; switch (action) { case 'install': if (packageOrScript) { command = pmInfo.manager; args.push('install', packageOrScript); } else { const installParts = pmInfo.commands.install.split(' '); command = installParts[0]; args.push(...installParts.slice(1)); } break; case 'installDev': { const installDevParts = pmInfo.commands.installDev.split(' '); command = installDevParts[0]; args.push(...installDevParts.slice(1)); if (packageOrScript) { args.push(packageOrScript); } break; } case 'run': { if (!packageOrScript) { throw new ProcessError('Script name is required for run command', 'run-command'); } const runParts = pmInfo.commands.run.split(' '); command = runParts[0]; args.push(...runParts.slice(1), packageOrScript); break; } case 'create': { if (!packageOrScript) { throw new ProcessError('Package name is required for create command', 'create-command'); } const createParts = pmInfo.commands.create.split(' '); command = createParts[0]; args.push(...createParts.slice(1), packageOrScript); break; } default: throw new ProcessError(`Unknown package manager action: ${action}`, 'unknown-action'); } execaLogger.info( `Running ${pmInfo.manager} ${action}${packageOrScript ? ` ${packageOrScript}` : ''}` ); return execa(command, args, { ...options, stdio: options.stdio ?? 'inherit', // Show output by default for package manager commands }); } /** Execute git commands with proper error handling / export async function gitExeca( subcommand: string, args: string[] = [], options: ExecOptions = {} ): Promise<ExecResult> { // Check if git is available if (!(await commandExists('git'))) { throw new ProcessError('Git is not installed or not available in PATH', 'git-not-found'); } return execa('git', [subcommand, ...args], { ...options, silent: options.silent ?? false, // Show git output by default }); } /** Create an AbortController for cancelling commands / export function createCancellableExecution(): { signal: AbortSignal; cancel: () => void; execa: (command: string, args?: string[], options?: ExecOptions) => Promise<ExecResult>; execStream: ( command: string, args?: string[], options?: ExecStreamOptions ) => Promise<ExecResult>; } { const controller = new AbortController(); return { signal: controller.signal, cancel: () => controller.abort(), execa: (command: string, args: string[] = [], options: ExecOptions = {}) => execa(command, args, { ...options, signal: controller.signal }), execStream: (command: string, args: string[] = [], options: ExecStreamOptions = {}) => execaStream(command, args, { ...options, signal: controller.signal }), }; } /** Utility to run multiple commands in sequence / export async function execaSequence( commands: Array<{ command: string; args?: string[]; options?: ExecOptions }>, options: { stopOnError?: boolean; cwd?: string } = {} ): Promise<ExecResult[]> { const { stopOnError = true, cwd } = options; const results: ExecResult[] = []; for (const { command, args = [], options: cmdOptions = {} } of commands) { try { const result = await execa(command, args, { cwd, ...cmdOptions, }); results.push(result); if (result.failed && stopOnError) { break; } } catch (error) { if (stopOnError) { throw error; } // If not stopping on error, create a failed result results.push({ stdout: '', stderr: error instanceof Error ? error.message : String(error), exitCode: 1, command: `${command} ${args.join(' ')}`, failed: true, timedOut: false, killed: false, duration: 0, }); } } return results; } /** Utility to run multiple commands in parallel / export async function execaParallel( commands: Array<{ command: string; args?: string[]; options?: ExecOptions }>, options: { cwd?: string; maxConcurrency?: number } = {} ): Promise<ExecResult[]> { const { cwd, maxConcurrency = 5 } = options; const executeCommand = async ({ command, args = [], options: cmdOptions = {}, }: (typeof commands)[0]) => { return execa(command, args, { cwd, ...cmdOptions }); }; // Simple concurrency control const results: ExecResult[] = []; const executing: Promise<void>[] = []; for (const cmd of commands) { const promise = executeCommand(cmd).then((result) => { results.push(result); }); executing.push(promise); if (executing.length >= maxConcurrency) { await Promise.race(executing); // Remove completed promises for (let i = executing.length - 1; i >= 0; i--) { if ( await Promise.allSettled([executing[i]]).then(([{ status }]) => status === 'fulfilled') ) { executing.splice(i, 1); } } } } await Promise.all(executing); return results; } /** Execa module interface for CommandContext
 
@@ -6074,7 +6074,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## execaParallel
 
 **Type**: `function`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 ```typescript
 export async function execaParallel(
@@ -6088,7 +6088,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## execaSequence
 
 **Type**: `function`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 ```typescript
 export async function execaSequence(
@@ -6102,7 +6102,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## execaStream
 
 **Type**: `function`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 ```typescript
 export async function execaStream(
@@ -6118,7 +6118,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## execaSync
 
 **Type**: `function`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 ```typescript
 export function execaSync(
@@ -6134,7 +6134,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## execaWithOutput
 
 **Type**: `function`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 ```typescript
 export async function execaWithOutput(
@@ -6150,7 +6150,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## ExecOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 Process execution wrapper with async/await support and error handling Provides secure command execution with proper error handling, output capture, streaming, and cancellation support using execa. / import { mkdir } from 'node:fs/promises'; import { tmpdir } from 'node:os'; import { join } from 'node:path'; import type { ExecaError, ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa'; // Note: execa package needs to be installed as a dependency // npm install execa@^8.0.1 import { execa as execaLib, execaSync as execaSyncLib } from 'execa'; import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/core/constants.js'; import { ProcessError } from '../foundation/errors/errors.js'; import { createLogger } from '../ui/logger.js'; // Create a logger instance for internal execa operations const execaLogger = createLogger({ prefix: 'execa' }); /** Result of a command execution / export interface ExecResult { stdout: string; // Standard output from the command stderr: string; // Standard error output exitCode: number; // Exit code (0 = success, non-zero = error) command: string; // The full command that was executed failed: boolean; // True if the command failed (exitCode !== 0) timedOut: boolean; // True if the command timed out killed: boolean; // True if the command was forcibly terminated duration: number; // Execution time in milliseconds } /** Sandboxing configuration for command execution / export interface SandboxConfig { enabled?: boolean; // Enable/disable sandboxing (default: true) isolateWorkingDirectory?: boolean; // Create isolated temp directory (default: true) restrictEnvironment?: boolean; // Use minimal safe environment (default: true) allowedEnvVars?: string[]; // Additional env vars to preserve (default: ['PATH', 'NODE_ENV']) customSandboxDir?: string; // Use custom sandbox directory instead of temp sandboxPrefix?: string; // Prefix for sandbox directory names (default: 'lord-commander-sandbox') } /** Options for command execution
 
@@ -6159,7 +6159,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## ExecResult
 
 **Type**: `interface`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 Process execution wrapper with async/await support and error handling Provides secure command execution with proper error handling, output capture, streaming, and cancellation support using execa. / import { mkdir } from 'node:fs/promises'; import { tmpdir } from 'node:os'; import { join } from 'node:path'; import type { ExecaError, ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa'; // Note: execa package needs to be installed as a dependency // npm install execa@^8.0.1 import { execa as execaLib, execaSync as execaSyncLib } from 'execa'; import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/core/constants.js'; import { ProcessError } from '../foundation/errors/errors.js'; import { createLogger } from '../ui/logger.js'; // Create a logger instance for internal execa operations const execaLogger = createLogger({ prefix: 'execa' }); /** Result of a command execution
 
@@ -6168,7 +6168,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## ExecStreamOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 Process execution wrapper with async/await support and error handling Provides secure command execution with proper error handling, output capture, streaming, and cancellation support using execa. / import { mkdir } from 'node:fs/promises'; import { tmpdir } from 'node:os'; import { join } from 'node:path'; import type { ExecaError, ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa'; // Note: execa package needs to be installed as a dependency // npm install execa@^8.0.1 import { execa as execaLib, execaSync as execaSyncLib } from 'execa'; import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/core/constants.js'; import { ProcessError } from '../foundation/errors/errors.js'; import { createLogger } from '../ui/logger.js'; // Create a logger instance for internal execa operations const execaLogger = createLogger({ prefix: 'execa' }); /** Result of a command execution / export interface ExecResult { stdout: string; // Standard output from the command stderr: string; // Standard error output exitCode: number; // Exit code (0 = success, non-zero = error) command: string; // The full command that was executed failed: boolean; // True if the command failed (exitCode !== 0) timedOut: boolean; // True if the command timed out killed: boolean; // True if the command was forcibly terminated duration: number; // Execution time in milliseconds } /** Sandboxing configuration for command execution / export interface SandboxConfig { enabled?: boolean; // Enable/disable sandboxing (default: true) isolateWorkingDirectory?: boolean; // Create isolated temp directory (default: true) restrictEnvironment?: boolean; // Use minimal safe environment (default: true) allowedEnvVars?: string[]; // Additional env vars to preserve (default: ['PATH', 'NODE_ENV']) customSandboxDir?: string; // Use custom sandbox directory instead of temp sandboxPrefix?: string; // Prefix for sandbox directory names (default: 'lord-commander-sandbox') } /** Options for command execution / export interface ExecOptions { cwd?: string; // Working directory to execute command in env?: Record<string, string>; // Environment variables to set timeout?: number; // Timeout in milliseconds (0 = no timeout) input?: string; // Input to send to the command's stdin stdio?: 'inherit' | 'pipe' | 'ignore'; // How to handle stdio streams silent?: boolean; // Suppress output logging shell?: boolean | string; // Run command in shell (true, false, or shell path) - security: defaults to false windowsHide?: boolean; // Hide console window on Windows reject?: boolean; // Whether to reject promise on non-zero exit code stripFinalNewline?: boolean; // Remove trailing newline from output preferLocal?: boolean; // Prefer locally installed binaries localDir?: string; // Directory to look for local binaries cleanup?: boolean; // Kill spawned process on parent process exit encoding?: BufferEncoding; // Output encoding maxBuffer?: number; // Max buffer size for stdout/stderr signal?: AbortSignal; // AbortController signal for cancellation sandbox?: SandboxConfig; // Sandboxing configuration for security } /** Options for streaming command execution
 
@@ -6177,7 +6177,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## executeErrorHandlerSafely
 
 **Type**: `function`  
-**Source**: [`src/core/createCLI.ts`](../../../src/core/createCLI.ts)
+**Source**: [`src/core/createCLI.ts`](../../src/core/createCLI.ts)
 
 ```typescript
 export async function executeErrorHandlerSafely(
@@ -6193,7 +6193,7 @@ Custom error class for error handler validation failures / export class ErrorHan
 ## exists
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export function exists(filePath: string): boolean
@@ -6206,7 +6206,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## EXPRESSION_LANGUAGE_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files / export const FILE_SYSTEM_PATTERNS = { // Sensitive system files (Unix) UNIX_SENSITIVE_FILES: /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|proc\/|sys\/|dev\/)/i, // Sensitive system files (Windows) WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i, // Windows reserved device names WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s.]|$)/i, // Fixed: device names at end or followed by space/dot // Windows filename edge cases (trailing dots/spaces that Windows strips) WINDOWS_FILENAME_EDGE_CASES: /[\s.]+$/, // Configuration files CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i, // Backup and temporary files BACKUP_FILES: /\.(bak|backup|tmp|temp|old|orig|save)$/i, // Executable files EXECUTABLE_FILES: /\.(exe|bat|cmd|com|scr|pif|msi|dll|so|dylib)$/i, } as const; /** Network attack patterns Detects attempts to make unauthorized network connections / export const NETWORK_PATTERNS = { // URLs with suspicious protocols SUSPICIOUS_PROTOCOLS: /^(file|ftp|gopher|ldap|dict|telnet|ssh):/i, // Private IP addresses (RFC 1918) PRIVATE_IPS: /\b(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/, // Localhost variations LOCALHOST_VARIANTS: /\b(localhost|127\.|0\.0\.0\.0|::1)/i, // Suspicious ports SUSPICIOUS_PORTS: /:(22|23|53|135|139|445|1433|1521|3306|3389|5432|5900|6379)\b/, } as const; /** Advanced security attack patterns Detects sophisticated attacks and bypass attempts / export const ADVANCED_ATTACK_PATTERNS = { // Homograph attacks using similar-looking characters HOMOGRAPH_CYRILLIC: /[а-яё]/gi, // Cyrillic characters HOMOGRAPH_GREEK: /[α-ωΑ-Ω]/g, // Greek characters HOMOGRAPH_MIXED: /[а-яёα-ωΑ-Ω]/g, // Mixed homograph scripts // Bidirectional text attacks BIDI_OVERRIDE: /[\u202A-\u202E\u2066-\u2069\u061C]/g, // Prototype pollution attempts PROTOTYPE_POLLUTION: /__proto__|constructor\.prototype|\.prototype\.|\.constructor/gi, // Zero-width and invisible characters ZERO_WIDTH_CHARS: /[\u200B-\u200D\uFEFF\u2060]/g, } as const; /** Deserialization attack patterns Detects attempts to inject malicious serialized objects / export const DESERIALIZATION_PATTERNS = { // Java serialization JAVA_SERIALIZED: /\xac\xed\x00\x05|rO0AB/g, JAVA_GADGETS: /\b(Runtime|ProcessBuilder|InvokerTransformer|CommonsCollections|JRMP|LDAP)\b/gi, // .NET serialization DOTNET_BINARY: /\x00\x01\x00\x00\x00\xff\xff\xff\xff/g, DOTNET_GADGETS: /\b(ObjectStateFormatter|LosFormatter|BinaryFormatter|TypeConfuseDelegate)\b/gi, // Python pickle PYTHON_PICKLE: /\x80[\x02-\x04]|c__builtin__|cos\nsystem/g, PYTHON_REDUCE: /__reduce__|__reduce_ex__/g, // PHP serialization PHP_SERIALIZED: /[Oo]:[0-9]+:"/g, PHP_GADGETS: /\b(POP|Monolog|Doctrine|Guzzle|Symfony)\b/gi, // Node.js serialization NODEJS_SERIALIZE: /"__js_function"|"__js_date"|"__js_regexp"/g, // Generic dangerous patterns DANGEROUS_CLASSES: /\b(eval|exec|system|shell_exec|file_get_contents|fopen|include|require)\b/gi, } as const; /** XXE (XML External Entity) attack patterns Detects XML external entity injection attempts / export const XXE_PATTERNS = { // External entity declarations EXTERNAL_ENTITY: /<!ENTITY[^>]+SYSTEM[^>]+>/gi, PUBLIC_ENTITY: /<!ENTITY[^>]+PUBLIC[^>]+>/gi, // Parameter entities PARAMETER_ENTITY: /<!ENTITY\s+%[^>]+>/gi, // Entity references ENTITY_REFERENCE: /&[a-zA-Z_][a-zA-Z0-9_]*;/g, // DOCTYPE declarations with external references DOCTYPE_EXTERNAL: /<!DOCTYPE[^>]+SYSTEM[^>]*>/gi, DOCTYPE_PUBLIC: /<!DOCTYPE[^>]+PUBLIC[^>]*>/gi, // XML inclusion XML_INCLUSION: /<xi:include[^>]*>/gi, // Suspicious protocols in XML XML_PROTOCOLS: /\b(file|ftp|http|https|gopher|jar|netdoc):/gi, // XML bomb patterns (billion laughs) XML_BOMB: /&lol[0-9]*;|&lol[0-9]*lol[0-9]*;/gi, } as const; /** SSTI (Server-Side Template Injection) attack patterns Detects template injection attempts in various template engines / export const SSTI_PATTERNS = { // Jinja2/Django templates JINJA2_INJECTION: /\{\{.*?(\.|_|config|request|session|g).*?\}\}/gi, JINJA2_DANGEROUS: /\{\{.*?(popen|system|eval|exec|import|builtins|globals).*?\}\}/gi, // Twig templates TWIG_INJECTION: /\{\{.*?(\.|_self|app).*?\}\}/gi, TWIG_DANGEROUS: /\{\{.*?(system|exec|shell_exec|passthru).*?\}\}/gi, // Handlebars templates HANDLEBARS_INJECTION: /\{\{.*?(constructor|prototype|process|require).*?\}\}/gi, // FreeMarker templates FREEMARKER_INJECTION: /<#assign|<#import|<#include|\$\{.*?new.*?\}/gi, FREEMARKER_DANGEROUS: /\$\{.*?(freemarker\.template\.utility\.Execute|ObjectConstructor).*?\}/gi, // Velocity templates VELOCITY_INJECTION: /#set\s*\(\s*\$.*?=|#evaluate|\$\{.*?Class.*?\}/gi, // Smarty templates SMARTY_INJECTION: /\{php\}|\{\/php\}|\{literal\}|\{\/literal\}/gi, // Generic template patterns TEMPLATE_EXECUTION: /\{\{.*?(eval|exec|system|import|require|constructor).*?\}\}/gi, TEMPLATE_OBJECT_ACCESS: /\{\{.*?(__.*__|prototype|constructor|process).*?\}\}/gi, } as const; /** LDAP injection attack patterns Detects LDAP injection attempts in search filters / export const LDAP_PATTERNS = { // LDAP filter injection LDAP_FILTER_INJECTION: /[()&|!*\\]/g, // LDAP special characters that need escaping LDAP_SPECIAL_CHARS: /[\\*()\\0]/g, // LDAP search operators LDAP_OPERATORS: /[&|!]|\*.*\*/g, // LDAP attribute injection LDAP_ATTRIBUTE_INJECTION: /[=<>~]/g, // Common LDAP attributes used in attacks LDAP_DANGEROUS_ATTRIBUTES: /\b(objectClass|cn|uid|userPassword|memberOf|dn)\s*[=]/gi, // LDAP DN injection LDAP_DN_INJECTION: /[,+=\\#<>;]/g, } as const; /** XPath injection attack patterns Detects XPath injection attempts in XML queries / export const XPATH_PATTERNS = { // XPath injection operators XPATH_OPERATORS: /['"]\s*or\s*['"]/gi, XPATH_AND_OR: /\b(and|or)\s+['"]/gi, // XPath functions that can be dangerous XPATH_FUNCTIONS: /\b(substring|contains|starts-with|string-length|position|last|count)\s*\(/gi, // XPath axes that can be used for traversal XPATH_AXES: /\b(parent|ancestor|descendant|following|preceding|child|attribute)::/gi, // XPath comment injection XPATH_COMMENTS: /\(:.*?:\)/g, // Boolean-based XPath injection XPATH_BOOLEAN: /['"]\s*(=|!=)\s*['"]/gi, XPATH_TRUE_FALSE: /\b(true|false)\s*\(\s*\)/gi, // XPath string manipulation for injection XPATH_CONCAT: /concat\s*\(/gi, XPATH_NORMALIZE: /normalize-space\s*\(/gi, } as const; /** Expression Language (EL) injection patterns Detects EL injection in Java/JSP environments
 
@@ -6215,7 +6215,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## ExtendedIcons
 
 **Type**: `interface`  
-**Source**: [`src/core/ui/icons.ts`](../../../src/core/ui/icons.ts)
+**Source**: [`src/core/ui/icons.ts`](../../src/core/ui/icons.ts)
 
 Enhanced Icon System for Logger with Cross-Platform Fallbacks This module extends the logger with comprehensive icon support, automatic fallback detection, and security considerations. / import { fallbackSymbols, mainSymbols } from 'figures'; import { SCRIPT_INJECTION_PATTERNS } from '../foundation/security/patterns.js'; /** Extended icon set with semantic names
 
@@ -6224,7 +6224,7 @@ Enhanced Icon System for Logger with Cross-Platform Fallbacks This module extend
 ## FILE_EXTENSIONS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 Core constants and configuration for the CLI SDK These constants define the supported technologies, file patterns, and framework detection logic used throughout the SDK. / import { homedir } from 'node:os'; import { join } from 'node:path'; /** Supported package managers for project detection and commands / export const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const; export type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]; /** Default file and directory patterns to ignore during operations / export const DEFAULT_IGNORE_PATTERNS = [ // Version control '.git', '.gitignore', // Dependencies 'node_modules', '.pnpm-store', '.yarn', // Build outputs 'dist', 'build', '.next', '.nuxt', '.output', '.vercel', '.netlify', // Cache and temp files '.cache', '.temp', '.tmp', 'coverage', // IDE and editor files '.vscode', '.idea', '*.log', '.DS_Store', 'Thumbs.db', // Environment and config '.env', '.env.local', '.env.*.local', ] as const; /** Prefix for temporary directories created by the SDK / export const TEMP_DIR_PREFIX = 'lord-commander-'; /** Paths where CLI configuration files can be found / export const CLI_CONFIG_PATHS = [ 'lord.config.js', 'lord.config.ts', join(homedir(), '.lord', 'config.json'), ] as const; /** Framework detection patterns for smart project detection Each framework has file indicators and optional package.json dependencies / export const FRAMEWORK_PATTERNS = { 'next.js': { files: ['next.config.js', 'next.config.ts', 'next.config.mjs'], dependencies: ['next'], devDependencies: ['@next/env'], directories: ['pages', 'app'], }, remix: { files: ['remix.config.js', 'remix.config.ts'], dependencies: ['@remix-run/node', '@remix-run/react', '@remix-run/serve'], directories: ['app/routes'], }, astro: { files: ['astro.config.js', 'astro.config.ts', 'astro.config.mjs'], dependencies: ['astro'], directories: ['src/pages'], }, vite: { files: ['vite.config.js', 'vite.config.ts'], dependencies: ['vite'], devDependencies: ['vite'], }, nuxt: { files: ['nuxt.config.js', 'nuxt.config.ts'], dependencies: ['nuxt', 'nuxt3'], directories: ['pages', 'components'], }, sveltekit: { files: ['svelte.config.js'], dependencies: ['@sveltejs/kit'], directories: ['src/routes'], }, express: { files: ['server.js', 'app.js', 'index.js'], dependencies: ['express'], }, fastify: { dependencies: ['fastify'], }, react: { dependencies: ['react'], devDependencies: ['@types/react'], }, vue: { dependencies: ['vue'], devDependencies: ['@vue/cli-service'], }, angular: { files: ['angular.json'], dependencies: ['@angular/core'], devDependencies: ['@angular/cli'], }, } as const; export type Framework = keyof typeof FRAMEWORK_PATTERNS; /** Common file extensions for different file types
 
@@ -6233,7 +6233,7 @@ Core constants and configuration for the CLI SDK These constants define the supp
 ## FILE_SYSTEM_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files
 
@@ -6242,7 +6242,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## FileOperationOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 File system utilities with safe operations and error handling Provides secure file system operations with proper error handling, progress tracking, and integration with the CLI logger system. / import { existsSync } from 'node:fs'; import fsPromises from 'node:fs/promises'; import path from 'node:path'; import type { JsonValue } from '../../types/common.js'; import { DEFAULT_IGNORE_PATTERNS } from '../foundation/core/constants.js'; import { FileSystemError } from '../foundation/errors/errors.js'; import { createLogger } from '../ui/logger.js'; // Create a logger instance for internal file operations const fsLogger = createLogger({ prefix: 'fs' }); /** Options for file operations
 
@@ -6251,7 +6251,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## FileStats
 
 **Type**: `interface`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 File system utilities with safe operations and error handling Provides secure file system operations with proper error handling, progress tracking, and integration with the CLI logger system. / import { existsSync } from 'node:fs'; import fsPromises from 'node:fs/promises'; import path from 'node:path'; import type { JsonValue } from '../../types/common.js'; import { DEFAULT_IGNORE_PATTERNS } from '../foundation/core/constants.js'; import { FileSystemError } from '../foundation/errors/errors.js'; import { createLogger } from '../ui/logger.js'; // Create a logger instance for internal file operations const fsLogger = createLogger({ prefix: 'fs' }); /** Options for file operations / export interface FileOperationOptions { overwrite?: boolean; // Allow overwriting existing files/directories createDirs?: boolean; // Create parent directories if they don't exist recursive?: boolean; // Apply operation recursively to subdirectories ignorePatterns?: readonly string[]; // File patterns to skip (e.g., 'node_modules', '*.log') onProgress?: (current: number, total: number, file: string) => void; // Progress callback for long operations } /** Options for copy operations / export interface CopyOptions extends FileOperationOptions { filter?: (src: string, dest: string) => boolean | Promise<boolean>; // Custom function to decide which files to copy preserveTimestamps?: boolean; // Keep original file modification/creation times dereference?: boolean; // Follow symbolic links instead of copying them as links } /** File system statistics interface
 
@@ -6260,7 +6260,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## FileSystemError
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 Error handling and cancellation utilities for the CLI SDK Provides graceful error management, user-friendly messages, and proper cleanup for CLI operations. / import { isCancel as clackIsCancel } from '@clack/prompts'; import colors from 'picocolors'; /** Custom CLI error class with enhanced error information / export class CLIError extends Error { public readonly code: string; public readonly suggestion?: string; public readonly recoverable: boolean; public readonly context?: Record<string, unknown>; public override readonly cause?: Error; constructor( message: string, options: { code?: string; suggestion?: string; recoverable?: boolean; context?: Record<string, unknown>; cause?: Error; } = {} ) { super(message); this.name = 'CLIError'; this.code = options.code || 'CLI_ERROR'; this.suggestion = options.suggestion; this.recoverable = options.recoverable ?? false; this.context = options.context; this.cause = options.cause; // Maintain proper stack trace if (Error.captureStackTrace) { Error.captureStackTrace(this, CLIError); } } } /** Specific error types for different CLI operations
 
@@ -6269,7 +6269,7 @@ Error handling and cancellation utilities for the CLI SDK Provides graceful erro
 ## findFiles
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function findFiles(
@@ -6285,7 +6285,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## flows
 
 **Type**: `constant`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 Display an introductory message at the start of a CLI flow / export function intro(message: string, options?: { theme?: Partial<PromptTheme> }): void { const theme = options?.theme ? { ...currentTheme, ...options.theme } : currentTheme; clack.intro(theme.style.info(`${theme.prefix} ${message}`)); } /** Display a closing message at the end of a CLI flow / export function outro(message: string, options?: { theme?: Partial<PromptTheme> }): void { const theme = options?.theme ? { ...currentTheme, ...options.theme } : currentTheme; clack.outro(theme.style.success(`${theme.symbol.success} ${message}`)); } /** Display an informational note / export function note(message: string, title?: string): void { const theme = currentTheme; const formattedTitle = title ? theme.style.info(title) : undefined; clack.note(message, formattedTitle); } /** Display a log message with styling / export function log( message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info' ): void { const theme = currentTheme; const symbol = theme.symbol[type] || theme.symbol.info; const style = theme.style[type] || theme.style.info; clack.log.message(style(`${symbol} ${message}`)); } /** Create a spinner for long-running operations / export function spinner(): { start: (message?: string) => void; stop: (message?: string, code?: number) => void; message: (message: string) => void; } { const s = clack.spinner(); return { start: (message?: string) => { const theme = currentTheme; s.start(message ? theme.style.info(message) : 'Loading...'); }, stop: (message?: string, code?: number) => { const theme = currentTheme; if (code === 0 || code === undefined) { s.stop(message ? theme.style.success(`${theme.symbol.success} ${message}`) : 'Done'); } else { s.stop(message ? theme.style.error(`${theme.symbol.error} ${message}`) : 'Failed'); } }, message: (message: string) => { const theme = currentTheme; s.message(theme.style.info(message)); }, }; } /** Prompt for text input / export async function text(message: string, options: PromptOptions = {}): Promise<string> { const theme = options.theme ? { ...currentTheme, ...options.theme } : currentTheme; const result = await clack.text({ message: theme.style.question(message), placeholder: options.placeholder, initialValue: options.initialValue, validate: options.validate, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } if (options.required && !result.trim()) { throw new CLIError('This field is required', { code: 'VALIDATION_ERROR' }); } return result; } /** Prompt for password input / export async function password( message: string, options: Omit<PromptOptions, 'initialValue'> = {} ): Promise<string> { const theme = options.theme ? { ...currentTheme, ...options.theme } : currentTheme; const result = await clack.password({ message: theme.style.question(message), validate: options.validate, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } if (options.required && !result.trim()) { throw new CLIError('Password is required', { code: 'VALIDATION_ERROR' }); } return result; } /** Prompt for confirmation (yes/no) / export async function confirm( message: string, options: ConfirmPromptOptions = {} ): Promise<boolean> { const theme = options.theme ? { ...currentTheme, ...options.theme } : currentTheme; const result = await clack.confirm({ message: theme.style.question(message), active: options.active || 'Yes', inactive: options.inactive || 'No', initialValue: options.initialValue, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } return result; } /** Prompt for single selection from a list / export async function select<T = string>( message: string, options: SelectOption<T>[], promptOptions: SelectPromptOptions<T> = {} ): Promise<T> { const theme = promptOptions.theme ? { ...currentTheme, ...promptOptions.theme } : currentTheme; const selectOptions = options.map((option) => ({ value: option.value, label: option.label || String(option.value), })); const result = await clack.select({ message: theme.style.question(message), options: selectOptions as unknown as Parameters<typeof clack.select>[0]['options'], maxItems: promptOptions.maxItems, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } if (promptOptions.validate) { const validationError = promptOptions.validate(result as T); if (validationError) { throw new CLIError(validationError, { code: 'VALIDATION_ERROR' }); } } return result as T; } /** Prompt for multiple selections from a list / export async function multiselect<T = string>( message: string, options: MultiSelectOption<T>[], promptOptions: MultiSelectPromptOptions<T> = {} ): Promise<T[]> { const theme = promptOptions.theme ? { ...currentTheme, ...promptOptions.theme } : currentTheme; const selectOptions = options.map((option) => ({ value: option.value, label: option.label || String(option.value), })); const result = await clack.multiselect({ message: theme.style.question(message), options: selectOptions as unknown as Parameters<typeof clack.multiselect>[0]['options'], required: promptOptions.required !== false, maxItems: promptOptions.maxItems, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } if (promptOptions.required && (!result || (result as T[]).length === 0)) { throw new CLIError('At least one selection is required', { code: 'VALIDATION_ERROR' }); } if (promptOptions.validate) { const validationError = promptOptions.validate(result as T[]); if (validationError) { throw new CLIError(validationError, { code: 'VALIDATION_ERROR' }); } } return result as T[]; } /** Group related prompts together / export async function group<T extends Record<string, unknown>>( prompts: { [K in keyof T]: () => Promise<T[K]>; }, options?: { onCancel?: (prompt: { results: Partial<T> }) => void; } ): Promise<T> { const result = await clack.group(prompts, options); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } return result; } // isCancel is re-exported from clack at the end of this file /** Cancel the current operation / export function cancel(message: string = 'Operation cancelled'): never { clack.cancel(currentTheme.style.error(message)); process.exit(1); } /** Common prompt patterns for CLI setup / export const patterns = { /** Project name validation / projectName: { validate: (value: string): string | undefined => { if (!value.trim()) return 'Project name is required'; if (!/^[a-zA-Z0-9-_]+$/.test(value)) { return 'Project name can only contain letters, numbers, hyphens, and underscores'; } if (value.length > 50) return 'Project name must be 50 characters or less'; return undefined; }, placeholder: 'my-awesome-project', }, /** Package manager selection / packageManager: async (): Promise<'npm' | 'pnpm' | 'yarn' | 'bun'> => { return select('Choose a package manager:', [ { value: 'pnpm' as const, label: 'pnpm (recommended)', hint: 'Fast, disk space efficient' }, { value: 'npm' as const, label: 'npm', hint: 'Node.js default package manager' }, { value: 'yarn' as const, label: 'Yarn', hint: 'Fast, reliable, secure' }, { value: 'bun' as const, label: 'Bun', hint: 'All-in-one JavaScript runtime' }, ]); }, /** Framework selection / framework: async (): Promise<string> => { return select('Choose a framework:', [ { value: 'next', label: 'Next.js', hint: 'React framework with SSR/SSG' }, { value: 'remix', label: 'Remix', hint: 'Full-stack React framework' }, { value: 'astro', label: 'Astro', hint: 'Static site generator' }, { value: 'vite', label: 'Vite', hint: 'Fast build tool' }, { value: 'none', label: 'None', hint: 'Plain setup' }, ]); }, /** TypeScript confirmation / typescript: async (): Promise<boolean> => { return confirm('Use TypeScript?', { initialValue: true }); }, /** Git repository initialization / initGit: async (): Promise<boolean> => { return confirm('Initialize Git repository?', { initialValue: true }); }, /** Environment variable setup / envSetup: async (): Promise<boolean> => { return confirm('Set up environment variables?', { initialValue: false }); }, }; /** Pre-built prompt flows for common CLI scenarios
 
@@ -6294,7 +6294,7 @@ Display an introductory message at the start of a CLI flow / export function int
 ## formatError
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 ```typescript
 export function formatError(
@@ -6309,14 +6309,14 @@ Error handling and cancellation utilities for the CLI SDK Provides graceful erro
 ## Framework
 
 **Type**: `type`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 ---
 
 ## FRAMEWORK_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 Core constants and configuration for the CLI SDK These constants define the supported technologies, file patterns, and framework detection logic used throughout the SDK. / import { homedir } from 'node:os'; import { join } from 'node:path'; /** Supported package managers for project detection and commands / export const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const; export type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]; /** Default file and directory patterns to ignore during operations / export const DEFAULT_IGNORE_PATTERNS = [ // Version control '.git', '.gitignore', // Dependencies 'node_modules', '.pnpm-store', '.yarn', // Build outputs 'dist', 'build', '.next', '.nuxt', '.output', '.vercel', '.netlify', // Cache and temp files '.cache', '.temp', '.tmp', 'coverage', // IDE and editor files '.vscode', '.idea', '*.log', '.DS_Store', 'Thumbs.db', // Environment and config '.env', '.env.local', '.env.*.local', ] as const; /** Prefix for temporary directories created by the SDK / export const TEMP_DIR_PREFIX = 'lord-commander-'; /** Paths where CLI configuration files can be found / export const CLI_CONFIG_PATHS = [ 'lord.config.js', 'lord.config.ts', join(homedir(), '.lord', 'config.json'), ] as const; /** Framework detection patterns for smart project detection Each framework has file indicators and optional package.json dependencies
 
@@ -6325,7 +6325,7 @@ Core constants and configuration for the CLI SDK These constants define the supp
 ## FrameworkBuildConfig
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
+**Source**: [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
 
 Enhanced Framework Detection with Security Validation This module extends the basic framework patterns with comprehensive security validation to prevent attacks through malicious framework configurations.
 
@@ -6334,7 +6334,7 @@ Enhanced Framework Detection with Security Validation This module extends the ba
 ## FrameworkDependencyInfo
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
+**Source**: [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
 
 Enhanced Framework Detection with Security Validation This module extends the basic framework patterns with comprehensive security validation to prevent attacks through malicious framework configurations.
 
@@ -6343,7 +6343,7 @@ Enhanced Framework Detection with Security Validation This module extends the ba
 ## FrameworkSecurityResult
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
+**Source**: [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
 
 Enhanced Framework Detection with Security Validation This module extends the basic framework patterns with comprehensive security validation to prevent attacks through malicious framework configurations.
 
@@ -6352,7 +6352,7 @@ Enhanced Framework Detection with Security Validation This module extends the ba
 ## FrameworkSecurityViolation
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
+**Source**: [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
 
 Enhanced Framework Detection with Security Validation This module extends the basic framework patterns with comprehensive security validation to prevent attacks through malicious framework configurations.
 
@@ -6361,7 +6361,7 @@ Enhanced Framework Detection with Security Validation This module extends the ba
 ## FrameworkViolationType
 
 **Type**: `type`  
-**Source**: [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
+**Source**: [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
 
 Enhanced Framework Detection with Security Validation This module extends the basic framework patterns with comprehensive security validation to prevent attacks through malicious framework configurations.
 
@@ -6370,7 +6370,7 @@ Enhanced Framework Detection with Security Validation This module extends the ba
 ## FSModule
 
 **Type**: `interface`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 File system utilities with safe operations and error handling Provides secure file system operations with proper error handling, progress tracking, and integration with the CLI logger system. / import { existsSync } from 'node:fs'; import fsPromises from 'node:fs/promises'; import path from 'node:path'; import type { JsonValue } from '../../types/common.js'; import { DEFAULT_IGNORE_PATTERNS } from '../foundation/core/constants.js'; import { FileSystemError } from '../foundation/errors/errors.js'; import { createLogger } from '../ui/logger.js'; // Create a logger instance for internal file operations const fsLogger = createLogger({ prefix: 'fs' }); /** Options for file operations / export interface FileOperationOptions { overwrite?: boolean; // Allow overwriting existing files/directories createDirs?: boolean; // Create parent directories if they don't exist recursive?: boolean; // Apply operation recursively to subdirectories ignorePatterns?: readonly string[]; // File patterns to skip (e.g., 'node_modules', '*.log') onProgress?: (current: number, total: number, file: string) => void; // Progress callback for long operations } /** Options for copy operations / export interface CopyOptions extends FileOperationOptions { filter?: (src: string, dest: string) => boolean | Promise<boolean>; // Custom function to decide which files to copy preserveTimestamps?: boolean; // Keep original file modification/creation times dereference?: boolean; // Follow symbolic links instead of copying them as links } /** File system statistics interface / export interface FileStats { isFile: boolean; // True if path points to a regular file isDirectory: boolean; // True if path points to a directory/folder isSymbolicLink: boolean; // True if path is a symbolic link (shortcut) size: number; // File size in bytes modified: Date; // Last modification timestamp created: Date; // Creation timestamp (birth time) } /** Directory listing result / export interface DirectoryEntry { name: string; // Just the filename or directory name (without path) path: string; // Full absolute or relative path to the item isFile: boolean; // True if this entry is a file isDirectory: boolean; // True if this entry is a directory size?: number; // File size in bytes (only present for files when includeStats=true) } /** Check if a file or directory exists / export function exists(filePath: string): boolean { try { return existsSync(filePath); } catch { return false; } } /** Get file/directory statistics / export async function stat(filePath: string): Promise<FileStats> { try { const stats = await fsPromises.stat(filePath); return { isFile: stats.isFile(), isDirectory: stats.isDirectory(), isSymbolicLink: stats.isSymbolicLink(), size: stats.size, modified: stats.mtime, created: stats.birthtime, }; } catch (error) { throw new FileSystemError(`Failed to get stats for: ${filePath}`, filePath, error as Error); } } /** Ensure a directory exists, creating it and parent directories if necessary / export async function ensureDir(dirPath: string): Promise<void> { try { await fsPromises.mkdir(dirPath, { recursive: true }); fsLogger.debug(`Ensured directory exists: ${dirPath}`); } catch (error) { throw new FileSystemError(`Failed to create directory: ${dirPath}`, dirPath, error as Error); } } /** Remove a file or directory / export async function remove( targetPath: string, options: { recursive?: boolean } = {} ): Promise<void> { try { if (!exists(targetPath)) { fsLogger.debug(`Path does not exist, nothing to remove: ${targetPath}`); return; } const stats = await stat(targetPath); if (stats.isDirectory) { await fsPromises.rmdir(targetPath, { recursive: options.recursive ?? true }); fsLogger.debug(`Removed directory: ${targetPath}`); } else { await fsPromises.unlink(targetPath); fsLogger.debug(`Removed file: ${targetPath}`); } } catch (error) { throw new FileSystemError(`Failed to remove: ${targetPath}`, targetPath, error as Error); } } /** Read a text file / export async function readFile( filePath: string, encoding: BufferEncoding = 'utf8' ): Promise<string> { try { const content = await fsPromises.readFile(filePath, encoding); fsLogger.debug(`Read file: ${filePath} (${content.length} chars)`); return content; } catch (error) { throw new FileSystemError(`Failed to read file: ${filePath}`, filePath, error as Error); } } /** Write a text file / export async function writeFile( filePath: string, content: string, options: FileOperationOptions = {} ): Promise<void> { try { const { createDirs = true, overwrite = true } = options; // Check if file exists and overwrite is disabled if (!overwrite && exists(filePath)) { throw new FileSystemError( `File already exists and overwrite is disabled: ${filePath}`, filePath ); } // Create parent directories if needed if (createDirs) { const parentDir = path.dirname(filePath); await ensureDir(parentDir); } await fsPromises.writeFile(filePath, content, 'utf8'); fsLogger.debug(`Wrote file: ${filePath} (${content.length} chars)`); } catch (error) { if (error instanceof FileSystemError) throw error; throw new FileSystemError(`Failed to write file: ${filePath}`, filePath, error as Error); } } /** Read and parse a JSON file / export async function readJSON<T = JsonValue>(filePath: string): Promise<T> { try { const content = await readFile(filePath); const parsed = JSON.parse(content); fsLogger.debug(`Read JSON file: ${filePath}`); return parsed; } catch (error) { if (error instanceof SyntaxError) { throw new FileSystemError(`Invalid JSON in file: ${filePath}`, filePath, error); } throw error; } } /** Write an object as JSON file / export async function writeJSON( filePath: string, data: JsonValue, options: FileOperationOptions & { indent?: number } = {} ): Promise<void> { try { const { indent = 2, ...fileOptions } = options; const content = JSON.stringify(data, null, indent); await writeFile(filePath, content, fileOptions); fsLogger.debug(`Wrote JSON file: ${filePath}`); } catch (error) { throw new FileSystemError(`Failed to write JSON file: ${filePath}`, filePath, error as Error); } } /** Copy a file / export async function copyFile( srcPath: string, destPath: string, options: CopyOptions = {} ): Promise<void> { try { const { overwrite = true, createDirs = true, preserveTimestamps = false } = options; // Check if source exists if (!exists(srcPath)) { throw new FileSystemError(`Source file does not exist: ${srcPath}`, srcPath); } // Check if destination exists and overwrite is disabled if (!overwrite && exists(destPath)) { throw new FileSystemError( `Destination file already exists and overwrite is disabled: ${destPath}`, destPath ); } // Create destination directory if needed if (createDirs) { const destDir = path.dirname(destPath); await ensureDir(destDir); } // Copy the file await fsPromises.copyFile(srcPath, destPath); // Preserve timestamps if requested if (preserveTimestamps) { const srcStats = await stat(srcPath); await fsPromises.utimes(destPath, srcStats.modified, srcStats.modified); } fsLogger.debug(`Copied file: ${srcPath} -> ${destPath}`); } catch (error) { if (error instanceof FileSystemError) throw error; throw new FileSystemError( `Failed to copy file: ${srcPath} -> ${destPath}`, srcPath, error as Error ); } } /** Check if a path matches any ignore pattern / function shouldIgnore(filePath: string, ignorePatterns: readonly string[]): boolean { const normalizedPath = path.normalize(filePath).replace(/\\/g, '/'); // Normalize path separators for cross-platform compatibility return ignorePatterns.some((pattern) => { // Simple glob-like matching - convert wildcards to regex if (pattern.includes('*')) { const regex = new RegExp(pattern.replace(/\*/g, '.*')); return regex.test(normalizedPath); } // Direct string matching for simple patterns like 'node_modules' return normalizedPath.includes(pattern); }); } /** List directory contents / export async function readDir( dirPath: string, options: { recursive?: boolean; // Scan subdirectories recursively includeStats?: boolean; // Include file sizes and detailed stats } = {} ): Promise<DirectoryEntry[]> { try { const { recursive = false, includeStats = false } = options; const entries: DirectoryEntry[] = []; const items = await fsPromises.readdir(dirPath); for (const item of items) { const itemPath = path.join(dirPath, item); let stats: FileStats; if (includeStats) { stats = await stat(itemPath); } else { const fsStats = await fsPromises.stat(itemPath); stats = { isFile: fsStats.isFile(), isDirectory: fsStats.isDirectory(), isSymbolicLink: fsStats.isSymbolicLink(), size: fsStats.size, modified: fsStats.mtime, created: fsStats.birthtime, }; } const entry: DirectoryEntry = { name: item, path: itemPath, isFile: stats.isFile, isDirectory: stats.isDirectory, }; if (includeStats && stats.isFile) { entry.size = stats.size; } entries.push(entry); // Recursively read subdirectories if requested if (recursive && stats.isDirectory) { const subEntries = await readDir(itemPath, options); entries.push(...subEntries); } } fsLogger.debug(`Read directory: ${dirPath} (${entries.length} entries)`); return entries; } catch (error) { throw new FileSystemError(`Failed to read directory: ${dirPath}`, dirPath, error as Error); } } /** Copy a directory and its contents / export async function copyDir( srcDir: string, destDir: string, options: CopyOptions = {} ): Promise<void> { try { const { overwrite = true, recursive = true, ignorePatterns = DEFAULT_IGNORE_PATTERNS, filter, onProgress, } = options; // Check if source directory exists if (!exists(srcDir)) { throw new FileSystemError(`Source directory does not exist: ${srcDir}`, srcDir); } // Create destination directory await ensureDir(destDir); // Get all files and directories to copy const entries = await readDir(srcDir, { recursive }); let processed = 0; for (const entry of entries) { const relativePath = path.relative(srcDir, entry.path); const destPath = path.join(destDir, relativePath); // Check ignore patterns if (shouldIgnore(relativePath, ignorePatterns)) { fsLogger.debug(`Ignored: ${relativePath}`); continue; } // Apply custom filter if provided if (filter && !(await filter(entry.path, destPath))) { fsLogger.debug(`Filtered out: ${relativePath}`); continue; } // Progress callback if (onProgress) { onProgress(processed + 1, entries.length, relativePath); } if (entry.isFile) { await copyFile(entry.path, destPath, { overwrite, createDirs: true, preserveTimestamps: options.preserveTimestamps, }); } else if (entry.isDirectory) { await ensureDir(destPath); } processed++; } fsLogger.debug(`Copied directory: ${srcDir} -> ${destDir} (${processed} items)`); } catch (error) { if (error instanceof FileSystemError) throw error; throw new FileSystemError( `Failed to copy directory: ${srcDir} -> ${destDir}`, srcDir, error as Error ); } } /** Copy files or directories (auto-detects type) / export async function copy(src: string, dest: string, options: CopyOptions = {}): Promise<void> { try { if (!exists(src)) { throw new FileSystemError(`Source does not exist: ${src}`, src); } const srcStats = await stat(src); if (srcStats.isFile) { await copyFile(src, dest, options); } else if (srcStats.isDirectory) { await copyDir(src, dest, options); } else { throw new FileSystemError(`Source is neither a file nor a directory: ${src}`, src); } } catch (error) { if (error instanceof FileSystemError) throw error; throw new FileSystemError(`Failed to copy: ${src} -> ${dest}`, src, error as Error); } } /** Find files matching a pattern / export async function findFiles( searchDir: string, pattern: string | RegExp, // Pattern to match filenames (supports wildcards like '*.js') options: { recursive?: boolean; // Search subdirectories ignorePatterns?: readonly string[]; // Patterns to exclude from search } = {} ): Promise<string[]> { try { const { recursive = true, ignorePatterns = DEFAULT_IGNORE_PATTERNS } = options; const matches: string[] = []; // Convert string patterns with wildcards to regex (e.g., '*.js' becomes /.*\.js/) const regex = typeof pattern === 'string' ? new RegExp(pattern.replace(/\*/g, '.*')) : pattern; const entries = await readDir(searchDir, { recursive }); for (const entry of entries) { if (!entry.isFile) continue; const relativePath = path.relative(searchDir, entry.path); // Check ignore patterns if (shouldIgnore(relativePath, ignorePatterns)) { continue; } // Check if filename matches pattern if (regex.test(entry.name) || regex.test(relativePath)) { matches.push(entry.path); } } fsLogger.debug(`Found ${matches.length} files matching pattern in: ${searchDir}`); return matches; } catch (error) { throw new FileSystemError(`Failed to find files in: ${searchDir}`, searchDir, error as Error); } } /** Clean a directory (remove all contents but keep the directory) / export async function cleanDir(dirPath: string): Promise<void> { try { if (!exists(dirPath)) { fsLogger.debug(`Directory does not exist, nothing to clean: ${dirPath}`); return; } const entries = await readDir(dirPath); for (const entry of entries) { await remove(entry.path, { recursive: true }); } fsLogger.debug(`Cleaned directory: ${dirPath} (${entries.length} items removed)`); } catch (error) { throw new FileSystemError(`Failed to clean directory: ${dirPath}`, dirPath, error as Error); } } /** Get the size of a file or directory in bytes / export async function getSize(targetPath: string): Promise<number> { try { const stats = await stat(targetPath); if (stats.isFile) { return stats.size; } if (stats.isDirectory) { const entries = await readDir(targetPath, { recursive: true, includeStats: true }); return entries .filter((entry) => entry.isFile) .reduce((total, entry) => total + (entry.size || 0), 0); } return 0; } catch (error) { throw new FileSystemError(`Failed to get size of: ${targetPath}`, targetPath, error as Error); } } /** Move (rename) a file or directory / export async function move( src: string, dest: string, options: FileOperationOptions = {} ): Promise<void> { try { const { overwrite = true, createDirs = true } = options; if (!exists(src)) { throw new FileSystemError(`Source does not exist: ${src}`, src); } if (!overwrite && exists(dest)) { throw new FileSystemError( `Destination already exists and overwrite is disabled: ${dest}`, dest ); } if (createDirs) { const destDir = path.dirname(dest); await ensureDir(destDir); } await fsPromises.rename(src, dest); fsLogger.debug(`Moved: ${src} -> ${dest}`); } catch (error) { if (error instanceof FileSystemError) throw error; throw new FileSystemError(`Failed to move: ${src} -> ${dest}`, src, error as Error); } } /** File system module interface for CommandContext
 
@@ -6379,7 +6379,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## generateBashCompletion
 
 **Type**: `function`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ```typescript
 export function generateBashCompletion(context: CompletionContext): string
@@ -6392,7 +6392,7 @@ Shell Autocomplete Core Module Provides comprehensive shell completion support f
 ## generateCompletion
 
 **Type**: `function`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ```typescript
 export function generateCompletion(
@@ -6408,7 +6408,7 @@ Shell Autocomplete Core Module Provides comprehensive shell completion support f
 ## generateCompletionScript
 
 **Type**: `function`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ```typescript
 export function generateCompletionScript(
@@ -6422,7 +6422,7 @@ export function generateCompletionScript(
 ## generateFishCompletion
 
 **Type**: `function`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ```typescript
 export function generateFishCompletion(context: CompletionContext): string
@@ -6435,7 +6435,7 @@ Shell Autocomplete Core Module Provides comprehensive shell completion support f
 ## generatePowerShellCompletion
 
 **Type**: `function`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ```typescript
 export function generatePowerShellCompletion(context: CompletionContext): string
@@ -6448,7 +6448,7 @@ Shell Autocomplete Core Module Provides comprehensive shell completion support f
 ## generateZshCompletion
 
 **Type**: `function`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ```typescript
 export function generateZshCompletion(context: CompletionContext): string
@@ -6461,7 +6461,7 @@ Shell Autocomplete Core Module Provides comprehensive shell completion support f
 ## getFrameworkSecurityRecommendations
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
+**Source**: [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
 
 ```typescript
 export function getFrameworkSecurityRecommendations(frameworkInfo: SecureFrameworkInfo): string[]
@@ -6726,7 +6726,7 @@ if (framework) {
 ## getRecoverySuggestion
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 ```typescript
 export function getRecoverySuggestion(error: Error): string | undefined
@@ -6739,7 +6739,7 @@ Error handling and cancellation utilities for the CLI SDK Provides graceful erro
 ## getSize
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function getSize(targetPath: string): Promise<number>
@@ -6752,7 +6752,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## getTheme
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function getTheme(): PromptTheme
@@ -6763,7 +6763,7 @@ export function getTheme(): PromptTheme
 ## GIT_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 Core constants and configuration for the CLI SDK These constants define the supported technologies, file patterns, and framework detection logic used throughout the SDK. / import { homedir } from 'node:os'; import { join } from 'node:path'; /** Supported package managers for project detection and commands / export const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const; export type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]; /** Default file and directory patterns to ignore during operations / export const DEFAULT_IGNORE_PATTERNS = [ // Version control '.git', '.gitignore', // Dependencies 'node_modules', '.pnpm-store', '.yarn', // Build outputs 'dist', 'build', '.next', '.nuxt', '.output', '.vercel', '.netlify', // Cache and temp files '.cache', '.temp', '.tmp', 'coverage', // IDE and editor files '.vscode', '.idea', '*.log', '.DS_Store', 'Thumbs.db', // Environment and config '.env', '.env.local', '.env.*.local', ] as const; /** Prefix for temporary directories created by the SDK / export const TEMP_DIR_PREFIX = 'lord-commander-'; /** Paths where CLI configuration files can be found / export const CLI_CONFIG_PATHS = [ 'lord.config.js', 'lord.config.ts', join(homedir(), '.lord', 'config.json'), ] as const; /** Framework detection patterns for smart project detection Each framework has file indicators and optional package.json dependencies / export const FRAMEWORK_PATTERNS = { 'next.js': { files: ['next.config.js', 'next.config.ts', 'next.config.mjs'], dependencies: ['next'], devDependencies: ['@next/env'], directories: ['pages', 'app'], }, remix: { files: ['remix.config.js', 'remix.config.ts'], dependencies: ['@remix-run/node', '@remix-run/react', '@remix-run/serve'], directories: ['app/routes'], }, astro: { files: ['astro.config.js', 'astro.config.ts', 'astro.config.mjs'], dependencies: ['astro'], directories: ['src/pages'], }, vite: { files: ['vite.config.js', 'vite.config.ts'], dependencies: ['vite'], devDependencies: ['vite'], }, nuxt: { files: ['nuxt.config.js', 'nuxt.config.ts'], dependencies: ['nuxt', 'nuxt3'], directories: ['pages', 'components'], }, sveltekit: { files: ['svelte.config.js'], dependencies: ['@sveltejs/kit'], directories: ['src/routes'], }, express: { files: ['server.js', 'app.js', 'index.js'], dependencies: ['express'], }, fastify: { dependencies: ['fastify'], }, react: { dependencies: ['react'], devDependencies: ['@types/react'], }, vue: { dependencies: ['vue'], devDependencies: ['@vue/cli-service'], }, angular: { files: ['angular.json'], dependencies: ['@angular/core'], devDependencies: ['@angular/cli'], }, } as const; export type Framework = keyof typeof FRAMEWORK_PATTERNS; /** Common file extensions for different file types / export const FILE_EXTENSIONS = { typescript: ['.ts', '.tsx'], javascript: ['.js', '.jsx', '.mjs'], config: ['.json', '.yaml', '.yml', '.toml'], template: ['.hbs', '.ejs', '.mustache'], style: ['.css', '.scss', '.sass', '.less'], } as const; /** Default ports commonly used by development servers / export const DEFAULT_PORTS = { next: 3000, remix: 3000, astro: 3000, vite: 5173, nuxt: 3000, sveltekit: 5173, express: 3000, fastify: 3000, } as const; /** Package manager specific commands and configurations / export const PACKAGE_MANAGER_COMMANDS = { npm: { install: 'npm install', installDev: 'npm install --save-dev', run: 'npm run', create: 'npm create', lockFile: 'package-lock.json', }, pnpm: { install: 'pnpm install', installDev: 'pnpm install --save-dev', run: 'pnpm run', create: 'pnpm create', lockFile: 'pnpm-lock.yaml', }, yarn: { install: 'yarn install', installDev: 'yarn add --dev', run: 'yarn run', create: 'yarn create', lockFile: 'yarn.lock', }, bun: { install: 'bun install', installDev: 'bun add --dev', run: 'bun run', create: 'bun create', lockFile: 'bun.lockb', }, } as const; /** Git configuration and patterns
 
@@ -6772,7 +6772,7 @@ Core constants and configuration for the CLI SDK These constants define the supp
 ## gitExeca
 
 **Type**: `function`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 ```typescript
 export async function gitExeca(
@@ -6788,7 +6788,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## gracefulExit
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 ```typescript
 export function gracefulExit(
@@ -6805,7 +6805,7 @@ Error handling and cancellation utilities for the CLI SDK Provides graceful erro
 ## group
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export async function group<T extends Record<string, unknown>>(
@@ -6819,7 +6819,7 @@ Display an introductory message at the start of a CLI flow / export function int
 ## handleCancel
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 ```typescript
 export function handleCancel(operation?: string): never
@@ -6832,28 +6832,28 @@ Error handling and cancellation utilities for the CLI SDK Provides graceful erro
 ## IconProvider
 
 **Type**: `class`  
-**Source**: [`src/core/ui/icons.ts`](../../../src/core/ui/icons.ts)
+**Source**: [`src/core/ui/icons.ts`](../../src/core/ui/icons.ts)
 
 ---
 
 ## icons
 
 **Type**: `constant`  
-**Source**: [`src/core/ui/icons.ts`](../../../src/core/ui/icons.ts)
+**Source**: [`src/core/ui/icons.ts`](../../src/core/ui/icons.ts)
 
 ---
 
 ## IconSecurity
 
 **Type**: `class`  
-**Source**: [`src/core/ui/icons.ts`](../../../src/core/ui/icons.ts)
+**Source**: [`src/core/ui/icons.ts`](../../src/core/ui/icons.ts)
 
 ---
 
 ## INPUT_SECURITY_LIMITS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 Comprehensive Input Validation Framework This module provides secure input validation, sanitization, and normalization utilities to prevent injection attacks, validate user inputs, and ensure safe operations throughout the CLI SDK.
 
@@ -6862,7 +6862,7 @@ Comprehensive Input Validation Framework This module provides secure input valid
 ## INPUT_VALIDATION_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files / export const FILE_SYSTEM_PATTERNS = { // Sensitive system files (Unix) UNIX_SENSITIVE_FILES: /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|proc\/|sys\/|dev\/)/i, // Sensitive system files (Windows) WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i, // Windows reserved device names WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s.]|$)/i, // Fixed: device names at end or followed by space/dot // Windows filename edge cases (trailing dots/spaces that Windows strips) WINDOWS_FILENAME_EDGE_CASES: /[\s.]+$/, // Configuration files CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i, // Backup and temporary files BACKUP_FILES: /\.(bak|backup|tmp|temp|old|orig|save)$/i, // Executable files EXECUTABLE_FILES: /\.(exe|bat|cmd|com|scr|pif|msi|dll|so|dylib)$/i, } as const; /** Network attack patterns Detects attempts to make unauthorized network connections / export const NETWORK_PATTERNS = { // URLs with suspicious protocols SUSPICIOUS_PROTOCOLS: /^(file|ftp|gopher|ldap|dict|telnet|ssh):/i, // Private IP addresses (RFC 1918) PRIVATE_IPS: /\b(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/, // Localhost variations LOCALHOST_VARIANTS: /\b(localhost|127\.|0\.0\.0\.0|::1)/i, // Suspicious ports SUSPICIOUS_PORTS: /:(22|23|53|135|139|445|1433|1521|3306|3389|5432|5900|6379)\b/, } as const; /** Advanced security attack patterns Detects sophisticated attacks and bypass attempts / export const ADVANCED_ATTACK_PATTERNS = { // Homograph attacks using similar-looking characters HOMOGRAPH_CYRILLIC: /[а-яё]/gi, // Cyrillic characters HOMOGRAPH_GREEK: /[α-ωΑ-Ω]/g, // Greek characters HOMOGRAPH_MIXED: /[а-яёα-ωΑ-Ω]/g, // Mixed homograph scripts // Bidirectional text attacks BIDI_OVERRIDE: /[\u202A-\u202E\u2066-\u2069\u061C]/g, // Prototype pollution attempts PROTOTYPE_POLLUTION: /__proto__|constructor\.prototype|\.prototype\.|\.constructor/gi, // Zero-width and invisible characters ZERO_WIDTH_CHARS: /[\u200B-\u200D\uFEFF\u2060]/g, } as const; /** Deserialization attack patterns Detects attempts to inject malicious serialized objects / export const DESERIALIZATION_PATTERNS = { // Java serialization JAVA_SERIALIZED: /\xac\xed\x00\x05|rO0AB/g, JAVA_GADGETS: /\b(Runtime|ProcessBuilder|InvokerTransformer|CommonsCollections|JRMP|LDAP)\b/gi, // .NET serialization DOTNET_BINARY: /\x00\x01\x00\x00\x00\xff\xff\xff\xff/g, DOTNET_GADGETS: /\b(ObjectStateFormatter|LosFormatter|BinaryFormatter|TypeConfuseDelegate)\b/gi, // Python pickle PYTHON_PICKLE: /\x80[\x02-\x04]|c__builtin__|cos\nsystem/g, PYTHON_REDUCE: /__reduce__|__reduce_ex__/g, // PHP serialization PHP_SERIALIZED: /[Oo]:[0-9]+:"/g, PHP_GADGETS: /\b(POP|Monolog|Doctrine|Guzzle|Symfony)\b/gi, // Node.js serialization NODEJS_SERIALIZE: /"__js_function"|"__js_date"|"__js_regexp"/g, // Generic dangerous patterns DANGEROUS_CLASSES: /\b(eval|exec|system|shell_exec|file_get_contents|fopen|include|require)\b/gi, } as const; /** XXE (XML External Entity) attack patterns Detects XML external entity injection attempts / export const XXE_PATTERNS = { // External entity declarations EXTERNAL_ENTITY: /<!ENTITY[^>]+SYSTEM[^>]+>/gi, PUBLIC_ENTITY: /<!ENTITY[^>]+PUBLIC[^>]+>/gi, // Parameter entities PARAMETER_ENTITY: /<!ENTITY\s+%[^>]+>/gi, // Entity references ENTITY_REFERENCE: /&[a-zA-Z_][a-zA-Z0-9_]*;/g, // DOCTYPE declarations with external references DOCTYPE_EXTERNAL: /<!DOCTYPE[^>]+SYSTEM[^>]*>/gi, DOCTYPE_PUBLIC: /<!DOCTYPE[^>]+PUBLIC[^>]*>/gi, // XML inclusion XML_INCLUSION: /<xi:include[^>]*>/gi, // Suspicious protocols in XML XML_PROTOCOLS: /\b(file|ftp|http|https|gopher|jar|netdoc):/gi, // XML bomb patterns (billion laughs) XML_BOMB: /&lol[0-9]*;|&lol[0-9]*lol[0-9]*;/gi, } as const; /** SSTI (Server-Side Template Injection) attack patterns Detects template injection attempts in various template engines / export const SSTI_PATTERNS = { // Jinja2/Django templates JINJA2_INJECTION: /\{\{.*?(\.|_|config|request|session|g).*?\}\}/gi, JINJA2_DANGEROUS: /\{\{.*?(popen|system|eval|exec|import|builtins|globals).*?\}\}/gi, // Twig templates TWIG_INJECTION: /\{\{.*?(\.|_self|app).*?\}\}/gi, TWIG_DANGEROUS: /\{\{.*?(system|exec|shell_exec|passthru).*?\}\}/gi, // Handlebars templates HANDLEBARS_INJECTION: /\{\{.*?(constructor|prototype|process|require).*?\}\}/gi, // FreeMarker templates FREEMARKER_INJECTION: /<#assign|<#import|<#include|\$\{.*?new.*?\}/gi, FREEMARKER_DANGEROUS: /\$\{.*?(freemarker\.template\.utility\.Execute|ObjectConstructor).*?\}/gi, // Velocity templates VELOCITY_INJECTION: /#set\s*\(\s*\$.*?=|#evaluate|\$\{.*?Class.*?\}/gi, // Smarty templates SMARTY_INJECTION: /\{php\}|\{\/php\}|\{literal\}|\{\/literal\}/gi, // Generic template patterns TEMPLATE_EXECUTION: /\{\{.*?(eval|exec|system|import|require|constructor).*?\}\}/gi, TEMPLATE_OBJECT_ACCESS: /\{\{.*?(__.*__|prototype|constructor|process).*?\}\}/gi, } as const; /** LDAP injection attack patterns Detects LDAP injection attempts in search filters / export const LDAP_PATTERNS = { // LDAP filter injection LDAP_FILTER_INJECTION: /[()&|!*\\]/g, // LDAP special characters that need escaping LDAP_SPECIAL_CHARS: /[\\*()\\0]/g, // LDAP search operators LDAP_OPERATORS: /[&|!]|\*.*\*/g, // LDAP attribute injection LDAP_ATTRIBUTE_INJECTION: /[=<>~]/g, // Common LDAP attributes used in attacks LDAP_DANGEROUS_ATTRIBUTES: /\b(objectClass|cn|uid|userPassword|memberOf|dn)\s*[=]/gi, // LDAP DN injection LDAP_DN_INJECTION: /[,+=\\#<>;]/g, } as const; /** XPath injection attack patterns Detects XPath injection attempts in XML queries / export const XPATH_PATTERNS = { // XPath injection operators XPATH_OPERATORS: /['"]\s*or\s*['"]/gi, XPATH_AND_OR: /\b(and|or)\s+['"]/gi, // XPath functions that can be dangerous XPATH_FUNCTIONS: /\b(substring|contains|starts-with|string-length|position|last|count)\s*\(/gi, // XPath axes that can be used for traversal XPATH_AXES: /\b(parent|ancestor|descendant|following|preceding|child|attribute)::/gi, // XPath comment injection XPATH_COMMENTS: /\(:.*?:\)/g, // Boolean-based XPath injection XPATH_BOOLEAN: /['"]\s*(=|!=)\s*['"]/gi, XPATH_TRUE_FALSE: /\b(true|false)\s*\(\s*\)/gi, // XPath string manipulation for injection XPATH_CONCAT: /concat\s*\(/gi, XPATH_NORMALIZE: /normalize-space\s*\(/gi, } as const; /** Expression Language (EL) injection patterns Detects EL injection in Java/JSP environments / export const EXPRESSION_LANGUAGE_PATTERNS = { // JSP EL injection JSP_EL: /\$\{.*?\}/g, JSP_EL_DANGEROUS: /\$\{.*?(Runtime|ProcessBuilder|System|Class|Method).*?\}/gi, // Spring EL injection SPRING_EL: /#\{.*?\}/g, SPRING_EL_DANGEROUS: /#\{.*?(T\(|new |Runtime|ProcessBuilder|System\.getProperty).*?\}/gi, // OGNL (Struts) injection OGNL_INJECTION: /%\{.*?\}|@.*?@/g, OGNL_DANGEROUS: /%\{.*?(Runtime|ProcessBuilder|System|@java\.lang).*?\}/gi, // MVEL injection MVEL_INJECTION: /\$\{.*?\}|@\{.*?\}/g, // Unified EL dangerous patterns EL_EXECUTION: /\$\{.*?(Runtime\.getRuntime\(\)|ProcessBuilder|System\.exit).*?\}/gi, EL_REFLECTION: /\$\{.*?(Class\.forName|getClass\(\)|getDeclaredMethod).*?\}/gi, } as const; /** CSV injection attack patterns Detects formula injection in CSV/spreadsheet exports / export const CSV_INJECTION_PATTERNS = { // Formula starters FORMULA_STARTERS: /^[\s]*[=+\-@]/, // Dangerous Excel/Calc functions DANGEROUS_FUNCTIONS: /\b(HYPERLINK|IMPORTXML|WEBSERVICE|INDIRECT|OFFSET)\s*\(/gi, // System command execution in formulas SYSTEM_COMMANDS: /\b(cmd|powershell|bash|sh|calc|notepad)\b/gi, // DDE (Dynamic Data Exchange) attacks DDE_INJECTION: /=.*?\|.*?!/gi, DDE_COMMANDS: /=cmd\|.*?!|=powershell\|.*?!/gi, // CSV field injection CSV_FIELD_INJECTION: /[",;\r\n]/g, // Hyperlink injection HYPERLINK_INJECTION: /=HYPERLINK\s*\(/gi, } as const; /** Input validation patterns Common patterns for validating user inputs
 
@@ -6871,7 +6871,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## InputValidationViolation
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 Comprehensive Input Validation Framework This module provides secure input validation, sanitization, and normalization utilities to prevent injection attacks, validate user inputs, and ensure safe operations throughout the CLI SDK.
 
@@ -6894,7 +6894,7 @@ const violation: InputValidationViolation = {
 ## InstallationOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 Shell Autocomplete Core Module Provides comprehensive shell completion support for CLI applications built with the SDK. Supports bash, zsh, fish, and PowerShell with command, option, and argument completion. / import type { Command } from 'commander'; import { execa } from '../execution/execa.js'; import { createLogger } from '../ui/logger.js'; export interface CompletionOptions { /** Custom completion function for command arguments / argumentCompletion?: (partial: string, command: string) => Promise<string[]> | string[]; /** Custom completion function for option values / optionCompletion?: ( partial: string, option: string, command: string ) => Promise<string[]> | string[]; /** Enable file/directory completion for arguments / enableFileCompletion?: boolean; /** Shell-specific completion customizations / shellCustomizations?: { bash?: string; zsh?: string; fish?: string; powershell?: string; }; } export interface CompletionContext { /** The CLI program instance / program: Command; /** CLI name for completion scripts / cliName: string; /** Analyzed commands / commands: Array<{ name: string; aliases: string[]; description: string; options: Array<{ flags: string; description: string; required: boolean; }>; arguments: Array<{ name: string; required: boolean; variadic: boolean; }>; }>; /** Global options available to all commands / globalOptions: Array<{ flags: string; description: string; }>; /** Completion options / options?: CompletionOptions; } /** Extract all commands, options, and arguments from a Commander program / interface CommandInfo { name: string; aliases: string[]; description: string; options: { flags: string; description: string; required: boolean; }[]; arguments: { name: string; required: boolean; variadic: boolean; }[]; } export function analyzeProgram(program: Command, cliName?: string): CompletionContext { const commands: CommandInfo[] = []; const globalOptions: { flags: string; description: string; required: boolean }[] = []; // Extract global options program.options.forEach((option) => { globalOptions.push({ flags: option.flags, description: option.description || '', required: option.required || false, }); }); // Extract commands recursively function extractCommands(cmd: Command, parentName = '') { cmd.commands.forEach((subCmd) => { const fullName = parentName ? `${parentName} ${subCmd.name()}` : subCmd.name(); const cmdInfo = { name: fullName, aliases: (subCmd as unknown as { _aliases?: string[] })._aliases || [], description: subCmd.description() || '', options: [] as { flags: string; description: string; required: boolean }[], arguments: [] as { name: string; required: boolean; variadic: boolean }[], }; // Extract command options subCmd.options.forEach((option) => { cmdInfo.options.push({ flags: option.flags, description: option.description || '', required: option.required || false, }); }); // Extract command arguments subCmd.registeredArguments?.forEach((arg) => { cmdInfo.arguments.push({ name: arg.name(), required: arg.required, variadic: arg.variadic, }); }); commands.push(cmdInfo); // Recursively extract subcommands if (subCmd.commands.length > 0) { extractCommands(subCmd, fullName); } }); } extractCommands(program); return { program, cliName: cliName || program.name() || 'cli', commands, globalOptions, }; } /** Generate bash completion script / export function generateBashCompletion(context: CompletionContext): string { const { cliName, options, commands, globalOptions } = context; const commandNames = commands.map((cmd) => cmd.name).join(' '); const globalOptionFlags = globalOptions.map((opt) => opt.flags.split(',')[0].trim()).join(' '); const bashScript = `#!/bin/bash # ${cliName} bash completion script # Generated by Lord Commander SDK _${cliName}_completion() { local cur prev opts commands COMPREPLY=() cur="\${COMP_WORDS[COMP_CWORD]}" prev="\${COMP_WORDS[COMP_CWORD-1]}" # Available commands commands="${commandNames}" # Global options opts="${globalOptionFlags} help version" # Complete commands if [[ \${COMP_CWORD} == 1 ]]; then COMPREPLY=( $(compgen -W "\${commands} \${opts}" -- \${cur}) ) return 0 fi # Complete command-specific options case "\${COMP_WORDS[1]}" in ${commands .map((cmd) => { const cmdOptions = cmd.options.map((opt) => opt.flags.split(',')[0].trim()).join(' '); return `        "${cmd.name}") COMPREPLY=( $(compgen -W "${cmdOptions} ${globalOptionFlags}" -- \${cur}) ) return 0 ;;`; }) .join('\n')} esac ${ options?.enableFileCompletion ? ` # File/directory completion for arguments if [[ "\${cur}" != -* ]]; then COMPREPLY=( $(compgen -f -- \${cur}) ) return 0 fi` : '' } ${options?.shellCustomizations?.bash || ''} } complete -F _${cliName}_completion ${cliName} `; return bashScript; } /** Generate zsh completion script / export function generateZshCompletion(context: CompletionContext): string { const { cliName, options, commands, globalOptions } = context; const zshScript = `#compdef ${cliName} # ${cliName} zsh completion script # Generated by Lord Commander SDK _${cliName}() { local context curcontext="$curcontext" state line typeset -A opt_args _arguments -C \\ ${globalOptions .map((opt) => { const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1]; const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; const flags = [shortFlag && `-${shortFlag}`, longFlag && `--${longFlag}`] .filter(Boolean) .join(','); return `        '${flags}[${opt.description}]' \\`; }) .join('\n')} '1: :_${cliName}_commands' \\ '*::arg:->args' case $line[1] in ${commands .map((cmd) => { return `        ${cmd.name}) _${cliName}_${cmd.name.replace(/[^a-zA-Z0-9]/g, '_')}_args ;;`; }) .join('\n')} esac } _${cliName}_commands() { local commands; commands=( ${commands.map((cmd) => `        '${cmd.name}:${cmd.description}'`).join('\n')} ) _describe 'command' commands } ${commands .map((cmd) => { const funcName = `_${cliName}_${cmd.name.replace(/[^a-zA-Z0-9]/g, '_')}_args`; const cmdOptions = cmd.options .map((opt) => { const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1]; const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; const flags = [shortFlag && `-${shortFlag}`, longFlag && `--${longFlag}`] .filter(Boolean) .join(','); return `        '${flags}[${opt.description}]' \\`; }) .join('\n'); return `${funcName}() { _arguments \\ ${cmdOptions} ${options?.enableFileCompletion ? "'*:file:_files'" : "'*:argument:'"} }`; }) .join('\n\n')} ${options?.shellCustomizations?.zsh || ''} _${cliName} "$@" `; return zshScript; } /** Generate fish completion script / export function generateFishCompletion(context: CompletionContext): string { const { cliName, options, commands, globalOptions } = context; let fishScript = `# ${cliName} fish completion script # Generated by Lord Commander SDK `; // Global options globalOptions.forEach((opt) => { const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1]; const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; if (shortFlag) { fishScript += `complete -c ${cliName} -s ${shortFlag} -d "${opt.description}"\n`; } if (longFlag) { fishScript += `complete -c ${cliName} -l ${longFlag} -d "${opt.description}"\n`; } }); fishScript += '\n'; // Commands commands.forEach((cmd) => { fishScript += `complete -c ${cliName} -f -a "${cmd.name}" -d "${cmd.description}"\n`; // Command-specific options cmd.options.forEach((opt) => { const shortFlag = opt.flags.match(/-([a-zA-Z])/)?.[1]; const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; const condition = `__fish_seen_subcommand_from ${cmd.name}`; if (shortFlag) { fishScript += `complete -c ${cliName} -s ${shortFlag} -n "${condition}" -d "${opt.description}"\n`; } if (longFlag) { fishScript += `complete -c ${cliName} -l ${longFlag} -n "${condition}" -d "${opt.description}"\n`; } }); }); if (options?.enableFileCompletion) { fishScript += `\n# Enable file completion for arguments\n`; fishScript += `complete -c ${cliName} -f\n`; } if (options?.shellCustomizations?.fish) { fishScript += `\n${options.shellCustomizations.fish}\n`; } return fishScript; } /** Generate PowerShell completion script / export function generatePowerShellCompletion(context: CompletionContext): string { const { program, cliName, options } = context; const { commands, globalOptions } = analyzeProgram(program); const powershellScript = `# ${cliName} PowerShell completion script # Generated by Lord Commander SDK Register-ArgumentCompleter -Native -CommandName ${cliName} -ScriptBlock { param($commandName, $wordToComplete, $cursorPosition) $commands = @( ${commands.map((cmd) => `        "${cmd.name}"`).join(',\n')} ) $globalOptions = @( ${globalOptions .map((opt) => { const longFlag = opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]; return longFlag ? `        "--${longFlag}"` : null; }) .filter(Boolean) .join(',\n')} ) # Get the current command line $commandElements = $wordToComplete.Split(' ') $lastElement = $commandElements[-1] # Complete commands if ($commandElements.Length -le 2) { $completions = $commands + $globalOptions | Where-Object { $_ -like "$lastElement*" } $completions | ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) } return } # Complete command-specific options $command = $commandElements[1] switch ($command) { ${commands .map((cmd) => { const cmdOptions = cmd.options .map((opt) => opt.flags.match(/--([a-zA-Z0-9-]+)/)?.[1]) .filter(Boolean) .map((flag) => `"--${flag}"`); return `        "${cmd.name}" { $options = @(${cmdOptions.join(', ')}) $completions = $options + $globalOptions | Where-Object { $_ -like "$lastElement*" } $completions | ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) } }`; }) .join('\n        ')} } ${ options?.enableFileCompletion ? ` # File completion for arguments if ($lastElement -notmatch '^-') { Get-ChildItem -Path "$lastElement*" | ForEach-Object { [System.Management.Automation.CompletionResult]::new($_.Name, $_.Name, 'ProviderItem', $_.Name) } }` : '' } ${options?.shellCustomizations?.powershell || ''} } `; return powershellScript; } /** Result of completion installation/uninstallation / export interface CompletionResult { success: boolean; error?: string; restartRequired?: boolean; activationCommand?: string; } /** Options for completion installation
 
@@ -6903,7 +6903,7 @@ Shell Autocomplete Core Module Provides comprehensive shell completion support f
 ## installCompletion
 
 **Type**: `function`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ```typescript
 export async function installCompletion(
@@ -6918,7 +6918,7 @@ Shell Autocomplete Core Module Provides comprehensive shell completion support f
 ## IntegrityVerificationResult
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -6927,7 +6927,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## intro
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function intro(message: string, options?:
@@ -6940,7 +6940,7 @@ Display an introductory message at the start of a CLI flow
 ## isCancel
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 ```typescript
 export function isCancel(value: unknown): value is symbol
@@ -6953,7 +6953,7 @@ Error handling and cancellation utilities for the CLI SDK Provides graceful erro
 ## isCommandSafe
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 ```typescript
 export function isCommandSafe(command: string): boolean
@@ -7492,7 +7492,7 @@ isCommandSafe("cmd; cat /etc/passwd");  // false
 ## isDebugMode
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 ```typescript
 export function isDebugMode(): boolean
@@ -7929,7 +7929,7 @@ if (isDebugMode()) {
 ## isFrameworkSafe
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
+**Source**: [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
 
 ```typescript
 export function isFrameworkSafe(
@@ -8244,7 +8244,7 @@ if (framework && isFrameworkSafe(framework)) {
 ## isMemorySafe
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ```typescript
 export function isMemorySafe(obj: unknown, maxSize = DEFAULT_MEMORY_CONFIG.maxObjectSize): boolean
@@ -8318,7 +8318,7 @@ Utility function to check if an object exceeds memory limits
 ## isPathSafe
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 ```typescript
 export function isPathSafe(path: string): boolean
@@ -8835,7 +8835,7 @@ isPathSafe("C:\\Windows\\System32");       // false
 ## isProjectNameSafe
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 ```typescript
 export function isProjectNameSafe(name: string): boolean
@@ -9401,7 +9401,7 @@ isProjectNameSafe("project; rm -rf /");   // false
 ## LDAP_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files / export const FILE_SYSTEM_PATTERNS = { // Sensitive system files (Unix) UNIX_SENSITIVE_FILES: /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|proc\/|sys\/|dev\/)/i, // Sensitive system files (Windows) WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i, // Windows reserved device names WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s.]|$)/i, // Fixed: device names at end or followed by space/dot // Windows filename edge cases (trailing dots/spaces that Windows strips) WINDOWS_FILENAME_EDGE_CASES: /[\s.]+$/, // Configuration files CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i, // Backup and temporary files BACKUP_FILES: /\.(bak|backup|tmp|temp|old|orig|save)$/i, // Executable files EXECUTABLE_FILES: /\.(exe|bat|cmd|com|scr|pif|msi|dll|so|dylib)$/i, } as const; /** Network attack patterns Detects attempts to make unauthorized network connections / export const NETWORK_PATTERNS = { // URLs with suspicious protocols SUSPICIOUS_PROTOCOLS: /^(file|ftp|gopher|ldap|dict|telnet|ssh):/i, // Private IP addresses (RFC 1918) PRIVATE_IPS: /\b(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/, // Localhost variations LOCALHOST_VARIANTS: /\b(localhost|127\.|0\.0\.0\.0|::1)/i, // Suspicious ports SUSPICIOUS_PORTS: /:(22|23|53|135|139|445|1433|1521|3306|3389|5432|5900|6379)\b/, } as const; /** Advanced security attack patterns Detects sophisticated attacks and bypass attempts / export const ADVANCED_ATTACK_PATTERNS = { // Homograph attacks using similar-looking characters HOMOGRAPH_CYRILLIC: /[а-яё]/gi, // Cyrillic characters HOMOGRAPH_GREEK: /[α-ωΑ-Ω]/g, // Greek characters HOMOGRAPH_MIXED: /[а-яёα-ωΑ-Ω]/g, // Mixed homograph scripts // Bidirectional text attacks BIDI_OVERRIDE: /[\u202A-\u202E\u2066-\u2069\u061C]/g, // Prototype pollution attempts PROTOTYPE_POLLUTION: /__proto__|constructor\.prototype|\.prototype\.|\.constructor/gi, // Zero-width and invisible characters ZERO_WIDTH_CHARS: /[\u200B-\u200D\uFEFF\u2060]/g, } as const; /** Deserialization attack patterns Detects attempts to inject malicious serialized objects / export const DESERIALIZATION_PATTERNS = { // Java serialization JAVA_SERIALIZED: /\xac\xed\x00\x05|rO0AB/g, JAVA_GADGETS: /\b(Runtime|ProcessBuilder|InvokerTransformer|CommonsCollections|JRMP|LDAP)\b/gi, // .NET serialization DOTNET_BINARY: /\x00\x01\x00\x00\x00\xff\xff\xff\xff/g, DOTNET_GADGETS: /\b(ObjectStateFormatter|LosFormatter|BinaryFormatter|TypeConfuseDelegate)\b/gi, // Python pickle PYTHON_PICKLE: /\x80[\x02-\x04]|c__builtin__|cos\nsystem/g, PYTHON_REDUCE: /__reduce__|__reduce_ex__/g, // PHP serialization PHP_SERIALIZED: /[Oo]:[0-9]+:"/g, PHP_GADGETS: /\b(POP|Monolog|Doctrine|Guzzle|Symfony)\b/gi, // Node.js serialization NODEJS_SERIALIZE: /"__js_function"|"__js_date"|"__js_regexp"/g, // Generic dangerous patterns DANGEROUS_CLASSES: /\b(eval|exec|system|shell_exec|file_get_contents|fopen|include|require)\b/gi, } as const; /** XXE (XML External Entity) attack patterns Detects XML external entity injection attempts / export const XXE_PATTERNS = { // External entity declarations EXTERNAL_ENTITY: /<!ENTITY[^>]+SYSTEM[^>]+>/gi, PUBLIC_ENTITY: /<!ENTITY[^>]+PUBLIC[^>]+>/gi, // Parameter entities PARAMETER_ENTITY: /<!ENTITY\s+%[^>]+>/gi, // Entity references ENTITY_REFERENCE: /&[a-zA-Z_][a-zA-Z0-9_]*;/g, // DOCTYPE declarations with external references DOCTYPE_EXTERNAL: /<!DOCTYPE[^>]+SYSTEM[^>]*>/gi, DOCTYPE_PUBLIC: /<!DOCTYPE[^>]+PUBLIC[^>]*>/gi, // XML inclusion XML_INCLUSION: /<xi:include[^>]*>/gi, // Suspicious protocols in XML XML_PROTOCOLS: /\b(file|ftp|http|https|gopher|jar|netdoc):/gi, // XML bomb patterns (billion laughs) XML_BOMB: /&lol[0-9]*;|&lol[0-9]*lol[0-9]*;/gi, } as const; /** SSTI (Server-Side Template Injection) attack patterns Detects template injection attempts in various template engines / export const SSTI_PATTERNS = { // Jinja2/Django templates JINJA2_INJECTION: /\{\{.*?(\.|_|config|request|session|g).*?\}\}/gi, JINJA2_DANGEROUS: /\{\{.*?(popen|system|eval|exec|import|builtins|globals).*?\}\}/gi, // Twig templates TWIG_INJECTION: /\{\{.*?(\.|_self|app).*?\}\}/gi, TWIG_DANGEROUS: /\{\{.*?(system|exec|shell_exec|passthru).*?\}\}/gi, // Handlebars templates HANDLEBARS_INJECTION: /\{\{.*?(constructor|prototype|process|require).*?\}\}/gi, // FreeMarker templates FREEMARKER_INJECTION: /<#assign|<#import|<#include|\$\{.*?new.*?\}/gi, FREEMARKER_DANGEROUS: /\$\{.*?(freemarker\.template\.utility\.Execute|ObjectConstructor).*?\}/gi, // Velocity templates VELOCITY_INJECTION: /#set\s*\(\s*\$.*?=|#evaluate|\$\{.*?Class.*?\}/gi, // Smarty templates SMARTY_INJECTION: /\{php\}|\{\/php\}|\{literal\}|\{\/literal\}/gi, // Generic template patterns TEMPLATE_EXECUTION: /\{\{.*?(eval|exec|system|import|require|constructor).*?\}\}/gi, TEMPLATE_OBJECT_ACCESS: /\{\{.*?(__.*__|prototype|constructor|process).*?\}\}/gi, } as const; /** LDAP injection attack patterns Detects LDAP injection attempts in search filters
 
@@ -9410,7 +9410,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## log
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function log(
@@ -9426,7 +9426,7 @@ Display an introductory message at the start of a CLI flow / export function int
 ## LogEntryOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/structured.ts`](../../../src/core/foundation/logging/structured.ts)
+**Source**: [`src/core/foundation/logging/structured.ts`](../../src/core/foundation/logging/structured.ts)
 
 Task 1.4.2: Structured Logging with Security Comprehensive structured logging system with automatic sanitization and security features. Builds on Task 1.4.1 (Log Injection Protection) to provide enterprise-grade structured logging. Features: - Structured log entries with consistent formatting - Automatic sanitization of log data using existing security framework - Security metadata and violation tracking - Performance-optimized serialization - Multiple output formats (JSON, text, structured) - Contextual logging with security-aware field handling - Integration with existing Logger and log injection protection
 
@@ -9435,7 +9435,7 @@ Task 1.4.2: Structured Logging with Security Comprehensive structured logging sy
 ## logger
 
 **Type**: `constant`  
-**Source**: [`src/core/ui/logger.ts`](../../../src/core/ui/logger.ts)
+**Source**: [`src/core/ui/logger.ts`](../../src/core/ui/logger.ts)
 
 Unified logging system with colors, spinners, and progress indicators Provides centralized logging with @clack/prompts integration, Picocolors theming, and comprehensive CLI output formatting. / import { intro as clackIntro, log as clackLog, note as clackNote, outro as clackOutro, spinner as clackSpinner, } from '@clack/prompts'; import figures from 'figures'; import { BRANDING } from '../foundation/core/constants.js'; import { formatError } from '../foundation/errors/errors.js'; import { analyzeLogSecurity, type LogInjectionConfig, sanitizeLogOutputAdvanced, } from '../foundation/logging/security.js'; import { type ExtendedIcons, IconProvider, IconSecurity, PlatformCapabilities } from './icons.js'; // Define Spinner type based on @clack/prompts return type type Spinner = ReturnType<typeof clackSpinner>; /** Log levels for controlling output verbosity / export enum LogLevel { SILENT = 0, ERROR = 1, WARN = 2, INFO = 3, DEBUG = 4, VERBOSE = 5, } /** Theme configuration for logger colors / export interface LoggerTheme { primary: (text: string) => string; success: (text: string) => string; warning: (text: string) => string; error: (text: string) => string; info: (text: string) => string; muted: (text: string) => string; highlight: (text: string) => string; dim: (text: string) => string; } /** Logger configuration options / export interface LoggerOptions { level?: LogLevel; theme?: Partial<LoggerTheme>; prefix?: string; timestamp?: boolean; showBrand?: boolean; logInjectionProtection?: LogInjectionConfig; } /** Default theme that emits explicit ANSI color sequences. We use explicit SGR sequences here to ensure consistent output in tests (tests assert exact escape codes). This avoids depending on runtime environment detection inside third-party color libraries which may be influenced by mocked `process` in tests. / const wrap = (start: string, end = '\u001b[39m') => (text: string) => `${start}${text}${end}`; const DEFAULT_THEME: LoggerTheme = { primary: wrap('\u001b[36m'), // cyan success: wrap('\u001b[32m'), // green warning: wrap('\u001b[33m'), // yellow error: wrap('\u001b[31m'), // red info: wrap('\u001b[34m'), // blue muted: wrap('\u001b[90m'), // bright black / gray highlight: (text: string) => `\u001b[1m\u001b[36m${text}\u001b[39m\u001b[22m`, // bold cyan dim: wrap('\u001b[2m', '\u001b[22m'), }; /** Logger class with comprehensive CLI output capabilities / export class Logger { private level: LogLevel; private theme: LoggerTheme; private prefix?: string; private showTimestamp: boolean; private showBrand: boolean; private activeSpinners = new Set<Spinner>(); private logInjectionConfig: LogInjectionConfig; constructor(options: LoggerOptions = {}) { this.level = options.level ?? LogLevel.INFO; // Properly merge theme, ensuring no undefined values override defaults this.theme = { ...DEFAULT_THEME }; if (options.theme) { Object.entries(options.theme).forEach(([key, value]) => { if (value !== undefined) { (this.theme as unknown as Record<string, unknown>)[key] = value; } }); } this.prefix = options.prefix; this.showTimestamp = options.timestamp ?? false; this.showBrand = options.showBrand ?? false; this.logInjectionConfig = options.logInjectionProtection ?? { enableProtection: true, protectionLevel: 'permissive', // Allow legitimate ANSI colors detectTerminalManipulation: false, // Disable for legitimate color usage preserveFormatting: true, allowControlChars: true, }; } /** Set the logging level / setLevel(level: LogLevel): void { this.level = level; } /** Enable verbose logging / enableVerbose(): void { this.setLevel(LogLevel.VERBOSE); } /** Enable debug logging / enableDebug(): void { this.setLevel(LogLevel.DEBUG); } /** Check if a log level should be output / private shouldLog(level: LogLevel): boolean { return this.level >= level; } /** Format a log message with prefix and timestamp / private formatMessage(message: string): string { const parts: string[] = []; if (this.showTimestamp) { const timestamp = new Date().toISOString(); parts.push(this.theme.dim(`[${timestamp}]`)); } if (this.prefix) { parts.push(this.theme.muted(`[${this.prefix}]`)); } parts.push(message); return parts.join(' '); } /** Raw console.log wrapper for internal use with log injection protection / private write(message: string): void { const sanitizedMessage = sanitizeLogOutputAdvanced(message, this.logInjectionConfig); console.log(sanitizedMessage); } /** Raw console.error wrapper for internal use with log injection protection / private writeError(message: string): void { const sanitizedMessage = sanitizeLogOutputAdvanced(message, this.logInjectionConfig); console.error(sanitizedMessage); } /** Log an info message / info(message: string): void { if (!this.shouldLog(LogLevel.INFO)) return; this.write(this.formatMessage(this.theme.info(`${figures.info} ${message}`))); } /** Log a success message / success(message: string): void { if (!this.shouldLog(LogLevel.INFO)) return; this.write(this.formatMessage(this.theme.success(`${figures.tick} ${message}`))); } /** Log a warning message / warn(message: string): void { if (!this.shouldLog(LogLevel.WARN)) return; this.write(this.formatMessage(this.theme.warning(`${figures.warning} ${message}`))); } /** Log an error message / error(message: string | Error): void { if (!this.shouldLog(LogLevel.ERROR)) return; let errorMessage: string; if (message instanceof Error) { errorMessage = formatError(message, { showStack: this.level >= LogLevel.DEBUG, colorize: true, }); } else { errorMessage = this.theme.error(`${figures.cross} ${message}`); } this.writeError(this.formatMessage(errorMessage)); } /** Log a debug message / debug(message: string, data?: unknown): void { if (!this.shouldLog(LogLevel.DEBUG)) return; let debugMessage = this.theme.dim(`${figures.bullet} ${message}`); if (data !== undefined) { debugMessage += `\n${this.theme.dim(JSON.stringify(data, null, 2))}`; } this.write(this.formatMessage(debugMessage)); } /** Log a verbose message / verbose(message: string, data?: unknown): void { if (!this.shouldLog(LogLevel.VERBOSE)) return; let verboseMessage = this.theme.muted(`${figures.arrowRight} ${message}`); if (data !== undefined) { verboseMessage += `\n${this.theme.muted(JSON.stringify(data, null, 2))}`; } this.write(this.formatMessage(verboseMessage)); } /** Display a prominent intro message / intro(message: string, showBrand = this.showBrand): void { if (!this.shouldLog(LogLevel.INFO)) return; if (showBrand) { this.write(this.theme.primary(BRANDING.asciiArt)); this.write(this.theme.muted(BRANDING.tagline)); this.write(''); } clackIntro(this.theme.primary(message)); } /** Display a prominent outro message / outro(message: string): void { if (!this.shouldLog(LogLevel.INFO)) return; clackOutro(this.theme.success(message)); } /** Display a note with optional title / note(message: string, title?: string): void { if (!this.shouldLog(LogLevel.INFO)) return; const noteMessage = this.theme.info(message); const noteTitle = title ? this.theme.highlight(title) : undefined; clackNote(noteMessage, noteTitle); } /** Display step information / step(message: string, stepNumber?: number, totalSteps?: number): void { if (!this.shouldLog(LogLevel.INFO)) return; let stepMessage = message; if (stepNumber !== undefined && totalSteps !== undefined) { const stepInfo = this.theme.muted(`(${stepNumber}/${totalSteps})`); stepMessage = `${stepInfo} ${message}`; } this.info(stepMessage); } /** Create a spinner for long-running operations / spinner(message: string): Spinner { const spinner = clackSpinner(); spinner.start(this.theme.primary(message)); this.activeSpinners.add(spinner); // Wrap spinner methods to maintain tracking const originalStop = spinner.stop.bind(spinner); const originalMessage = spinner.message.bind(spinner); spinner.stop = (message?: string, code?: number) => { this.activeSpinners.delete(spinner); return originalStop(message, code); }; spinner.message = (message?: string) => { if (message) { return originalMessage(this.theme.primary(message)); } return originalMessage(); }; // Add convenience methods interface EnhancedSpinner { success: (message: string) => void; fail: (message: string) => void; warn: (message: string) => void; } (spinner as unknown as EnhancedSpinner).success = (message: string) => { this.activeSpinners.delete(spinner); spinner.stop(this.theme.success(`${figures.tick} ${message}`)); }; (spinner as unknown as EnhancedSpinner).fail = (message: string) => { this.activeSpinners.delete(spinner); spinner.stop(this.theme.error(`${figures.cross} ${message}`), 1); }; (spinner as unknown as EnhancedSpinner).warn = (message: string) => { this.activeSpinners.delete(spinner); spinner.stop(this.theme.warning(`${figures.warning} ${message}`)); }; return spinner; } /** Stop all active spinners (useful for cleanup) / stopAllSpinners(message?: string): void { for (const spinner of this.activeSpinners) { spinner.stop(message); } this.activeSpinners.clear(); } /** Log with @clack/prompts log function for consistent styling / log(message: string): void { if (!this.shouldLog(LogLevel.INFO)) return; clackLog.message(this.formatMessage(message)); } /** Display a table-like structure / table(data: Record<string, string | number | boolean>): void { if (!this.shouldLog(LogLevel.INFO)) return; const maxKeyLength = Math.max(...Object.keys(data).map((k) => k.length)); for (const [key, value] of Object.entries(data)) { const paddedKey = key.padEnd(maxKeyLength); const keyColor = this.theme.highlight(paddedKey); const valueColor = this.theme.info(String(value)); this.write(`${keyColor} │ ${valueColor}`); } } /** Display a list with bullets / list(items: string[], bullet = figures.bullet): void { if (!this.shouldLog(LogLevel.INFO)) return; for (const item of items) { const bulletColor = this.theme.primary(bullet); const itemColor = this.theme.info(item); this.write(`${bulletColor} ${itemColor}`); } } /** Display a box around text / box(message: string, title?: string): void { if (!this.shouldLog(LogLevel.INFO)) return; const lines = message.split('\n'); const maxLength = Math.max(...lines.map((line) => line.length)); const width = Math.max(maxLength + 4, title ? title.length + 4 : 0); const horizontal = '─'.repeat(width - 2); const top = `┌${horizontal}┐`; const bottom = `└${horizontal}┘`; this.write(this.theme.primary(top)); if (title) { const paddedTitle = title.padStart((width + title.length) / 2).padEnd(width - 2); this.write(this.theme.primary(`│${this.theme.highlight(paddedTitle)}│`)); this.write(this.theme.primary(`├${horizontal}┤`)); } for (const line of lines) { const paddedLine = line.padEnd(width - 4); this.write(this.theme.primary(`│ ${this.theme.info(paddedLine)} │`)); } this.write(this.theme.primary(bottom)); } /** Create a child logger with additional prefix / child(prefix: string, options: Partial<LoggerOptions> = {}): Logger { const childPrefix = this.prefix ? `${this.prefix}:${prefix}` : prefix; return new Logger({ level: this.level, theme: this.theme, prefix: childPrefix, timestamp: this.showTimestamp, showBrand: false, // Don't show brand for child loggers ...options, }); } /** Update theme colors / setTheme(theme: Partial<LoggerTheme>): void { this.theme = { ...this.theme, ...theme }; } /** Get current theme / getTheme(): LoggerTheme { return { ...this.theme }; } /** Update log injection protection configuration / setLogInjectionProtection(config: LogInjectionConfig): void { this.logInjectionConfig = { ...this.logInjectionConfig, ...config }; } /** Get current log injection protection configuration / getLogInjectionProtection(): LogInjectionConfig { return { ...this.logInjectionConfig }; } /** Analyze a message for potential log injection risks / analyzeMessage(message: string) { return analyzeLogSecurity(message); } // ======================================== // Enhanced Icon Methods // ======================================== /** Get all available icons with platform-appropriate fallbacks / getIcons(): ExtendedIcons { return IconProvider.getIcons(); } /** Get platform capabilities info / getPlatformInfo() { return PlatformCapabilities.getInfo(); } /** Log a message with a specific icon / withIcon(iconName: keyof ExtendedIcons, message: string, level: LogLevel = LogLevel.INFO): void { if (!this.shouldLog(level)) return; try { const icon = IconProvider.get(iconName); const safeIcon = IconSecurity.sanitizeIcon(icon); if (!IconSecurity.isValidIcon(safeIcon)) { this.warn(`Invalid icon "${iconName}" - falling back to text`); this.log(message); return; } const coloredMessage = level === LogLevel.ERROR ? this.theme.error(message) : level === LogLevel.WARN ? this.theme.warning(message) : level === LogLevel.INFO ? this.theme.info(message) : level === LogLevel.DEBUG ? this.theme.muted(message) : message; clackLog.message(this.formatMessage(`${safeIcon} ${coloredMessage}`)); } catch (error) { // Gracefully handle icon provider errors this.warn( `Error getting icon "${iconName}": ${error instanceof Error ? error.message : 'Unknown error'}` ); this.log(message); } } /** Deployment and infrastructure icons / rocket(message: string): void { this.withIcon('rocket', message, LogLevel.INFO); } cloud(message: string): void { this.withIcon('cloud', message, LogLevel.INFO); } package(message: string): void { this.withIcon('box', message, LogLevel.INFO); } deploy(message: string): void { this.withIcon('deploy', message, LogLevel.INFO); } server(message: string): void { this.withIcon('server', message, LogLevel.INFO); } database(message: string): void { this.withIcon('database', message, LogLevel.INFO); } api(message: string): void { this.withIcon('api', message, LogLevel.INFO); } network(message: string): void { this.withIcon('network', message, LogLevel.INFO); } globe(message: string): void { this.withIcon('globe', message, LogLevel.INFO); } /** File and folder operations / folder(message: string): void { this.withIcon('folder', message, LogLevel.INFO); } file(message: string): void { this.withIcon('file', message, LogLevel.INFO); } upload(message: string): void { this.withIcon('upload', message, LogLevel.INFO); } download(message: string): void { this.withIcon('download', message, LogLevel.INFO); } sync(message: string): void { this.withIcon('sync', message, LogLevel.INFO); } /** Security and configuration / shield(message: string): void { this.withIcon('shield', message, LogLevel.INFO); } key(message: string): void { this.withIcon('key', message, LogLevel.INFO); } lock(message: string): void { this.withIcon('lock', message, LogLevel.INFO); } gear(message: string): void { this.withIcon('gear', message, LogLevel.INFO); } /** Process and status icons / build(message: string): void { this.withIcon('build', message, LogLevel.INFO); } lightning(message: string): void { this.withIcon('lightning', message, LogLevel.INFO); } pending(message: string): void { this.withIcon('pending', message, LogLevel.INFO); } skip(message: string): void { this.withIcon('skip', message, LogLevel.INFO); } /** Enhanced status methods with better icons / successWithIcon(message: string): void { this.withIcon('success', message, LogLevel.INFO); } failureWithIcon(message: string): void { this.withIcon('failure', message, LogLevel.ERROR); } /** Decorative icons / sparkle(message: string): void { this.withIcon('sparkle', message, LogLevel.INFO); } diamond(message: string): void { this.withIcon('diamond', message, LogLevel.INFO); } crown(message: string): void { this.withIcon('crown', message, LogLevel.INFO); } trophy(message: string): void { this.withIcon('trophy', message, LogLevel.INFO); } /** Test icon display for debugging platform compatibility / testIcons(): void { const icons = this.getIcons(); const platformInfo = this.getPlatformInfo(); clackLog.message(this.formatMessage('Platform Icon Test')); clackLog.message(this.formatMessage(`Platform: ${platformInfo.platform}`)); clackLog.message(this.formatMessage(`Terminal: ${platformInfo.termProgram || 'unknown'}`)); clackLog.message(this.formatMessage(`Unicode Support: ${platformInfo.supportsUnicode}`)); clackLog.message(this.formatMessage(`Emoji Support: ${platformInfo.supportsEmoji}`)); clackLog.message(this.formatMessage('\nAvailable Icons:')); // Group icons by category for better display const categories = { Status: ['tick', 'cross', 'warning', 'info', 'success', 'failure', 'pending', 'skip'], Infrastructure: ['rocket', 'cloud', 'server', 'database', 'api', 'network', 'globe'], Files: ['box', 'folder', 'file', 'upload', 'download', 'sync'], Security: ['shield', 'key', 'lock', 'gear'], Process: ['build', 'deploy', 'lightning'], Decorative: ['sparkle', 'diamond', 'crown', 'trophy'], }; Object.entries(categories).forEach(([category, iconNames]) => { clackLog.message(this.formatMessage(`\n${category}:`)); iconNames.forEach((iconName) => { const icon = icons[iconName as keyof ExtendedIcons]; const security = IconSecurity.analyzeIconSecurity(icon); const status = security.isSecure ? '✓' : '⚠'; clackLog.message(this.formatMessage(`  ${iconName.padEnd(12)} │ ${icon} │ ${status}`)); }); }); } /** Analyze icon security for a given text / analyzeIconSecurity(text: string) { return IconSecurity.analyzeIconSecurity(text); } /** Get a safe version of an icon / getSafeIcon(iconName: keyof ExtendedIcons): string { const icon = IconProvider.get(iconName); return IconSecurity.sanitizeIcon(icon); } } /** Default logger instance
 
@@ -9444,7 +9444,7 @@ Unified logging system with colors, spinners, and progress indicators Provides c
 ## Logger
 
 **Type**: `class`  
-**Source**: [`src/core/ui/logger.ts`](../../../src/core/ui/logger.ts)
+**Source**: [`src/core/ui/logger.ts`](../../src/core/ui/logger.ts)
 
 Unified logging system with colors, spinners, and progress indicators Provides centralized logging with @clack/prompts integration, Picocolors theming, and comprehensive CLI output formatting. / import { intro as clackIntro, log as clackLog, note as clackNote, outro as clackOutro, spinner as clackSpinner, } from '@clack/prompts'; import figures from 'figures'; import { BRANDING } from '../foundation/core/constants.js'; import { formatError } from '../foundation/errors/errors.js'; import { analyzeLogSecurity, type LogInjectionConfig, sanitizeLogOutputAdvanced, } from '../foundation/logging/security.js'; import { type ExtendedIcons, IconProvider, IconSecurity, PlatformCapabilities } from './icons.js'; // Define Spinner type based on @clack/prompts return type type Spinner = ReturnType<typeof clackSpinner>; /** Log levels for controlling output verbosity / export enum LogLevel { SILENT = 0, ERROR = 1, WARN = 2, INFO = 3, DEBUG = 4, VERBOSE = 5, } /** Theme configuration for logger colors / export interface LoggerTheme { primary: (text: string) => string; success: (text: string) => string; warning: (text: string) => string; error: (text: string) => string; info: (text: string) => string; muted: (text: string) => string; highlight: (text: string) => string; dim: (text: string) => string; } /** Logger configuration options / export interface LoggerOptions { level?: LogLevel; theme?: Partial<LoggerTheme>; prefix?: string; timestamp?: boolean; showBrand?: boolean; logInjectionProtection?: LogInjectionConfig; } /** Default theme that emits explicit ANSI color sequences. We use explicit SGR sequences here to ensure consistent output in tests (tests assert exact escape codes). This avoids depending on runtime environment detection inside third-party color libraries which may be influenced by mocked `process` in tests. / const wrap = (start: string, end = '\u001b[39m') => (text: string) => `${start}${text}${end}`; const DEFAULT_THEME: LoggerTheme = { primary: wrap('\u001b[36m'), // cyan success: wrap('\u001b[32m'), // green warning: wrap('\u001b[33m'), // yellow error: wrap('\u001b[31m'), // red info: wrap('\u001b[34m'), // blue muted: wrap('\u001b[90m'), // bright black / gray highlight: (text: string) => `\u001b[1m\u001b[36m${text}\u001b[39m\u001b[22m`, // bold cyan dim: wrap('\u001b[2m', '\u001b[22m'), }; /** Logger class with comprehensive CLI output capabilities
 
@@ -9453,7 +9453,7 @@ Unified logging system with colors, spinners, and progress indicators Provides c
 ## LoggerOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/ui/logger.ts`](../../../src/core/ui/logger.ts)
+**Source**: [`src/core/ui/logger.ts`](../../src/core/ui/logger.ts)
 
 Unified logging system with colors, spinners, and progress indicators Provides centralized logging with @clack/prompts integration, Picocolors theming, and comprehensive CLI output formatting. / import { intro as clackIntro, log as clackLog, note as clackNote, outro as clackOutro, spinner as clackSpinner, } from '@clack/prompts'; import figures from 'figures'; import { BRANDING } from '../foundation/core/constants.js'; import { formatError } from '../foundation/errors/errors.js'; import { analyzeLogSecurity, type LogInjectionConfig, sanitizeLogOutputAdvanced, } from '../foundation/logging/security.js'; import { type ExtendedIcons, IconProvider, IconSecurity, PlatformCapabilities } from './icons.js'; // Define Spinner type based on @clack/prompts return type type Spinner = ReturnType<typeof clackSpinner>; /** Log levels for controlling output verbosity / export enum LogLevel { SILENT = 0, ERROR = 1, WARN = 2, INFO = 3, DEBUG = 4, VERBOSE = 5, } /** Theme configuration for logger colors / export interface LoggerTheme { primary: (text: string) => string; success: (text: string) => string; warning: (text: string) => string; error: (text: string) => string; info: (text: string) => string; muted: (text: string) => string; highlight: (text: string) => string; dim: (text: string) => string; } /** Logger configuration options
 
@@ -9462,7 +9462,7 @@ Unified logging system with colors, spinners, and progress indicators Provides c
 ## LoggerTheme
 
 **Type**: `interface`  
-**Source**: [`src/core/ui/logger.ts`](../../../src/core/ui/logger.ts)
+**Source**: [`src/core/ui/logger.ts`](../../src/core/ui/logger.ts)
 
 Unified logging system with colors, spinners, and progress indicators Provides centralized logging with @clack/prompts integration, Picocolors theming, and comprehensive CLI output formatting. / import { intro as clackIntro, log as clackLog, note as clackNote, outro as clackOutro, spinner as clackSpinner, } from '@clack/prompts'; import figures from 'figures'; import { BRANDING } from '../foundation/core/constants.js'; import { formatError } from '../foundation/errors/errors.js'; import { analyzeLogSecurity, type LogInjectionConfig, sanitizeLogOutputAdvanced, } from '../foundation/logging/security.js'; import { type ExtendedIcons, IconProvider, IconSecurity, PlatformCapabilities } from './icons.js'; // Define Spinner type based on @clack/prompts return type type Spinner = ReturnType<typeof clackSpinner>; /** Log levels for controlling output verbosity / export enum LogLevel { SILENT = 0, ERROR = 1, WARN = 2, INFO = 3, DEBUG = 4, VERBOSE = 5, } /** Theme configuration for logger colors
 
@@ -9471,7 +9471,7 @@ Unified logging system with colors, spinners, and progress indicators Provides c
 ## LogInjectionConfig
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/security.ts`](../../../src/core/foundation/logging/security.ts)
+**Source**: [`src/core/foundation/logging/security.ts`](../../src/core/foundation/logging/security.ts)
 
 Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.1: Log Injection Protection Enhancement - Comprehensive Security Framework Provides enterprise-grade protection against advanced log injection attacks including: - ANSI escape sequences and terminal manipulation - Control characters and terminal reset commands - Carriage return/line feed injection and log spoofing - Terminal bell, cursor manipulation, and screen clearing - Unicode bidirectional override and homograph attacks - Format string attacks and command execution attempts - Terminal title manipulation and window control - OSC (Operating System Command) sequence attacks - Device control string attacks and screen buffer manipulation - Hyperlink injection and clickjacking attempts
 
@@ -9480,7 +9480,7 @@ Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.
 ## LogSecurityAnalysis
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/security.ts`](../../../src/core/foundation/logging/security.ts)
+**Source**: [`src/core/foundation/logging/security.ts`](../../src/core/foundation/logging/security.ts)
 
 Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.1: Log Injection Protection Enhancement - Comprehensive Security Framework Provides enterprise-grade protection against advanced log injection attacks including: - ANSI escape sequences and terminal manipulation - Control characters and terminal reset commands - Carriage return/line feed injection and log spoofing - Terminal bell, cursor manipulation, and screen clearing - Unicode bidirectional override and homograph attacks - Format string attacks and command execution attempts - Terminal title manipulation and window control - OSC (Operating System Command) sequence attacks - Device control string attacks and screen buffer manipulation - Hyperlink injection and clickjacking attempts
 
@@ -9489,7 +9489,7 @@ Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.
 ## LogSecurityMonitor
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/logging/security.ts`](../../../src/core/foundation/logging/security.ts)
+**Source**: [`src/core/foundation/logging/security.ts`](../../src/core/foundation/logging/security.ts)
 
 Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.1: Log Injection Protection Enhancement - Comprehensive Security Framework Provides enterprise-grade protection against advanced log injection attacks including: - ANSI escape sequences and terminal manipulation - Control characters and terminal reset commands - Carriage return/line feed injection and log spoofing - Terminal bell, cursor manipulation, and screen clearing - Unicode bidirectional override and homograph attacks - Format string attacks and command execution attempts - Terminal title manipulation and window control - OSC (Operating System Command) sequence attacks - Device control string attacks and screen buffer manipulation - Hyperlink injection and clickjacking attempts
 
@@ -9498,7 +9498,7 @@ Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.
 ## LogSecurityViolation
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/security.ts`](../../../src/core/foundation/logging/security.ts)
+**Source**: [`src/core/foundation/logging/security.ts`](../../src/core/foundation/logging/security.ts)
 
 Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.1: Log Injection Protection Enhancement - Comprehensive Security Framework Provides enterprise-grade protection against advanced log injection attacks including: - ANSI escape sequences and terminal manipulation - Control characters and terminal reset commands - Carriage return/line feed injection and log spoofing - Terminal bell, cursor manipulation, and screen clearing - Unicode bidirectional override and homograph attacks - Format string attacks and command execution attempts - Terminal title manipulation and window control - OSC (Operating System Command) sequence attacks - Device control string attacks and screen buffer manipulation - Hyperlink injection and clickjacking attempts
 
@@ -9507,7 +9507,7 @@ Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.
 ## MemoryAnalysisResult
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -9557,7 +9557,7 @@ Comprehensive memory protection configuration following SOLID principles
 ## MemoryAuditStorage
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
+**Source**: [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
 
 Task 1.4.3: Audit Trail Integration Security-focused audit logging system that integrates with existing structured logging and security violation detection frameworks to provide comprehensive audit trails. Features: - Security event tracking with context preservation - Integrity protection using cryptographic hashing - Tamper detection with verification mechanisms - Secure storage with configurable backends - Compliance support (SOX, GDPR, HIPAA, etc.) - Integration with existing security frameworks - Performance optimization for high-throughput scenarios
 
@@ -9566,7 +9566,7 @@ Task 1.4.3: Audit Trail Integration Security-focused audit logging system that i
 ## MemoryConfigPresets
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -9616,7 +9616,7 @@ Comprehensive memory protection configuration following SOLID principles
 ## MemoryProtectionConfig
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -9666,7 +9666,7 @@ Comprehensive memory protection configuration following SOLID principles
 ## MemoryProtectionError
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -9716,7 +9716,7 @@ Comprehensive memory protection configuration following SOLID principles
 ## MemoryProtectionLevel
 
 **Type**: `type`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -9743,7 +9743,7 @@ Memory protection severity levels for graduated response
 ## MemoryProtectionManager
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -9793,7 +9793,7 @@ Comprehensive memory protection configuration following SOLID principles
 ## MemorySizeCalculator
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -9843,7 +9843,7 @@ Comprehensive memory protection configuration following SOLID principles
 ## MemoryUsageLevel
 
 **Type**: `type`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -9875,7 +9875,7 @@ Memory usage classification for monitoring and alerting
 ## MemoryViolation
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -9925,7 +9925,7 @@ Comprehensive memory protection configuration following SOLID principles
 ## MemoryViolationAnalyzer
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -9975,7 +9975,7 @@ Comprehensive memory protection configuration following SOLID principles
 ## MemoryViolationType
 
 **Type**: `type`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -10012,7 +10012,7 @@ Memory protection violation types for security analysis
 ## move
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function move(
@@ -10028,7 +10028,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## multiselect
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export async function multiselect<T = string>(
@@ -10044,21 +10044,21 @@ Display an introductory message at the start of a CLI flow / export function int
 ## MultiSelectOption
 
 **Type**: `interface`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ---
 
 ## MultiSelectPromptOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ---
 
 ## NETWORK_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files / export const FILE_SYSTEM_PATTERNS = { // Sensitive system files (Unix) UNIX_SENSITIVE_FILES: /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|proc\/|sys\/|dev\/)/i, // Sensitive system files (Windows) WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i, // Windows reserved device names WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s.]|$)/i, // Fixed: device names at end or followed by space/dot // Windows filename edge cases (trailing dots/spaces that Windows strips) WINDOWS_FILENAME_EDGE_CASES: /[\s.]+$/, // Configuration files CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i, // Backup and temporary files BACKUP_FILES: /\.(bak|backup|tmp|temp|old|orig|save)$/i, // Executable files EXECUTABLE_FILES: /\.(exe|bat|cmd|com|scr|pif|msi|dll|so|dylib)$/i, } as const; /** Network attack patterns Detects attempts to make unauthorized network connections
 
@@ -10067,14 +10067,14 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## NetworkError
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 ---
 
 ## note
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function note(message: string, title?: string): void
@@ -10087,7 +10087,7 @@ Display an introductory message at the start of a CLI flow / export function int
 ## ObjectSanitizationConfig
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -10155,7 +10155,7 @@ Advanced object sanitization configuration
 ## ObjectSanitizationLevel
 
 **Type**: `type`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -10192,7 +10192,7 @@ Object sanitization levels for graduated response
 ## ObjectSanitizationResult
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -10332,7 +10332,7 @@ Object sanitization result with comprehensive metadata
 ## ObjectSanitizationViolation
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -10507,7 +10507,7 @@ Object sanitization violation details
 ## ObjectSanitizationViolationType
 
 **Type**: `type`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -10696,7 +10696,7 @@ Object sanitization violation types
 ## ObjectType
 
 **Type**: `type`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -10738,7 +10738,7 @@ Object type classification for sanitization strategies
 ## outro
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function outro(message: string, options?:
@@ -10751,7 +10751,7 @@ Display an introductory message at the start of a CLI flow / export function int
 ## PACKAGE_MANAGER_COMMANDS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 Core constants and configuration for the CLI SDK These constants define the supported technologies, file patterns, and framework detection logic used throughout the SDK. / import { homedir } from 'node:os'; import { join } from 'node:path'; /** Supported package managers for project detection and commands / export const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const; export type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]; /** Default file and directory patterns to ignore during operations / export const DEFAULT_IGNORE_PATTERNS = [ // Version control '.git', '.gitignore', // Dependencies 'node_modules', '.pnpm-store', '.yarn', // Build outputs 'dist', 'build', '.next', '.nuxt', '.output', '.vercel', '.netlify', // Cache and temp files '.cache', '.temp', '.tmp', 'coverage', // IDE and editor files '.vscode', '.idea', '*.log', '.DS_Store', 'Thumbs.db', // Environment and config '.env', '.env.local', '.env.*.local', ] as const; /** Prefix for temporary directories created by the SDK / export const TEMP_DIR_PREFIX = 'lord-commander-'; /** Paths where CLI configuration files can be found / export const CLI_CONFIG_PATHS = [ 'lord.config.js', 'lord.config.ts', join(homedir(), '.lord', 'config.json'), ] as const; /** Framework detection patterns for smart project detection Each framework has file indicators and optional package.json dependencies / export const FRAMEWORK_PATTERNS = { 'next.js': { files: ['next.config.js', 'next.config.ts', 'next.config.mjs'], dependencies: ['next'], devDependencies: ['@next/env'], directories: ['pages', 'app'], }, remix: { files: ['remix.config.js', 'remix.config.ts'], dependencies: ['@remix-run/node', '@remix-run/react', '@remix-run/serve'], directories: ['app/routes'], }, astro: { files: ['astro.config.js', 'astro.config.ts', 'astro.config.mjs'], dependencies: ['astro'], directories: ['src/pages'], }, vite: { files: ['vite.config.js', 'vite.config.ts'], dependencies: ['vite'], devDependencies: ['vite'], }, nuxt: { files: ['nuxt.config.js', 'nuxt.config.ts'], dependencies: ['nuxt', 'nuxt3'], directories: ['pages', 'components'], }, sveltekit: { files: ['svelte.config.js'], dependencies: ['@sveltejs/kit'], directories: ['src/routes'], }, express: { files: ['server.js', 'app.js', 'index.js'], dependencies: ['express'], }, fastify: { dependencies: ['fastify'], }, react: { dependencies: ['react'], devDependencies: ['@types/react'], }, vue: { dependencies: ['vue'], devDependencies: ['@vue/cli-service'], }, angular: { files: ['angular.json'], dependencies: ['@angular/core'], devDependencies: ['@angular/cli'], }, } as const; export type Framework = keyof typeof FRAMEWORK_PATTERNS; /** Common file extensions for different file types / export const FILE_EXTENSIONS = { typescript: ['.ts', '.tsx'], javascript: ['.js', '.jsx', '.mjs'], config: ['.json', '.yaml', '.yml', '.toml'], template: ['.hbs', '.ejs', '.mustache'], style: ['.css', '.scss', '.sass', '.less'], } as const; /** Default ports commonly used by development servers / export const DEFAULT_PORTS = { next: 3000, remix: 3000, astro: 3000, vite: 5173, nuxt: 3000, sveltekit: 5173, express: 3000, fastify: 3000, } as const; /** Package manager specific commands and configurations
 
@@ -10760,14 +10760,14 @@ Core constants and configuration for the CLI SDK These constants define the supp
 ## PackageManager
 
 **Type**: `type`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 ---
 
 ## PackageManagerInfo
 
 **Type**: `interface`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 Process execution wrapper with async/await support and error handling Provides secure command execution with proper error handling, output capture, streaming, and cancellation support using execa. / import { mkdir } from 'node:fs/promises'; import { tmpdir } from 'node:os'; import { join } from 'node:path'; import type { ExecaError, ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa'; // Note: execa package needs to be installed as a dependency // npm install execa@^8.0.1 import { execa as execaLib, execaSync as execaSyncLib } from 'execa'; import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/core/constants.js'; import { ProcessError } from '../foundation/errors/errors.js'; import { createLogger } from '../ui/logger.js'; // Create a logger instance for internal execa operations const execaLogger = createLogger({ prefix: 'execa' }); /** Result of a command execution / export interface ExecResult { stdout: string; // Standard output from the command stderr: string; // Standard error output exitCode: number; // Exit code (0 = success, non-zero = error) command: string; // The full command that was executed failed: boolean; // True if the command failed (exitCode !== 0) timedOut: boolean; // True if the command timed out killed: boolean; // True if the command was forcibly terminated duration: number; // Execution time in milliseconds } /** Sandboxing configuration for command execution / export interface SandboxConfig { enabled?: boolean; // Enable/disable sandboxing (default: true) isolateWorkingDirectory?: boolean; // Create isolated temp directory (default: true) restrictEnvironment?: boolean; // Use minimal safe environment (default: true) allowedEnvVars?: string[]; // Additional env vars to preserve (default: ['PATH', 'NODE_ENV']) customSandboxDir?: string; // Use custom sandbox directory instead of temp sandboxPrefix?: string; // Prefix for sandbox directory names (default: 'lord-commander-sandbox') } /** Options for command execution / export interface ExecOptions { cwd?: string; // Working directory to execute command in env?: Record<string, string>; // Environment variables to set timeout?: number; // Timeout in milliseconds (0 = no timeout) input?: string; // Input to send to the command's stdin stdio?: 'inherit' | 'pipe' | 'ignore'; // How to handle stdio streams silent?: boolean; // Suppress output logging shell?: boolean | string; // Run command in shell (true, false, or shell path) - security: defaults to false windowsHide?: boolean; // Hide console window on Windows reject?: boolean; // Whether to reject promise on non-zero exit code stripFinalNewline?: boolean; // Remove trailing newline from output preferLocal?: boolean; // Prefer locally installed binaries localDir?: string; // Directory to look for local binaries cleanup?: boolean; // Kill spawned process on parent process exit encoding?: BufferEncoding; // Output encoding maxBuffer?: number; // Max buffer size for stdout/stderr signal?: AbortSignal; // AbortController signal for cancellation sandbox?: SandboxConfig; // Sandboxing configuration for security } /** Options for streaming command execution / export interface ExecStreamOptions extends ExecOptions { onStdout?: (data: string) => void; // Callback for stdout data chunks onStderr?: (data: string) => void; // Callback for stderr data chunks onProgress?: (progress: { type: 'stdout' | 'stderr'; data: string }) => void; // Generic progress callback } /** Package manager detection result
 
@@ -10776,7 +10776,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## password
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export async function password(
@@ -10791,7 +10791,7 @@ Display an introductory message at the start of a CLI flow / export function int
 ## PATH_TRAVERSAL_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory
 
@@ -10800,7 +10800,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## patterns
 
 **Type**: `constant`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 Display an introductory message at the start of a CLI flow / export function intro(message: string, options?: { theme?: Partial<PromptTheme> }): void { const theme = options?.theme ? { ...currentTheme, ...options.theme } : currentTheme; clack.intro(theme.style.info(`${theme.prefix} ${message}`)); } /** Display a closing message at the end of a CLI flow / export function outro(message: string, options?: { theme?: Partial<PromptTheme> }): void { const theme = options?.theme ? { ...currentTheme, ...options.theme } : currentTheme; clack.outro(theme.style.success(`${theme.symbol.success} ${message}`)); } /** Display an informational note / export function note(message: string, title?: string): void { const theme = currentTheme; const formattedTitle = title ? theme.style.info(title) : undefined; clack.note(message, formattedTitle); } /** Display a log message with styling / export function log( message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info' ): void { const theme = currentTheme; const symbol = theme.symbol[type] || theme.symbol.info; const style = theme.style[type] || theme.style.info; clack.log.message(style(`${symbol} ${message}`)); } /** Create a spinner for long-running operations / export function spinner(): { start: (message?: string) => void; stop: (message?: string, code?: number) => void; message: (message: string) => void; } { const s = clack.spinner(); return { start: (message?: string) => { const theme = currentTheme; s.start(message ? theme.style.info(message) : 'Loading...'); }, stop: (message?: string, code?: number) => { const theme = currentTheme; if (code === 0 || code === undefined) { s.stop(message ? theme.style.success(`${theme.symbol.success} ${message}`) : 'Done'); } else { s.stop(message ? theme.style.error(`${theme.symbol.error} ${message}`) : 'Failed'); } }, message: (message: string) => { const theme = currentTheme; s.message(theme.style.info(message)); }, }; } /** Prompt for text input / export async function text(message: string, options: PromptOptions = {}): Promise<string> { const theme = options.theme ? { ...currentTheme, ...options.theme } : currentTheme; const result = await clack.text({ message: theme.style.question(message), placeholder: options.placeholder, initialValue: options.initialValue, validate: options.validate, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } if (options.required && !result.trim()) { throw new CLIError('This field is required', { code: 'VALIDATION_ERROR' }); } return result; } /** Prompt for password input / export async function password( message: string, options: Omit<PromptOptions, 'initialValue'> = {} ): Promise<string> { const theme = options.theme ? { ...currentTheme, ...options.theme } : currentTheme; const result = await clack.password({ message: theme.style.question(message), validate: options.validate, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } if (options.required && !result.trim()) { throw new CLIError('Password is required', { code: 'VALIDATION_ERROR' }); } return result; } /** Prompt for confirmation (yes/no) / export async function confirm( message: string, options: ConfirmPromptOptions = {} ): Promise<boolean> { const theme = options.theme ? { ...currentTheme, ...options.theme } : currentTheme; const result = await clack.confirm({ message: theme.style.question(message), active: options.active || 'Yes', inactive: options.inactive || 'No', initialValue: options.initialValue, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } return result; } /** Prompt for single selection from a list / export async function select<T = string>( message: string, options: SelectOption<T>[], promptOptions: SelectPromptOptions<T> = {} ): Promise<T> { const theme = promptOptions.theme ? { ...currentTheme, ...promptOptions.theme } : currentTheme; const selectOptions = options.map((option) => ({ value: option.value, label: option.label || String(option.value), })); const result = await clack.select({ message: theme.style.question(message), options: selectOptions as unknown as Parameters<typeof clack.select>[0]['options'], maxItems: promptOptions.maxItems, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } if (promptOptions.validate) { const validationError = promptOptions.validate(result as T); if (validationError) { throw new CLIError(validationError, { code: 'VALIDATION_ERROR' }); } } return result as T; } /** Prompt for multiple selections from a list / export async function multiselect<T = string>( message: string, options: MultiSelectOption<T>[], promptOptions: MultiSelectPromptOptions<T> = {} ): Promise<T[]> { const theme = promptOptions.theme ? { ...currentTheme, ...promptOptions.theme } : currentTheme; const selectOptions = options.map((option) => ({ value: option.value, label: option.label || String(option.value), })); const result = await clack.multiselect({ message: theme.style.question(message), options: selectOptions as unknown as Parameters<typeof clack.multiselect>[0]['options'], required: promptOptions.required !== false, maxItems: promptOptions.maxItems, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } if (promptOptions.required && (!result || (result as T[]).length === 0)) { throw new CLIError('At least one selection is required', { code: 'VALIDATION_ERROR' }); } if (promptOptions.validate) { const validationError = promptOptions.validate(result as T[]); if (validationError) { throw new CLIError(validationError, { code: 'VALIDATION_ERROR' }); } } return result as T[]; } /** Group related prompts together / export async function group<T extends Record<string, unknown>>( prompts: { [K in keyof T]: () => Promise<T[K]>; }, options?: { onCancel?: (prompt: { results: Partial<T> }) => void; } ): Promise<T> { const result = await clack.group(prompts, options); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } return result; } // isCancel is re-exported from clack at the end of this file /** Cancel the current operation / export function cancel(message: string = 'Operation cancelled'): never { clack.cancel(currentTheme.style.error(message)); process.exit(1); } /** Common prompt patterns for CLI setup
 
@@ -10809,7 +10809,7 @@ Display an introductory message at the start of a CLI flow / export function int
 ## PerformanceAnalysis
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -11062,21 +11062,21 @@ Performance analysis for sanitization operation
 ## PlatformCapabilities
 
 **Type**: `class`  
-**Source**: [`src/core/ui/icons.ts`](../../../src/core/ui/icons.ts)
+**Source**: [`src/core/ui/icons.ts`](../../src/core/ui/icons.ts)
 
 ---
 
 ## platformInfo
 
 **Type**: `constant`  
-**Source**: [`src/core/ui/icons.ts`](../../../src/core/ui/icons.ts)
+**Source**: [`src/core/ui/icons.ts`](../../src/core/ui/icons.ts)
 
 ---
 
 ## printPromptFooter
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function printPromptFooter(): void
@@ -11087,7 +11087,7 @@ export function printPromptFooter(): void
 ## printPromptHeader
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function printPromptHeader(title: string): void
@@ -11098,7 +11098,7 @@ export function printPromptHeader(title: string): void
 ## printSection
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function printSection(title: string, content?: string): void
@@ -11109,7 +11109,7 @@ export function printSection(title: string, content?: string): void
 ## printSeparator
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function printSeparator(
@@ -11123,7 +11123,7 @@ export function printSeparator(
 ## printSpacing
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function printSpacing(lines = 1): void
@@ -11134,7 +11134,7 @@ export function printSpacing(lines = 1): void
 ## printTaskComplete
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function printTaskComplete(task: string, success = true): void
@@ -11145,7 +11145,7 @@ export function printTaskComplete(task: string, success = true): void
 ## printTaskStart
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function printTaskStart(task: string): void
@@ -11156,7 +11156,7 @@ export function printTaskStart(task: string): void
 ## PRIVILEGE_ESCALATION_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources
 
@@ -11165,7 +11165,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## processContextWithMemoryProtection
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ```typescript
 export function processContextWithMemoryProtection(
@@ -11242,14 +11242,14 @@ Utility function to check if an object exceeds memory limits
 ## ProcessError
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 ---
 
 ## PROJECT_NAME_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 Comprehensive Input Validation Framework This module provides secure input validation, sanitization, and normalization utilities to prevent injection attacks, validate user inputs, and ensure safe operations throughout the CLI SDK.
 
@@ -11274,21 +11274,21 @@ Comprehensive Input Validation Framework This module provides secure input valid
 ## PromptFlow
 
 **Type**: `class`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ---
 
 ## PromptOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ---
 
 ## PromptsModule
 
 **Type**: `interface`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 Display an introductory message at the start of a CLI flow / export function intro(message: string, options?: { theme?: Partial<PromptTheme> }): void { const theme = options?.theme ? { ...currentTheme, ...options.theme } : currentTheme; clack.intro(theme.style.info(`${theme.prefix} ${message}`)); } /** Display a closing message at the end of a CLI flow / export function outro(message: string, options?: { theme?: Partial<PromptTheme> }): void { const theme = options?.theme ? { ...currentTheme, ...options.theme } : currentTheme; clack.outro(theme.style.success(`${theme.symbol.success} ${message}`)); } /** Display an informational note / export function note(message: string, title?: string): void { const theme = currentTheme; const formattedTitle = title ? theme.style.info(title) : undefined; clack.note(message, formattedTitle); } /** Display a log message with styling / export function log( message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info' ): void { const theme = currentTheme; const symbol = theme.symbol[type] || theme.symbol.info; const style = theme.style[type] || theme.style.info; clack.log.message(style(`${symbol} ${message}`)); } /** Create a spinner for long-running operations / export function spinner(): { start: (message?: string) => void; stop: (message?: string, code?: number) => void; message: (message: string) => void; } { const s = clack.spinner(); return { start: (message?: string) => { const theme = currentTheme; s.start(message ? theme.style.info(message) : 'Loading...'); }, stop: (message?: string, code?: number) => { const theme = currentTheme; if (code === 0 || code === undefined) { s.stop(message ? theme.style.success(`${theme.symbol.success} ${message}`) : 'Done'); } else { s.stop(message ? theme.style.error(`${theme.symbol.error} ${message}`) : 'Failed'); } }, message: (message: string) => { const theme = currentTheme; s.message(theme.style.info(message)); }, }; } /** Prompt for text input / export async function text(message: string, options: PromptOptions = {}): Promise<string> { const theme = options.theme ? { ...currentTheme, ...options.theme } : currentTheme; const result = await clack.text({ message: theme.style.question(message), placeholder: options.placeholder, initialValue: options.initialValue, validate: options.validate, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } if (options.required && !result.trim()) { throw new CLIError('This field is required', { code: 'VALIDATION_ERROR' }); } return result; } /** Prompt for password input / export async function password( message: string, options: Omit<PromptOptions, 'initialValue'> = {} ): Promise<string> { const theme = options.theme ? { ...currentTheme, ...options.theme } : currentTheme; const result = await clack.password({ message: theme.style.question(message), validate: options.validate, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } if (options.required && !result.trim()) { throw new CLIError('Password is required', { code: 'VALIDATION_ERROR' }); } return result; } /** Prompt for confirmation (yes/no) / export async function confirm( message: string, options: ConfirmPromptOptions = {} ): Promise<boolean> { const theme = options.theme ? { ...currentTheme, ...options.theme } : currentTheme; const result = await clack.confirm({ message: theme.style.question(message), active: options.active || 'Yes', inactive: options.inactive || 'No', initialValue: options.initialValue, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } return result; } /** Prompt for single selection from a list / export async function select<T = string>( message: string, options: SelectOption<T>[], promptOptions: SelectPromptOptions<T> = {} ): Promise<T> { const theme = promptOptions.theme ? { ...currentTheme, ...promptOptions.theme } : currentTheme; const selectOptions = options.map((option) => ({ value: option.value, label: option.label || String(option.value), })); const result = await clack.select({ message: theme.style.question(message), options: selectOptions as unknown as Parameters<typeof clack.select>[0]['options'], maxItems: promptOptions.maxItems, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } if (promptOptions.validate) { const validationError = promptOptions.validate(result as T); if (validationError) { throw new CLIError(validationError, { code: 'VALIDATION_ERROR' }); } } return result as T; } /** Prompt for multiple selections from a list / export async function multiselect<T = string>( message: string, options: MultiSelectOption<T>[], promptOptions: MultiSelectPromptOptions<T> = {} ): Promise<T[]> { const theme = promptOptions.theme ? { ...currentTheme, ...promptOptions.theme } : currentTheme; const selectOptions = options.map((option) => ({ value: option.value, label: option.label || String(option.value), })); const result = await clack.multiselect({ message: theme.style.question(message), options: selectOptions as unknown as Parameters<typeof clack.multiselect>[0]['options'], required: promptOptions.required !== false, maxItems: promptOptions.maxItems, }); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } if (promptOptions.required && (!result || (result as T[]).length === 0)) { throw new CLIError('At least one selection is required', { code: 'VALIDATION_ERROR' }); } if (promptOptions.validate) { const validationError = promptOptions.validate(result as T[]); if (validationError) { throw new CLIError(validationError, { code: 'VALIDATION_ERROR' }); } } return result as T[]; } /** Group related prompts together / export async function group<T extends Record<string, unknown>>( prompts: { [K in keyof T]: () => Promise<T[K]>; }, options?: { onCancel?: (prompt: { results: Partial<T> }) => void; } ): Promise<T> { const result = await clack.group(prompts, options); if (clack.isCancel(result)) { throw new CLIError('Operation cancelled by user', { code: 'CANCELLED' }); } return result; } // isCancel is re-exported from clack at the end of this file /** Cancel the current operation / export function cancel(message: string = 'Operation cancelled'): never { clack.cancel(currentTheme.style.error(message)); process.exit(1); } /** Common prompt patterns for CLI setup / export const patterns = { /** Project name validation / projectName: { validate: (value: string): string | undefined => { if (!value.trim()) return 'Project name is required'; if (!/^[a-zA-Z0-9-_]+$/.test(value)) { return 'Project name can only contain letters, numbers, hyphens, and underscores'; } if (value.length > 50) return 'Project name must be 50 characters or less'; return undefined; }, placeholder: 'my-awesome-project', }, /** Package manager selection / packageManager: async (): Promise<'npm' | 'pnpm' | 'yarn' | 'bun'> => { return select('Choose a package manager:', [ { value: 'pnpm' as const, label: 'pnpm (recommended)', hint: 'Fast, disk space efficient' }, { value: 'npm' as const, label: 'npm', hint: 'Node.js default package manager' }, { value: 'yarn' as const, label: 'Yarn', hint: 'Fast, reliable, secure' }, { value: 'bun' as const, label: 'Bun', hint: 'All-in-one JavaScript runtime' }, ]); }, /** Framework selection / framework: async (): Promise<string> => { return select('Choose a framework:', [ { value: 'next', label: 'Next.js', hint: 'React framework with SSR/SSG' }, { value: 'remix', label: 'Remix', hint: 'Full-stack React framework' }, { value: 'astro', label: 'Astro', hint: 'Static site generator' }, { value: 'vite', label: 'Vite', hint: 'Fast build tool' }, { value: 'none', label: 'None', hint: 'Plain setup' }, ]); }, /** TypeScript confirmation / typescript: async (): Promise<boolean> => { return confirm('Use TypeScript?', { initialValue: true }); }, /** Git repository initialization / initGit: async (): Promise<boolean> => { return confirm('Initialize Git repository?', { initialValue: true }); }, /** Environment variable setup / envSetup: async (): Promise<boolean> => { return confirm('Set up environment variables?', { initialValue: false }); }, }; /** Pre-built prompt flows for common CLI scenarios / export const flows = { /** Project initialization flow / projectInit: async (): Promise<{ name: string; packageManager: 'npm' | 'pnpm' | 'yarn' | 'bun'; framework: string; typescript: boolean; initGit: boolean; }> => { intro("Let's create your project"); const result = await group({ name: () => text('Project name:', patterns.projectName), packageManager: patterns.packageManager, framework: patterns.framework, typescript: patterns.typescript, initGit: patterns.initGit, }); outro('Project configuration complete!'); return result; }, /** Environment configuration flow / envConfig: async (): Promise<Record<string, string>> => { intro('Environment Configuration'); const envVars: Record<string, string> = {}; let addMore = true; while (addMore) { const key = await text('Environment variable name:', { placeholder: 'API_KEY', validate: (value) => { if (!value.trim()) return 'Variable name is required'; if (!/^[A-Z_][A-Z0-9_]*$/.test(value)) { return 'Variable name must be uppercase with underscores'; } return undefined; }, }); const value = await password('Environment variable value:'); envVars[key] = value; addMore = await confirm('Add another environment variable?', { initialValue: false }); } outro(`Configured ${Object.keys(envVars).length} environment variable(s)`); return envVars; }, /** Deployment configuration flow / deployConfig: async (): Promise<{ provider: string; region: string; environment: string; }> => { intro('Deployment Configuration'); const result = await group({ provider: () => select('Deployment provider:', [ { value: 'vercel', label: 'Vercel', hint: 'Optimized for Next.js' }, { value: 'netlify', label: 'Netlify', hint: 'Great for static sites' }, { value: 'aws', label: 'AWS', hint: 'Full cloud platform' }, { value: 'railway', label: 'Railway', hint: 'Simple deployments' }, ]), region: () => select('Deployment region:', [ { value: 'us-east-1', label: 'US East (N. Virginia)' }, { value: 'us-west-2', label: 'US West (Oregon)' }, { value: 'eu-west-1', label: 'Europe (Ireland)' }, { value: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' }, ]), environment: () => select('Environment:', [ { value: 'production', label: 'Production' }, { value: 'staging', label: 'Staging' }, { value: 'development', label: 'Development' }, ]), }); outro('Deployment configuration complete!'); return result; }, }; // Export clack utilities for advanced use cases export { clack }; // Note: isCancel is already exported from errors.js, so we don't re-export it here to avoid conflicts /** Prompts module interface for CommandContext
 
@@ -11297,14 +11297,14 @@ Display an introductory message at the start of a CLI flow / export function int
 ## PromptTheme
 
 **Type**: `type`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ---
 
 ## ProtectedOperationResult
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ### Examples
 
@@ -11354,7 +11354,7 @@ Comprehensive memory protection configuration following SOLID principles
 ## quickSanitizeObject
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ```typescript
 export async function quickSanitizeObject(
@@ -11669,7 +11669,7 @@ Advanced object sanitizer with comprehensive security and performance features
 ## readDir
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function readDir(
@@ -11684,7 +11684,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## readFile
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function readFile(
@@ -11700,7 +11700,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## readJSON
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function readJSON<T = JsonValue>(filePath: string): Promise<T>
@@ -11713,7 +11713,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## RecommendedAction
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -11722,7 +11722,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## registerBuiltinCommands
 
 **Type**: `function`  
-**Source**: [`src/core/createCLI.ts`](../../../src/core/createCLI.ts)
+**Source**: [`src/core/createCLI.ts`](../../src/core/createCLI.ts)
 
 ```typescript
 export async function registerBuiltinCommands(
@@ -11738,7 +11738,7 @@ Custom error class for error handler validation failures / export class ErrorHan
 ## registerCommands
 
 **Type**: `function`  
-**Source**: [`src/core/commands/registerCommands.ts`](../../../src/core/commands/registerCommands.ts)
+**Source**: [`src/core/commands/registerCommands.ts`](../../src/core/commands/registerCommands.ts)
 
 ```typescript
 export async function registerCommands(
@@ -11755,7 +11755,7 @@ Validate that a path is safe and within allowed boundaries / function validateCo
 ## RemediationSuggestion
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -11764,7 +11764,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## remove
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function remove(
@@ -11779,7 +11779,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## resetCommandTracking
 
 **Type**: `function`  
-**Source**: [`src/core/commands/registerCommands.ts`](../../../src/core/commands/registerCommands.ts)
+**Source**: [`src/core/commands/registerCommands.ts`](../../src/core/commands/registerCommands.ts)
 
 ```typescript
 export function resetCommandTracking(): void
@@ -11792,7 +11792,7 @@ Validate that a path is safe and within allowed boundaries / function validateCo
 ## RiskFactor
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -11801,7 +11801,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## RiskScoringConfig
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -11810,7 +11810,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## runPackageManagerExeca
 
 **Type**: `function`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 ```typescript
 export async function runPackageManagerExeca(
@@ -11826,7 +11826,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## SandboxConfig
 
 **Type**: `interface`  
-**Source**: [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
+**Source**: [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
 
 Process execution wrapper with async/await support and error handling Provides secure command execution with proper error handling, output capture, streaming, and cancellation support using execa. / import { mkdir } from 'node:fs/promises'; import { tmpdir } from 'node:os'; import { join } from 'node:path'; import type { ExecaError, ExecaReturnValue, ExecaSyncReturnValue, Options } from 'execa'; // Note: execa package needs to be installed as a dependency // npm install execa@^8.0.1 import { execa as execaLib, execaSync as execaSyncLib } from 'execa'; import { PACKAGE_MANAGER_COMMANDS, type PackageManager } from '../foundation/core/constants.js'; import { ProcessError } from '../foundation/errors/errors.js'; import { createLogger } from '../ui/logger.js'; // Create a logger instance for internal execa operations const execaLogger = createLogger({ prefix: 'execa' }); /** Result of a command execution / export interface ExecResult { stdout: string; // Standard output from the command stderr: string; // Standard error output exitCode: number; // Exit code (0 = success, non-zero = error) command: string; // The full command that was executed failed: boolean; // True if the command failed (exitCode !== 0) timedOut: boolean; // True if the command timed out killed: boolean; // True if the command was forcibly terminated duration: number; // Execution time in milliseconds } /** Sandboxing configuration for command execution
 
@@ -11835,7 +11835,7 @@ Process execution wrapper with async/await support and error handling Provides s
 ## SanitizationMetrics
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -12039,7 +12039,7 @@ Sanitization performance metrics
 ## SanitizationReport
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -12256,7 +12256,7 @@ Detailed sanitization report
 ## SanitizationStrategy
 
 **Type**: `type`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -12313,7 +12313,7 @@ Sanitization strategy for different object types
 ## SanitizationTransformation
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -12545,7 +12545,7 @@ Object transformation record
 ## sanitizeCommandArgs
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 ```typescript
 export function sanitizeCommandArgs(
@@ -13395,7 +13395,7 @@ console.log(paths); // ['--input', './src/file.js', '--output', './dist/']
 ## SanitizedErrorContext
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 Enhanced Error Sanitization for Information Disclosure Protection This module provides comprehensive error sanitization to prevent sensitive information disclosure in error messages, stack traces, and error context. Implements Task 1.3.1: Information Disclosure Protection requirements.
 
@@ -13972,7 +13972,7 @@ what was redacted and secure identifiers.
 ## sanitizeErrorContext
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 ```typescript
 export function sanitizeErrorContext(
@@ -14613,7 +14613,7 @@ const result = sanitizeErrorContext(error, context, {
 ## sanitizeErrorForProduction
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 ```typescript
 export function sanitizeErrorForProduction(
@@ -15012,7 +15012,7 @@ console.log(safeError.stack);   // Sanitized stack without sensitive paths
 ## sanitizeErrorMessage
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 ```typescript
 export function sanitizeErrorMessage(
@@ -15284,7 +15284,7 @@ const safe2 = sanitizeErrorMessage(errorMsg, customConfig);
 ## sanitizeErrorObjectWithMemoryProtection
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ```typescript
 export function sanitizeErrorObjectWithMemoryProtection(
@@ -15361,7 +15361,7 @@ Utility function to check if an object exceeds memory limits
 ## sanitizeInput
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 ```typescript
 export function sanitizeInput(input: string): string
@@ -15781,7 +15781,7 @@ const safe = sanitizeInput(dangerous);
 ## sanitizeLogOutput
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/logging/security.ts`](../../../src/core/foundation/logging/security.ts)
+**Source**: [`src/core/foundation/logging/security.ts`](../../src/core/foundation/logging/security.ts)
 
 ```typescript
 export function sanitizeLogOutput(message: string): string
@@ -15794,7 +15794,7 @@ Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.
 ## sanitizeLogOutputAdvanced
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/logging/security.ts`](../../../src/core/foundation/logging/security.ts)
+**Source**: [`src/core/foundation/logging/security.ts`](../../src/core/foundation/logging/security.ts)
 
 ```typescript
 export function sanitizeLogOutputAdvanced(
@@ -15809,7 +15809,7 @@ Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.
 ## sanitizePath
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 ```typescript
 export function sanitizePath(
@@ -16807,7 +16807,7 @@ console.log(normalized); // './components/Button.tsx'
 ## sanitizeStackTrace
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 ```typescript
 export function sanitizeStackTrace(
@@ -17089,7 +17089,7 @@ const safeStack = sanitizeStackTrace(error.stack);
 ## SCRIPT_INJECTION_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code
 
@@ -17098,7 +17098,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## SecureFrameworkInfo
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
+**Source**: [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
 
 Enhanced Framework Detection with Security Validation This module extends the basic framework patterns with comprehensive security validation to prevent attacks through malicious framework configurations.
 
@@ -17107,7 +17107,7 @@ Enhanced Framework Detection with Security Validation This module extends the ba
 ## SecurityAlert
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/security.ts`](../../../src/core/foundation/logging/security.ts)
+**Source**: [`src/core/foundation/logging/security.ts`](../../src/core/foundation/logging/security.ts)
 
 Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.1: Log Injection Protection Enhancement - Comprehensive Security Framework Provides enterprise-grade protection against advanced log injection attacks including: - ANSI escape sequences and terminal manipulation - Control characters and terminal reset commands - Carriage return/line feed injection and log spoofing - Terminal bell, cursor manipulation, and screen clearing - Unicode bidirectional override and homograph attacks - Format string attacks and command execution attempts - Terminal title manipulation and window control - OSC (Operating System Command) sequence attacks - Device control string attacks and screen buffer manipulation - Hyperlink injection and clickjacking attempts
 
@@ -17116,7 +17116,7 @@ Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.
 ## SecurityAnalysis
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
+**Source**: [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
 
 ### Examples
 
@@ -17359,7 +17359,7 @@ Security analysis for sanitized object
 ## SecurityAnalysisResult
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files / export const FILE_SYSTEM_PATTERNS = { // Sensitive system files (Unix) UNIX_SENSITIVE_FILES: /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|proc\/|sys\/|dev\/)/i, // Sensitive system files (Windows) WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i, // Windows reserved device names WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s.]|$)/i, // Fixed: device names at end or followed by space/dot // Windows filename edge cases (trailing dots/spaces that Windows strips) WINDOWS_FILENAME_EDGE_CASES: /[\s.]+$/, // Configuration files CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i, // Backup and temporary files BACKUP_FILES: /\.(bak|backup|tmp|temp|old|orig|save)$/i, // Executable files EXECUTABLE_FILES: /\.(exe|bat|cmd|com|scr|pif|msi|dll|so|dylib)$/i, } as const; /** Network attack patterns Detects attempts to make unauthorized network connections / export const NETWORK_PATTERNS = { // URLs with suspicious protocols SUSPICIOUS_PROTOCOLS: /^(file|ftp|gopher|ldap|dict|telnet|ssh):/i, // Private IP addresses (RFC 1918) PRIVATE_IPS: /\b(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/, // Localhost variations LOCALHOST_VARIANTS: /\b(localhost|127\.|0\.0\.0\.0|::1)/i, // Suspicious ports SUSPICIOUS_PORTS: /:(22|23|53|135|139|445|1433|1521|3306|3389|5432|5900|6379)\b/, } as const; /** Advanced security attack patterns Detects sophisticated attacks and bypass attempts / export const ADVANCED_ATTACK_PATTERNS = { // Homograph attacks using similar-looking characters HOMOGRAPH_CYRILLIC: /[а-яё]/gi, // Cyrillic characters HOMOGRAPH_GREEK: /[α-ωΑ-Ω]/g, // Greek characters HOMOGRAPH_MIXED: /[а-яёα-ωΑ-Ω]/g, // Mixed homograph scripts // Bidirectional text attacks BIDI_OVERRIDE: /[\u202A-\u202E\u2066-\u2069\u061C]/g, // Prototype pollution attempts PROTOTYPE_POLLUTION: /__proto__|constructor\.prototype|\.prototype\.|\.constructor/gi, // Zero-width and invisible characters ZERO_WIDTH_CHARS: /[\u200B-\u200D\uFEFF\u2060]/g, } as const; /** Deserialization attack patterns Detects attempts to inject malicious serialized objects / export const DESERIALIZATION_PATTERNS = { // Java serialization JAVA_SERIALIZED: /\xac\xed\x00\x05|rO0AB/g, JAVA_GADGETS: /\b(Runtime|ProcessBuilder|InvokerTransformer|CommonsCollections|JRMP|LDAP)\b/gi, // .NET serialization DOTNET_BINARY: /\x00\x01\x00\x00\x00\xff\xff\xff\xff/g, DOTNET_GADGETS: /\b(ObjectStateFormatter|LosFormatter|BinaryFormatter|TypeConfuseDelegate)\b/gi, // Python pickle PYTHON_PICKLE: /\x80[\x02-\x04]|c__builtin__|cos\nsystem/g, PYTHON_REDUCE: /__reduce__|__reduce_ex__/g, // PHP serialization PHP_SERIALIZED: /[Oo]:[0-9]+:"/g, PHP_GADGETS: /\b(POP|Monolog|Doctrine|Guzzle|Symfony)\b/gi, // Node.js serialization NODEJS_SERIALIZE: /"__js_function"|"__js_date"|"__js_regexp"/g, // Generic dangerous patterns DANGEROUS_CLASSES: /\b(eval|exec|system|shell_exec|file_get_contents|fopen|include|require)\b/gi, } as const; /** XXE (XML External Entity) attack patterns Detects XML external entity injection attempts / export const XXE_PATTERNS = { // External entity declarations EXTERNAL_ENTITY: /<!ENTITY[^>]+SYSTEM[^>]+>/gi, PUBLIC_ENTITY: /<!ENTITY[^>]+PUBLIC[^>]+>/gi, // Parameter entities PARAMETER_ENTITY: /<!ENTITY\s+%[^>]+>/gi, // Entity references ENTITY_REFERENCE: /&[a-zA-Z_][a-zA-Z0-9_]*;/g, // DOCTYPE declarations with external references DOCTYPE_EXTERNAL: /<!DOCTYPE[^>]+SYSTEM[^>]*>/gi, DOCTYPE_PUBLIC: /<!DOCTYPE[^>]+PUBLIC[^>]*>/gi, // XML inclusion XML_INCLUSION: /<xi:include[^>]*>/gi, // Suspicious protocols in XML XML_PROTOCOLS: /\b(file|ftp|http|https|gopher|jar|netdoc):/gi, // XML bomb patterns (billion laughs) XML_BOMB: /&lol[0-9]*;|&lol[0-9]*lol[0-9]*;/gi, } as const; /** SSTI (Server-Side Template Injection) attack patterns Detects template injection attempts in various template engines / export const SSTI_PATTERNS = { // Jinja2/Django templates JINJA2_INJECTION: /\{\{.*?(\.|_|config|request|session|g).*?\}\}/gi, JINJA2_DANGEROUS: /\{\{.*?(popen|system|eval|exec|import|builtins|globals).*?\}\}/gi, // Twig templates TWIG_INJECTION: /\{\{.*?(\.|_self|app).*?\}\}/gi, TWIG_DANGEROUS: /\{\{.*?(system|exec|shell_exec|passthru).*?\}\}/gi, // Handlebars templates HANDLEBARS_INJECTION: /\{\{.*?(constructor|prototype|process|require).*?\}\}/gi, // FreeMarker templates FREEMARKER_INJECTION: /<#assign|<#import|<#include|\$\{.*?new.*?\}/gi, FREEMARKER_DANGEROUS: /\$\{.*?(freemarker\.template\.utility\.Execute|ObjectConstructor).*?\}/gi, // Velocity templates VELOCITY_INJECTION: /#set\s*\(\s*\$.*?=|#evaluate|\$\{.*?Class.*?\}/gi, // Smarty templates SMARTY_INJECTION: /\{php\}|\{\/php\}|\{literal\}|\{\/literal\}/gi, // Generic template patterns TEMPLATE_EXECUTION: /\{\{.*?(eval|exec|system|import|require|constructor).*?\}\}/gi, TEMPLATE_OBJECT_ACCESS: /\{\{.*?(__.*__|prototype|constructor|process).*?\}\}/gi, } as const; /** LDAP injection attack patterns Detects LDAP injection attempts in search filters / export const LDAP_PATTERNS = { // LDAP filter injection LDAP_FILTER_INJECTION: /[()&|!*\\]/g, // LDAP special characters that need escaping LDAP_SPECIAL_CHARS: /[\\*()\\0]/g, // LDAP search operators LDAP_OPERATORS: /[&|!]|\*.*\*/g, // LDAP attribute injection LDAP_ATTRIBUTE_INJECTION: /[=<>~]/g, // Common LDAP attributes used in attacks LDAP_DANGEROUS_ATTRIBUTES: /\b(objectClass|cn|uid|userPassword|memberOf|dn)\s*[=]/gi, // LDAP DN injection LDAP_DN_INJECTION: /[,+=\\#<>;]/g, } as const; /** XPath injection attack patterns Detects XPath injection attempts in XML queries / export const XPATH_PATTERNS = { // XPath injection operators XPATH_OPERATORS: /['"]\s*or\s*['"]/gi, XPATH_AND_OR: /\b(and|or)\s+['"]/gi, // XPath functions that can be dangerous XPATH_FUNCTIONS: /\b(substring|contains|starts-with|string-length|position|last|count)\s*\(/gi, // XPath axes that can be used for traversal XPATH_AXES: /\b(parent|ancestor|descendant|following|preceding|child|attribute)::/gi, // XPath comment injection XPATH_COMMENTS: /\(:.*?:\)/g, // Boolean-based XPath injection XPATH_BOOLEAN: /['"]\s*(=|!=)\s*['"]/gi, XPATH_TRUE_FALSE: /\b(true|false)\s*\(\s*\)/gi, // XPath string manipulation for injection XPATH_CONCAT: /concat\s*\(/gi, XPATH_NORMALIZE: /normalize-space\s*\(/gi, } as const; /** Expression Language (EL) injection patterns Detects EL injection in Java/JSP environments / export const EXPRESSION_LANGUAGE_PATTERNS = { // JSP EL injection JSP_EL: /\$\{.*?\}/g, JSP_EL_DANGEROUS: /\$\{.*?(Runtime|ProcessBuilder|System|Class|Method).*?\}/gi, // Spring EL injection SPRING_EL: /#\{.*?\}/g, SPRING_EL_DANGEROUS: /#\{.*?(T\(|new |Runtime|ProcessBuilder|System\.getProperty).*?\}/gi, // OGNL (Struts) injection OGNL_INJECTION: /%\{.*?\}|@.*?@/g, OGNL_DANGEROUS: /%\{.*?(Runtime|ProcessBuilder|System|@java\.lang).*?\}/gi, // MVEL injection MVEL_INJECTION: /\$\{.*?\}|@\{.*?\}/g, // Unified EL dangerous patterns EL_EXECUTION: /\$\{.*?(Runtime\.getRuntime\(\)|ProcessBuilder|System\.exit).*?\}/gi, EL_REFLECTION: /\$\{.*?(Class\.forName|getClass\(\)|getDeclaredMethod).*?\}/gi, } as const; /** CSV injection attack patterns Detects formula injection in CSV/spreadsheet exports / export const CSV_INJECTION_PATTERNS = { // Formula starters FORMULA_STARTERS: /^[\s]*[=+\-@]/, // Dangerous Excel/Calc functions DANGEROUS_FUNCTIONS: /\b(HYPERLINK|IMPORTXML|WEBSERVICE|INDIRECT|OFFSET)\s*\(/gi, // System command execution in formulas SYSTEM_COMMANDS: /\b(cmd|powershell|bash|sh|calc|notepad)\b/gi, // DDE (Dynamic Data Exchange) attacks DDE_INJECTION: /=.*?\|.*?!/gi, DDE_COMMANDS: /=cmd\|.*?!|=powershell\|.*?!/gi, // CSV field injection CSV_FIELD_INJECTION: /[",;\r\n]/g, // Hyperlink injection HYPERLINK_INJECTION: /=HYPERLINK\s*\(/gi, } as const; /** Input validation patterns Common patterns for validating user inputs / export const INPUT_VALIDATION_PATTERNS = { // Safe project names SAFE_PROJECT_NAME: /^[a-zA-Z0-9\-_.àáâãäåæçèéêëìíîïñòóôõöøùúûüýÿÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝŸ]+$/, // Safe file names SAFE_FILE_NAME: /^[a-zA-Z0-9\-_.\s]+$/, // Safe package manager names SAFE_PACKAGE_MANAGER: /^(npm|pnpm|yarn|bun)$/, // Email validation (basic) EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // URL validation (basic) URL: /^https?:\/\/[^\s]+$/, } as const; /** Represents a single security violation detected in input analysis
 
@@ -17368,7 +17368,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## SecurityLogger
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/security.ts`](../../../src/core/foundation/logging/security.ts)
+**Source**: [`src/core/foundation/logging/security.ts`](../../src/core/foundation/logging/security.ts)
 
 Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.1: Log Injection Protection Enhancement - Comprehensive Security Framework Provides enterprise-grade protection against advanced log injection attacks including: - ANSI escape sequences and terminal manipulation - Control characters and terminal reset commands - Carriage return/line feed injection and log spoofing - Terminal bell, cursor manipulation, and screen clearing - Unicode bidirectional override and homograph attacks - Format string attacks and command execution attempts - Terminal title manipulation and window control - OSC (Operating System Command) sequence attacks - Device control string attacks and screen buffer manipulation - Hyperlink injection and clickjacking attempts
 
@@ -17377,7 +17377,7 @@ Enhanced Log Injection Protection and Terminal Manipulation Prevention Task 1.4.
 ## SecurityViolation
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files / export const FILE_SYSTEM_PATTERNS = { // Sensitive system files (Unix) UNIX_SENSITIVE_FILES: /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|proc\/|sys\/|dev\/)/i, // Sensitive system files (Windows) WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i, // Windows reserved device names WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s.]|$)/i, // Fixed: device names at end or followed by space/dot // Windows filename edge cases (trailing dots/spaces that Windows strips) WINDOWS_FILENAME_EDGE_CASES: /[\s.]+$/, // Configuration files CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i, // Backup and temporary files BACKUP_FILES: /\.(bak|backup|tmp|temp|old|orig|save)$/i, // Executable files EXECUTABLE_FILES: /\.(exe|bat|cmd|com|scr|pif|msi|dll|so|dylib)$/i, } as const; /** Network attack patterns Detects attempts to make unauthorized network connections / export const NETWORK_PATTERNS = { // URLs with suspicious protocols SUSPICIOUS_PROTOCOLS: /^(file|ftp|gopher|ldap|dict|telnet|ssh):/i, // Private IP addresses (RFC 1918) PRIVATE_IPS: /\b(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/, // Localhost variations LOCALHOST_VARIANTS: /\b(localhost|127\.|0\.0\.0\.0|::1)/i, // Suspicious ports SUSPICIOUS_PORTS: /:(22|23|53|135|139|445|1433|1521|3306|3389|5432|5900|6379)\b/, } as const; /** Advanced security attack patterns Detects sophisticated attacks and bypass attempts / export const ADVANCED_ATTACK_PATTERNS = { // Homograph attacks using similar-looking characters HOMOGRAPH_CYRILLIC: /[а-яё]/gi, // Cyrillic characters HOMOGRAPH_GREEK: /[α-ωΑ-Ω]/g, // Greek characters HOMOGRAPH_MIXED: /[а-яёα-ωΑ-Ω]/g, // Mixed homograph scripts // Bidirectional text attacks BIDI_OVERRIDE: /[\u202A-\u202E\u2066-\u2069\u061C]/g, // Prototype pollution attempts PROTOTYPE_POLLUTION: /__proto__|constructor\.prototype|\.prototype\.|\.constructor/gi, // Zero-width and invisible characters ZERO_WIDTH_CHARS: /[\u200B-\u200D\uFEFF\u2060]/g, } as const; /** Deserialization attack patterns Detects attempts to inject malicious serialized objects / export const DESERIALIZATION_PATTERNS = { // Java serialization JAVA_SERIALIZED: /\xac\xed\x00\x05|rO0AB/g, JAVA_GADGETS: /\b(Runtime|ProcessBuilder|InvokerTransformer|CommonsCollections|JRMP|LDAP)\b/gi, // .NET serialization DOTNET_BINARY: /\x00\x01\x00\x00\x00\xff\xff\xff\xff/g, DOTNET_GADGETS: /\b(ObjectStateFormatter|LosFormatter|BinaryFormatter|TypeConfuseDelegate)\b/gi, // Python pickle PYTHON_PICKLE: /\x80[\x02-\x04]|c__builtin__|cos\nsystem/g, PYTHON_REDUCE: /__reduce__|__reduce_ex__/g, // PHP serialization PHP_SERIALIZED: /[Oo]:[0-9]+:"/g, PHP_GADGETS: /\b(POP|Monolog|Doctrine|Guzzle|Symfony)\b/gi, // Node.js serialization NODEJS_SERIALIZE: /"__js_function"|"__js_date"|"__js_regexp"/g, // Generic dangerous patterns DANGEROUS_CLASSES: /\b(eval|exec|system|shell_exec|file_get_contents|fopen|include|require)\b/gi, } as const; /** XXE (XML External Entity) attack patterns Detects XML external entity injection attempts / export const XXE_PATTERNS = { // External entity declarations EXTERNAL_ENTITY: /<!ENTITY[^>]+SYSTEM[^>]+>/gi, PUBLIC_ENTITY: /<!ENTITY[^>]+PUBLIC[^>]+>/gi, // Parameter entities PARAMETER_ENTITY: /<!ENTITY\s+%[^>]+>/gi, // Entity references ENTITY_REFERENCE: /&[a-zA-Z_][a-zA-Z0-9_]*;/g, // DOCTYPE declarations with external references DOCTYPE_EXTERNAL: /<!DOCTYPE[^>]+SYSTEM[^>]*>/gi, DOCTYPE_PUBLIC: /<!DOCTYPE[^>]+PUBLIC[^>]*>/gi, // XML inclusion XML_INCLUSION: /<xi:include[^>]*>/gi, // Suspicious protocols in XML XML_PROTOCOLS: /\b(file|ftp|http|https|gopher|jar|netdoc):/gi, // XML bomb patterns (billion laughs) XML_BOMB: /&lol[0-9]*;|&lol[0-9]*lol[0-9]*;/gi, } as const; /** SSTI (Server-Side Template Injection) attack patterns Detects template injection attempts in various template engines / export const SSTI_PATTERNS = { // Jinja2/Django templates JINJA2_INJECTION: /\{\{.*?(\.|_|config|request|session|g).*?\}\}/gi, JINJA2_DANGEROUS: /\{\{.*?(popen|system|eval|exec|import|builtins|globals).*?\}\}/gi, // Twig templates TWIG_INJECTION: /\{\{.*?(\.|_self|app).*?\}\}/gi, TWIG_DANGEROUS: /\{\{.*?(system|exec|shell_exec|passthru).*?\}\}/gi, // Handlebars templates HANDLEBARS_INJECTION: /\{\{.*?(constructor|prototype|process|require).*?\}\}/gi, // FreeMarker templates FREEMARKER_INJECTION: /<#assign|<#import|<#include|\$\{.*?new.*?\}/gi, FREEMARKER_DANGEROUS: /\$\{.*?(freemarker\.template\.utility\.Execute|ObjectConstructor).*?\}/gi, // Velocity templates VELOCITY_INJECTION: /#set\s*\(\s*\$.*?=|#evaluate|\$\{.*?Class.*?\}/gi, // Smarty templates SMARTY_INJECTION: /\{php\}|\{\/php\}|\{literal\}|\{\/literal\}/gi, // Generic template patterns TEMPLATE_EXECUTION: /\{\{.*?(eval|exec|system|import|require|constructor).*?\}\}/gi, TEMPLATE_OBJECT_ACCESS: /\{\{.*?(__.*__|prototype|constructor|process).*?\}\}/gi, } as const; /** LDAP injection attack patterns Detects LDAP injection attempts in search filters / export const LDAP_PATTERNS = { // LDAP filter injection LDAP_FILTER_INJECTION: /[()&|!*\\]/g, // LDAP special characters that need escaping LDAP_SPECIAL_CHARS: /[\\*()\\0]/g, // LDAP search operators LDAP_OPERATORS: /[&|!]|\*.*\*/g, // LDAP attribute injection LDAP_ATTRIBUTE_INJECTION: /[=<>~]/g, // Common LDAP attributes used in attacks LDAP_DANGEROUS_ATTRIBUTES: /\b(objectClass|cn|uid|userPassword|memberOf|dn)\s*[=]/gi, // LDAP DN injection LDAP_DN_INJECTION: /[,+=\\#<>;]/g, } as const; /** XPath injection attack patterns Detects XPath injection attempts in XML queries / export const XPATH_PATTERNS = { // XPath injection operators XPATH_OPERATORS: /['"]\s*or\s*['"]/gi, XPATH_AND_OR: /\b(and|or)\s+['"]/gi, // XPath functions that can be dangerous XPATH_FUNCTIONS: /\b(substring|contains|starts-with|string-length|position|last|count)\s*\(/gi, // XPath axes that can be used for traversal XPATH_AXES: /\b(parent|ancestor|descendant|following|preceding|child|attribute)::/gi, // XPath comment injection XPATH_COMMENTS: /\(:.*?:\)/g, // Boolean-based XPath injection XPATH_BOOLEAN: /['"]\s*(=|!=)\s*['"]/gi, XPATH_TRUE_FALSE: /\b(true|false)\s*\(\s*\)/gi, // XPath string manipulation for injection XPATH_CONCAT: /concat\s*\(/gi, XPATH_NORMALIZE: /normalize-space\s*\(/gi, } as const; /** Expression Language (EL) injection patterns Detects EL injection in Java/JSP environments / export const EXPRESSION_LANGUAGE_PATTERNS = { // JSP EL injection JSP_EL: /\$\{.*?\}/g, JSP_EL_DANGEROUS: /\$\{.*?(Runtime|ProcessBuilder|System|Class|Method).*?\}/gi, // Spring EL injection SPRING_EL: /#\{.*?\}/g, SPRING_EL_DANGEROUS: /#\{.*?(T\(|new |Runtime|ProcessBuilder|System\.getProperty).*?\}/gi, // OGNL (Struts) injection OGNL_INJECTION: /%\{.*?\}|@.*?@/g, OGNL_DANGEROUS: /%\{.*?(Runtime|ProcessBuilder|System|@java\.lang).*?\}/gi, // MVEL injection MVEL_INJECTION: /\$\{.*?\}|@\{.*?\}/g, // Unified EL dangerous patterns EL_EXECUTION: /\$\{.*?(Runtime\.getRuntime\(\)|ProcessBuilder|System\.exit).*?\}/gi, EL_REFLECTION: /\$\{.*?(Class\.forName|getClass\(\)|getDeclaredMethod).*?\}/gi, } as const; /** CSV injection attack patterns Detects formula injection in CSV/spreadsheet exports / export const CSV_INJECTION_PATTERNS = { // Formula starters FORMULA_STARTERS: /^[\s]*[=+\-@]/, // Dangerous Excel/Calc functions DANGEROUS_FUNCTIONS: /\b(HYPERLINK|IMPORTXML|WEBSERVICE|INDIRECT|OFFSET)\s*\(/gi, // System command execution in formulas SYSTEM_COMMANDS: /\b(cmd|powershell|bash|sh|calc|notepad)\b/gi, // DDE (Dynamic Data Exchange) attacks DDE_INJECTION: /=.*?\|.*?!/gi, DDE_COMMANDS: /=cmd\|.*?!|=powershell\|.*?!/gi, // CSV field injection CSV_FIELD_INJECTION: /[",;\r\n]/g, // Hyperlink injection HYPERLINK_INJECTION: /=HYPERLINK\s*\(/gi, } as const; /** Input validation patterns Common patterns for validating user inputs / export const INPUT_VALIDATION_PATTERNS = { // Safe project names SAFE_PROJECT_NAME: /^[a-zA-Z0-9\-_.àáâãäåæçèéêëìíîïñòóôõöøùúûüýÿÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÝŸ]+$/, // Safe file names SAFE_FILE_NAME: /^[a-zA-Z0-9\-_.\s]+$/, // Safe package manager names SAFE_PACKAGE_MANAGER: /^(npm|pnpm|yarn|bun)$/, // Email validation (basic) EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, // URL validation (basic) URL: /^https?:\/\/[^\s]+$/, } as const; /** Represents a single security violation detected in input analysis
 
@@ -17386,7 +17386,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## SecurityViolationDetector
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -17395,7 +17395,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## select
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export async function select<T = string>(
@@ -17411,21 +17411,21 @@ Display an introductory message at the start of a CLI flow / export function int
 ## SelectOption
 
 **Type**: `interface`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ---
 
 ## SelectPromptOptions
 
 **Type**: `interface`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ---
 
 ## SensitiveContextDetection
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 Enhanced Error Sanitization for Information Disclosure Protection This module provides comprehensive error sanitization to prevent sensitive information disclosure in error messages, stack traces, and error context. Implements Task 1.3.1: Information Disclosure Protection requirements.
 
@@ -18024,7 +18024,7 @@ Information about detected sensitive content in error context
 ## setTheme
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function setTheme(theme: Partial<PromptTheme>): void
@@ -18035,7 +18035,7 @@ export function setTheme(theme: Partial<PromptTheme>): void
 ## setupGlobalErrorHandlers
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 ```typescript
 export function setupGlobalErrorHandlers(
@@ -18049,7 +18049,7 @@ Error handling and cancellation utilities for the CLI SDK Provides graceful erro
 ## SHELL_METACHARACTERS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 Comprehensive Input Validation Framework This module provides secure input validation, sanitization, and normalization utilities to prevent injection attacks, validate user inputs, and ensure safe operations throughout the CLI SDK.
 
@@ -18073,7 +18073,7 @@ const clean = sanitizeCommandArgs(['build', 'file;rm -rf /']);
 ## shouldShowDetailedErrors
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
+**Source**: [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
 
 ```typescript
 export function shouldShowDetailedErrors(): boolean
@@ -18480,7 +18480,7 @@ if (shouldShowDetailedErrors()) {
 ## spinner
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export function spinner():
@@ -18493,7 +18493,7 @@ Display an introductory message at the start of a CLI flow / export function int
 ## SSTI_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files / export const FILE_SYSTEM_PATTERNS = { // Sensitive system files (Unix) UNIX_SENSITIVE_FILES: /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|proc\/|sys\/|dev\/)/i, // Sensitive system files (Windows) WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i, // Windows reserved device names WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s.]|$)/i, // Fixed: device names at end or followed by space/dot // Windows filename edge cases (trailing dots/spaces that Windows strips) WINDOWS_FILENAME_EDGE_CASES: /[\s.]+$/, // Configuration files CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i, // Backup and temporary files BACKUP_FILES: /\.(bak|backup|tmp|temp|old|orig|save)$/i, // Executable files EXECUTABLE_FILES: /\.(exe|bat|cmd|com|scr|pif|msi|dll|so|dylib)$/i, } as const; /** Network attack patterns Detects attempts to make unauthorized network connections / export const NETWORK_PATTERNS = { // URLs with suspicious protocols SUSPICIOUS_PROTOCOLS: /^(file|ftp|gopher|ldap|dict|telnet|ssh):/i, // Private IP addresses (RFC 1918) PRIVATE_IPS: /\b(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/, // Localhost variations LOCALHOST_VARIANTS: /\b(localhost|127\.|0\.0\.0\.0|::1)/i, // Suspicious ports SUSPICIOUS_PORTS: /:(22|23|53|135|139|445|1433|1521|3306|3389|5432|5900|6379)\b/, } as const; /** Advanced security attack patterns Detects sophisticated attacks and bypass attempts / export const ADVANCED_ATTACK_PATTERNS = { // Homograph attacks using similar-looking characters HOMOGRAPH_CYRILLIC: /[а-яё]/gi, // Cyrillic characters HOMOGRAPH_GREEK: /[α-ωΑ-Ω]/g, // Greek characters HOMOGRAPH_MIXED: /[а-яёα-ωΑ-Ω]/g, // Mixed homograph scripts // Bidirectional text attacks BIDI_OVERRIDE: /[\u202A-\u202E\u2066-\u2069\u061C]/g, // Prototype pollution attempts PROTOTYPE_POLLUTION: /__proto__|constructor\.prototype|\.prototype\.|\.constructor/gi, // Zero-width and invisible characters ZERO_WIDTH_CHARS: /[\u200B-\u200D\uFEFF\u2060]/g, } as const; /** Deserialization attack patterns Detects attempts to inject malicious serialized objects / export const DESERIALIZATION_PATTERNS = { // Java serialization JAVA_SERIALIZED: /\xac\xed\x00\x05|rO0AB/g, JAVA_GADGETS: /\b(Runtime|ProcessBuilder|InvokerTransformer|CommonsCollections|JRMP|LDAP)\b/gi, // .NET serialization DOTNET_BINARY: /\x00\x01\x00\x00\x00\xff\xff\xff\xff/g, DOTNET_GADGETS: /\b(ObjectStateFormatter|LosFormatter|BinaryFormatter|TypeConfuseDelegate)\b/gi, // Python pickle PYTHON_PICKLE: /\x80[\x02-\x04]|c__builtin__|cos\nsystem/g, PYTHON_REDUCE: /__reduce__|__reduce_ex__/g, // PHP serialization PHP_SERIALIZED: /[Oo]:[0-9]+:"/g, PHP_GADGETS: /\b(POP|Monolog|Doctrine|Guzzle|Symfony)\b/gi, // Node.js serialization NODEJS_SERIALIZE: /"__js_function"|"__js_date"|"__js_regexp"/g, // Generic dangerous patterns DANGEROUS_CLASSES: /\b(eval|exec|system|shell_exec|file_get_contents|fopen|include|require)\b/gi, } as const; /** XXE (XML External Entity) attack patterns Detects XML external entity injection attempts / export const XXE_PATTERNS = { // External entity declarations EXTERNAL_ENTITY: /<!ENTITY[^>]+SYSTEM[^>]+>/gi, PUBLIC_ENTITY: /<!ENTITY[^>]+PUBLIC[^>]+>/gi, // Parameter entities PARAMETER_ENTITY: /<!ENTITY\s+%[^>]+>/gi, // Entity references ENTITY_REFERENCE: /&[a-zA-Z_][a-zA-Z0-9_]*;/g, // DOCTYPE declarations with external references DOCTYPE_EXTERNAL: /<!DOCTYPE[^>]+SYSTEM[^>]*>/gi, DOCTYPE_PUBLIC: /<!DOCTYPE[^>]+PUBLIC[^>]*>/gi, // XML inclusion XML_INCLUSION: /<xi:include[^>]*>/gi, // Suspicious protocols in XML XML_PROTOCOLS: /\b(file|ftp|http|https|gopher|jar|netdoc):/gi, // XML bomb patterns (billion laughs) XML_BOMB: /&lol[0-9]*;|&lol[0-9]*lol[0-9]*;/gi, } as const; /** SSTI (Server-Side Template Injection) attack patterns Detects template injection attempts in various template engines
 
@@ -18502,7 +18502,7 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## stat
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function stat(filePath: string): Promise<FileStats>
@@ -18515,7 +18515,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## StructuredError
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/structured.ts`](../../../src/core/foundation/logging/structured.ts)
+**Source**: [`src/core/foundation/logging/structured.ts`](../../src/core/foundation/logging/structured.ts)
 
 Task 1.4.2: Structured Logging with Security Comprehensive structured logging system with automatic sanitization and security features. Builds on Task 1.4.1 (Log Injection Protection) to provide enterprise-grade structured logging. Features: - Structured log entries with consistent formatting - Automatic sanitization of log data using existing security framework - Security metadata and violation tracking - Performance-optimized serialization - Multiple output formats (JSON, text, structured) - Contextual logging with security-aware field handling - Integration with existing Logger and log injection protection
 
@@ -18524,7 +18524,7 @@ Task 1.4.2: Structured Logging with Security Comprehensive structured logging sy
 ## structuredLog
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/logging/structured.ts`](../../../src/core/foundation/logging/structured.ts)
+**Source**: [`src/core/foundation/logging/structured.ts`](../../src/core/foundation/logging/structured.ts)
 
 Task 1.4.2: Structured Logging with Security Comprehensive structured logging system with automatic sanitization and security features. Builds on Task 1.4.1 (Log Injection Protection) to provide enterprise-grade structured logging. Features: - Structured log entries with consistent formatting - Automatic sanitization of log data using existing security framework - Security metadata and violation tracking - Performance-optimized serialization - Multiple output formats (JSON, text, structured) - Contextual logging with security-aware field handling - Integration with existing Logger and log injection protection
 
@@ -18533,7 +18533,7 @@ Task 1.4.2: Structured Logging with Security Comprehensive structured logging sy
 ## StructuredLogEntry
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/structured.ts`](../../../src/core/foundation/logging/structured.ts)
+**Source**: [`src/core/foundation/logging/structured.ts`](../../src/core/foundation/logging/structured.ts)
 
 Task 1.4.2: Structured Logging with Security Comprehensive structured logging system with automatic sanitization and security features. Builds on Task 1.4.1 (Log Injection Protection) to provide enterprise-grade structured logging. Features: - Structured log entries with consistent formatting - Automatic sanitization of log data using existing security framework - Security metadata and violation tracking - Performance-optimized serialization - Multiple output formats (JSON, text, structured) - Contextual logging with security-aware field handling - Integration with existing Logger and log injection protection
 
@@ -18542,7 +18542,7 @@ Task 1.4.2: Structured Logging with Security Comprehensive structured logging sy
 ## StructuredLogger
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/logging/structured.ts`](../../../src/core/foundation/logging/structured.ts)
+**Source**: [`src/core/foundation/logging/structured.ts`](../../src/core/foundation/logging/structured.ts)
 
 Task 1.4.2: Structured Logging with Security Comprehensive structured logging system with automatic sanitization and security features. Builds on Task 1.4.1 (Log Injection Protection) to provide enterprise-grade structured logging. Features: - Structured log entries with consistent formatting - Automatic sanitization of log data using existing security framework - Security metadata and violation tracking - Performance-optimized serialization - Multiple output formats (JSON, text, structured) - Contextual logging with security-aware field handling - Integration with existing Logger and log injection protection
 
@@ -18551,7 +18551,7 @@ Task 1.4.2: Structured Logging with Security Comprehensive structured logging sy
 ## StructuredLoggingConfig
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/logging/structured.ts`](../../../src/core/foundation/logging/structured.ts)
+**Source**: [`src/core/foundation/logging/structured.ts`](../../src/core/foundation/logging/structured.ts)
 
 Task 1.4.2: Structured Logging with Security Comprehensive structured logging system with automatic sanitization and security features. Builds on Task 1.4.1 (Log Injection Protection) to provide enterprise-grade structured logging. Features: - Structured log entries with consistent formatting - Automatic sanitization of log data using existing security framework - Security metadata and violation tracking - Performance-optimized serialization - Multiple output formats (JSON, text, structured) - Contextual logging with security-aware field handling - Integration with existing Logger and log injection protection
 
@@ -18560,7 +18560,7 @@ Task 1.4.2: Structured Logging with Security Comprehensive structured logging sy
 ## SUPPORTED_PACKAGE_MANAGERS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 Core constants and configuration for the CLI SDK These constants define the supported technologies, file patterns, and framework detection logic used throughout the SDK. / import { homedir } from 'node:os'; import { join } from 'node:path'; /** Supported package managers for project detection and commands
 
@@ -18569,7 +18569,7 @@ Core constants and configuration for the CLI SDK These constants define the supp
 ## SUSPICIOUS_DEPENDENCY_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
+**Source**: [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
 
 Enhanced Framework Detection with Security Validation This module extends the basic framework patterns with comprehensive security validation to prevent attacks through malicious framework configurations.
 
@@ -18722,7 +18722,7 @@ console.log(isLegit); // false
 ## TELEMETRY_CONFIG
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 Core constants and configuration for the CLI SDK These constants define the supported technologies, file patterns, and framework detection logic used throughout the SDK. / import { homedir } from 'node:os'; import { join } from 'node:path'; /** Supported package managers for project detection and commands / export const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const; export type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]; /** Default file and directory patterns to ignore during operations / export const DEFAULT_IGNORE_PATTERNS = [ // Version control '.git', '.gitignore', // Dependencies 'node_modules', '.pnpm-store', '.yarn', // Build outputs 'dist', 'build', '.next', '.nuxt', '.output', '.vercel', '.netlify', // Cache and temp files '.cache', '.temp', '.tmp', 'coverage', // IDE and editor files '.vscode', '.idea', '*.log', '.DS_Store', 'Thumbs.db', // Environment and config '.env', '.env.local', '.env.*.local', ] as const; /** Prefix for temporary directories created by the SDK / export const TEMP_DIR_PREFIX = 'lord-commander-'; /** Paths where CLI configuration files can be found / export const CLI_CONFIG_PATHS = [ 'lord.config.js', 'lord.config.ts', join(homedir(), '.lord', 'config.json'), ] as const; /** Framework detection patterns for smart project detection Each framework has file indicators and optional package.json dependencies / export const FRAMEWORK_PATTERNS = { 'next.js': { files: ['next.config.js', 'next.config.ts', 'next.config.mjs'], dependencies: ['next'], devDependencies: ['@next/env'], directories: ['pages', 'app'], }, remix: { files: ['remix.config.js', 'remix.config.ts'], dependencies: ['@remix-run/node', '@remix-run/react', '@remix-run/serve'], directories: ['app/routes'], }, astro: { files: ['astro.config.js', 'astro.config.ts', 'astro.config.mjs'], dependencies: ['astro'], directories: ['src/pages'], }, vite: { files: ['vite.config.js', 'vite.config.ts'], dependencies: ['vite'], devDependencies: ['vite'], }, nuxt: { files: ['nuxt.config.js', 'nuxt.config.ts'], dependencies: ['nuxt', 'nuxt3'], directories: ['pages', 'components'], }, sveltekit: { files: ['svelte.config.js'], dependencies: ['@sveltejs/kit'], directories: ['src/routes'], }, express: { files: ['server.js', 'app.js', 'index.js'], dependencies: ['express'], }, fastify: { dependencies: ['fastify'], }, react: { dependencies: ['react'], devDependencies: ['@types/react'], }, vue: { dependencies: ['vue'], devDependencies: ['@vue/cli-service'], }, angular: { files: ['angular.json'], dependencies: ['@angular/core'], devDependencies: ['@angular/cli'], }, } as const; export type Framework = keyof typeof FRAMEWORK_PATTERNS; /** Common file extensions for different file types / export const FILE_EXTENSIONS = { typescript: ['.ts', '.tsx'], javascript: ['.js', '.jsx', '.mjs'], config: ['.json', '.yaml', '.yml', '.toml'], template: ['.hbs', '.ejs', '.mustache'], style: ['.css', '.scss', '.sass', '.less'], } as const; /** Default ports commonly used by development servers / export const DEFAULT_PORTS = { next: 3000, remix: 3000, astro: 3000, vite: 5173, nuxt: 3000, sveltekit: 5173, express: 3000, fastify: 3000, } as const; /** Package manager specific commands and configurations / export const PACKAGE_MANAGER_COMMANDS = { npm: { install: 'npm install', installDev: 'npm install --save-dev', run: 'npm run', create: 'npm create', lockFile: 'package-lock.json', }, pnpm: { install: 'pnpm install', installDev: 'pnpm install --save-dev', run: 'pnpm run', create: 'pnpm create', lockFile: 'pnpm-lock.yaml', }, yarn: { install: 'yarn install', installDev: 'yarn add --dev', run: 'yarn run', create: 'yarn create', lockFile: 'yarn.lock', }, bun: { install: 'bun install', installDev: 'bun add --dev', run: 'bun run', create: 'bun create', lockFile: 'bun.lockb', }, } as const; /** Git configuration and patterns / export const GIT_PATTERNS = { defaultBranch: 'main', commonBranches: ['main', 'master', 'develop', 'dev'], ignorePatterns: DEFAULT_IGNORE_PATTERNS, defaultCommitMessage: '✨ Initial commit from Lord Commander', } as const; /** Telemetry and analytics configuration
 
@@ -18731,7 +18731,7 @@ Core constants and configuration for the CLI SDK These constants define the supp
 ## TEMP_DIR_PREFIX
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
+**Source**: [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
 
 Core constants and configuration for the CLI SDK These constants define the supported technologies, file patterns, and framework detection logic used throughout the SDK. / import { homedir } from 'node:os'; import { join } from 'node:path'; /** Supported package managers for project detection and commands / export const SUPPORTED_PACKAGE_MANAGERS = ['npm', 'pnpm', 'yarn', 'bun'] as const; export type PackageManager = (typeof SUPPORTED_PACKAGE_MANAGERS)[number]; /** Default file and directory patterns to ignore during operations / export const DEFAULT_IGNORE_PATTERNS = [ // Version control '.git', '.gitignore', // Dependencies 'node_modules', '.pnpm-store', '.yarn', // Build outputs 'dist', 'build', '.next', '.nuxt', '.output', '.vercel', '.netlify', // Cache and temp files '.cache', '.temp', '.tmp', 'coverage', // IDE and editor files '.vscode', '.idea', '*.log', '.DS_Store', 'Thumbs.db', // Environment and config '.env', '.env.local', '.env.*.local', ] as const; /** Prefix for temporary directories created by the SDK
 
@@ -18740,7 +18740,7 @@ Core constants and configuration for the CLI SDK These constants define the supp
 ## text
 
 **Type**: `function`  
-**Source**: [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
+**Source**: [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
 
 ```typescript
 export async function text(message: string, options: PromptOptions =
@@ -18753,7 +18753,7 @@ Display an introductory message at the start of a CLI flow / export function int
 ## ThreatCategory
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -18762,7 +18762,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## truncateForMemory
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ```typescript
 export function truncateForMemory<T>(obj: T, maxSize = DEFAULT_MEMORY_CONFIG.maxObjectSize): T
@@ -18836,7 +18836,7 @@ Utility function to check if an object exceeds memory limits
 ## truncateMessageWithMemoryProtection
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
+**Source**: [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
 
 ```typescript
 export function truncateMessageWithMemoryProtection(
@@ -18913,7 +18913,7 @@ Utility function to check if an object exceeds memory limits
 ## TRUSTED_FRAMEWORK_DEPENDENCIES
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
+**Source**: [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
 
 Enhanced Framework Detection with Security Validation This module extends the basic framework patterns with comprehensive security validation to prevent attacks through malicious framework configurations.
 
@@ -19051,7 +19051,7 @@ Immutable Set of trusted framework dependencies
 ## TRUSTED_PACKAGE_MANAGERS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 Comprehensive Input Validation Framework This module provides secure input validation, sanitization, and normalization utilities to prevent injection attacks, validate user inputs, and ensure safe operations throughout the CLI SDK.
 
@@ -19074,7 +19074,7 @@ const trusted = Array.from(TRUSTED_PACKAGE_MANAGERS);
 ## uninstallCompletion
 
 **Type**: `function`  
-**Source**: [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
+**Source**: [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
 
 ```typescript
 export async function uninstallCompletion(
@@ -19089,7 +19089,7 @@ Shell Autocomplete Core Module Provides comprehensive shell completion support f
 ## UserCancelledError
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 Error handling and cancellation utilities for the CLI SDK Provides graceful error management, user-friendly messages, and proper cleanup for CLI operations. / import { isCancel as clackIsCancel } from '@clack/prompts'; import colors from 'picocolors'; /** Custom CLI error class with enhanced error information / export class CLIError extends Error { public readonly code: string; public readonly suggestion?: string; public readonly recoverable: boolean; public readonly context?: Record<string, unknown>; public override readonly cause?: Error; constructor( message: string, options: { code?: string; suggestion?: string; recoverable?: boolean; context?: Record<string, unknown>; cause?: Error; } = {} ) { super(message); this.name = 'CLIError'; this.code = options.code || 'CLI_ERROR'; this.suggestion = options.suggestion; this.recoverable = options.recoverable ?? false; this.context = options.context; this.cause = options.cause; // Maintain proper stack trace if (Error.captureStackTrace) { Error.captureStackTrace(this, CLIError); } } } /** Specific error types for different CLI operations / export class FileSystemError extends CLIError { constructor(message: string, filePath: string, cause?: Error) { super(message, { code: 'FS_ERROR', suggestion: `Check if the path exists and you have the necessary permissions: ${filePath}`, recoverable: true, context: { filePath }, cause, }); } } export class ProcessError extends CLIError { constructor(message: string, command: string, exitCode?: number, cause?: Error) { super(message, { code: 'PROCESS_ERROR', suggestion: exitCode === 127 ? `Command not found: ${command}. Make sure it's installed and in your PATH.` : `Command failed: ${command}. Check the command syntax and try again.`, recoverable: true, context: { command, exitCode }, cause, }); } } export class NetworkError extends CLIError { constructor(message: string, url?: string, cause?: Error) { super(message, { code: 'NETWORK_ERROR', suggestion: 'Check your internet connection and try again.', recoverable: true, context: { url }, cause, }); } } export class ConfigurationError extends CLIError { constructor(message: string, configPath?: string, cause?: Error) { super(message, { code: 'CONFIG_ERROR', suggestion: configPath ? `Check the configuration file format: ${configPath}` : 'Verify your configuration settings and try again.', recoverable: true, context: { configPath }, cause, }); } } export class ValidationError extends CLIError { constructor(message: string, field?: string, value?: unknown) { super(message, { code: 'VALIDATION_ERROR', suggestion: field ? `Please provide a valid value for: ${field}` : 'Please check your input and try again.', recoverable: true, context: { field, value }, }); } } /** User cancellation error for @clack/prompts integration
 
@@ -19098,7 +19098,7 @@ Error handling and cancellation utilities for the CLI SDK Provides graceful erro
 ## validateErrorHandler
 
 **Type**: `function`  
-**Source**: [`src/core/createCLI.ts`](../../../src/core/createCLI.ts)
+**Source**: [`src/core/createCLI.ts`](../../src/core/createCLI.ts)
 
 ```typescript
 export function validateErrorHandler(
@@ -19113,7 +19113,7 @@ Custom error class for error handler validation failures / export class ErrorHan
 ## validateInput
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 ```typescript
 export function validateInput(
@@ -20224,7 +20224,7 @@ console.log(malicious.violations); // Path traversal violation
 ## validatePackageManager
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 ```typescript
 export function validatePackageManager(
@@ -20759,7 +20759,7 @@ console.log(malicious.violations); // Command injection violation
 ## validateProjectName
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 ```typescript
 export function validateProjectName(
@@ -20842,7 +20842,7 @@ console.log(result.suggestions); // ["Use lowercase letters", "Replace spaces wi
 ## ValidationConfig
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 Comprehensive Input Validation Framework This module provides secure input validation, sanitization, and normalization utilities to prevent injection attacks, validate user inputs, and ensure safe operations throughout the CLI SDK.
 
@@ -20874,14 +20874,14 @@ const lenientConfig: ValidationConfig = {
 ## ValidationError
 
 **Type**: `class`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 ---
 
 ## ValidationResult
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
+**Source**: [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
 
 Comprehensive Input Validation Framework This module provides secure input validation, sanitization, and normalization utilities to prevent injection attacks, validate user inputs, and ensure safe operations throughout the CLI SDK.
 
@@ -20910,7 +20910,7 @@ const result: ValidationResult = {
 ## ViolationAnalysisResult
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -20919,7 +20919,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## ViolationContext
 
 **Type**: `interface`  
-**Source**: [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
+**Source**: [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
 
 Security Violation Detection Engine (Task 1.2.2) Centralized security violation detection system that provides comprehensive threat analysis, risk scoring, attack correlation, and compliance mapping.
 
@@ -20928,7 +20928,7 @@ Security Violation Detection Engine (Task 1.2.2) Centralized security violation 
 ## withErrorHandling
 
 **Type**: `function`  
-**Source**: [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
+**Source**: [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
 
 ```typescript
 export function withErrorHandling<T extends unknown[], R>(
@@ -20944,7 +20944,7 @@ Error handling and cancellation utilities for the CLI SDK Provides graceful erro
 ## writeFile
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function writeFile(
@@ -20960,7 +20960,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## writeJSON
 
 **Type**: `function`  
-**Source**: [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
+**Source**: [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
 
 ```typescript
 export async function writeJSON(
@@ -20976,7 +20976,7 @@ File system utilities with safe operations and error handling Provides secure fi
 ## XPATH_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files / export const FILE_SYSTEM_PATTERNS = { // Sensitive system files (Unix) UNIX_SENSITIVE_FILES: /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|proc\/|sys\/|dev\/)/i, // Sensitive system files (Windows) WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i, // Windows reserved device names WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s.]|$)/i, // Fixed: device names at end or followed by space/dot // Windows filename edge cases (trailing dots/spaces that Windows strips) WINDOWS_FILENAME_EDGE_CASES: /[\s.]+$/, // Configuration files CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i, // Backup and temporary files BACKUP_FILES: /\.(bak|backup|tmp|temp|old|orig|save)$/i, // Executable files EXECUTABLE_FILES: /\.(exe|bat|cmd|com|scr|pif|msi|dll|so|dylib)$/i, } as const; /** Network attack patterns Detects attempts to make unauthorized network connections / export const NETWORK_PATTERNS = { // URLs with suspicious protocols SUSPICIOUS_PROTOCOLS: /^(file|ftp|gopher|ldap|dict|telnet|ssh):/i, // Private IP addresses (RFC 1918) PRIVATE_IPS: /\b(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/, // Localhost variations LOCALHOST_VARIANTS: /\b(localhost|127\.|0\.0\.0\.0|::1)/i, // Suspicious ports SUSPICIOUS_PORTS: /:(22|23|53|135|139|445|1433|1521|3306|3389|5432|5900|6379)\b/, } as const; /** Advanced security attack patterns Detects sophisticated attacks and bypass attempts / export const ADVANCED_ATTACK_PATTERNS = { // Homograph attacks using similar-looking characters HOMOGRAPH_CYRILLIC: /[а-яё]/gi, // Cyrillic characters HOMOGRAPH_GREEK: /[α-ωΑ-Ω]/g, // Greek characters HOMOGRAPH_MIXED: /[а-яёα-ωΑ-Ω]/g, // Mixed homograph scripts // Bidirectional text attacks BIDI_OVERRIDE: /[\u202A-\u202E\u2066-\u2069\u061C]/g, // Prototype pollution attempts PROTOTYPE_POLLUTION: /__proto__|constructor\.prototype|\.prototype\.|\.constructor/gi, // Zero-width and invisible characters ZERO_WIDTH_CHARS: /[\u200B-\u200D\uFEFF\u2060]/g, } as const; /** Deserialization attack patterns Detects attempts to inject malicious serialized objects / export const DESERIALIZATION_PATTERNS = { // Java serialization JAVA_SERIALIZED: /\xac\xed\x00\x05|rO0AB/g, JAVA_GADGETS: /\b(Runtime|ProcessBuilder|InvokerTransformer|CommonsCollections|JRMP|LDAP)\b/gi, // .NET serialization DOTNET_BINARY: /\x00\x01\x00\x00\x00\xff\xff\xff\xff/g, DOTNET_GADGETS: /\b(ObjectStateFormatter|LosFormatter|BinaryFormatter|TypeConfuseDelegate)\b/gi, // Python pickle PYTHON_PICKLE: /\x80[\x02-\x04]|c__builtin__|cos\nsystem/g, PYTHON_REDUCE: /__reduce__|__reduce_ex__/g, // PHP serialization PHP_SERIALIZED: /[Oo]:[0-9]+:"/g, PHP_GADGETS: /\b(POP|Monolog|Doctrine|Guzzle|Symfony)\b/gi, // Node.js serialization NODEJS_SERIALIZE: /"__js_function"|"__js_date"|"__js_regexp"/g, // Generic dangerous patterns DANGEROUS_CLASSES: /\b(eval|exec|system|shell_exec|file_get_contents|fopen|include|require)\b/gi, } as const; /** XXE (XML External Entity) attack patterns Detects XML external entity injection attempts / export const XXE_PATTERNS = { // External entity declarations EXTERNAL_ENTITY: /<!ENTITY[^>]+SYSTEM[^>]+>/gi, PUBLIC_ENTITY: /<!ENTITY[^>]+PUBLIC[^>]+>/gi, // Parameter entities PARAMETER_ENTITY: /<!ENTITY\s+%[^>]+>/gi, // Entity references ENTITY_REFERENCE: /&[a-zA-Z_][a-zA-Z0-9_]*;/g, // DOCTYPE declarations with external references DOCTYPE_EXTERNAL: /<!DOCTYPE[^>]+SYSTEM[^>]*>/gi, DOCTYPE_PUBLIC: /<!DOCTYPE[^>]+PUBLIC[^>]*>/gi, // XML inclusion XML_INCLUSION: /<xi:include[^>]*>/gi, // Suspicious protocols in XML XML_PROTOCOLS: /\b(file|ftp|http|https|gopher|jar|netdoc):/gi, // XML bomb patterns (billion laughs) XML_BOMB: /&lol[0-9]*;|&lol[0-9]*lol[0-9]*;/gi, } as const; /** SSTI (Server-Side Template Injection) attack patterns Detects template injection attempts in various template engines / export const SSTI_PATTERNS = { // Jinja2/Django templates JINJA2_INJECTION: /\{\{.*?(\.|_|config|request|session|g).*?\}\}/gi, JINJA2_DANGEROUS: /\{\{.*?(popen|system|eval|exec|import|builtins|globals).*?\}\}/gi, // Twig templates TWIG_INJECTION: /\{\{.*?(\.|_self|app).*?\}\}/gi, TWIG_DANGEROUS: /\{\{.*?(system|exec|shell_exec|passthru).*?\}\}/gi, // Handlebars templates HANDLEBARS_INJECTION: /\{\{.*?(constructor|prototype|process|require).*?\}\}/gi, // FreeMarker templates FREEMARKER_INJECTION: /<#assign|<#import|<#include|\$\{.*?new.*?\}/gi, FREEMARKER_DANGEROUS: /\$\{.*?(freemarker\.template\.utility\.Execute|ObjectConstructor).*?\}/gi, // Velocity templates VELOCITY_INJECTION: /#set\s*\(\s*\$.*?=|#evaluate|\$\{.*?Class.*?\}/gi, // Smarty templates SMARTY_INJECTION: /\{php\}|\{\/php\}|\{literal\}|\{\/literal\}/gi, // Generic template patterns TEMPLATE_EXECUTION: /\{\{.*?(eval|exec|system|import|require|constructor).*?\}\}/gi, TEMPLATE_OBJECT_ACCESS: /\{\{.*?(__.*__|prototype|constructor|process).*?\}\}/gi, } as const; /** LDAP injection attack patterns Detects LDAP injection attempts in search filters / export const LDAP_PATTERNS = { // LDAP filter injection LDAP_FILTER_INJECTION: /[()&|!*\\]/g, // LDAP special characters that need escaping LDAP_SPECIAL_CHARS: /[\\*()\\0]/g, // LDAP search operators LDAP_OPERATORS: /[&|!]|\*.*\*/g, // LDAP attribute injection LDAP_ATTRIBUTE_INJECTION: /[=<>~]/g, // Common LDAP attributes used in attacks LDAP_DANGEROUS_ATTRIBUTES: /\b(objectClass|cn|uid|userPassword|memberOf|dn)\s*[=]/gi, // LDAP DN injection LDAP_DN_INJECTION: /[,+=\\#<>;]/g, } as const; /** XPath injection attack patterns Detects XPath injection attempts in XML queries
 
@@ -20985,33 +20985,33 @@ Security pattern definitions for detecting malicious inputs and attack vectors T
 ## XXE_PATTERNS
 
 **Type**: `constant`  
-**Source**: [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
+**Source**: [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
 
 Security pattern definitions for detecting malicious inputs and attack vectors These patterns are used throughout the SDK to validate user inputs, command arguments, file paths, and configuration values for security threats. / /** Path traversal attack patterns Detects attempts to access files outside the intended directory / export const PATH_TRAVERSAL_PATTERNS = { // Basic directory traversal DOTDOT_SLASH: /\.\.[/\\]/g, DOTDOT_ENCODED: /%2e%2e(%2f|%5c)/gi, // Advanced traversal techniques UNICODE_TRAVERSAL: /\u002e\u002e[\u002f\u005c]/g, UNICODE_FULLWIDTH: /[\uFF0E\u2024]\u002E[\uFF0F\u2044\u002F\u005C]/g, UNICODE_VARIANTS: /[\u002E\uFF0E\u2024][\u002E\uFF0E\u2024][\u002F\uFF0F\u2044\u005C]/g, ZERO_WIDTH_INJECTION: /\.[\u200B\uFEFF]+\.[\u200B\uFEFF]*[/\\]/g, DOUBLE_ENCODED: /%252e%252e(%252f|%255c)/gi, TRIPLE_ENCODED: /%25252e%25252e%25252f/gi, OVERLONG_UTF8: /%c0%ae%c0%ae/gi, OVERLONG_BACKSLASH: /%c1%9c/gi, MIXED_ENCODED: /\.\.(%252f|%252c|%2f|%5c|%c0%af)/gi, // Windows-specific traversal UNC_PATH: /^\\\\[^\\]+\\[^\\]/, DRIVE_ROOT: /^[a-zA-Z]:[\\/]$/, // Unix-specific traversal ROOT_PATH: /^\/[^/]/, TILDE_EXPANSION: /^~[/\\]/, // Null byte injection (path truncation) NULL_BYTE: /\x00/g, } as const; /** Command injection attack patterns Detects attempts to inject shell commands or execute arbitrary code / export const COMMAND_INJECTION_PATTERNS = { // Shell metacharacters SHELL_METACHARACTERS: /[;&|`$(){}[\]<>]/, // Command chaining COMMAND_CHAINING: /[;&|]{1,2}/, // Subprocess execution SUBPROCESS_EXECUTION: /\$\([^)]*\)/g, BACKTICK_EXECUTION: /`[^`]*`/g, // Redirection and piping REDIRECTION: /[<>]{1,2}/, PIPE_EXECUTION: /\|[^|]/, // Environment variable manipulation ENV_VAR_INJECTION: /\$\{[^}]*\}/g, PATH_MANIPULATION: /PATH\s*=|LD_PRELOAD\s*=|BASH_ENV\s*=|ENV\s*=/i, IFS_BYPASS: /\$IFS\$|\$\{IFS\}/g, QUOTE_ESCAPING: /\$['"][^'"]*['"]|\\\\/g, // Specific dangerous commands DANGEROUS_COMMANDS: /\b(rm|del|format|fdisk|mkfs|dd|cat|curl|wget|nc|netcat|telnet|ssh|ftp|tftp|eval|exec|system)\s/i, } as const; /** Script injection attack patterns Detects attempts to inject malicious scripts or code / export const SCRIPT_INJECTION_PATTERNS = { // JavaScript injection JAVASCRIPT_EVAL: /\beval\s*\(/i, JAVASCRIPT_FUNCTION: /\bFunction\s*\(/i, JAVASCRIPT_SETTIMEOUT: /\bsetTimeout\s*\(/i, JAVASCRIPT_SETINTERVAL: /\bsetInterval\s*\(/i, // HTML/XML injection SCRIPT_TAG: /<script[^>]*>.*?<\/script>/gis, JAVASCRIPT_PROTOCOL: /javascript:/i, DATA_URI: /data:[^;]*;base64/i, // SQL injection patterns SQL_KEYWORDS: /\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b/gi, SQL_COMMENTS: /(--|\/\*|\*\/|#)/, // NoSQL injection NOSQL_OPERATORS: /\$where|\$regex|\$ne|\$gt|\$lt/i, // Template injection TEMPLATE_INJECTION: /(\{\{.*?\}\}|\$\{.*?\})/g, } as const; /** Privilege escalation attack patterns Detects attempts to gain elevated privileges or access restricted resources / export const PRIVILEGE_ESCALATION_PATTERNS = { // Sudo and su commands SUDO_COMMAND: /\bsudo\s/i, SU_COMMAND: /\bsu\s/i, // Windows elevation RUNAS_COMMAND: /\brunas\s/i, UAC_BYPASS: /\bbypassuac\b/i, // Process manipulation SETUID_COMMANDS: /\b(chmod\s+[0-7]*[4-7][0-7]*|chown\s+root)/i, // Service manipulation SERVICE_COMMANDS: /\b(systemctl|service|sc\.exe)\s/i, // Registry manipulation (Windows) REGISTRY_COMMANDS: /\b(reg\s+add|regedit)\s/i, // Kernel module loading KERNEL_MODULES: /\b(insmod|modprobe|rmmod)\s/i, } as const; /** File system attack patterns Detects attempts to access or manipulate sensitive files / export const FILE_SYSTEM_PATTERNS = { // Sensitive system files (Unix) UNIX_SENSITIVE_FILES: /\/(etc\/passwd|etc\/shadow|etc\/hosts|root\/|proc\/|sys\/|dev\/)/i, // Sensitive system files (Windows) WINDOWS_SENSITIVE_FILES: /\\(windows\\system32|windows\\syswow64|program files|users\\[^\\]*\\desktop)/i, // Windows reserved device names WINDOWS_DEVICE_NAMES: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i, WINDOWS_DEVICE_VARIANTS: /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:[\s.]|$)/i, // Fixed: device names at end or followed by space/dot // Windows filename edge cases (trailing dots/spaces that Windows strips) WINDOWS_FILENAME_EDGE_CASES: /[\s.]+$/, // Configuration files CONFIG_FILES: /\.(conf|config|cfg|ini|env|key|pem|p12|pfx)$/i, // Backup and temporary files BACKUP_FILES: /\.(bak|backup|tmp|temp|old|orig|save)$/i, // Executable files EXECUTABLE_FILES: /\.(exe|bat|cmd|com|scr|pif|msi|dll|so|dylib)$/i, } as const; /** Network attack patterns Detects attempts to make unauthorized network connections / export const NETWORK_PATTERNS = { // URLs with suspicious protocols SUSPICIOUS_PROTOCOLS: /^(file|ftp|gopher|ldap|dict|telnet|ssh):/i, // Private IP addresses (RFC 1918) PRIVATE_IPS: /\b(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)/, // Localhost variations LOCALHOST_VARIANTS: /\b(localhost|127\.|0\.0\.0\.0|::1)/i, // Suspicious ports SUSPICIOUS_PORTS: /:(22|23|53|135|139|445|1433|1521|3306|3389|5432|5900|6379)\b/, } as const; /** Advanced security attack patterns Detects sophisticated attacks and bypass attempts / export const ADVANCED_ATTACK_PATTERNS = { // Homograph attacks using similar-looking characters HOMOGRAPH_CYRILLIC: /[а-яё]/gi, // Cyrillic characters HOMOGRAPH_GREEK: /[α-ωΑ-Ω]/g, // Greek characters HOMOGRAPH_MIXED: /[а-яёα-ωΑ-Ω]/g, // Mixed homograph scripts // Bidirectional text attacks BIDI_OVERRIDE: /[\u202A-\u202E\u2066-\u2069\u061C]/g, // Prototype pollution attempts PROTOTYPE_POLLUTION: /__proto__|constructor\.prototype|\.prototype\.|\.constructor/gi, // Zero-width and invisible characters ZERO_WIDTH_CHARS: /[\u200B-\u200D\uFEFF\u2060]/g, } as const; /** Deserialization attack patterns Detects attempts to inject malicious serialized objects / export const DESERIALIZATION_PATTERNS = { // Java serialization JAVA_SERIALIZED: /\xac\xed\x00\x05|rO0AB/g, JAVA_GADGETS: /\b(Runtime|ProcessBuilder|InvokerTransformer|CommonsCollections|JRMP|LDAP)\b/gi, // .NET serialization DOTNET_BINARY: /\x00\x01\x00\x00\x00\xff\xff\xff\xff/g, DOTNET_GADGETS: /\b(ObjectStateFormatter|LosFormatter|BinaryFormatter|TypeConfuseDelegate)\b/gi, // Python pickle PYTHON_PICKLE: /\x80[\x02-\x04]|c__builtin__|cos\nsystem/g, PYTHON_REDUCE: /__reduce__|__reduce_ex__/g, // PHP serialization PHP_SERIALIZED: /[Oo]:[0-9]+:"/g, PHP_GADGETS: /\b(POP|Monolog|Doctrine|Guzzle|Symfony)\b/gi, // Node.js serialization NODEJS_SERIALIZE: /"__js_function"|"__js_date"|"__js_regexp"/g, // Generic dangerous patterns DANGEROUS_CLASSES: /\b(eval|exec|system|shell_exec|file_get_contents|fopen|include|require)\b/gi, } as const; /** XXE (XML External Entity) attack patterns Detects XML external entity injection attempts
 
 ## 📁 Source Files
 
-- [`src/core/foundation/security/patterns.ts`](../../../src/core/foundation/security/patterns.ts)
-- [`src/core/foundation/memory/sanitization.ts`](../../../src/core/foundation/memory/sanitization.ts)
-- [`src/core/foundation/errors/sanitization.ts`](../../../src/core/foundation/errors/sanitization.ts)
-- [`src/core/foundation/logging/security.ts`](../../../src/core/foundation/logging/security.ts)
-- [`src/core/commands/autocomplete.ts`](../../../src/core/commands/autocomplete.ts)
-- [`src/core/foundation/security/violation-detector.ts`](../../../src/core/foundation/security/violation-detector.ts)
-- [`src/core/foundation/logging/audit.ts`](../../../src/core/foundation/logging/audit.ts)
-- [`src/core/foundation/core/constants.ts`](../../../src/core/foundation/core/constants.ts)
-- [`src/core/ui/prompts.ts`](../../../src/core/ui/prompts.ts)
-- [`src/core/execution/fs.ts`](../../../src/core/execution/fs.ts)
-- [`src/core/foundation/errors/errors.ts`](../../../src/core/foundation/errors/errors.ts)
-- [`src/core/execution/execa.ts`](../../../src/core/execution/execa.ts)
-- [`src/core/createCLI.ts`](../../../src/core/createCLI.ts)
-- [`src/core/foundation/logging/structured.ts`](../../../src/core/foundation/logging/structured.ts)
-- [`src/core/ui/logger.ts`](../../../src/core/ui/logger.ts)
-- [`src/core/foundation/memory/protection.ts`](../../../src/core/foundation/memory/protection.ts)
-- [`src/core/foundation/security/framework.ts`](../../../src/core/foundation/security/framework.ts)
-- [`src/core/foundation/security/validation.ts`](../../../src/core/foundation/security/validation.ts)
-- [`src/core/ui/icons.ts`](../../../src/core/ui/icons.ts)
-- [`src/core/commands/registerCommands.ts`](../../../src/core/commands/registerCommands.ts)
+- [`src/core/foundation/security/patterns.ts`](../../src/core/foundation/security/patterns.ts)
+- [`src/core/foundation/memory/sanitization.ts`](../../src/core/foundation/memory/sanitization.ts)
+- [`src/core/foundation/errors/sanitization.ts`](../../src/core/foundation/errors/sanitization.ts)
+- [`src/core/foundation/logging/security.ts`](../../src/core/foundation/logging/security.ts)
+- [`src/core/commands/autocomplete.ts`](../../src/core/commands/autocomplete.ts)
+- [`src/core/foundation/security/violation-detector.ts`](../../src/core/foundation/security/violation-detector.ts)
+- [`src/core/foundation/logging/audit.ts`](../../src/core/foundation/logging/audit.ts)
+- [`src/core/foundation/core/constants.ts`](../../src/core/foundation/core/constants.ts)
+- [`src/core/ui/prompts.ts`](../../src/core/ui/prompts.ts)
+- [`src/core/execution/fs.ts`](../../src/core/execution/fs.ts)
+- [`src/core/foundation/errors/errors.ts`](../../src/core/foundation/errors/errors.ts)
+- [`src/core/execution/execa.ts`](../../src/core/execution/execa.ts)
+- [`src/core/createCLI.ts`](../../src/core/createCLI.ts)
+- [`src/core/foundation/logging/structured.ts`](../../src/core/foundation/logging/structured.ts)
+- [`src/core/ui/logger.ts`](../../src/core/ui/logger.ts)
+- [`src/core/foundation/memory/protection.ts`](../../src/core/foundation/memory/protection.ts)
+- [`src/core/foundation/security/framework.ts`](../../src/core/foundation/security/framework.ts)
+- [`src/core/foundation/security/validation.ts`](../../src/core/foundation/security/validation.ts)
+- [`src/core/ui/icons.ts`](../../src/core/ui/icons.ts)
+- [`src/core/commands/registerCommands.ts`](../../src/core/commands/registerCommands.ts)
 
 ---
 
-*Generated on 2025-11-17T03:51:25.269Z*
+*Generated on 2025-11-17T21:48:01.813Z*
