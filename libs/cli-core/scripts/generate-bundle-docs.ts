@@ -341,14 +341,14 @@ async function generateBundleAnalysis(): Promise<BundleAnalysis> {
   const sourceSizeKB = 742; // Approximate source size in KB
   const buildOptimizationPercent = Math.round((1 - (totalSize / 1024) / sourceSizeKB) * 100);
 
-  // Tree-shaking: compare core vs full bundle
+  // Tree-shaking: limited due to current namespace export architecture
   const treeshakingPercent = treeshakingMetrics.selectiveImportSaving;
 
   console.log(`   📊 Total bundle: ${formatKB(totalSize)}KB`);
   console.log(`   🎯 Core: ${formatKB(coreSize)}KB`);
   console.log(`   🔧 Plugins: ${formatKB(pluginSize)}KB`);
-  console.log(`   🏗️  Build optimization: ${buildOptimizationPercent}% (source to bundle)`);
-  console.log(`   ⚡ Tree-shaking: ${treeshakingPercent}% (selective imports)`);
+  console.log(`   🏗️  Build optimization: ${buildOptimizationPercent}% (TypeScript source → JS bundle)`);
+  console.log(`   ⚠️  Tree-shaking: ${treeshakingPercent}% (limited by namespace exports)`);
 
   return {
     totalSize,
