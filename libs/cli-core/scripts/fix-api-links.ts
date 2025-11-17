@@ -12,6 +12,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+// Workspace paths for NX monorepo
+const cliCorePath = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const workspaceRoot = path.resolve(cliCorePath, '../..');
+
 async function fixLinksInFile(filePath: string): Promise<void> {
   try {
     console.log(`📝 Fixing links in: ${path.relative(process.cwd(), filePath)}`);
@@ -88,14 +92,14 @@ async function findApiReadmeFiles(dir: string): Promise<string[]> {
 async function main(): Promise<void> {
   console.log('🔧 API Documentation Link Fixer\n');
 
-  const apiDocsDir = path.join(process.cwd(), 'docs', 'api');
+  const apiDocsDir = path.join(cliCorePath, 'docs', 'api');
 
   try {
     // Check if the API docs directory exists
     await fs.access(apiDocsDir);
 
     // Find all README.md files in the API docs
-    console.log(`📂 Searching for README files in: ${path.relative(process.cwd(), apiDocsDir)}\n`);
+    console.log(`📂 Searching for README files in: ${path.relative(workspaceRoot, apiDocsDir)}\n`);
     const readmeFiles = await findApiReadmeFiles(apiDocsDir);
 
     if (readmeFiles.length === 0) {

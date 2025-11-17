@@ -14,13 +14,13 @@ By the end of this guide, you'll have a fully functional CLI with:
 
 ```bash
 # Using pnpm (recommended)
-pnpm add @caedonai/lord-commander
+pnpm add @lord-commander/cli-core
 
 # Using npm
-npm install @caedonai/lord-commander
+npm install @lord-commander/cli-core
 
 # Using yarn
-yarn add @caedonai/lord-commander
+yarn add @lord-commander/cli-core
 ```
 
 ## ⚡ Quick Start
@@ -29,7 +29,7 @@ yarn add @caedonai/lord-commander
 
 ```typescript
 // cli.ts
-import { createCLI } from '@caedonai/lord-commander';
+import { createCLI } from '@lord-commander/cli-core';
 
 await createCLI({
   name: 'my-cli',
@@ -43,7 +43,7 @@ await createCLI({
 ```typescript
 // commands/greet.ts
 import { Command } from 'commander';
-import type { CommandContext } from '@caedonai/lord-commander';
+import type { CommandContext } from '@lord-commander/cli-core';
 
 export default function(program: Command, context: CommandContext) {
   const { logger, prompts } = context;
@@ -86,7 +86,7 @@ node dist/cli.js --help
 ### Interactive Prompts
 
 ```typescript
-import { PromptFlow, enhancedSelect, enhancedConfirm } from '@caedonai/lord-commander';
+import { core } from '@lord-commander/cli-core';
 
 // Multi-step workflow with progress tracking
 const flow = new PromptFlow('Project Setup', 3);
@@ -124,7 +124,7 @@ await createCLI({
 ### Security & Validation
 
 ```typescript
-import { validateProjectName, sanitizePath } from '@caedonai/lord-commander';
+import { core } from '@lord-commander/cli-core';
 
 // Secure input validation
 const result = validateProjectName(userInput, {
@@ -144,7 +144,7 @@ if (result.isValid) {
 The SDK includes built-in tools for professional CLI output:
 
 ```typescript
-import { printSeparator, printSection, printTaskStart } from '@caedonai/lord-commander';
+import { core } from '@lord-commander/cli-core';
 
 // Visual separation and progress
 printSeparator('Configuration Setup', 'double');
@@ -217,8 +217,7 @@ my-cli/
 
 1. **Tree Shaking**: Use selective imports for smaller bundles
    ```typescript
-   import { createCLI } from '@caedonai/lord-commander/core';
-   import { gitClone } from '@caedonai/lord-commander/plugins';
+   import { core, plugins } from '@lord-commander/cli-core';
    ```
 
 2. **TypeScript**: Enable strict mode for better development experience

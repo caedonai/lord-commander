@@ -20,10 +20,10 @@ A simple CLI tool with:
 
 ```bash
 # Install the SDK
-pnpm add @caedonai/sdk
+pnpm add @lord-commander/cli-core
 
 # Or with npm
-npm install @caedonai/sdk
+npm install @lord-commander/cli-core
 ```
 
 ## Your First CLI
@@ -31,7 +31,7 @@ npm install @caedonai/sdk
 Create `my-cli.ts`:
 
 ```typescript
-import { createCLI } from '@caedonai/sdk/core';
+import { createCLI } from '@lord-commander/cli-core';
 
 // Create CLI with automatic command discovery
 await createCLI({

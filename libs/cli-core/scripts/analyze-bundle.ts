@@ -8,7 +8,8 @@
  */
 
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { readFile, stat } from 'node:fs/promises';
+import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execa } from 'execa';
 
@@ -47,8 +48,9 @@ interface AnalysisResult {
 }
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const rootPath = resolve(__dirname, '..');
-const distPath = resolve(rootPath, 'dist');
+const cliCorePath = resolve(__dirname, '..');
+const workspaceRoot = resolve(cliCorePath, '../..');
+const distPath = resolve(workspaceRoot, 'dist/libs/cli-core');
 
 console.log('📊 Lord Commander SDK Bundle Analysis');
 console.log('═'.repeat(50));
@@ -61,15 +63,56 @@ function formatBytes(bytes: number): string {
   return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
-function categorizeFile(path: string): BundleFile['category'] {
-  if (path.includes('/core/') || path.startsWith('core/')) return 'core';
-  if (path.includes('/plugins/') || path.startsWith('plugins/')) return 'plugins';
-  if (path.includes('/commands/') || path.startsWith('commands/')) return 'commands';
-  if (path.includes('/types/') || path.startsWith('types/')) return 'types';
-  return 'other';
+async function categorizeFile(filePath: string): Promise<BundleFile['category']> {
+  const fileName = basename(filePath).toLowerCase();
+  
+  // For Vite's hash-named bundles, we need to analyze content
+  if (fileName === 'index.js') {
+    return 'core'; // Main entry point
+  }
+  
+  try {
+    const content = await readFile(filePath, 'utf8');
+    
+    // Check for core patterns first (large files with core functionality)
+    const stats = await stat(filePath);
+    if (stats.size > 100000) { // Files larger than 100KB are likely core
+      // But check if it's actually a command file by looking for specific command patterns
+      if (fileName.includes('hello') || fileName.includes('version') || 
+          fileName.includes('completion') || fileName.includes('init') ||
+          fileName.includes('scaffold') || fileName.includes('demo')) {
+        return 'commands';
+      }
+      return 'core';
+    }
+    
+    // Check for command patterns (smaller command files)
+    if (content.includes('.command(') && (
+        fileName.includes('hello') || fileName.includes('version') || 
+        fileName.includes('completion') || fileName.includes('init') ||
+        fileName.includes('scaffold') || fileName.includes('demo'))) {
+      return 'commands';
+    }
+    
+    // Check for plugin patterns
+    if (content.includes('plugin') || content.includes('git') || 
+        content.includes('updater') || content.includes('workspace')) {
+      return 'plugins';
+    }
+    
+    // Check for type definitions
+    if (content.includes('interface ') || content.includes('type ') ||
+        fileName.includes('types')) {
+      return 'types';
+    }
+    
+    return 'other';
+  } catch (error) {
+    return 'other';
+  }
 }
 
-function analyzeBundleSize(): { files: BundleFile[]; totalSize: number } {
+async function analyzeBundleSize(): Promise<{ files: BundleFile[]; totalSize: number }> {
   console.log('📦 Bundle Size Analysis');
   console.log('─'.repeat(30));
 
@@ -80,7 +123,7 @@ function analyzeBundleSize(): { files: BundleFile[]; totalSize: number } {
 
   const files: BundleFile[] = [];
 
-  function scanDir(dir: string, prefix = '') {
+  async function scanDir(dir: string, prefix = ''): Promise<void> {
     const entries = readdirSync(dir, { withFileTypes: true });
 
     for (const entry of entries) {
@@ -88,19 +131,20 @@ function analyzeBundleSize(): { files: BundleFile[]; totalSize: number } {
       const relativePath = join(prefix, entry.name);
 
       if (entry.isDirectory()) {
-        scanDir(fullPath, relativePath);
+        await scanDir(fullPath, relativePath);
       } else if (entry.isFile() && entry.name.endsWith('.js')) {
         const stats = statSync(fullPath);
+        const category = await categorizeFile(fullPath); // Use fullPath instead of relativePath
         files.push({
           path: relativePath,
           size: stats.size,
-          category: categorizeFile(relativePath),
+          category,
         });
       }
     }
   }
 
-  scanDir(distPath);
+  await scanDir(distPath);
 
   // Sort by size (largest first)
   files.sort((a, b) => b.size - a.size);
@@ -160,7 +204,7 @@ function analyzeDependencies(): { production: number; development: number; peer:
   console.log('─'.repeat(30));
 
   const packageJson: PackageJson = JSON.parse(
-    readFileSync(resolve(rootPath, 'package.json'), 'utf-8')
+    readFileSync(resolve(cliCorePath, 'package.json'), 'utf-8')
   );
 
   const deps = Object.keys(packageJson.dependencies || {}).length;
@@ -208,7 +252,7 @@ function analyzeTreeShaking(): { enabled: boolean; esmOptimized: boolean; hasExp
   console.log('─'.repeat(30));
 
   const packageJson: PackageJson = JSON.parse(
-    readFileSync(resolve(rootPath, 'package.json'), 'utf-8')
+    readFileSync(resolve(cliCorePath, 'package.json'), 'utf-8')
   );
 
   const sideEffects = packageJson.sideEffects === false;
@@ -284,18 +328,18 @@ async function runBundleAnalyzer(): Promise<void> {
   try {
     // Check if we can run bundle analyzer
     await execa('which', ['webpack-bundle-analyzer'], {
-      cwd: rootPath,
+      cwd: workspaceRoot,
       stdio: 'pipe',
     }).catch(() =>
       execa('npm', ['list', 'webpack-bundle-analyzer'], {
-        cwd: rootPath,
+        cwd: workspaceRoot,
         stdio: 'pipe',
       })
     );
 
     console.log('📊 Generating detailed bundle analysis...');
-    await execa('pnpm', ['build', '--analyze'], {
-      cwd: rootPath,
+    await execa('pnpx', ['nx', 'build', 'cli-core', '--analyze'], {
+      cwd: workspaceRoot,
       stdio: 'inherit',
     });
   } catch (_error) {
@@ -337,7 +381,7 @@ function generateBundleReport(analysis: AnalysisResult): void {
   };
 
   // Save report for docs generation
-  const reportPath = resolve(rootPath, 'temp-bundle-report.json');
+  const reportPath = resolve(cliCorePath, 'temp-bundle-report.json');
   writeFileSync(reportPath, JSON.stringify(report, null, 2));
   console.log(`\n📊 Bundle report saved to ${reportPath}`);
 }
@@ -348,13 +392,13 @@ async function main(): Promise<void> {
     statSync(distPath);
   } catch (_error) {
     console.log('❌ No build found. Building now...');
-    await execa('pnpm', ['build'], {
-      cwd: rootPath,
+    await execa('pnpx', ['nx', 'build', 'cli-core'], {
+      cwd: workspaceRoot,
       stdio: 'inherit',
     });
   }
 
-  const bundleAnalysis = analyzeBundleSize();
+  const bundleAnalysis = await analyzeBundleSize();
   const dependencyAnalysis = analyzeDependencies();
   const treeShakingAnalysis = analyzeTreeShaking();
 

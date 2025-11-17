@@ -38,8 +38,8 @@ Welcome to the comprehensive documentation for the Lord Commander CLI SDK - a mo
 
 ## 📊 Project Status
 
-- **Bundle Size**: 71KB full SDK, 1.78KB core-only
-- **Tree-shaking**: 97% size reduction for selective imports
+- **Bundle Size**: 267.5KB full SDK, 253.5KB core-only  
+- **Tree-shaking**: 64% size reduction from source to bundle
 - **Test Coverage**: 1412 tests passing (100% success rate)
 - **Security**: 974+ comprehensive security validations
 

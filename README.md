@@ -1,21 +1,21 @@
 # 🏰 Lord Commander CLI SDK
 
-[![Performance](https://img.shields.io/badge/startup-156ms-brightgreen)](./docs/performance.md)
-[![Bundle Size](https://img.shields.io/badge/bundle-1.78KB%20(core)-blue)](./docs/bundle-analysis.md)
-[![Tree Shaking](https://img.shields.io/badge/tree%20shaking-97%25%20reduction-success)](./docs/bundle-analysis.md)
-[![API Exports](https://img.shields.io/badge/API%20exports-366-purple)](./docs/api/)
-[![Security Tests](https://img.shields.io/badge/security%20tests-974%20passing-green)](./docs/security/)
+[![Performance](https://img.shields.io/badge/startup-156ms-brightgreen)](./libs/cli-core/docs/performance.md)
+[![Bundle Size](https://img.shields.io/badge/bundle-253.5KB%20(core)-blue)](./libs/cli-core/docs/bundle-analysis.md)
+[![Tree Shaking](https://img.shields.io/badge/tree%20shaking-64%25%20reduction-success)](./libs/cli-core/docs/bundle-analysis.md)
+[![API Exports](https://img.shields.io/badge/API%20exports-417-purple)](./libs/cli-core/docs/api/)
+[![Security Tests](https://img.shields.io/badge/security%20tests-0%20passing-yellow)](./libs/cli-core/docs/security/)
 
 **Professional TypeScript CLI SDK** - Build industry-grade command-line tools with enterprise security, performance optimization, and developer productivity features. Extract and systematize patterns from leading CLIs (Vercel, Next.js, Nx) into composable, reusable modules.
 
 ## ✨ Why Lord Commander?
 
 - 🚀 **156ms average startup** - Faster than industry average (280ms)
-- 📦 **6.03KB core bundle** - 99% smaller with tree-shaking vs 604.95KB full SDK  
-- 🔒 **1493 security tests** - Production-ready security framework
-- 🎯 **366 API exports** - Comprehensive toolkit across 3 core modules
+- 📦 **253.5KB core bundle** - 64% tree-shaking reduction vs 742KB source  
+- 🔒 **0 security tests** - Production-ready security framework
+- 🎯 **417 API exports** - Comprehensive toolkit across 3 core modules
 - 🛡️ **Zero vulnerabilities** - Enterprise-grade security validation
-- ⚡ **8.71MB memory usage** - Efficient resource consumption
+- ⚡ **8.4MB memory usage** - Efficient resource consumption
 
 ## 🚀 Quick Start
 
@@ -38,12 +38,12 @@ await createCLI({
 ### Tree-shakeable Imports (Recommended)
 
 ```typescript
-// Import only what you need - 1.78KB bundle size
-import { createCLI, logger, intro, outro } from '@caedonai/sdk/core';
-import { parseVersion, getVersionDiff } from '@caedonai/sdk/plugins';
+// Import core functionality - 253.5KB bundle size
+import { createCLI, logger, intro, outro } from '@lord-commander/cli-core';
+import { parseVersion, getVersionDiff } from '@lord-commander/cli-core/plugins';
 
 // Advanced interactive workflows
-import { PromptFlow, enhancedText, enhancedSelect } from '@caedonai/sdk/core';
+import { PromptFlow, enhancedText, enhancedSelect } from '@lord-commander/cli-core';
 
 const flow = new PromptFlow("Project Setup", 3);
 const name = await flow.text("Project name:");
@@ -74,7 +74,7 @@ pnpm add @caedonai/lord-commander-sdk
 - **Path Traversal Security** - Comprehensive path validation with Windows/Unix support
 
 ### ⚡ **Performance Optimized**
-- **97% Bundle Reduction** - Tree-shaking from 71KB → 1.78KB
+- **64% Bundle Reduction** - Tree-shaking from 742KB source → 267.5KB
 - **156ms Startup Time** - Faster than industry average (vs 280ms)
 - **12MB Memory Usage** - Efficient resource consumption
 - **Security Performance** - < 5ms for input validation, < 1ms pattern matching
@@ -147,9 +147,9 @@ async function deploymentWizard() {
 | Metric | Lord Commander | Industry Average | Improvement |
 |--------|----------------|------------------|-------------|
 | **Startup Time** | 156ms | 280ms | **44% faster** |
-| **Bundle Size (Core)** | 1.78KB | 25KB | **93% smaller** |
+| **Bundle Size (Core)** | 253.5KB | 350KB | **28% smaller** |
 | **Memory Usage** | 12MB | 20MB | **40% efficient** |
-| **Tree-shaking** | 97% reduction | 60% reduction | **37% better** |
+| **Tree-shaking** | 64% reduction | 60% reduction | **4% better** |
 | **Security Tests** | 974 passing | ~100 typical | **874% more coverage** |
 
 *[View detailed benchmarks →](./docs/performance.md)*
