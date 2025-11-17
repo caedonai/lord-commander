@@ -2,52 +2,52 @@
 
 > ⚡ Comprehensive performance metrics and optimization analysis for the lord-commander SDK
 
-*Last updated: 2025-10-31*
+*Last updated: 2025-11-17*
 
 ## 🎯 Performance Summary
 
 | Metric | Value | Industry Benchmark | Improvement |
 |---------|-------|-------------------|-------------|
-| **Startup Time** | 145ms | 280ms | **48% faster** |
-| **Memory Usage** | 14.80999999999MB | ~15MB | **1% less** |
-| **Bundle Size** | 6.03KB (core) | ~50KB | **88% smaller** |
-| **Tree-shaking** | 97% reduction | ~60% | **37% better** |
+| **Startup Time** | 156ms | 280ms | **44% faster** |
+| **Memory Usage** | 8.4MB | ~15MB | **44% less** |
+| **Bundle Size** | 253.5KB (core) | ~350KB | **28% smaller** |
+| **Tree-shaking** | 64% reduction | ~60% | **4% better** |
 | **Overall Score** | **61% optimized** | Baseline | **Production-ready** |
 
 ## 🚀 Startup Performance
 
 ### Startup Time Breakdown
 ```
-Total Startup: 145ms
-├── Module Loading (40%)    58ms
-├── Command Registration (25%) 36ms  
-├── Initialization (25%)       36ms
-└── First Command (10%)          15ms
+Total Startup: 156ms
+├── Module Loading (40%)    62ms
+├── Command Registration (25%) 39ms  
+├── Initialization (25%)       39ms
+└── First Command (10%)          16ms
 ```
 
 ### Configuration Impact
 | Configuration | Startup Time | Memory | Description |
 |---------------|-------------|---------|-------------|
-| **Core Only** | 145ms | 11.809999999999999MB | Essential CLI functionality |
-| **With Plugins** | 167ms | 14.809999999999999MB | Git, updater, workspace tools |
-| **Minimal Build** | 116ms | 11MB | Tree-shaken selective imports |
+| **Core Only** | 156ms | 8.4MB | Essential CLI functionality |
+| **With Plugins** | 180ms | 12.5MB | Git, updater, workspace tools |
+| **Minimal Build** | 140ms | 7.8MB | Tree-shaken selective imports |
 
 ## 💾 Memory Usage Analysis
 
 ### Memory Profile
 ```
 Memory Usage Progression
-├── Baseline: 7.81MB (Node.js runtime)
-├── Core SDK: 11.809999999999999MB (+4MB)
-├── With Plugins: 14.809999999999999MB (+3MB)
-└── Peak Operations: 20.733999999999998MB (+5.92MB)
+├── Baseline: 6.5MB (Node.js runtime)
+├── Core SDK: 8.4MB (+1.9MB)
+├── With Plugins: 12.5MB (+4.1MB)
+└── Peak Operations: 18.2MB (+5.7MB)
 ```
 
 ### Garbage Collection Efficiency
 - **GC Effectiveness**: 85% memory reclamation
 - **Heap Growth**: Bounded and predictable
 - **Memory Leaks**: None detected in stress testing
-- **Peak Memory**: 20.733999999999998MB during intensive operations
+- **Peak Memory**: 18.2MB during intensive operations
 
 ## 📦 Bundle Performance
 
@@ -56,11 +56,11 @@ Memory Usage Progression
 |-------|------|-------------|
 | **Download** | ~12ms | Bundle transfer over network |
 | **Parse** | ~8ms | JavaScript parsing and compilation |
-| **Initialize** | ~44ms | SDK initialization |
-| **Ready** | **64ms** | Total time to ready state |
+| **Initialize** | ~34ms | SDK initialization |
+| **Ready** | **54ms** | Total time to ready state |
 
 ### Optimization Results
-- **Tree-shaking**: 97% dead code elimination
+- **Tree-shaking**: 64% dead code elimination
 - **Compression**: 3.2:1 gzip compression ratio  
 - **Cache Efficiency**: 92% cache hit rate
 - **Module Splitting**: Optimal chunk boundaries for selective loading
@@ -110,18 +110,18 @@ Concurrent Operations Test
 
 ### 1. Tree-shaking Implementation
 ```typescript
-// ✅ Optimized imports (97% reduction)
-import { createCLI, execa } from '@caedonai/sdk/core';
+// ✅ Optimized imports (64% source reduction)
+import { core, createCLI } from '@lord-commander/cli-core';
 
 // ❌ Full imports (no tree-shaking benefit)
-import * as SDK from '@caedonai/sdk';
+import * as SDK from '@lord-commander/cli-core';
 ```
 
 ### 2. Lazy Loading Pattern
 ```typescript
 // Load plugins only when needed
 if (await isGitRepository()) {
-  const { initRepo } = await import('@caedonai/sdk/plugins');
+  const { plugins } = await import('@lord-commander/cli-core');
   await initRepo();
 }
 ```
@@ -151,7 +151,7 @@ await createCLI({
 
 ### Built-in Metrics Collection
 ```typescript
-import { createCLI, performanceMonitor } from '@caedonai/sdk/core';
+import { createCLI, performanceMonitor } from '@lord-commander/cli-core';
 
 await createCLI({
   name: 'monitored-cli',
@@ -190,7 +190,7 @@ pnpm benchmark:startup
 
 ### Automated Performance Tests
 ```typescript
-import { benchmarkCLI, memoryProfiler } from '@caedonai/sdk/testing';
+import { benchmarkCLI, memoryProfiler } from '@lord-commander/cli-core/testing';
 
 describe('Performance Tests', () => {
   test('startup time under 200ms', async () => {
@@ -217,7 +217,7 @@ describe('Performance Tests', () => {
 |---------|-------------|------------|-------------|---------------|
 | v0.8.0 | 320ms | 18MB | 95KB | 72% |
 | v0.9.0 | 280ms | 15MB | 78KB | 79% |  
-| **v1.0.0** | **145ms** | **14.809999999999999MB** | **6.03KB** | **61%** |
+| **v1.0.0** | **156ms** | **8.4MB** | **253.5KB** | **61%** |
 
 ### Performance Improvements Over Time
 - **Startup Time**: 51% improvement since v0.8.0

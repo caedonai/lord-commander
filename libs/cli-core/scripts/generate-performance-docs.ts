@@ -10,6 +10,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+// Workspace paths for NX monorepo
+const cliCorePath = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const workspaceRoot = path.resolve(cliCorePath, '../..');
+
 interface PerformanceMetrics {
   startup: StartupMetrics;
   memory: MemoryMetrics;
@@ -319,7 +323,7 @@ async function collectPerformanceMetrics(): Promise<PerformanceMetrics> {
 }
 
 async function generatePerformanceDoc(metrics: PerformanceMetrics): Promise<void> {
-  const docPath = path.join(process.cwd(), 'docs', 'performance.md');
+  const docPath = path.join(cliCorePath, 'docs', 'performance.md');
 
   const content = `# Performance Analysis
 

@@ -4,7 +4,8 @@
  * Release Automation Script
  *
  * Automates the release process for the Lord Commander CLI SDK including
- * version bumping, changelog generation, build validation, and npm publishing.
+ * version bump  const packagePath = resolve(cliCorePath, 'package.json');
+  const packageJson = JSON.parse(readFileSync(packagePath, 'utf-8'));g, changelog generation, build validation, and npm publishing.
  * Supports alpha versioning strategy for pre-1.0.0 and stable versioning for 1.x.x+
  */
 
@@ -12,6 +13,11 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execa } from 'execa';
+
+// Workspace paths for NX monorepo
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const cliCorePath = resolve(__dirname, '..');
+const workspaceRoot = resolve(cliCorePath, '../..');
 
 // Types for better release management
 interface PackageJson {
@@ -41,8 +47,7 @@ interface ReleaseConfig {
 
 type ReleaseType = 'alpha' | 'beta' | 'rc' | 'patch' | 'minor' | 'major' | 'stable' | '1.0.0';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const rootPath = resolve(__dirname, '..');
+// Use the workspace paths already defined at the top
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -103,8 +108,11 @@ async function runCommand(cmd: string, description: string): Promise<void> {
 
   try {
     const [command, ...args] = cmd.split(' ');
+    // Use workspace root for build/test commands, cli-core path for others
+    const cwd = cmd.includes('build') || cmd.includes('test') ? workspaceRoot : cliCorePath;
+    
     await execa(command, args, {
-      cwd: rootPath,
+      cwd,
       stdio: 'inherit',
     });
     console.log(`   ✅ Completed`);
@@ -136,7 +144,7 @@ function parseVersion(version: string): VersionInfo {
 async function bumpVersion(type: ReleaseType): Promise<string> {
   console.log(`📈 Bumping ${type} version...`);
 
-  const packagePath = resolve(rootPath, 'package.json');
+  const packagePath = resolve(cliCorePath, 'package.json');
   const pkg: PackageJson = JSON.parse(readFileSync(packagePath, 'utf-8'));
 
   const currentVersion = pkg.version;
@@ -360,7 +368,7 @@ async function generateChangelog(version: string): Promise<void> {
   const changelogEntry = generateChangelogEntry(version);
 
   try {
-    const changelogPath = resolve(rootPath, 'CHANGELOG.md');
+    const changelogPath = resolve(cliCorePath, 'CHANGELOG.md');
     let changelog: string;
 
     try {
@@ -386,7 +394,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 }
 
 function createReleaseConfig(newVersion: string): ReleaseConfig {
-  const packagePath = resolve(rootPath, 'package.json');
+  const packagePath = resolve(cliCorePath, 'package.json');
   const pkg: PackageJson = JSON.parse(readFileSync(packagePath, 'utf-8'));
 
   const isPrerelease = newVersion.includes('-');
@@ -428,11 +436,11 @@ function displayReleaseInfo(config: ReleaseConfig): void {
 async function main(): Promise<void> {
   try {
     // 1. Run all tests
-    await runCommand('pnpm test', 'Running unit tests');
-    await runCommand('pnpm test:cli-all', 'Running CLI tests');
+    await runCommand('pnpx nx test cli-core', 'Running unit tests');
+    await runCommand('pnpx nx test cli', 'Running CLI tests');
 
     // 2. Build the project
-    await runCommand('pnpm build', 'Building project');
+    await runCommand('pnpx nx build cli-core', 'Building project');
 
     // 3. Bump version
     const newVersion = await bumpVersion(releaseType);

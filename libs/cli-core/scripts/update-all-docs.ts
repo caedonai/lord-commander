@@ -13,6 +13,13 @@
  */
 
 import { execaSync } from 'execa';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+// Workspace paths for NX monorepo
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const cliCorePath = path.resolve(__dirname, '..');
+const workspaceRoot = path.resolve(cliCorePath, '../..');
 
 interface UpdateStep {
   name: string;
@@ -25,37 +32,37 @@ const UPDATE_STEPS: UpdateStep[] = [
   {
     name: 'Build Project',
     description: 'Build project for accurate bundle analysis',
-    command: ['pnpm', 'build'],
+    command: ['pnpx', 'nx', 'build', 'cli-core'],
     optional: false,
   },
   {
     name: 'Update README Metrics',
     description: 'Update README.md with current performance and bundle metrics',
-    command: ['pnpm', 'docs:update-metrics'],
+    command: ['pnpx', 'tsx', 'scripts/update-readme-metrics.ts'],
     optional: false,
   },
   {
     name: 'Generate Bundle Analysis',
     description: 'Generate comprehensive bundle analysis documentation',
-    command: ['pnpm', 'docs:bundle-analysis'],
+    command: ['pnpx', 'tsx', 'scripts/generate-bundle-docs.ts'],
     optional: false,
   },
   {
     name: 'Generate Performance Docs',
     description: 'Generate performance metrics and optimization documentation',
-    command: ['pnpm', 'docs:performance'],
+    command: ['pnpx', 'tsx', 'scripts/generate-performance-docs.ts'],
     optional: false,
   },
   {
     name: 'Fix API Links',
     description: 'Fix broken API documentation links across all README files',
-    command: ['pnpm', 'docs:fix-links'],
+    command: ['pnpx', 'tsx', 'scripts/fix-api-links.ts'],
     optional: true,
   },
   {
     name: 'Verify Tests',
     description: 'Run comprehensive test suite to verify all systems',
-    command: ['pnpm', 'test'],
+    command: ['pnpx', 'nx', 'test', 'cli-core'],
     optional: true,
   },
 ];
@@ -96,9 +103,12 @@ async function runStep(step: UpdateStep, stepNum: number, totalSteps: number): P
   const startTime = Date.now();
 
   try {
+    // Use workspace root for build/test commands, cli-core path for script commands
+    const cwd = step.command.includes('nx') ? workspaceRoot : cliCorePath;
+    
     execaSync(step.command[0], step.command.slice(1), {
       stdio: 'pipe',
-      cwd: process.cwd(),
+      cwd,
     });
 
     const duration = Date.now() - startTime;
@@ -151,11 +161,11 @@ function printSummary(results: boolean[], steps: UpdateStep[]): void {
 
 function printUsageInfo(): void {
   console.log(`\n💡 Individual commands available:`);
-  console.log(`   pnpm docs:update-metrics     # Update README metrics only`);
-  console.log(`   pnpm docs:bundle-analysis    # Generate bundle docs only`);
-  console.log(`   pnpm docs:performance        # Generate performance docs only`);
-  console.log(`   pnpm docs:fix-links          # Fix API links only`);
-  console.log(`   pnpm build                   # Build project for analysis`);
+  console.log(`   pnpx tsx scripts/update-readme-metrics.ts     # Update README metrics only`);
+  console.log(`   pnpx tsx scripts/generate-bundle-docs.ts      # Generate bundle docs only`);
+  console.log(`   pnpx tsx scripts/generate-performance-docs.ts # Generate performance docs only`);
+  console.log(`   pnpx tsx scripts/fix-api-links.ts             # Fix API links only`);
+  console.log(`   pnpx nx build cli-core                        # Build project for analysis`);
   console.log(`\n📚 Documentation locations:`);
   console.log(`   ./README.md                  # Main project README with metrics`);
   console.log(`   ./docs/examples/             # Usage examples and tutorials`);
