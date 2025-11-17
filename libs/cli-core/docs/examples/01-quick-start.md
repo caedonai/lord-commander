@@ -5,6 +5,7 @@
 ## What You'll Build
 
 A simple CLI tool with:
+
 - Basic command structure
 - Interactive prompts
 - File operations
@@ -31,17 +32,18 @@ npm install @lord-commander/cli-core
 Create `my-cli.ts`:
 
 ```typescript
-import { createCLI } from '@lord-commander/cli-core';
+import { createCLI } from "@lord-commander/cli-core";
 
 // Create CLI with automatic command discovery
 await createCLI({
-  name: 'my-cli',
-  version: '1.0.0',
-  description: 'My first CLI built with lord-commander SDK'
+  name: "my-cli",
+  version: "1.0.0",
+  description: "My first CLI built with lord-commander SDK",
 });
 ```
 
 That's it! You now have a functional CLI with:
+
 - `--help` and `--version` flags
 - Shell completion support
 - Error handling and graceful exits
@@ -52,35 +54,35 @@ That's it! You now have a functional CLI with:
 Create `commands/greet.ts`:
 
 ```typescript
-import { Command } from 'commander';
-import { CommandContext } from '@caedonai/sdk/types';
+import { Command } from "commander";
+import { CommandContext } from "@caedonai/sdk/types";
 
-export default function(program: Command, context: CommandContext) {
+export default function (program: Command, context: CommandContext) {
   const { logger, prompts } = context;
-  
+
   program
-    .command('greet')
-    .description('Greet someone with a personalized message')
-    .argument('[name]', 'Name to greet')
-    .option('-e, --enthusiastic', 'Add enthusiasm to the greeting')
+    .command("greet")
+    .description("Greet someone with a personalized message")
+    .argument("[name]", "Name to greet")
+    .option("-e, --enthusiastic", "Add enthusiasm to the greeting")
     .action(async (name, options) => {
-      logger.intro('🎉 Greeting Generator');
-      
+      logger.intro("🎉 Greeting Generator");
+
       // Get name interactively if not provided
       if (!name) {
         name = await prompts.text({
-          message: 'What\'s your name?',
-          placeholder: 'Enter your name...'
+          message: "What's your name?",
+          placeholder: "Enter your name...",
         });
       }
-      
+
       // Generate greeting
-      const greeting = options.enthusiastic 
-        ? `Hello there, ${name}! 🎉✨` 
+      const greeting = options.enthusiastic
+        ? `Hello there, ${name}! 🎉✨`
         : `Hello, ${name}! 👋`;
-        
+
       logger.success(greeting);
-      logger.outro('Have a great day! 🌟');
+      logger.outro("Have a great day! 🌟");
     });
 }
 ```
@@ -104,87 +106,88 @@ node my-cli.ts greet --help
 Create `commands/init.ts`:
 
 ```typescript
-import { Command } from 'commander';
-import { CommandContext } from '@caedonai/sdk/types';
-import path from 'path';
+import { Command } from "commander";
+import { CommandContext } from "@caedonai/sdk/types";
+import path from "path";
 
-export default function(program: Command, context: CommandContext) {
+export default function (program: Command, context: CommandContext) {
   const { logger, prompts, fs, execa } = context;
-  
+
   program
-    .command('init')
-    .description('Initialize a new project')
-    .argument('[directory]', 'Project directory')
+    .command("init")
+    .description("Initialize a new project")
+    .argument("[directory]", "Project directory")
     .action(async (directory) => {
-      logger.intro('📦 Project Initializer');
-      
+      logger.intro("📦 Project Initializer");
+
       // Get project details
-      const projectName = directory || await prompts.text({
-        message: 'Project name:',
-        placeholder: 'my-awesome-project'
-      });
-      
+      const projectName =
+        directory ||
+        (await prompts.text({
+          message: "Project name:",
+          placeholder: "my-awesome-project",
+        }));
+
       const packageManager = await prompts.select({
-        message: 'Package manager:',
+        message: "Package manager:",
         options: [
-          { value: 'pnpm', label: 'pnpm (recommended)' },
-          { value: 'npm', label: 'npm' },
-          { value: 'yarn', label: 'yarn' }
-        ]
+          { value: "pnpm", label: "pnpm (recommended)" },
+          { value: "npm", label: "npm" },
+          { value: "yarn", label: "yarn" },
+        ],
       });
-      
+
       // Create project structure
       const projectPath = path.resolve(projectName);
-      const spinner = logger.spinner('Creating project...');
-      
+      const spinner = logger.spinner("Creating project...");
+
       try {
         // Create directories
         await fs.ensureDir(projectPath);
-        await fs.ensureDir(path.join(projectPath, 'src'));
-        
+        await fs.ensureDir(path.join(projectPath, "src"));
+
         // Create package.json
         const packageJson = {
           name: projectName,
-          version: '1.0.0',
-          description: 'A new project',
-          main: 'src/index.ts',
+          version: "1.0.0",
+          description: "A new project",
+          main: "src/index.ts",
           scripts: {
-            start: 'node src/index.ts',
-            build: 'tsc',
-            dev: 'ts-node src/index.ts'
-          }
+            start: "node src/index.ts",
+            build: "tsc",
+            dev: "ts-node src/index.ts",
+          },
         };
-        
+
         await fs.writeFile(
-          path.join(projectPath, 'package.json'),
+          path.join(projectPath, "package.json"),
           JSON.stringify(packageJson, null, 2)
         );
-        
+
         // Create entry file
         await fs.writeFile(
-          path.join(projectPath, 'src', 'index.ts'),
+          path.join(projectPath, "src", "index.ts"),
           `console.log('Hello from ${projectName}!');\\n`
         );
-        
+
         spinner.success(`Project created at ${projectPath}`);
-        
+
         // Install dependencies
-        const installSpinner = logger.spinner('Installing dependencies...');
-        
-        await execa(packageManager, ['install'], {
+        const installSpinner = logger.spinner("Installing dependencies...");
+
+        await execa(packageManager, ["install"], {
           cwd: projectPath,
-          stdio: 'pipe'
+          stdio: "pipe",
         });
-        
-        installSpinner.success('Dependencies installed');
-        
+
+        installSpinner.success("Dependencies installed");
+
         logger.outro(`✨ Project ${projectName} is ready!`);
         logger.info(`\\nNext steps:`);
         logger.info(`  cd ${projectName}`);
         logger.info(`  ${packageManager} run dev`);
-        
       } catch (error) {
-        spinner.fail('Project creation failed');
+        spinner.fail("Project creation failed");
         logger.error(error.message);
         process.exit(1);
       }
@@ -197,20 +200,20 @@ export default function(program: Command, context: CommandContext) {
 Update your `my-cli.ts`:
 
 ```typescript
-import { createCLI } from '@caedonai/sdk/core';
+import { createCLI } from "@caedonai/sdk/core";
 
 await createCLI({
-  name: 'my-cli',
-  version: '1.0.0',
-  description: 'My first CLI built with lord-commander SDK',
-  
+  name: "my-cli",
+  version: "1.0.0",
+  description: "My first CLI built with lord-commander SDK",
+
   // Enable shell completion
   autocomplete: {
     enabled: true,
     autoInstall: true, // Install completion on first run
-    shells: ['bash', 'zsh', 'fish'], // Target shells
-    enableFileCompletion: true // File/directory completion
-  }
+    shells: ["bash", "zsh", "fish"], // Target shells
+    enableFileCompletion: true, // File/directory completion
+  },
 });
 ```
 
@@ -246,7 +249,7 @@ Build and link for global usage:
 # Build TypeScript
 pnpm build
 
-# Link for global usage  
+# Link for global usage
 pnpm link --global
 
 # Now use anywhere
@@ -263,11 +266,12 @@ In just 5 minutes, you've created a CLI with:
 ✅ **Process Execution** - Running external commands with proper error handling  
 ✅ **Shell Completion** - Tab completion for commands and files  
 ✅ **Professional Logging** - Colorized output with spinners and progress  
-✅ **Error Handling** - Graceful failures with helpful messages  
+✅ **Error Handling** - Graceful failures with helpful messages
 
 ## Next Steps
 
 🎯 **Ready for more?** Continue with:
+
 - [**Basic CLI Patterns**](./02-basic-cli.md) - Core concepts and best practices
 - [**Command Organization**](./03-command-registration.md) - Advanced command structure
 - [**Interactive UI**](./04-interactive-prompts.md) - Rich user experiences
@@ -279,130 +283,134 @@ In just 5 minutes, you've created a CLI with:
 <summary>Click to see complete example code</summary>
 
 **my-cli.ts**
+
 ```typescript
-import { createCLI } from '@caedonai/sdk/core';
+import { createCLI } from "@caedonai/sdk/core";
 
 await createCLI({
-  name: 'my-cli',
-  version: '1.0.0',
-  description: 'My first CLI built with lord-commander SDK',
+  name: "my-cli",
+  version: "1.0.0",
+  description: "My first CLI built with lord-commander SDK",
   autocomplete: {
     enabled: true,
     autoInstall: true,
-    shells: ['bash', 'zsh', 'fish'],
-    enableFileCompletion: true
-  }
+    shells: ["bash", "zsh", "fish"],
+    enableFileCompletion: true,
+  },
 });
 ```
 
 **commands/greet.ts**
-```typescript
-import { Command } from 'commander';
-import { CommandContext } from '@caedonai/sdk/types';
 
-export default function(program: Command, context: CommandContext) {
+```typescript
+import { Command } from "commander";
+import { CommandContext } from "@caedonai/sdk/types";
+
+export default function (program: Command, context: CommandContext) {
   const { logger, prompts } = context;
-  
+
   program
-    .command('greet')
-    .description('Greet someone with a personalized message')
-    .argument('[name]', 'Name to greet')
-    .option('-e, --enthusiastic', 'Add enthusiasm to the greeting')
+    .command("greet")
+    .description("Greet someone with a personalized message")
+    .argument("[name]", "Name to greet")
+    .option("-e, --enthusiastic", "Add enthusiasm to the greeting")
     .action(async (name, options) => {
-      logger.intro('🎉 Greeting Generator');
-      
+      logger.intro("🎉 Greeting Generator");
+
       if (!name) {
         name = await prompts.text({
-          message: 'What\'s your name?',
-          placeholder: 'Enter your name...'
+          message: "What's your name?",
+          placeholder: "Enter your name...",
         });
       }
-      
-      const greeting = options.enthusiastic 
-        ? `Hello there, ${name}! 🎉✨` 
+
+      const greeting = options.enthusiastic
+        ? `Hello there, ${name}! 🎉✨`
         : `Hello, ${name}! 👋`;
-        
+
       logger.success(greeting);
-      logger.outro('Have a great day! 🌟');
+      logger.outro("Have a great day! 🌟");
     });
 }
 ```
 
 **commands/init.ts**
-```typescript
-import { Command } from 'commander';
-import { CommandContext } from '@caedonai/sdk/types';
-import path from 'path';
 
-export default function(program: Command, context: CommandContext) {
+```typescript
+import { Command } from "commander";
+import { CommandContext } from "@caedonai/sdk/types";
+import path from "path";
+
+export default function (program: Command, context: CommandContext) {
   const { logger, prompts, fs, execa } = context;
-  
+
   program
-    .command('init')
-    .description('Initialize a new project')
-    .argument('[directory]', 'Project directory')
+    .command("init")
+    .description("Initialize a new project")
+    .argument("[directory]", "Project directory")
     .action(async (directory) => {
-      logger.intro('📦 Project Initializer');
-      
-      const projectName = directory || await prompts.text({
-        message: 'Project name:',
-        placeholder: 'my-awesome-project'
-      });
-      
+      logger.intro("📦 Project Initializer");
+
+      const projectName =
+        directory ||
+        (await prompts.text({
+          message: "Project name:",
+          placeholder: "my-awesome-project",
+        }));
+
       const packageManager = await prompts.select({
-        message: 'Package manager:',
+        message: "Package manager:",
         options: [
-          { value: 'pnpm', label: 'pnpm (recommended)' },
-          { value: 'npm', label: 'npm' },
-          { value: 'yarn', label: 'yarn' }
-        ]
+          { value: "pnpm", label: "pnpm (recommended)" },
+          { value: "npm", label: "npm" },
+          { value: "yarn", label: "yarn" },
+        ],
       });
-      
+
       const projectPath = path.resolve(projectName);
-      const spinner = logger.spinner('Creating project...');
-      
+      const spinner = logger.spinner("Creating project...");
+
       try {
         await fs.ensureDir(projectPath);
-        await fs.ensureDir(path.join(projectPath, 'src'));
-        
+        await fs.ensureDir(path.join(projectPath, "src"));
+
         const packageJson = {
           name: projectName,
-          version: '1.0.0',
-          description: 'A new project',
-          main: 'src/index.ts',
+          version: "1.0.0",
+          description: "A new project",
+          main: "src/index.ts",
           scripts: {
-            start: 'node src/index.ts',
-            build: 'tsc',
-            dev: 'ts-node src/index.ts'
-          }
+            start: "node src/index.ts",
+            build: "tsc",
+            dev: "ts-node src/index.ts",
+          },
         };
-        
+
         await fs.writeFile(
-          path.join(projectPath, 'package.json'),
+          path.join(projectPath, "package.json"),
           JSON.stringify(packageJson, null, 2)
         );
-        
+
         await fs.writeFile(
-          path.join(projectPath, 'src', 'index.ts'),
+          path.join(projectPath, "src", "index.ts"),
           `console.log('Hello from ${projectName}!');\\n`
         );
-        
+
         spinner.success(`Project created at ${projectPath}`);
-        
-        const installSpinner = logger.spinner('Installing dependencies...');
-        await execa(packageManager, ['install'], {
+
+        const installSpinner = logger.spinner("Installing dependencies...");
+        await execa(packageManager, ["install"], {
           cwd: projectPath,
-          stdio: 'pipe'
+          stdio: "pipe",
         });
-        installSpinner.success('Dependencies installed');
-        
+        installSpinner.success("Dependencies installed");
+
         logger.outro(`✨ Project ${projectName} is ready!`);
         logger.info(`\\nNext steps:`);
         logger.info(`  cd ${projectName}`);
         logger.info(`  ${packageManager} run dev`);
-        
       } catch (error) {
-        spinner.fail('Project creation failed');
+        spinner.fail("Project creation failed");
         logger.error(error.message);
         process.exit(1);
       }
@@ -414,4 +422,4 @@ export default function(program: Command, context: CommandContext) {
 
 ---
 
-*🎉 **Congratulations!** You've built your first professional CLI. The lord-commander SDK handles the complex parts while you focus on your CLI's unique functionality.*
+_🎉 **Congratulations!** You've built your first professional CLI. The lord-commander SDK handles the complex parts while you focus on your CLI's unique functionality._

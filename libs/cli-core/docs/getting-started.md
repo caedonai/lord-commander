@@ -5,6 +5,7 @@ Welcome to the Lord Commander CLI SDK! This guide will help you create your firs
 ## 🎯 What You'll Build
 
 By the end of this guide, you'll have a fully functional CLI with:
+
 - Interactive prompts and beautiful output
 - Shell autocomplete support
 - Built-in help system
@@ -29,12 +30,12 @@ yarn add @lord-commander/cli-core
 
 ```typescript
 // cli.ts
-import { createCLI } from '@lord-commander/cli-core';
+import { createCLI } from "@lord-commander/cli-core";
 
 await createCLI({
-  name: 'my-cli',
-  version: '1.0.0',
-  description: 'My awesome CLI tool'
+  name: "my-cli",
+  version: "1.0.0",
+  description: "My awesome CLI tool",
 });
 ```
 
@@ -42,29 +43,29 @@ await createCLI({
 
 ```typescript
 // commands/greet.ts
-import { Command } from 'commander';
-import type { CommandContext } from '@lord-commander/cli-core';
+import { Command } from "commander";
+import type { CommandContext } from "@lord-commander/cli-core";
 
-export default function(program: Command, context: CommandContext) {
+export default function (program: Command, context: CommandContext) {
   const { logger, prompts } = context;
-  
+
   program
-    .command('greet [name]')
-    .description('Greet someone warmly')
-    .option('-e, --enthusiastic', 'Add extra excitement')
+    .command("greet [name]")
+    .description("Greet someone warmly")
+    .option("-e, --enthusiastic", "Add extra excitement")
     .action(async (name, options) => {
-      logger.intro('👋 Greeting Generator');
-      
+      logger.intro("👋 Greeting Generator");
+
       if (!name) {
         name = await prompts.text({
-          message: 'What\'s your name?',
-          placeholder: 'Enter your name'
+          message: "What's your name?",
+          placeholder: "Enter your name",
         });
       }
-      
-      const greeting = `Hello, ${name}!${options.enthusiastic ? ' 🎉' : ''}`;
+
+      const greeting = `Hello, ${name}!${options.enthusiastic ? " 🎉" : ""}`;
       logger.success(greeting);
-      logger.outro('Have a great day! ✨');
+      logger.outro("Have a great day! ✨");
     });
 }
 ```
@@ -86,56 +87,56 @@ node dist/cli.js --help
 ### Interactive Prompts
 
 ```typescript
-import { core } from '@lord-commander/cli-core';
+import { core } from "@lord-commander/cli-core";
 
 // Multi-step workflow with progress tracking
-const flow = new PromptFlow('Project Setup', 3);
+const flow = new PromptFlow("Project Setup", 3);
 
-const projectType = await flow.select('Project type:', [
-  { value: 'next', label: 'Next.js App' },
-  { value: 'express', label: 'Express API' }
+const projectType = await flow.select("Project type:", [
+  { value: "next", label: "Next.js App" },
+  { value: "express", label: "Express API" },
 ]);
 
-const useTypeScript = await flow.confirm('Use TypeScript?');
-const packageManager = await flow.select('Package manager:', [
-  { value: 'pnpm', label: 'pnpm (recommended)' },
-  { value: 'npm', label: 'npm' },
-  { value: 'yarn', label: 'yarn' }
+const useTypeScript = await flow.confirm("Use TypeScript?");
+const packageManager = await flow.select("Package manager:", [
+  { value: "pnpm", label: "pnpm (recommended)" },
+  { value: "npm", label: "npm" },
+  { value: "yarn", label: "yarn" },
 ]);
 
-flow.complete('Project configured successfully! 🚀');
+flow.complete("Project configured successfully! 🚀");
 ```
 
 ### Shell Autocomplete
 
 ```typescript
 await createCLI({
-  name: 'my-cli',
-  version: '1.0.0',
-  description: 'My CLI with autocomplete',
+  name: "my-cli",
+  version: "1.0.0",
+  description: "My CLI with autocomplete",
   autocomplete: {
     enabled: true,
     autoInstall: true,
-    shells: ['bash', 'zsh', 'fish']
-  }
+    shells: ["bash", "zsh", "fish"],
+  },
 });
 ```
 
 ### Security & Validation
 
 ```typescript
-import { core } from '@lord-commander/cli-core';
+import { core } from "@lord-commander/cli-core";
 
 // Secure input validation
 const result = validateProjectName(userInput, {
   autoSanitize: true,
-  strictMode: false
+  strictMode: false,
 });
 
 if (result.isValid) {
   console.log(`Using project: ${result.sanitized}`);
 } else {
-  console.error(`Invalid name: ${result.errors.join(', ')}`);
+  console.error(`Invalid name: ${result.errors.join(", ")}`);
 }
 ```
 
@@ -144,42 +145,42 @@ if (result.isValid) {
 The SDK includes built-in tools for professional CLI output:
 
 ```typescript
-import { core } from '@lord-commander/cli-core';
+import { core } from "@lord-commander/cli-core";
 
 // Visual separation and progress
-printSeparator('Configuration Setup', 'double');
-printSection('Environment', 'Configuring deployment target');
+printSeparator("Configuration Setup", "double");
+printSection("Environment", "Configuring deployment target");
 
-printTaskStart('Installing dependencies');
+printTaskStart("Installing dependencies");
 // ... perform task
-printTaskComplete('Dependencies installed successfully');
+printTaskComplete("Dependencies installed successfully");
 ```
 
 ## 🔧 Advanced Configuration
 
 ```typescript
 await createCLI({
-  name: 'advanced-cli',
-  version: '2.0.0',
-  description: 'Advanced CLI with all features',
-  
+  name: "advanced-cli",
+  version: "2.0.0",
+  description: "Advanced CLI with all features",
+
   // Multiple command directories
-  commandsPath: ['./commands/core', './commands/utils'],
-  
+  commandsPath: ["./commands/core", "./commands/utils"],
+
   // Built-in commands
   builtinCommands: {
     completion: true,
     hello: false,
-    version: true
+    version: true,
   },
-  
+
   // Caching for performance
   cache: {
     enabled: true,
     ttl: 86400, // 24 hours
-    maxSize: 100 * 1024 * 1024 // 100MB
+    maxSize: 100 * 1024 * 1024, // 100MB
   },
-  
+
   // Custom error handling
   errorHandler: async (error) => {
     console.error(`🚨 Error: ${error.message}`);
@@ -187,7 +188,7 @@ await createCLI({
       console.error(error.stack);
     }
     process.exit(1);
-  }
+  },
 });
 ```
 
@@ -216,8 +217,9 @@ my-cli/
 ## 🚀 Pro Tips
 
 1. **Tree Shaking**: Use selective imports for smaller bundles
+
    ```typescript
-   import { core, plugins } from '@lord-commander/cli-core';
+   import { core, plugins } from "@lord-commander/cli-core";
    ```
 
 2. **TypeScript**: Enable strict mode for better development experience
