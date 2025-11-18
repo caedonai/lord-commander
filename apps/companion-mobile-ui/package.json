@@ -1,0 +1,50 @@
+{
+  "name": "companion-mobile-ui",
+  "version": "1.0.0",
+  "description": "Lord Commander Mobile Companion App - React Native",
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "build:android": "eas build --platform android",
+    "build:ios": "eas build --platform ios",
+    "preview": "expo start --tunnel",
+    "test": "jest",
+    "lint": "ultracite check src",
+    "lint:fix": "ultracite fix src",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^14.1.0",
+    "@react-navigation/bottom-tabs": "^6.6.1",
+    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/stack": "^6.3.20",
+    "expo": "~50.0.0",
+    "expo-constants": "~15.4.0",
+    "expo-font": "~11.10.0",
+    "expo-splash-screen": "~0.26.1",
+    "expo-status-bar": "~1.11.1",
+    "react": "18.2.0",
+    "react-native": "0.73.0",
+    "react-native-gesture-handler": "~2.14.0",
+    "react-native-reanimated": "~3.6.2",
+    "react-native-safe-area-context": "4.8.2",
+    "react-native-screens": "~3.29.0",
+    "react-native-svg": "14.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@expo/cli": "~0.17.0",
+    "@types/react": "~18.2.45",
+    "@types/react-native": "~0.73.0",
+    "jest": "^29.2.1",
+    "typescript": "^5.1.3"
+  },
+  "jest": {
+    "preset": "react-native",
+    "passWithNoTests": true
+  },
+  "private": true
+}

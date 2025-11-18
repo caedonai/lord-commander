@@ -1,0 +1,77 @@
+{
+  "name": "companion-mobile-ui",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/companion-mobile-ui/src",
+  "projectType": "application",
+  "tags": ["scope:mobile", "type:app"],
+  "targets": {
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "expo start",
+        "cwd": "apps/companion-mobile-ui"
+      }
+    },
+    "android": {
+      "executor": "nx:run-commands", 
+      "options": {
+        "command": "expo start --android",
+        "cwd": "apps/companion-mobile-ui"
+      }
+    },
+    "ios": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "expo start --ios", 
+        "cwd": "apps/companion-mobile-ui"
+      }
+    },
+    "web": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "expo start --web",
+        "cwd": "apps/companion-mobile-ui"
+      }
+    },
+    "build-android": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eas build --platform android",
+        "cwd": "apps/companion-mobile-ui"
+      }
+    },
+    "build-ios": {
+      "executor": "nx:run-commands", 
+      "options": {
+        "command": "eas build --platform ios",
+        "cwd": "apps/companion-mobile-ui"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "jest",
+        "cwd": "apps/companion-mobile-ui"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "NO_COLOR=1 ultracite check apps/companion-mobile-ui/src"
+      }
+    },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "NO_COLOR=1 ultracite fix apps/companion-mobile-ui/src"
+      }
+    },
+    "type-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "apps/companion-mobile-ui"
+      }
+    }
+  }
+}
