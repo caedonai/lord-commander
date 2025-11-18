@@ -1,0 +1,100 @@
+---
+title: "scaffold"
+description: "Generate code using intelligent templates and conventions"
+---
+
+# Scaffold Command
+
+The `scaffold` command generates code using intelligent templates that follow your project's patterns and conventions. It's designed to speed up development by creating consistent, well-structured code.
+
+## Basic Usage
+
+```bash
+# Generate a component
+lord-commander scaffold component Button
+
+# Generate a page
+lord-commander scaffold page HomePage
+
+# Generate an API endpoint
+lord-commander scaffold api users
+```
+
+## Command Options
+
+| Option       | Description                    | Default           |
+| ------------ | ------------------------------ | ----------------- |
+| `--template` | Template to use                | Auto-detected     |
+| `--path`     | Output directory               | Current directory |
+| `--dry-run`  | Preview without creating files | `false`           |
+| `--force`    | Overwrite existing files       | `false`           |
+
+## Supported Generators
+
+<CardGroup cols={2}>
+
+<Card title="Components" icon="puzzle-piece">
+  Generate UI components with tests and styles
+</Card>
+
+<Card title="Pages" icon="file">
+  Create page components with routing setup
+</Card>
+
+<Card title="API Endpoints" icon="server">
+  Generate REST API endpoints with validation
+</Card>
+
+<Card title="Hooks" icon="hook">
+  Create custom React hooks with TypeScript
+</Card>
+
+</CardGroup>
+
+## Examples
+
+### React Component
+
+```bash
+lord-commander scaffold component Button --template typescript
+```
+
+Creates:
+
+```
+src/components/Button/
+├── Button.tsx
+├── Button.test.tsx
+├── Button.module.css
+└── index.ts
+```
+
+### API Route
+
+```bash
+lord-commander scaffold api users --crud
+```
+
+Creates:
+
+```
+src/api/users/
+├── users.controller.ts
+├── users.service.ts
+├── users.model.ts
+└── users.test.ts
+```
+
+## Related Commands
+
+<CardGroup cols={2}>
+
+<Card title="init" icon="rocket" href="/commands/init">
+  Initialize new projects with scaffolding-ready structure
+</Card>
+
+<Card title="analyze" icon="chart-simple" href="/commands/analyze">
+  Analyze generated code for optimization opportunities
+</Card>
+
+</CardGroup>

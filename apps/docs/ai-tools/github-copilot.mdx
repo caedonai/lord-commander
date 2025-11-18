@@ -1,0 +1,145 @@
+---
+title: "GitHub Copilot"
+description: "Instructions and best practices for using GitHub Copilot with Lord Commander documentation"
+---
+
+# GitHub Copilot Instructions for Lord Commander Docs
+
+## Documentation Context
+
+This is the documentation site for **Lord Commander CLI SDK**, a comprehensive command-line toolkit for modern web development. The documentation is built with Mintlify and follows these key principles:
+
+### Project Structure
+
+- **Framework**: Mintlify documentation platform
+- **Content Format**: MDX (Markdown with JSX components)
+- **Navigation**: Defined in `docs.json`
+- **Styling**: Mintlify's built-in components and themes
+
+### Content Guidelines
+
+When helping with documentation content:
+
+1. **Use Mintlify Components**: Leverage built-in components like `<Card>`, `<CardGroup>`, `<Accordion>`, `<AccordionGroup>`, `<Tabs>`, `<CodeGroup>`, etc.
+
+2. **Follow Existing Patterns**:
+
+   - Start with YAML frontmatter (title, description)
+   - Use consistent heading hierarchy
+   - Include code examples with proper syntax highlighting
+   - Add cross-references between related sections
+
+3. **Content Structure**:
+
+   ```mdx
+   ---
+   title: "Page Title"
+   description: "Clear, concise description for SEO"
+   ---
+
+   # Main Heading
+
+   Brief introduction paragraph.
+
+   ## Section Heading
+
+   Content with examples and components.
+   ```
+
+### Code Examples
+
+Always include realistic, working examples:
+
+```typescript
+// Good: Complete, runnable example
+import { createCLI } from "@caedonai/lord-commander";
+
+const cli = createCLI({
+  name: "my-cli",
+  description: "My awesome CLI tool",
+  commands: [
+    {
+      name: "hello",
+      description: "Say hello",
+      handler: async () => {
+        console.log("Hello, world!");
+      },
+    },
+  ],
+});
+
+cli.run();
+```
+
+### Navigation Integration
+
+When creating new pages, remember to:
+
+1. Add the page to the appropriate section in `docs.json`
+2. Use consistent file naming (kebab-case)
+3. Place files in the correct directory structure
+
+### Mintlify-Specific Features
+
+Use these Mintlify components effectively:
+
+- `<Card>` and `<CardGroup>` for feature highlights
+- `<Accordion>` for FAQ-style content
+- `<Tabs>` for multi-option examples
+- `<CodeGroup>` for language-specific code samples
+- `<Note>`, `<Tip>`, `<Warning>` for callouts
+
+### Documentation Sections
+
+The Lord Commander docs are organized as:
+
+1. **Core Concepts** (`/core/`): Fundamental CLI development concepts
+2. **Guides** (`/guides/`): Step-by-step tutorials and how-tos
+3. **Commands** (`/commands/`): Individual command documentation
+4. **Examples** (`/examples/`): Real-world usage examples
+5. **API Reference** (`/api-reference/`): Complete API documentation
+
+### Writing Style
+
+- **Tone**: Professional but approachable
+- **Audience**: Developers building CLI tools
+- **Focus**: Practical, actionable guidance
+- **Examples**: Always include working code samples
+
+### Quality Standards
+
+Ensure all content:
+
+- Has proper frontmatter
+- Includes relevant examples
+- Uses correct Mintlify components
+- Links to related sections
+- Follows accessibility best practices
+
+## NX Integration
+
+This docs app is integrated with NX workspace. Available commands:
+
+- `pnpx nx run docs:dev` - Start development server
+- `pnpx nx run docs:build` - Build documentation
+- `pnpx nx run docs:lint` - Check links and accessibility
+- `pnpx nx run docs:preview` - Preview built docs
+
+## Common Tasks
+
+### Adding a New Page
+
+1. Create MDX file in appropriate directory
+2. Add frontmatter with title and description
+3. Update `docs.json` navigation
+4. Test with `pnpx nx run docs:dev`
+
+### Updating Navigation
+
+Edit `docs.json` and ensure all referenced files exist.
+
+### Code Examples
+
+Use realistic Lord Commander SDK examples that developers can actually run.
+
+Remember: This documentation serves developers who want to build better CLI tools. Focus on practical value and clear examples!

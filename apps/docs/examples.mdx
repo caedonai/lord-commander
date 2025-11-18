@@ -1,0 +1,404 @@
+---
+title: "Examples"
+description: "Real-world examples and use cases for Lord Commander CLI SDK"
+---
+
+## Getting Started Examples
+
+These examples show common Lord Commander workflows for different project types and scenarios.
+
+## React Project Setup
+
+### Initialize a React Project
+
+```bash
+# Create a new CLI project with TypeScript (recommended project folder approach)
+lord-commander init my-react-cli --type=cli-only --pm=pnpm
+cd my-react-cli
+```
+
+**What this does:**
+
+- Sets up React with TypeScript configuration
+- Configures build tools (Vite/Webpack)
+- Adds testing setup with Jest/Vitest
+- Creates project structure with best practices
+
+### Generate React Components
+
+```bash
+# Generate a basic component
+lord-commander scaffold component Button
+
+# Generate a component with props interface
+lord-commander scaffold component Card --with-props
+
+# Generate a page component
+lord-commander scaffold page HomePage --route "/home"
+```
+
+**Generated files:**
+
+```
+src/
+├── components/
+│   ├── Button/
+│   │   ├── Button.tsx
+│   │   ├── Button.test.tsx
+│   │   └── index.ts
+│   └── Card/
+│       ├── Card.tsx
+│       ├── Card.props.ts
+│       ├── Card.test.tsx
+│       └── index.ts
+└── pages/
+    └── HomePage/
+        ├── HomePage.tsx
+        ├── HomePage.test.tsx
+        └── index.ts
+```
+
+## Vue Project Setup
+
+### Initialize a Vue Project
+
+```bash
+# Create a Vue CLI project (project folder approach)
+lord-commander init my-vue-cli --type=cli-only --pm=pnpm
+```
+
+### Generate Vue Components
+
+```bash
+# Generate a single-file component
+lord-commander scaffold component UserProfile
+
+# Generate with composables
+lord-commander scaffold component DataTable --with-composables
+```
+
+**Generated Vue component:**
+
+```vue
+<!-- UserProfile.vue -->
+<template>
+  <div class="user-profile">
+    <h2>{{ user.name }}</h2>
+    <p>{{ user.email }}</p>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { defineProps } from "vue";
+
+interface User {
+  name: string;
+  email: string;
+}
+
+interface UserProfileProps {
+  user: User;
+}
+
+const props = defineProps<UserProfileProps>();
+</script>
+
+<style scoped>
+.user-profile {
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+}
+</style>
+```
+
+## Bundle Analysis Examples
+
+### Basic Bundle Analysis
+
+```bash
+# Analyze current project bundle
+lord-commander analyze
+
+# Analyze with detailed output
+lord-commander analyze --verbose
+
+# Generate HTML report
+lord-commander analyze --report --output ./reports/bundle-analysis.html
+```
+
+**Sample output:**
+
+```
+📊 Bundle Analysis Results
+
+Total Bundle Size: 847.2 KB (gzipped: 234.1 KB)
+
+🎯 Largest Dependencies:
+  1. react-dom (130.4 KB)
+  2. lodash (89.2 KB)
+  3. moment (67.8 KB)
+  4. chart.js (45.3 KB)
+
+⚠️  Optimization Opportunities:
+  • Replace moment with date-fns (-22.4 KB)
+  • Use lodash-es for tree shaking (-31.2 KB)
+  • Implement code splitting for chart.js (-45.3 KB)
+
+🏆 Recommendations:
+  • Total potential savings: 98.9 KB (11.7%)
+  • Consider lazy loading for non-critical components
+```
+
+### CI/CD Integration
+
+```yaml
+# .github/workflows/bundle-analysis.yml
+name: Bundle Analysis
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run bundle analysis
+        run: lord-commander analyze --ci --threshold 500kb
+
+      - name: Generate report
+        run: lord-commander analyze --report --format json > bundle-report.json
+
+      - name: Upload report
+        uses: actions/upload-artifact@v3
+        with:
+          name: bundle-report
+          path: bundle-report.json
+```
+
+## Advanced Scaffolding
+
+### Custom Templates
+
+Create a custom component template:
+
+```bash
+# Create templates directory
+mkdir .lordcommander/templates
+
+# Create custom React hook template
+cat > .lordcommander/templates/hook.hbs << 'EOF'
+import { useState, useEffect } from 'react';
+
+export interface Use{{pascalCase name}}Options {
+  // Add options here
+}
+
+export interface Use{{pascalCase name}}Return {
+  // Add return type here
+}
+
+export const use{{pascalCase name}} = (
+  options: Use{{pascalCase name}}Options = {}
+): Use{{pascalCase name}}Return => {
+  const [state, setState] = useState();
+
+  useEffect(() => {
+    // Implementation here
+  }, []);
+
+  return {
+    // Return values here
+  };
+};
+EOF
+
+# Use the custom template
+lord-commander scaffold hook useUserData --template hook
+```
+
+### API Route Generation
+
+```bash
+# Generate REST API endpoints
+lord-commander scaffold api users --crud
+
+# Generate GraphQL resolvers
+lord-commander scaffold graphql User --type Query,Mutation
+```
+
+**Generated API structure:**
+
+```
+src/
+└── api/
+    └── users/
+        ├── users.controller.ts
+        ├── users.service.ts
+        ├── users.model.ts
+        ├── users.routes.ts
+        └── users.test.ts
+```
+
+## Multi-Framework Workspace
+
+### Monorepo Setup
+
+```bash
+# Initialize a monorepo with multiple frameworks
+lord-commander init my-monorepo --type=full-stack --pm=pnpm
+
+# Navigate to the monorepo
+cd my-monorepo
+
+# Use scaffold commands to add additional components
+lord-commander scaffold component UserProfile
+lord-commander scaffold command deploy
+```
+
+### Cross-Framework Analysis
+
+```bash
+# Analyze entire workspace
+lord-commander analyze --workspace
+
+# Analyze specific apps
+lord-commander analyze --apps frontend,api
+
+# Generate workspace report
+lord-commander analyze --workspace --report --output ./reports/
+```
+
+## Performance Optimization Examples
+
+### Code Splitting Setup
+
+```bash
+# Analyze current bundle for splitting opportunities
+lord-commander analyze --code-splitting
+
+# Generate route-based splitting
+lord-commander scaffold routes --lazy-loading
+
+# Optimize third-party imports
+lord-commander optimize --tree-shaking --chunk-splitting
+```
+
+### Progressive Enhancement
+
+```bash
+# Set up progressive loading
+lord-commander scaffold pwa --service-worker
+
+# Generate critical CSS
+lord-commander optimize --critical-css
+
+# Configure preloading strategies
+lord-commander optimize --preload-strategy aggressive
+```
+
+## Testing Integration
+
+### Generate Test Suites
+
+```bash
+# Generate unit tests for existing components
+lord-commander scaffold tests --type unit --pattern "src/components/**/*.tsx"
+
+# Generate integration tests
+lord-commander scaffold tests --type integration --api-endpoints
+
+# Generate E2E tests
+lord-commander scaffold tests --type e2e --user-flows
+```
+
+### Test Configuration
+
+```bash
+# Set up testing environment
+lord-commander init my-test-project --type=cli-only --pm=pnpm
+
+# Navigate and set up testing
+cd my-test-project
+
+# Use scaffold commands to add test utilities
+lord-commander scaffold command test-runner
+```
+
+## Deployment Examples
+
+### Build Optimization
+
+```bash
+# Optimize for production
+lord-commander build --optimize --analyze
+
+# Generate deployment artifacts
+lord-commander build --docker --k8s-manifests
+
+# Create deployment package
+lord-commander package --target vercel,netlify,aws
+```
+
+### Environment Configuration
+
+```bash
+# Set up multiple environments
+lord-commander configure --env development,staging,production
+
+# Generate environment-specific builds
+lord-commander build --env production --optimize --minify
+```
+
+## Troubleshooting Examples
+
+### Debug Bundle Issues
+
+```bash
+# Debug bundle composition
+lord-commander analyze --debug --verbose
+
+# Find circular dependencies
+lord-commander analyze --circular-deps
+
+# Identify unused dependencies
+lord-commander analyze --unused-deps --prune
+```
+
+### Performance Debugging
+
+```bash
+# Profile build performance
+lord-commander build --profile --benchmark
+
+# Analyze build bottlenecks
+lord-commander analyze --build-time --optimization-suggestions
+```
+
+## Next Steps
+
+Explore more advanced features:
+
+<CardGroup cols={2}>
+  <Card
+    title="API Reference"
+    icon="terminal"
+    href="/api-reference/introduction"
+  >
+    Complete command reference and configuration options
+  </Card>
+  <Card title="Guides" icon="book-open" href="/guides/configuration">
+    In-depth guides for advanced usage patterns
+  </Card>
+</CardGroup>

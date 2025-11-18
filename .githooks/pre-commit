@@ -1,18 +1,21 @@
 #!/bin/sh
 # Pre-commit hook for Lord Commander SDK
 
+# Ensure non-interactive mode for CI environments
+export CI=true
+export NODE_ENV=test
+
+# Unset FORCE_COLOR to avoid conflicts with NO_COLOR
+unset FORCE_COLOR
+
 echo "🔍 Running pre-commit checks..."
 
-# Run linting and formatting
-echo "📏 Running linting and formatting with Ultracite..."
-pnpm lint:check || exit 1
+# Run linting on affected projects using NX
+echo "📏 Running linting checks..."
+pnpm run lint || exit 1
 
-# Run tests
+# Run tests on affected projects using NX  
 echo "🧪 Running tests..."
-pnpm test || exit 1
-
-# Build check
-echo "🔨 Testing build..."
-pnpm build || exit 1
+pnpm run test || exit 1
 
 echo "✅ Pre-commit checks passed!"

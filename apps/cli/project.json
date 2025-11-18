@@ -1,0 +1,88 @@
+{
+  "name": "cli",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cli/src",
+  "projectType": "application",
+  "tags": [],
+  "implicitDependencies": ["cli-core"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "dependsOn": ["cli-core:build"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cli",
+        "format": ["esm"],
+        "bundle": true,
+        "main": "apps/cli/src/main.ts",
+        "tsConfig": "apps/cli/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/cli/commands",
+            "output": "./commands"
+          }
+        ],
+        "generatePackageJson": true,
+        "external": [],
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          },
+          "banner": {
+            "js": "#!/usr/bin/env node"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "cli:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "cli:build:development"
+        },
+        "production": {
+          "buildTarget": "cli:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "NO_COLOR=1 ultracite check apps/cli/src apps/cli/commands"
+      }
+    },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "NO_COLOR=1 ultracite fix apps/cli/src apps/cli/commands"
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "passWithNoTests": true,
+        "reportsDirectory": "../../coverage/apps/cli"
+      }
+    }
+  }
+}

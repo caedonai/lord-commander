@@ -1,0 +1,528 @@
+---
+title: "Configuration"
+description: "Complete guide to configuring Lord Commander for your development workflow"
+---
+
+## Configuration Overview
+
+Lord Commander uses a flexible configuration system that allows you to customize its behavior at multiple levels. Configuration is hierarchical, with command-line options taking precedence over project configuration, which takes precedence over global configuration.
+
+## Configuration Hierarchy
+
+1. **Command-line flags** (highest priority)
+2. **Project configuration** (`.lordcommander/config.json`)
+3. **Global configuration** (`~/.config/lord-commander/config.json`)
+4. **Default values** (lowest priority)
+
+## Global Configuration
+
+### Location
+
+Global configuration is stored at:
+
+- **macOS/Linux:** `~/.config/lord-commander/config.json`
+- **Windows:** `%APPDATA%\lord-commander\config.json`
+
+### Creating Global Config
+
+```bash
+# Initialize global configuration
+lord-commander config --global --init
+
+# Set global preferences
+lord-commander config --global set framework react
+lord-commander config --global set language typescript
+lord-commander config --global set packageManager pnpm
+```
+
+### Global Config Schema
+
+```json
+{
+  "defaults": {
+    "framework": "react",
+    "language": "typescript",
+    "packageManager": "pnpm",
+    "testFramework": "vitest"
+  },
+  "templates": {
+    "directory": "~/.config/lord-commander/templates"
+  },
+  "plugins": {
+    "directory": "~/.config/lord-commander/plugins",
+    "enabled": [
+      "@lordcommander/react-plugin",
+      "@lordcommander/typescript-plugin"
+    ]
+  },
+  "editor": {
+    "command": "code",
+    "flags": ["--wait"]
+  }
+}
+```
+
+## Project Configuration
+
+### Creating Project Config
+
+```bash
+# Initialize project configuration
+lord-commander config --init
+
+# Set project-specific options
+lord-commander config set framework vue
+lord-commander config set testFramework cypress
+```
+
+### Project Config Schema
+
+```json
+{
+  "project": {
+    "name": "my-awesome-app",
+    "framework": "react",
+    "language": "typescript",
+    "packageManager": "pnpm"
+  },
+  "paths": {
+    "src": "./src",
+    "components": "./src/components",
+    "pages": "./src/pages",
+    "utils": "./src/utils",
+    "tests": "./src/__tests__",
+    "docs": "./docs"
+  },
+  "templates": {
+    "component": "./templates/component.hbs",
+    "page": "./templates/page.hbs",
+    "hook": "./templates/hook.hbs"
+  },
+  "analysis": {
+    "bundleSize": {
+      "threshold": "500kb",
+      "showWarnings": true,
+      "failOnExceed": false
+    },
+    "performance": {
+      "metrics": ["fcp", "lcp", "fid", "cls"],
+      "thresholds": {
+        "fcp": 2000,
+        "lcp": 4000
+      }
+    }
+  },
+  "scaffold": {
+    "autoImport": true,
+    "generateTests": true,
+    "generateDocs": true,
+    "naming": {
+      "components": "PascalCase",
+      "files": "kebab-case",
+      "directories": "kebab-case"
+    }
+  },
+  "build": {
+    "target": "es2020",
+    "sourceMaps": true,
+    "minify": true,
+    "treeshake": true
+  }
+}
+```
+
+## Framework-Specific Configuration
+
+### React Configuration
+
+```json
+{
+  "framework": "react",
+  "react": {
+    "version": "18",
+    "typescript": true,
+    "jsx": "react-jsx",
+    "hooks": {
+      "generateCustomHooks": true,
+      "hooksDirectory": "./src/hooks"
+    },
+    "components": {
+      "defaultExport": true,
+      "propsInterface": true,
+      "styled": "css-modules"
+    },
+    "testing": {
+      "framework": "jest",
+      "rtl": true,
+      "snapshot": false
+    }
+  }
+}
+```
+
+### Vue Configuration
+
+```json
+{
+  "framework": "vue",
+  "vue": {
+    "version": "3",
+    "typescript": true,
+    "compositionApi": true,
+    "sfc": {
+      "scriptSetup": true,
+      "cssScoped": true,
+      "cssModules": false
+    },
+    "components": {
+      "autoImport": true,
+      "directory": "./src/components"
+    },
+    "testing": {
+      "framework": "vitest",
+      "vtu": true
+    }
+  }
+}
+```
+
+### Angular Configuration
+
+```json
+{
+  "framework": "angular",
+  "angular": {
+    "version": "16",
+    "typescript": true,
+    "standalone": true,
+    "components": {
+      "changeDetection": "OnPush",
+      "style": "scss",
+      "viewEncapsulation": "Emulated"
+    },
+    "services": {
+      "injectable": "root"
+    },
+    "testing": {
+      "framework": "jasmine",
+      "karma": true
+    }
+  }
+}
+```
+
+## Template Configuration
+
+### Custom Templates Directory
+
+```bash
+# Set custom templates directory
+lord-commander config set templates.directory ./my-templates
+
+# List available templates
+lord-commander templates list
+
+# Create new template
+lord-commander templates create component --name my-component-template
+```
+
+### Template Variables
+
+Templates support various built-in variables:
+
+| Variable     | Description   | Example        |
+| ------------ | ------------- | -------------- |
+| `name`       | Original name | `userProfile`  |
+| `pascalCase` | PascalCase    | `UserProfile`  |
+| `camelCase`  | camelCase     | `userProfile`  |
+| `kebabCase`  | kebab-case    | `user-profile` |
+| `snakeCase`  | snake_case    | `user_profile` |
+| `titleCase`  | Title Case    | `User Profile` |
+| `upperCase`  | UPPER_CASE    | `USER_PROFILE` |
+
+### Template Helpers
+
+```handlebars
+{{! Conditional rendering }}
+{{#if typescript}}
+  interface
+  {{pascalCase name}}Props { // Props interface }
+{{/if}}
+
+{{! Loops }}
+{{#each props}}
+  {{this.name}}:
+  {{this.type}};
+{{/each}}
+
+{{! Custom helpers }}
+{{formatDate createdAt}}
+{{pluralize name}}
+```
+
+## Plugin Configuration
+
+### Installing Plugins
+
+```bash
+# Install plugin globally
+npm install -g @lordcommander/react-plugin
+
+# Install plugin for project
+npm install --save-dev @lordcommander/vue-plugin
+
+# Enable plugin in configuration
+lord-commander config set plugins.enabled[] @lordcommander/react-plugin
+```
+
+### Plugin Configuration
+
+```json
+{
+  "plugins": {
+    "enabled": [
+      "@lordcommander/react-plugin",
+      "@lordcommander/typescript-plugin",
+      "./local-plugins/my-plugin"
+    ],
+    "configuration": {
+      "@lordcommander/react-plugin": {
+        "defaultProps": true,
+        "propTypes": false,
+        "hooks": true
+      },
+      "@lordcommander/typescript-plugin": {
+        "strict": true,
+        "exactOptionalPropertyTypes": true
+      }
+    }
+  }
+}
+```
+
+## Analysis Configuration
+
+### Bundle Analysis Settings
+
+```json
+{
+  "analysis": {
+    "bundleSize": {
+      "threshold": "500kb",
+      "showWarnings": true,
+      "failOnExceed": false,
+      "exclude": ["*.test.js", "*.spec.js"],
+      "gzip": true,
+      "brotli": true
+    },
+    "dependencies": {
+      "checkOutdated": true,
+      "checkVulnerabilities": true,
+      "suggestAlternatives": true
+    },
+    "performance": {
+      "lighthouse": true,
+      "metrics": ["fcp", "lcp", "fid", "cls", "ttfb"],
+      "thresholds": {
+        "fcp": 2000,
+        "lcp": 4000,
+        "fid": 300,
+        "cls": 0.1
+      }
+    },
+    "codeQuality": {
+      "complexity": true,
+      "duplication": true,
+      "maintainability": true
+    }
+  }
+}
+```
+
+### Custom Analysis Rules
+
+```json
+{
+  "analysis": {
+    "rules": {
+      "max-component-size": {
+        "enabled": true,
+        "threshold": "200 lines",
+        "exclude": ["*.generated.tsx"]
+      },
+      "no-circular-deps": {
+        "enabled": true,
+        "maxDepth": 10
+      },
+      "bundle-size-regression": {
+        "enabled": true,
+        "threshold": "5%",
+        "baseline": "./baseline-bundle-stats.json"
+      }
+    }
+  }
+}
+```
+
+## Environment-Specific Configuration
+
+### Multiple Environments
+
+```json
+{
+  "environments": {
+    "development": {
+      "build": {
+        "sourceMaps": true,
+        "minify": false,
+        "watch": true
+      },
+      "analysis": {
+        "bundleSize": {
+          "threshold": "1mb"
+        }
+      }
+    },
+    "production": {
+      "build": {
+        "sourceMaps": false,
+        "minify": true,
+        "optimization": "aggressive"
+      },
+      "analysis": {
+        "bundleSize": {
+          "threshold": "500kb",
+          "failOnExceed": true
+        }
+      }
+    }
+  }
+}
+```
+
+### Using Environment Config
+
+```bash
+# Use specific environment
+lord-commander build --env production
+
+# Set default environment
+lord-commander config set defaultEnvironment development
+```
+
+## Configuration Commands
+
+### Viewing Configuration
+
+```bash
+# Show current configuration
+lord-commander config show
+
+# Show specific value
+lord-commander config get framework
+
+# Show configuration source
+lord-commander config show --source
+```
+
+### Modifying Configuration
+
+```bash
+# Set configuration value
+lord-commander config set framework vue
+
+# Unset configuration value
+lord-commander config unset framework
+
+# Reset to defaults
+lord-commander config reset
+
+# Validate configuration
+lord-commander config validate
+```
+
+### Importing/Exporting Configuration
+
+```bash
+# Export configuration
+lord-commander config export > my-config.json
+
+# Import configuration
+lord-commander config import my-config.json
+
+# Merge configuration
+lord-commander config merge team-config.json
+```
+
+## Configuration Validation
+
+### Schema Validation
+
+Lord Commander validates configuration against a JSON schema:
+
+```bash
+# Validate current configuration
+lord-commander config validate
+
+# Validate specific file
+lord-commander config validate ./custom-config.json
+
+# Show validation errors
+lord-commander config validate --verbose
+```
+
+### Common Validation Errors
+
+<AccordionGroup>
+  <Accordion icon="triangle-exclamation" title="Invalid Framework">
+    **Error:** `Invalid framework 'reactjs'. Must be one of: react, vue,
+    angular, svelte` **Solution:** Use the correct framework name from the
+    supported list.
+  </Accordion>
+
+  <Accordion icon="triangle-exclamation" title="Invalid Path">
+    **Error:** `Path './src/components' does not exist` **Solution:** Ensure all
+    configured paths exist or use relative paths from project root.
+  </Accordion>
+
+  <Accordion icon="triangle-exclamation" title="Plugin Not Found">
+    **Error:** `Plugin '@lordcommander/unknown-plugin' not found` **Solution:**
+    Install the plugin or remove it from the enabled plugins list.
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Tabs>
+  <Tab title="Team Configuration">
+    - **Version control:** Include `.lordcommander/config.json` in your
+    repository - **Documentation:** Document custom configurations in your
+    README - **Consistency:** Use shared configuration across team members -
+    **Validation:** Set up CI checks for configuration validation
+  </Tab>
+
+  <Tab title="Performance">
+    - **Minimal config:** Only configure what you need to change from defaults -
+    **Environment-specific:** Use different configurations for dev/prod -
+    **Plugin management:** Only enable plugins you actively use - **Template
+    caching:** Keep custom templates in version control
+  </Tab>
+
+  <Tab title="Maintenance">
+    - **Regular updates:** Keep configuration in sync with Lord Commander
+    updates - **Backup:** Export important configurations before major changes -
+    **Testing:** Test configuration changes in development first -
+    **Migration:** Use configuration migration tools for major version updates
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="CLI Creation" icon="plus" href="/core/cli-creation">
+    Learn the fundamentals of CLI design
+  </Card>
+  <Card title="Commands" icon="terminal" href="/core/commands">
+    Understanding command structure
+  </Card>
+</CardGroup>

@@ -1,0 +1,94 @@
+{
+  "name": "@lord-commander/cli-core",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Core CLI SDK library for building advanced command-line tools",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./core": {
+      "import": "./dist/core/index.js",
+      "types": "./dist/core/index.d.ts"
+    },
+    "./execa": {
+      "import": "./dist/core/execution/execa.js",
+      "types": "./dist/core/execution/execa.d.ts"
+    },
+    "./fs": {
+      "import": "./dist/core/execution/fs.js",
+      "types": "./dist/core/execution/fs.d.ts"
+    },
+    "./logger": {
+      "import": "./dist/core/ui/logger.js",
+      "types": "./dist/core/ui/logger.d.ts"
+    },
+    "./prompts": {
+      "import": "./dist/core/ui/prompts.js",
+      "types": "./dist/core/ui/prompts.d.ts"
+    },
+    "./icons": {
+      "import": "./dist/core/ui/icons.js",
+      "types": "./dist/core/ui/icons.d.ts"
+    },
+    "./errors": {
+      "import": "./dist/core/foundation/errors/errors.js",
+      "types": "./dist/core/foundation/errors/errors.d.ts"
+    },
+    "./security": {
+      "import": "./dist/core/foundation/security/patterns.js",
+      "types": "./dist/core/foundation/security/patterns.d.ts"
+    },
+    "./validation": {
+      "import": "./dist/core/foundation/security/validation.js",
+      "types": "./dist/core/foundation/security/validation.d.ts"
+    },
+    "./constants": {
+      "import": "./dist/core/foundation/core/constants.js",
+      "types": "./dist/core/foundation/core/constants.d.ts"
+    },
+    "./commands": {
+      "import": "./dist/commands/index.js", 
+      "types": "./dist/commands/index.d.ts"
+    },
+    "./plugins": {
+      "import": "./dist/plugins/index.js",
+      "types": "./dist/plugins/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "cli",
+    "sdk",
+    "framework",
+    "command-line",
+    "tool",
+    "typescript",
+    "commander",
+    "scaffolding",
+    "automation"
+  ],
+  "author": "fabiomarcellusdev",
+  "license": "ISC",
+  "sideEffects": false,
+  "dependencies": {
+    "@clack/prompts": "^0.11.0",
+    "axios": "^1.6.0",
+    "commander": "^14.0.1",
+    "execa": "^8.0.1",
+    "figures": "^6.1.0",
+    "picocolors": "^1.1.1",
+    "tslib": "^2.3.0"
+  }
+}

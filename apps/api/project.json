@@ -1,0 +1,74 @@
+{
+  "name": "api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/api/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/api"],
+      "options": {
+        "commands": [
+          "pnpx vite build",
+          "cp package.json ../../dist/apps/api/package.json || echo 'No package.json to copy - using workspace dependencies'",
+          "echo 'API build completed successfully'"
+        ],
+        "cwd": "apps/api",
+        "parallel": false
+      },
+      "configurations": {
+        "development": {
+          "commands": [
+            "pnpx vite build --mode development",
+            "echo 'API development build completed'"
+          ]
+        },
+        "production": {
+          "commands": [
+            "pnpx vite build --mode production", 
+            "echo 'API production build completed'"
+          ]
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "passWithNoTests": false,
+        "reportsDirectory": "../../coverage/apps/api"
+      }
+    },
+
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "api:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "api:build:development"
+        },
+        "production": {
+          "buildTarget": "api:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "NO_COLOR=1 ultracite check apps/api/src"
+      }
+    },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "NO_COLOR=1 ultracite fix apps/api/src"
+      }
+    }
+  },
+  "tags": ["scope:api"]
+}

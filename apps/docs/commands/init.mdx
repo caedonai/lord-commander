@@ -1,0 +1,1000 @@
+---
+title: "init"
+description: "Initialize Lord Commander CLI setup in different modes"
+---
+
+## Overview
+
+The `init` command initializes your Lord Commander CLI setup. It supports multiple setup modes, from simple library installation to complete full-stack project scaffolding with API and Dashboard components.
+
+## Setup Modes
+
+### Library Mode
+
+Install only the `@lord-commander/cli-core` package for SDK usage in existing projects.
+
+### CLI-Only Mode
+
+Create a standalone CLI application with the Lord Commander framework.
+
+### CLI+API Mode
+
+Create a CLI application with a companion REST API backend.
+
+### Full-Stack Mode
+
+Create a complete setup with CLI, API backend, and admin dashboard.
+
+## Basic Usage
+
+```bash
+# Interactive initialization (default)
+lord-commander init
+
+# Quick library mode installation
+lord-commander init --quick --type=library
+
+# Quick CLI-only setup
+lord-commander init --quick --type=cli-only
+
+# Full-stack with dashboard in project folder (recommended)
+lord-commander init --quick --type=full-stack --output my-project
+
+# Full-stack in current directory
+lord-commander init --quick --type=full-stack
+
+# Custom component paths
+lord-commander init --quick --type=full-stack --dashboard-path ./admin --api-path ./backend
+```
+
+## Command Options
+
+| Option             | Description                                               | Values                                         | Default          |
+| ------------------ | --------------------------------------------------------- | ---------------------------------------------- | ---------------- |
+| `--type`           | Setup type                                                | `library`, `cli-only`, `cli-api`, `full-stack` | `cli-only`       |
+| `--quick`          | Skip interactive mode                                     | `true`, `false`                                | `false`          |
+| `--global`         | Install globally instead of current directory             | `true`, `false`                                | `false`          |
+| `--pm`             | Package manager to use                                    | `npm`, `pnpm`, `yarn`                          | `npm`            |
+| `--output`         | Output directory for the project (creates project folder) | `string`                                       | -                |
+| `--cli-path`       | Custom path for CLI component                             | `string`                                       | `./cli`          |
+| `--dashboard-path` | Custom path for dashboard-ui component                    | `string`                                       | `./dashboard-ui` |
+| `--api-path`       | Custom path for API component                             | `string`                                       | `./api`          |
+| `--readme-path`    | Custom path for README.md file                            | `string`                                       | Auto-detected    |
+
+## Examples
+
+### Basic Examples
+
+```bash
+# Library mode - install SDK only
+lord-commander init --quick --type=library
+
+# Library mode with project folder
+lord-commander init --quick --type=library --output my-sdk-project
+
+# CLI-only setup with yarn
+lord-commander init --quick --type=cli-only --pm=yarn --output my-cli
+
+# Full-stack setup with pnpm (recommended pattern)
+lord-commander init --quick --type=full-stack --pm=pnpm --output my-project
+
+# CLI+API setup in project folder
+lord-commander init --quick --type=cli-api --output my-backend-project
+```
+
+### Advanced Project Structure Examples
+
+```bash
+# Create everything in a new project folder (recommended)
+lord-commander init --quick --type=full-stack --output my-awesome-project
+# Creates: ./my-awesome-project/cli, ./my-awesome-project/api, ./my-awesome-project/dashboard-ui
+# README: ./my-awesome-project/README.md
+
+# Create components in current directory
+lord-commander init --quick --type=full-stack
+# Creates: ./cli, ./api, ./dashboard-ui
+# README: ./README.md
+
+# Custom paths for each component
+lord-commander init --quick --type=full-stack --cli-path ./tools --dashboard-path ./admin --api-path ./backend
+# Creates: ./tools, ./backend, ./admin
+# README: ./README.md
+
+# Custom CLI name and API path
+lord-commander init --quick --type=cli-api --cli-path ./my-custom-cli --api-path ./server
+# Creates: ./my-custom-cli, ./server
+# README: ./README.md
+
+# Complete custom control including README
+lord-commander init --quick --type=full-stack \
+  --cli-path ./tools \
+  --api-path ./server \
+  --dashboard-path ./admin \
+  --readme-path ./docs/README.md
+# Creates: ./tools, ./server, ./admin
+# README: ./docs/README.md
+
+# Mixed approach - output folder with custom component paths
+lord-commander init --quick --type=full-stack --output my-project \
+  --dashboard-path ./admin \
+  --api-path ../shared-api
+# Creates: ./my-project/cli, ../shared-api, ./admin
+# README: ./my-project/README.md
+```
+
+## Use Cases & Folder Structures
+
+Lord Commander supports various development scenarios with flexible project organization. Here are common use cases and their resulting folder structures:
+
+### Use Case 1: New Startup CLI Tool
+
+**Scenario:** Building a new CLI tool for your startup with potential for web dashboard
+
+**Command:**
+
+```bash
+lord-commander init --quick --type=full-stack --output acme-cli --pm=pnpm
+```
+
+**Resulting Structure:**
+
+```
+acme-cli/                     # ← Project root
+├── package.json              # Workspace configuration
+├── README.md                 # Project documentation
+├── .gitignore
+├── cli/                      # Command-line interface
+│   ├── src/
+│   │   ├── main.ts
+│   │   └── commands/
+│   ├── tests/
+│   ├── package.json
+│   └── README.md
+├── api/                      # REST API backend
+│   ├── src/
+│   │   ├── app.ts
+│   │   ├── controllers/
+│   │   └── services/
+│   ├── tests/
+│   ├── package.json
+│   └── README.md
+└── dashboard-ui/             # Admin web interface
+    ├── src/
+    │   ├── pages/
+    │   └── components/
+    ├── public/
+    ├── package.json
+    └── README.md
+```
+
+### Use Case 2: Enterprise Microservices Architecture
+
+**Scenario:** Large organization with separate teams, shared API, custom naming conventions
+
+**Command:**
+
+```bash
+lord-commander init --quick --type=full-stack \
+  --cli-path ./tools/customer-cli \
+  --dashboard-path ./apps/admin-portal \
+  --api-path ../shared-services/customer-api \
+  --readme-path ./docs/customer-tool.md
+```
+
+**Resulting Structure:**
+
+```
+project-workspace/
+├── tools/
+│   └── customer-cli/         # ← CLI component
+├── apps/
+│   └── admin-portal/         # ← Dashboard component
+├── docs/
+│   └── customer-tool.md      # ← Custom README location
+└── ../shared-services/
+    └── customer-api/         # ← API in parent directory
+```
+
+### Use Case 3: Adding CLI to Existing Monorepo
+
+**Scenario:** Existing Next.js/React monorepo, need to add CLI without disrupting structure
+
+**Command:**
+
+```bash
+lord-commander init --quick --type=cli-only --cli-path ./packages/cli
+```
+
+**Resulting Structure:**
+
+```
+my-existing-monorepo/
+├── apps/
+│   ├── web/                  # Existing Next.js app
+│   └── mobile/               # Existing React Native app
+├── packages/
+│   ├── ui/                   # Existing shared components
+│   ├── utils/                # Existing utilities
+│   └── cli/                  # ← New CLI tool
+│       ├── src/
+│       ├── commands/
+│       └── package.json
+├── package.json              # Updated with CLI workspace
+└── README.md                 # Existing README (untouched)
+```
+
+### Use Case 4: SDK Integration in Existing Project
+
+**Scenario:** Want to add CLI capabilities to existing Node.js application
+
+**Command:**
+
+```bash
+lord-commander init --quick --type=library
+```
+
+**Resulting Structure:**
+
+```
+my-existing-app/
+├── src/                      # Your existing code
+├── lib/                      # Your existing libraries
+├── package.json              # Updated with @lord-commander/cli-core
+├── cli-commands/             # New: CLI command files
+├── index.js                  # Updated: CLI entry point added
+└── README.md                 # Updated: CLI usage instructions
+```
+
+### Use Case 5: Multi-Tool Development Environment
+
+**Scenario:** Developer building multiple CLI tools in same workspace
+
+**Command:**
+
+```bash
+# Tool 1: Customer management
+lord-commander init --quick --type=cli-only --output customer-cli
+
+# Tool 2: Analytics CLI
+lord-commander init --quick --type=cli-api --output analytics-tool
+
+# Tool 3: Deployment tool with dashboard
+lord-commander init --quick --type=full-stack --output deploy-manager
+```
+
+**Resulting Structure:**
+
+```
+cli-workspace/
+├── customer-cli/             # ← Simple CLI tool
+│   ├── cli/
+│   └── package.json
+├── analytics-tool/           # ← CLI + API
+│   ├── cli/
+│   ├── api/
+│   └── package.json
+├── deploy-manager/           # ← Full-stack setup
+│   ├── cli/
+│   ├── api/
+│   ├── dashboard-ui/
+│   └── package.json
+└── shared/                   # Your shared utilities
+```
+
+### Use Case 6: Docker-Based Development
+
+**Scenario:** Each component runs in separate containers, need specific paths for volumes
+
+**Command:**
+
+```bash
+lord-commander init --quick --type=full-stack \
+  --cli-path ./containers/cli \
+  --api-path ./containers/api \
+  --dashboard-path ./containers/web \
+  --readme-path ./PROJECT.md
+```
+
+**Resulting Structure:**
+
+```
+docker-project/
+├── containers/
+│   ├── cli/                  # ← CLI container
+│   │   ├── Dockerfile
+│   │   └── src/
+│   ├── api/                  # ← API container
+│   │   ├── Dockerfile
+│   │   └── src/
+│   └── web/                  # ← Dashboard container
+│       ├── Dockerfile
+│       └── src/
+├── docker-compose.yml
+├── PROJECT.md                # ← Custom README name
+└── package.json
+```
+
+## Project Structure Patterns
+
+Lord Commander supports three different project organization patterns to match your development needs:
+
+### 1. Project Folder (Recommended)
+
+**When to use:** New projects, following industry standards (like create-next-app)
+
+```bash
+lord-commander init --output my-project --type=full-stack
+```
+
+**Result:**
+
+```
+my-project/               # ← Main project directory
+├── package.json         # Workspace configuration
+├── README.md
+├── cli/                 # CLI application
+│   ├── src/
+│   └── package.json
+├── api/                 # Backend API
+│   ├── src/
+│   └── package.json
+└── dashboard-ui/        # Frontend dashboard
+    ├── src/
+    └── package.json
+```
+
+**Benefits:**
+
+- Clean project boundaries
+- Easy to move, delete, or share
+- Follows industry conventions
+- Works well with monorepo tools
+
+### 2. Current Directory
+
+**When to use:** Adding to existing projects or workspace structures
+
+```bash
+lord-commander init --type=full-stack
+```
+
+**Result:**
+
+```
+. (current directory)
+├── package.json         # Your existing package.json updated
+├── cli/                 # CLI application
+├── api/                 # Backend API
+└── dashboard-ui/        # Frontend dashboard
+```
+
+**Benefits:**
+
+- Integrates with existing projects
+- No additional nesting
+- Good for monorepos with existing structure
+
+### 3. Custom Paths
+
+**When to use:** Specific organizational requirements or existing conventions
+
+```bash
+lord-commander init --dashboard-path ./admin --api-path ./server --type=full-stack
+```
+
+**Result:**
+
+```
+. (current directory)
+├── cli/                 # CLI application (default location)
+├── server/              # Backend API (custom path)
+└── admin/               # Frontend dashboard (custom path)
+```
+
+**Benefits:**
+
+- Full control over component placement
+- Match existing naming conventions
+- Separate components across different repositories
+
+## Interactive Mode
+
+When run without the `--quick` flag, `init` enters interactive mode with enhanced project structure selection:
+
+```bash
+lord-commander init
+```
+
+### Interactive Prompts
+
+1. **Project Name**
+
+   ```
+   ? What is your project name? (my-awesome-cli)
+   ```
+
+2. **Setup Type**
+
+   ```
+   ? What type of setup do you want?
+   ❯ Library Mode (SDK only)
+     CLI-only Application
+     CLI + API Backend
+     Full-stack (CLI + API + Dashboard)
+   ```
+
+3. **Installation Location**
+
+   ```
+   ? Where would you like to install?
+   ❯ Current directory
+     Global installation
+   ```
+
+4. **Package Manager**
+
+   ```
+   ? Which package manager do you prefer?
+   ❯ npm
+     pnpm
+     yarn
+   ```
+
+5. **Project Structure** (for multi-component setups)
+
+   ```
+   ? How should we organize your project?
+   ❯ Create in new project folder (recommended)
+     Create in current directory
+     Custom paths for each component
+   ```
+
+6. **Custom Paths** (if selected)
+
+   ```
+   ? CLI path: (./cli)
+   ? Dashboard UI path: (./dashboard-ui)
+   ? API path: (./api)
+   ? Would you like to specify a custom location for README.md? (Y/n)
+   ? README.md path: (./README.md)
+   ```
+
+7. **Configuration Summary**
+
+   ```
+   📋 Configuration Summary:
+   Project Name: my-awesome-cli
+   Setup Type: Full Stack (CLI + API + Dashboard)
+
+   📂 Project Structure:
+      CLI: ./tools
+      API: ./server
+      Dashboard: ./admin
+      README.md: ./README.md
+   ```
+
+8. **Confirmation**
+
+   ```
+   📋 Configuration Summary:
+   Project Name: my-awesome-cli
+   Setup Type: CLI-only Application
+   Installation: local
+   Package Manager: npm
+
+   ? Proceed with this configuration? (Y/n)
+   ```
+
+## Setup Types
+
+### Library Mode (`--type=library`)
+
+Installs only the `@lord-commander/cli-core` package for use in existing projects.
+
+```bash
+lord-commander init --quick --type=library
+```
+
+**What it installs:**
+
+- `@lord-commander/cli-core` npm package
+- Basic project structure for CLI development
+- Example usage files
+
+**Use when:** You want to integrate the CLI SDK into an existing project.
+
+### CLI-Only Mode (`--type=cli-only`)
+
+Creates a standalone CLI application with the Lord Commander framework.
+
+```bash
+# Project folder approach (recommended)
+lord-commander init --quick --type=cli-only --output my-cli
+
+# Current directory approach
+lord-commander init --quick --type=cli-only
+```
+
+**Generated structure (project folder):**
+
+```
+my-cli/                  # ← Project folder created
+├── package.json
+├── tsconfig.json
+├── README.md
+├── commands/
+│   ├── hello.ts
+│   └── version.ts
+└── src/
+    └── index.ts
+```
+
+**Generated structure (current directory):**
+
+```
+. (current directory)
+├── package.json         # Updated with CLI dependencies
+├── tsconfig.json
+├── commands/
+└── src/
+```
+
+**Use when:** Building a command-line tool without backend services.
+
+### CLI+API Mode (`--type=cli-api`)
+
+Creates a CLI application with a companion REST API backend.
+
+```bash
+# Project folder approach (recommended)
+lord-commander init --quick --type=cli-api --output my-project
+
+# Current directory approach
+lord-commander init --quick --type=cli-api
+
+# Custom paths approach
+lord-commander init --quick --type=cli-api --api-path ./backend
+```
+
+**Generated structure (project folder):**
+
+```
+my-project/              # ← Project folder created
+├── package.json         # Workspace configuration
+├── README.md
+├── cli/
+│   ├── src/
+│   ├── commands/
+│   └── package.json
+└── api/
+    ├── src/
+    │   ├── controllers/
+    │   ├── services/
+    │   └── app.ts
+    └── package.json
+```
+
+**Generated structure (custom paths):**
+
+```
+. (current directory)
+├── package.json         # Updated workspace config
+├── cli/                 # CLI application
+└── backend/             # API at custom path
+```
+
+**Use when:** Your CLI needs to interact with backend data or services.
+
+### Full-Stack Mode (`--type=full-stack`)
+
+Creates CLI, API backend, and admin dashboard in a complete setup.
+
+```bash
+# Project folder approach (recommended)
+lord-commander init --quick --type=full-stack --output my-project
+
+# Current directory approach
+lord-commander init --quick --type=full-stack
+
+# Custom paths approach
+lord-commander init --quick --type=full-stack --dashboard-path ./admin --api-path ./server
+```
+
+**Generated structure (project folder):**
+
+```
+my-project/              # ← Project folder created
+├── package.json         # Workspace configuration with scripts
+├── README.md            # Setup and usage instructions
+├── cli/                 # Command-line interface
+│   ├── src/
+│   ├── commands/
+│   └── package.json
+├── api/                 # REST API backend
+│   ├── src/
+│   │   ├── controllers/
+│   │   └── services/
+│   └── package.json
+└── dashboard-ui/        # Admin web interface
+    ├── src/
+    ├── public/
+    └── package.json
+```
+
+**Generated structure (custom paths):**
+
+```
+. (current directory)
+├── package.json         # Updated workspace config
+├── cli/                 # CLI application
+├── server/              # API at custom path
+└── admin/               # Dashboard at custom path
+```
+
+**Use when:** Building a complete CLI ecosystem with web management interface.
+
+## Package Manager Support
+
+Lord Commander automatically detects and supports multiple package managers:
+
+### NPM (Default)
+
+```bash
+lord-commander init --pm=npm
+```
+
+### PNPM (Recommended)
+
+```bash
+lord-commander init --pm=pnpm
+```
+
+### Yarn
+
+```bash
+lord-commander init --pm=yarn
+```
+
+### Auto-Detection
+
+If no package manager is specified, Lord Commander will:
+
+1. Check for existing lockfiles (`pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`)
+2. Use the detected package manager
+3. Fall back to `npm` if none detected
+
+## Installation Locations
+
+### Local Installation (Default)
+
+```bash
+lord-commander init --type=library
+```
+
+Installs in the current directory for project-specific usage.
+
+### Global Installation
+
+```bash
+lord-commander init --type=library --global
+```
+
+Installs globally for system-wide CLI usage.
+
+## Library Mode Usage
+
+After installing in library mode, you can use the CLI SDK in your project:
+
+### Import the CLI Core
+
+```typescript
+import { createCLI } from "@lord-commander/cli-core";
+
+// Create your CLI instance
+const cli = await createCLI({
+  name: "my-cli",
+  version: "1.0.0",
+  description: "My custom CLI tool",
+  commandsPath: "./commands",
+});
+```
+
+### Create Commands
+
+```typescript
+// commands/hello.ts
+import type { Command, CommandContext } from "@lord-commander/cli-core";
+
+export default function (program: Command, context: CommandContext) {
+  const { logger } = context;
+
+  program
+    .command("hello")
+    .description("Say hello")
+    .action(() => {
+      logger.info("Hello from Lord Commander!");
+    });
+}
+```
+
+### Run Your CLI
+
+```bash
+node index.js hello
+```
+
+## Best Practices & Recommendations
+
+### Choose the Right Project Structure
+
+**Use Project Folder (`--output`) when:**
+
+- Creating new projects from scratch
+- Following industry standards (like create-next-app, create-vue)
+- Want clean project boundaries
+- Planning to share or move the project
+
+**Use Current Directory when:**
+
+- Adding to existing projects
+- Working in established monorepos
+- Have existing workspace structure
+
+**Use Custom Paths when:**
+
+- Following specific organizational conventions
+- Separating components across repositories
+- Need precise control over component placement
+
+### Recommended Commands
+
+```bash
+# ✅ Recommended: New full-stack project
+lord-commander init --quick --type=full-stack --output my-awesome-project --pm=pnpm
+
+# ✅ Recommended: New CLI tool
+lord-commander init --quick --type=cli-only --output my-cli-tool --pm=pnpm
+
+# ✅ Recommended: Library integration
+lord-commander init --quick --type=library --pm=pnpm
+
+# ⚠️  Use with caution: Current directory (may clutter workspace)
+lord-commander init --quick --type=full-stack
+
+# 🔧 Advanced: Custom paths (for specific requirements)
+lord-commander init --quick --type=full-stack --dashboard-path ./admin --api-path ./backend
+```
+
+### Migration from Current Directory Pattern
+
+If you have existing projects using the current directory pattern, you can restructure them:
+
+```bash
+# 1. Create new project with recommended structure
+lord-commander init --quick --type=full-stack --output my-restructured-project
+
+# 2. Move existing code
+mv ./cli ./my-restructured-project/
+mv ./api ./my-restructured-project/
+mv ./dashboard-ui ./my-restructured-project/
+
+# 3. Update package.json references
+cd my-restructured-project && npm install
+```
+
+## Post-Initialization
+
+After initialization, Lord Commander provides setup completion and next steps:
+
+### Library Mode
+
+```bash
+🎉 Library installation complete!
+
+� Next steps:
+• Import the CLI SDK in your project:
+  import { createCLI } from "@lord-commander/cli-core";
+
+• Create your CLI:
+  const cli = await createCLI({
+    name: "my-cli",
+    version: "1.0.0",
+    description: "My custom CLI",
+    commandsPath: "./commands"
+  });
+
+• Start building:
+  - Add your commands in the "./commands" directory
+  - Run "node index.js --help" to test your CLI
+  - Use "npm run dev" for development mode
+```
+
+### CLI-Only/API/Full-Stack Modes
+
+```bash
+✨ Lord Commander CLI setup complete!
+
+📁 Project created at: /path/to/my-awesome-project
+📂 Project structure:
+   Root: /path/to/my-awesome-project
+   CLI: /path/to/my-awesome-project/cli
+   API: /path/to/my-awesome-project/api
+   Dashboard: /path/to/my-awesome-project/dashboard-ui
+
+📚 Next steps:
+• Navigate to your project: cd my-awesome-project
+• Install dependencies: npm run install:all
+• Start developing:
+  - npm run dev:cli      # CLI development
+  - npm run dev:api      # API development
+  - npm run dev:dashboard # Dashboard development
+• Build all: npm run build:all
+• Test all: npm run test:all
+
+📖 Documentation: https://docs.lord-commander.dev
+🐛 Issues: https://github.com/caedonai/lord-commander/issues
+```
+
+### Custom Paths Mode
+
+```bash
+✨ Lord Commander CLI setup complete!
+
+📁 Project created at: /current/directory
+📂 Project structure:
+   Root: /current/directory
+   CLI: /current/directory/cli
+   API: /current/directory/backend
+   Dashboard: /current/directory/admin
+
+📚 Next steps:
+• Start developing:
+  - cd cli && npm run dev          # CLI development
+  - cd backend && npm run dev      # API development
+  - cd admin && npm run dev        # Dashboard development
+• Each component can be developed independently
+• See individual README files for component-specific instructions
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion icon="package" title="Package Installation Failed">
+    **Error:** `Failed to install @lord-commander/cli-core`
+    
+    **Solutions:**
+    - Check internet connection
+    - Verify npm registry access
+    - Try different package manager: `--pm=pnpm` or `--pm=yarn`
+    - Check package manager permissions
+  </Accordion>
+
+{" "}
+
+<Accordion icon="folder" title="Directory Not Empty">
+  **Error:** `Directory is not empty` **Solutions:** - Choose a different
+  directory name - Navigate to an empty directory - Use library mode in existing
+  projects: `--type=library`
+</Accordion>
+
+{" "}
+
+<Accordion icon="exclamation-triangle" title="Permission Errors">
+  **Error:** `Permission denied during global installation` **Solutions:** - Use
+  local installation (default) - Configure npm permissions properly - Use a Node
+  version manager (nvm, fnm) - Avoid using `sudo` with npm
+</Accordion>
+
+  <Accordion icon="network-wired" title="Network Issues">
+    **Error:** `Network timeout or connection refused`
+    
+    **Solutions:**
+    - Check firewall settings
+    - Configure proxy if behind corporate firewall
+    - Try different npm registry
+    - Use offline mode if available
+  </Accordion>
+</AccordionGroup>
+
+## Complete Examples
+
+<Tabs>
+  <Tab title="Library Integration">
+    ```bash
+    # Install CLI SDK for existing project (current directory)
+    lord-commander init --quick --type=library --pm=pnpm
+    
+    # Install in new project folder
+    lord-commander init --quick --type=library --output my-sdk --pm=pnpm
+    
+    # Global installation for system-wide use
+    lord-commander init --quick --type=library --global
+    ```
+    
+    **Result:** Adds `@lord-commander/cli-core` to your project dependencies
+  </Tab>
+
+  <Tab title="New CLI Project">
+    ```bash
+    # Simple CLI application in project folder (recommended)
+    lord-commander init --quick --type=cli-only --output my-cli --pm=pnpm
+    
+    # CLI in current directory
+    lord-commander init --quick --type=cli-only --pm=pnpm
+    
+    # CLI with custom path
+    lord-commander init --quick --type=cli-only --cli-path ./tools/my-cli
+    
+    # Interactive setup for custom configuration
+    lord-commander init
+    ```
+    
+    **Result:** Creates standalone CLI application with commands and build setup
+  </Tab>
+
+  <Tab title="Full-Stack Setup">
+    ```bash
+    # Complete ecosystem in project folder (recommended)
+    lord-commander init --quick --type=full-stack --output my-project --pm=pnpm
+    
+    # Full-stack in current directory
+    lord-commander init --quick --type=full-stack --pm=pnpm
+    
+    # Custom component paths
+    lord-commander init --quick --type=full-stack \
+      --cli-path ./tools \
+      --dashboard-path ./admin \
+      --api-path ./backend
+    
+    # CLI + API only in project folder
+    lord-commander init --quick --type=cli-api --output my-backend --pm=yarn
+    ```
+    
+    **Result:** Creates complete CLI ecosystem with optional web interface
+  </Tab>
+
+  <Tab title="Advanced Patterns">
+    ```bash
+    # Microservices pattern - shared API in parent directory
+    lord-commander init --quick --type=cli-api \
+      --cli-path ./customer-cli \
+      --api-path ../shared-services/api
+      
+    # Multiple CLI tools in same workspace
+    lord-commander init --quick --type=cli-only --output tool1
+    lord-commander init --quick --type=cli-only --output tool2
+    
+    # Dashboard for existing API
+    lord-commander init --quick --type=full-stack \
+      --cli-path ./new-cli \
+      --dashboard-path ./admin \
+      --api-path ../existing-api
+      
+    # Enterprise workspace structure
+    lord-commander init --quick --type=full-stack --output apps/my-tool \
+      --dashboard-path ./apps/admin \
+      --api-path ./services/api \
+      --readme-path ./docs/my-tool.md
+      
+    # Docker-ready structure
+    lord-commander init --quick --type=full-stack \
+      --cli-path ./containers/cli \
+      --api-path ./containers/api \
+      --dashboard-path ./containers/web \
+      --readme-path ./PROJECT.md
+    ```
+    
+    **Result:** Flexible component placement for complex architectures
+  </Tab>
+</Tabs>
+
+## Related Commands
+
+<CardGroup cols={2}>
+  <Card title="scaffold" icon="wand-magic-sparkles" href="/commands/scaffold">
+    Generate components and features after initialization
+  </Card>
+  <Card title="analyze" icon="chart-simple" href="/commands/analyze">
+    Analyze your initialized project structure and performance
+  </Card>
+</CardGroup>

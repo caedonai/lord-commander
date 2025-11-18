@@ -1,0 +1,72 @@
+{
+  "name": "marketing",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/marketing/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/marketing"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/marketing"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "marketing:build",
+        "dev": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "marketing:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "marketing:build:production",
+          "dev": false
+        }
+      }
+    },
+    "export": {
+      "executor": "@nx/next:export",
+      "options": {
+        "buildTarget": "marketing:build:production"
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "config": "apps/marketing/vitest.config.ts",
+        "passWithNoTests": false,
+        "reportsDirectory": "coverage/apps/marketing"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "NO_COLOR=1 ultracite check apps/marketing/src"
+      }
+    },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "NO_COLOR=1 ultracite fix apps/marketing/src"
+      }
+    }
+  }
+}

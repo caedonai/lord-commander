@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "jsx": "react",
+    "types": ["vitest/globals", "node"]
+  },
+  "include": [
+    "vitest.config.ts",
+    "vitest.setup.ts",
+    "specs/**/*.test.ts",
+    "specs/**/*.spec.ts",
+    "specs/**/*.test.tsx",
+    "specs/**/*.spec.tsx",
+    "specs/**/*.test.js",
+    "specs/**/*.spec.js",
+    "specs/**/*.test.jsx",
+    "specs/**/*.spec.jsx",
+    "src/**/*.d.ts"
+  ]
+}

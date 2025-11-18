@@ -1,2 +1,13 @@
+packages:
+  - apps/cli
+  - libs/*
+
 onlyBuiltDependencies:
+  - "@nestjs/core"
+  - "@parcel/watcher"
+  - "@swc/core"
+  - cypress
   - esbuild
+  - nx
+  - sharp
+  - unrs-resolver

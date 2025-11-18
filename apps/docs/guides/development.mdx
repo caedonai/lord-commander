@@ -1,0 +1,243 @@
+---
+title: "Development"
+description: "Development workflow and best practices for Lord Commander projects"
+---
+
+# Development Workflow
+
+This guide covers the development workflow and best practices for building CLI applications with Lord Commander.
+
+## Project Setup
+
+### Development Environment
+
+```bash
+# Initialize your project (recommended project folder approach)
+lord-commander init my-cli --type=cli-only --pm=pnpm
+
+# Navigate to project and install dependencies
+cd my-cli
+pnpm install
+
+# Start development mode
+npm run dev
+```
+
+### Development Scripts
+
+Add these scripts to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "tsx watch src/cli.ts",
+    "build": "tsc && chmod +x dist/cli.js",
+    "test": "vitest",
+    "lint": "eslint src/",
+    "format": "prettier --write src/"
+  }
+}
+```
+
+## Hot Reloading
+
+Use `tsx` for hot reloading during development:
+
+```bash
+# Install tsx for development
+npm install -D tsx
+
+# Run with hot reload
+npx tsx watch src/cli.ts hello --name "Developer"
+```
+
+## Testing Strategy
+
+### Unit Testing
+
+```typescript
+// tests/commands/hello.test.ts
+import { testCommand } from "@caedonai/lord-commander/testing";
+import { helloCommand } from "../src/commands/hello";
+
+describe("hello command", () => {
+  it("should greet with default name", async () => {
+    const result = await testCommand(helloCommand, {
+      arguments: {},
+      options: {},
+    });
+
+    expect(result.output).toContain("Hello, World!");
+    expect(result.exitCode).toBe(0);
+  });
+
+  it("should greet with custom name", async () => {
+    const result = await testCommand(helloCommand, {
+      arguments: { name: "Alice" },
+      options: { enthusiastic: true },
+    });
+
+    expect(result.output).toContain("Hello, Alice! 🎉");
+  });
+});
+```
+
+### Integration Testing
+
+```typescript
+// tests/integration/cli.test.ts
+import { execSync } from "child_process";
+
+describe("CLI Integration", () => {
+  it("should work end-to-end", () => {
+    const output = execSync("./bin/my-cli hello Alice", {
+      encoding: "utf8",
+    });
+
+    expect(output.trim()).toBe("Hello, Alice!");
+  });
+});
+```
+
+## Debugging
+
+### VS Code Configuration
+
+Create `.vscode/launch.json`:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug CLI",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/cli.ts",
+      "args": ["hello", "--name", "Debug"],
+      "runtimeArgs": ["--loader", "tsx/esm"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}
+```
+
+### Debug Output
+
+Add debug logging:
+
+```typescript
+import debug from "debug";
+
+const log = debug("my-cli:hello");
+
+export const helloCommand: Command = {
+  name: "hello",
+  handler: async (args, options) => {
+    log("Executing hello command with args:", args);
+    log("Options:", options);
+
+    // Command logic
+    const greeting = `Hello, ${args.name}!`;
+    console.log(greeting);
+  },
+};
+```
+
+## Performance Optimization
+
+### Lazy Loading
+
+```typescript
+// Lazy load heavy dependencies
+export const analyzeCommand: Command = {
+  name: "analyze",
+  handler: async (args, options) => {
+    const { performAnalysis } = await import("./heavy-analysis");
+    return performAnalysis(args, options);
+  },
+};
+```
+
+### Caching
+
+```typescript
+import { createCache } from "@caedonai/lord-commander";
+
+const cache = createCache({
+  ttl: 3600000, // 1 hour
+  directory: ".cache",
+});
+
+export const fetchCommand: Command = {
+  name: "fetch",
+  handler: async (args) => {
+    const cacheKey = `fetch-${args.url}`;
+
+    let data = await cache.get(cacheKey);
+    if (!data) {
+      data = await fetchData(args.url);
+      await cache.set(cacheKey, data);
+    }
+
+    console.log(data);
+  },
+};
+```
+
+## Build and Distribution
+
+### TypeScript Configuration
+
+```json
+// tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "tests"]
+}
+```
+
+### Build Process
+
+```bash
+# Clean build
+rm -rf dist/
+npm run build
+
+# Test built CLI
+node dist/cli.js hello --name "Production"
+```
+
+## Related Topics
+
+<CardGroup cols={2}>
+
+<Card title="Configuration" icon="gear" href="/guides/configuration">
+  Advanced configuration patterns
+</Card>
+
+<Card title="CLI Creation" icon="plus" href="/core/cli-creation">
+  Learn CLI fundamentals
+</Card>
+
+<Card title="Commands" icon="terminal" href="/core/commands">
+  Command development guide
+</Card>
+
+<Card title="Build Your First CLI" icon="rocket" href="/guides/first-cli">
+  Step-by-step tutorial
+</Card>
+
+</CardGroup>

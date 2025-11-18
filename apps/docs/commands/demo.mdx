@@ -1,0 +1,85 @@
+---
+title: "demo"
+description: "Interactive demos and tutorials for Lord Commander features"
+---
+
+# Demo Command
+
+The `demo` command provides interactive demonstrations of Lord Commander features. It's perfect for learning, onboarding new team members, or exploring capabilities.
+
+## Basic Usage
+
+```bash
+# List available demos
+lord-commander demo
+
+# Run a specific demo
+lord-commander demo init-project
+
+# Interactive demo selection
+lord-commander demo --interactive
+```
+
+## Available Demos
+
+<AccordionGroup>
+  <Accordion icon="rocket" title="Project Initialization">
+    ```bash lord-commander demo init-project ``` Demonstrates project
+    initialization with different frameworks and configurations.
+  </Accordion>
+
+  <Accordion icon="wand-magic-sparkles" title="Code Generation">
+    ```bash lord-commander demo scaffolding ``` Shows component, page, and API
+    generation capabilities.
+  </Accordion>
+
+  <Accordion icon="chart-simple" title="Bundle Analysis">
+    ```bash lord-commander demo analysis ``` Interactive bundle analysis and
+    optimization recommendations.
+  </Accordion>
+
+  <Accordion icon="puzzle-piece" title="Plugin System">
+    ```bash lord-commander demo plugins ``` Demonstrates plugin installation and
+    custom plugin creation.
+  </Accordion>
+</AccordionGroup>
+
+## Demo Options
+
+| Option          | Description                          | Default         |
+| --------------- | ------------------------------------ | --------------- |
+| `--interactive` | Interactive demo selection           | `false`         |
+| `--fast`        | Skip delays and animations           | `false`         |
+| `--output`      | Demo output directory                | `./demo-output` |
+| `--clean`       | Clean up demo files after completion | `true`          |
+
+## Interactive Mode
+
+```bash
+lord-commander demo --interactive
+```
+
+Launches an interactive menu:
+
+```
+? Select a demo to run:
+❯ 🚀 Project Initialization
+  🎨 Component Scaffolding
+  📊 Bundle Analysis
+  🔌 Plugin Development
+  📚 Documentation Setup
+```
+
+## Related Commands
+
+<CardGroup cols={2}>
+
+<Card title="init" icon="rocket" href="/commands/init">
+  Initialize real projects after trying demos
+</Card>
+
+<Card title="scaffold" icon="wand-magic-sparkles" href="/commands/scaffold">
+  Generate code in your actual projects
+</Card>
+
+</CardGroup>

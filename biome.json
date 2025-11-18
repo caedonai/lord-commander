@@ -6,7 +6,8 @@
       "recommended": true,
       "style": {
         "useConst": "warn",
-        "noNonNullAssertion": "warn"
+        "noNonNullAssertion": "warn",
+        "useImportType": "off"
       },
       "suspicious": {
         "noExplicitAny": "error",
@@ -32,6 +33,9 @@
     "lineEnding": "lf"
   },
   "javascript": {
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    },
     "formatter": {
       "jsxQuoteStyle": "double",
       "quoteProperties": "asNeeded",
@@ -45,7 +49,19 @@
     }
   },
   "files": {
-    "includes": ["src/**/*.ts", "src/**/*.js", "*.ts", "*.js"],
+    "includes": [
+      "libs/**/*.ts",
+      "libs/**/*.tsx",
+      "libs/**/*.js",
+      "apps/*/src/**/*.ts",
+      "apps/*/src/**/*.tsx",
+      "apps/*/src/**/*.js",
+      "apps/*/src/**/*.jsx",
+      "apps/*/commands/**/*.ts",
+      "apps/*/commands/**/*.js",
+      "*.ts",
+      "*.js"
+    ],
     "ignoreUnknown": false
   }
 }

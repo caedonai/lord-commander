@@ -1,0 +1,72 @@
+{
+  "name": "dashboard-ui",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/dashboard-ui",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/dashboard-ui"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "apps/dashboard-ui"
+        },
+        "production": {}
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "dashboard-ui:build",
+        "dev": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "dashboard-ui:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "dashboard-ui:build:production",
+          "dev": false
+        }
+      }
+    },
+    "export": {
+      "executor": "@nx/next:export",
+      "options": {
+        "buildTarget": "dashboard-ui:build:production"
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}"
+      ],
+      "options": {
+        "config": "apps/dashboard-ui/vitest.config.ts",
+        "passWithNoTests": false,
+        "reportsDirectory": "coverage/apps/dashboard-ui"
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "NO_COLOR=1 ultracite check apps/dashboard-ui/src"
+      }
+    },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "NO_COLOR=1 ultracite fix apps/dashboard-ui/src"
+      }
+    }
+  }
+}

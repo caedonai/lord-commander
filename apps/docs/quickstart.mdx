@@ -1,0 +1,268 @@
+---
+title: "Quickstart"
+description: "Get started with Lord Commander CLI SDK in under 5 minutes"
+---
+
+## Choose Your Path
+
+Lord Commander offers different setup modes depending on your needs:
+
+<CardGroup cols={2}>
+  <Card title="Library Mode" icon="package">
+    Install the CLI SDK for use in existing projects
+  </Card>
+  <Card title="New CLI Project" icon="rocket">
+    Create a complete CLI application from scratch
+  </Card>
+</CardGroup>
+
+## Option 1: Library Mode (Existing Project)
+
+Add Lord Commander SDK to your existing project:
+
+### Install the CLI globally
+
+```bash
+npm install -g lord-commander
+```
+
+### Add CLI SDK to your project
+
+```bash
+lord-commander init --quick --type=library --pm=pnpm
+```
+
+### Start using the SDK
+
+```typescript
+import { createCLI } from "@lord-commander/cli-core";
+
+const cli = await createCLI({
+  name: "my-cli",
+  version: "1.0.0",
+  description: "My awesome CLI",
+  commandsPath: "./commands",
+});
+```
+
+## Option 2: New CLI Application
+
+Create a complete CLI application with scaffolding:
+
+### Step 1: Install CLI globally
+
+```bash
+npm install -g lord-commander
+```
+
+### Step 2: Initialize project
+
+<Tabs>
+  <Tab title="Project Folder (Recommended)">
+    ```bash
+    lord-commander init my-cli-project --type=cli-only --pm=pnpm
+    # Creates: my-cli-project/
+    ```
+  </Tab>
+  <Tab title="Current Directory">
+    ```bash
+    mkdir my-project && cd my-project
+    lord-commander init . --type=cli-only --pm=pnpm
+    # Uses current directory
+    ```
+  </Tab>
+  <Tab title="Custom Paths">
+    ```bash
+    lord-commander init --output=./projects/cli --type=cli-api --pm=pnpm
+    # Creates: projects/cli/
+    ```
+  </Tab>
+  <Tab title="Interactive">
+    ```bash
+    lord-commander init
+    # Follow the prompts for custom setup
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  **Recommended:** Use the project folder approach (first tab) as it creates a
+  clean, isolated project structure similar to `create-next-app` or
+  `create-react-app`.
+</Note>
+
+### Step 3: Start building
+
+```bash
+cd my-cli-project  # or your chosen directory
+pnpm install
+pnpm dev
+```
+
+## Project Structure Options
+
+Lord Commander offers flexible project structure approaches:
+
+<CardGroup cols={3}>
+  <Card title="Project Folder" icon="folder" color="#10B981">
+    **Recommended** - Creates `my-project/` with all files inside (like
+    create-next-app)
+  </Card>
+  <Card title="Current Directory" icon="location-dot" color="#F59E0B">
+    Uses current directory - good for existing folders
+  </Card>
+  <Card title="Custom Paths" icon="route" color="#8B5CF6">
+    Specify exact paths for each component with `--output`, `--dashboard-path`,
+    `--api-path`
+  </Card>
+</CardGroup>
+
+### Example Directory Structures
+
+<CodeGroup>
+```bash Project Folder (Recommended)
+my-cli-project/
+├── src/
+├── commands/
+├── package.json
+└── README.md
+```
+
+```bash Current Directory
+./
+├── src/
+├── commands/
+├── package.json
+└── README.md
+```
+
+```bash Custom Paths
+./
+├── my-cli/          # --output=./my-cli
+├── web-dashboard/   # --dashboard-path=./web-dashboard
+├── backend-api/     # --api-path=./backend-api
+└── other-files...
+```
+
+</CodeGroup>
+
+## Verification
+
+### Check installation and status
+
+```bash
+lord-commander --version
+lord-commander status
+lord-commander --help
+```
+
+You should see the CLI version, system info, and available commands.
+
+### Test your setup
+
+```bash
+# Test a simple command
+lord-commander hello
+
+# View available commands
+lord-commander --help
+
+# Check system status
+lord-commander status
+```
+
+## Essential Commands
+
+Master these core commands to get the most out of Lord Commander:
+
+<CardGroup cols={2}>
+
+<Card title="init" icon="rocket" href="/commands/init">
+  Initialize CLI projects in library, cli-only, cli-api, or full-stack modes.
+</Card>
+
+<Card title="status" icon="info">
+  Check CLI version, SDK version, and system information.
+</Card>
+
+<Card title="scaffold" icon="wand-magic-sparkles" href="/commands/scaffold">
+  Generate components, commands, and features with intelligent templates.
+</Card>
+
+<Card title="analyze" icon="chart-simple" href="/commands/analyze">
+  Analyze your bundle size and composition for optimization opportunities.
+</Card>
+
+</CardGroup>
+
+## Quick Examples
+
+### Library Mode Integration
+
+```bash
+# Add to existing project
+lord-commander init --quick --type=library --pm=pnpm
+
+# Use in your code
+import { createCLI } from '@lord-commander/cli-core';
+```
+
+### New CLI Project - Recommended Patterns
+
+```bash
+# Create CLI-only app (recommended project folder approach)
+lord-commander init my-cli-app --type=cli-only --pm=pnpm
+
+# Create with API backend
+lord-commander init my-fullstack-app --type=cli-api --pm=pnpm
+
+# Create full-stack with custom paths
+lord-commander init my-project \
+  --type=full-stack \
+  --dashboard-path=./web \
+  --api-path=./backend \
+  --pm=pnpm
+```
+
+### Interactive Setup
+
+```bash
+# Full interactive setup with all options
+lord-commander init
+
+# Interactive setup in a project folder (recommended)
+lord-commander init my-new-project
+
+# Check what was installed
+lord-commander status
+```
+
+## Next Steps
+
+Now that you have Lord Commander installed, explore these key areas:
+
+<CardGroup cols={2}>
+
+<Card title="Core Concepts" icon="lightbulb" href="/core-concepts">
+  Understand the fundamental concepts behind Lord Commander.
+</Card>
+
+<Card title="Configuration" icon="gear" href="/guides/configuration">
+  Learn how to configure Lord Commander for your workflow.
+</Card>
+
+<Card title="Examples" icon="code" href="/examples">
+  Explore real-world examples and use cases.
+</Card>
+
+<Card title="API Reference" icon="terminal" href="/api-reference/introduction">
+  Complete command reference and API documentation.
+</Card>
+
+</CardGroup>
+
+<Note>
+  **Need help?** Check out our [GitHub
+  issues](https://github.com/caedonai/lord-commander/issues) or see the [full
+  documentation](/core-concepts).
+</Note>

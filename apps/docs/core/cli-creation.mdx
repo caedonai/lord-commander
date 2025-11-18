@@ -1,0 +1,123 @@
+---
+title: "CLI Creation"
+description: "Learn how to create and structure CLI applications with Lord Commander"
+---
+
+# CLI Creation
+
+Lord Commander provides a streamlined approach to creating command-line interfaces that are both powerful and user-friendly. This guide covers the fundamental concepts of CLI architecture and best practices.
+
+## CLI Structure
+
+A well-designed CLI follows these principles:
+
+<AccordionGroup>
+  <Accordion icon="tree" title="Hierarchical Commands">
+    Organize commands in a logical hierarchy that matches user mental models:
+    
+    ```bash
+    lord-commander init          # Top-level command
+    lord-commander scaffold component MyComponent  # Nested command
+    lord-commander analyze bundle --output json    # Command with options
+    ```
+  </Accordion>
+  
+  <Accordion icon="gear" title="Configuration-First Design">
+    Design your CLI to be configurable through multiple sources:
+    
+    - Command-line flags
+    - Configuration files (JSON, YAML, TOML)
+    - Environment variables
+    - Interactive prompts
+  </Accordion>
+  
+  <Accordion icon="puzzle-piece" title="Plugin Architecture">
+    Build extensibility from the ground up:
+    
+    ```typescript
+    // Plugin interface
+    interface CLIPlugin {
+      name: string;
+      commands: Command[];
+      hooks: PluginHooks;
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Command Design Patterns
+
+### Single Responsibility
+
+Each command should have a single, clear purpose:
+
+```bash
+# Good - focused commands
+lord-commander init
+lord-commander analyze
+lord-commander scaffold
+
+# Avoid - multi-purpose commands
+lord-commander do-everything --type init --also analyze
+```
+
+### Progressive Disclosure
+
+Start with simple defaults and allow advanced configuration:
+
+```bash
+# Simple usage
+lord-commander scaffold component Button
+
+# Advanced usage
+lord-commander scaffold component Button \
+  --template typescript \
+  --styling styled-components \
+  --tests jest \
+  --stories storybook
+```
+
+## Error Handling
+
+Provide clear, actionable error messages:
+
+<CodeGroup>
+
+```bash Good Error Messages
+❌ Error: Cannot find template 'react-component'
+
+💡 Available templates:
+   • react-component-ts
+   • vue-component
+   • angular-component
+
+Run 'lord-commander scaffold --list-templates' to see all options.
+```
+
+```bash Poor Error Messages
+❌ Error: Template not found
+```
+
+</CodeGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+
+<Card title="Commands" icon="terminal" href="/core/commands">
+  Learn about command structure and implementation
+</Card>
+
+<Card title="Plugins" icon="plug" href="/core/plugins">
+  Understand the plugin architecture
+</Card>
+
+<Card title="Security" icon="shield" href="/core/security">
+  Implement security best practices
+</Card>
+
+<Card title="Build Your First CLI" icon="rocket" href="/guides/first-cli">
+  Step-by-step tutorial for creating a CLI
+</Card>
+
+</CardGroup>
