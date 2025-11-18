@@ -67,61 +67,72 @@ async function categorizeFile(filePath: string): Promise<BundleFile['category']>
   const fileName = basename(filePath).toLowerCase();
   const normalizedPath = filePath.replace(/\\/g, '/').toLowerCase();
   
-  // Analyze actual content for Vite-generated chunks to categorize accurately
+  // Path-based categorization for clear directory structure
+  if (normalizedPath.includes('/core/')) {
+    return 'core';
+  }
+  
+  if (normalizedPath.includes('/plugins/')) {
+    return 'plugins';
+  }
+  
+  if (normalizedPath.includes('/types/')) {
+    return 'types';
+  }
+  
+  // Command files based on filename patterns
+  if (fileName.includes('hello') || fileName.includes('version') || 
+      fileName.includes('completion') || fileName.includes('init') ||
+      fileName.includes('scaffold') || fileName.includes('demo')) {
+    return 'commands';
+  }
+  
+  // For Vite-generated hash-named chunks, analyze content and size
   try {
     const content = await readFile(filePath, 'utf8');
+    const stats = await stat(filePath);
     
-    // Count occurrences of core vs plugin functionality in the file
-    const coreKeywords = ['execa', 'createCLI', 'prompts', 'logger', 'security', 'validation', 'icons', 'constants', 'errors'];
-    const pluginKeywords = ['workspace', 'git', 'updater'];
-    
-    const coreCount = coreKeywords.reduce((count, keyword) => 
-      count + (content.match(new RegExp(keyword, 'gi')) || []).length, 0);
-    const pluginCount = pluginKeywords.reduce((count, keyword) => 
-      count + (content.match(new RegExp(keyword, 'gi')) || []).length, 0);
-    
-    // Files that are clearly in core/plugins directories based on path
-    if (normalizedPath.includes('/core/')) {
-      return 'core';
-    }
-    
-    if (normalizedPath.includes('/plugins/')) {
-      return 'plugins';
-    }
-    
-    // Types files
-    if (normalizedPath.includes('/types/')) {
-      return 'types';
-    }
-    
-    // Command files
-    if (fileName.includes('hello') || fileName.includes('version') || 
-        fileName.includes('completion') || fileName.includes('init') ||
-        fileName.includes('scaffold') || fileName.includes('demo')) {
-      return 'commands';
-    }
-    
-    // For Vite-generated chunks, analyze content to determine primary category
-    if (fileName.startsWith('index-') || fileName.startsWith('logger-') || fileName === 'index.js') {
-      // If it's primarily plugin code, categorize as plugin
-      if (pluginCount > coreCount && pluginCount > 5) {
+    // Large files (>20KB) need content analysis to determine category
+    if (stats.size > 20000) {
+      // Count occurrences of core vs plugin functionality
+      const coreKeywords = ['execa', 'createCLI', 'prompts', 'logger', 'commander', 'security', 'validation'];
+      const pluginKeywords = ['workspace', 'git.', 'updater'];
+      
+      const coreCount = coreKeywords.reduce((count, keyword) => 
+        count + (content.match(new RegExp(keyword, 'gi')) || []).length, 0);
+      const pluginCount = pluginKeywords.reduce((count, keyword) => 
+        count + (content.match(new RegExp(keyword, 'gi')) || []).length, 0);
+      
+      // Explicit plugin files by name
+      if (fileName.includes('updater') && pluginCount > 0) {
         return 'plugins';
       }
-      // Otherwise, it's primarily core functionality
-      return 'core';
+      
+      // If core functionality significantly outweighs plugin (or has substantial core presence)
+      if (coreCount > pluginCount || coreCount > 5) {
+        return 'core';
+      }
+      
+      // Fallback based on content ratio
+      return pluginCount > coreCount ? 'plugins' : 'core';
     }
     
-    // Files with clear plugin names
-    if (fileName.includes('updater') || fileName.includes('git') || fileName.includes('workspace')) {
+    // Smaller files - check for specific functionality
+    if (fileName.includes('updater') || content.includes('updater')) {
       return 'plugins';
+    }
+    
+    // Default categorization for entry points and utilities
+    if (fileName === 'index.js' && stats.size < 10000) {
+      return 'other'; // Entry point files are typically small
     }
     
     return 'other';
   } catch (error) {
-    // Fallback to path-based categorization if file can't be read
-    if (normalizedPath.includes('/core/')) return 'core';
-    if (normalizedPath.includes('/plugins/')) return 'plugins';
-    if (normalizedPath.includes('/types/')) return 'types';
+    // Fallback to filename-based categorization
+    if (fileName.includes('updater') || fileName.includes('git') || fileName.includes('workspace')) {
+      return 'plugins';
+    }
     return 'other';
   }
 }
