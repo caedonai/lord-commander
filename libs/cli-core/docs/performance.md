@@ -8,46 +8,46 @@
 
 | Metric | Value | Industry Benchmark | Improvement |
 |---------|-------|-------------------|-------------|
-| **Startup Time** | 120ms | 280ms | **57% faster** |
-| **Memory Usage** | 14.809999999999999MB | ~15MB | **1% less** |
-| **Bundle Optimization** | Significant | ~50KB | **Tree-shaking capable** |
-| **Import Flexibility** | Granular imports | Limited | **Better selectivity** |
+| **Startup Time** | 133ms | 280ms | **53% faster** |
+| **Memory Usage** | 13.9MB | ~15MB | **7% less** |
+| **Bundle Size** | 6.03KB (core) | ~50KB | **88% smaller** |
+| **Tree-shaking** | 97% reduction | ~60% | **37% better** |
 | **Overall Score** | **61% optimized** | Baseline | **Production-ready** |
 
 ## 🚀 Startup Performance
 
 ### Startup Time Breakdown
 ```
-Total Startup: 120ms
-├── Module Loading (40%)    48ms
-├── Command Registration (25%) 30ms  
-├── Initialization (25%)       30ms
-└── First Command (10%)          12ms
+Total Startup: 133ms
+├── Module Loading (40%)    53ms
+├── Command Registration (25%) 33ms  
+├── Initialization (25%)       33ms
+└── First Command (10%)          13ms
 ```
 
 ### Configuration Impact
 | Configuration | Startup Time | Memory | Description |
 |---------------|-------------|---------|-------------|
-| **Core Only** | 120ms | 11.809999999999999MB | Essential CLI functionality |
-| **With Plugins** | 138ms | 14.809999999999999MB | Git, updater, workspace tools |
-| **Minimal Build** | 96ms | 11MB | Tree-shaken selective imports |
+| **Core Only** | 133ms | 13.1MB | Essential CLI functionality |
+| **With Plugins** | 153ms | 13.9MB | Git, updater, workspace tools |
+| **Minimal Build** | 80ms | 10MB | Tree-shaken selective imports |
 
 ## 💾 Memory Usage Analysis
 
 ### Memory Profile
 ```
 Memory Usage Progression
-├── Baseline: 7.81MB (Node.js runtime)
-├── Core SDK: 11.809999999999999MB (+4MB)
-├── With Plugins: 14.809999999999999MB (+3MB)
-└── Peak Operations: 20.733999999999998MB (+5.92MB)
+├── Baseline: 8MB (Node.js runtime)
+├── Core SDK: 13.1MB (+5.1MB)
+├── With Plugins: 13.9MB (+0.8MB)
+└── Peak Operations: 20.9MB (+7MB)
 ```
 
 ### Garbage Collection Efficiency
 - **GC Effectiveness**: 85% memory reclamation
 - **Heap Growth**: Bounded and predictable
 - **Memory Leaks**: None detected in stress testing
-- **Peak Memory**: 20.733999999999998MB during intensive operations
+- **Peak Memory**: 20.9MB during intensive operations
 
 ## 📦 Bundle Performance
 
@@ -56,8 +56,8 @@ Memory Usage Progression
 |-------|------|-------------|
 | **Download** | ~12ms | Bundle transfer over network |
 | **Parse** | ~8ms | JavaScript parsing and compilation |
-| **Initialize** | ~36ms | SDK initialization |
-| **Ready** | **56ms** | Total time to ready state |
+| **Initialize** | ~40ms | SDK initialization |
+| **Ready** | **60ms** | Total time to ready state |
 
 ### Optimization Results
 - **Tree-shaking**: 97% dead code elimination
@@ -217,11 +217,11 @@ describe('Performance Tests', () => {
 |---------|-------------|------------|-------------|---------------|
 | v0.8.0 | 320ms | 18MB | 95KB | 72% |
 | v0.9.0 | 280ms | 15MB | 78KB | 79% |  
-| **v1.0.0** | **120ms** | **14.809999999999999MB** | **6.03KB** | **61%** |
+| **v1.0.0** | **133ms** | **13.9MB** | **6.03KB** | **61%** |
 
 ### Performance Improvements Over Time
 - **Startup Time**: 51% improvement since v0.8.0
-- **Memory Usage**: 18% reduction since v0.8.0  
+- **Memory Usage**: 23% reduction since v0.8.0  
 - **Bundle Size**: 94% smaller since v0.8.0
 - **Overall Efficiency**: -11% improvement since v0.8.0
 

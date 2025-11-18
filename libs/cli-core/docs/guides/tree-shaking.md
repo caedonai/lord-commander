@@ -98,14 +98,14 @@ The SDK supports **granular exports** alongside namespace exports for maximum fl
 
 ```typescript
 // Granular structure (excellent tree-shaking)
-export { createCLI } from "./core/createCLI.js";        // Individual functions
-export { execa } from "./core/execution/execa.js";      // Process execution
-export { createLogger } from "./core/ui/logger.js";     // Logging utilities
-export { prompts } from "./core/ui/prompts.js";         // User interaction
+export { createCLI } from "./core/createCLI.js"; // Individual functions
+export { execa } from "./core/execution/execa.js"; // Process execution
+export { createLogger } from "./core/ui/logger.js"; // Logging utilities
+export { prompts } from "./core/ui/prompts.js"; // User interaction
 // ... 89+ individual exports for granular imports
 
 // Backward compatibility (namespace exports still work)
-export * as core from "./core";     // Full core namespace  
+export * as core from "./core"; // Full core namespace
 export * as plugins from "./plugins"; // Full plugins namespace
 ```
 
@@ -113,11 +113,11 @@ Consumers can choose their import strategy:
 
 ```typescript
 // Granular imports (maximum tree-shaking)
-import { createCLI } from "@lord-commander/cli-core";           // Individual function
-import { execa } from "@lord-commander/cli-core/execa";         // Subpath import
+import { createCLI } from "@lord-commander/cli-core"; // Individual function
+import { execa } from "@lord-commander/cli-core/execa"; // Subpath import
 
 // Namespace imports (still supported)
-import { core } from "@lord-commander/cli-core";               // Full namespace
+import { core } from "@lord-commander/cli-core"; // Full namespace
 const { createCLI } = core; // Includes entire core module
 ```
 
@@ -134,14 +134,14 @@ const { createCLI } = core; // Includes entire core module
     },
     "./execa": {
       "import": "./dist/core/execution/execa.js",
-      "types": "./dist/core/execution/execa.d.ts"  
+      "types": "./dist/core/execution/execa.d.ts"
     },
     "./logger": {
       "import": "./dist/core/ui/logger.js",
       "types": "./dist/core/ui/logger.d.ts"
     },
     "./fs": {
-      "import": "./dist/core/execution/fs.js", 
+      "import": "./dist/core/execution/fs.js",
       "types": "./dist/core/execution/fs.d.ts"
     }
     // ... 15+ subpath exports for granular imports
@@ -156,19 +156,21 @@ const { createCLI } = core; // Includes entire core module
 ### Core Module (`@lord-commander/cli-core`) - 295 Exports
 
 **Granular Imports**:
+
 ```typescript
 // Individual function imports (tree-shakeable)
-import { createCLI } from "@lord-commander/cli-core";           
-import { execa, execaSync } from "@lord-commander/cli-core/execa";  
-import { createLogger } from "@lord-commander/cli-core/logger";     
-import { readFile, writeFile } from "@lord-commander/cli-core/fs";  
-import { text, confirm } from "@lord-commander/cli-core/prompts";   
+import { createCLI } from "@lord-commander/cli-core";
+import { execa, execaSync } from "@lord-commander/cli-core/execa";
+import { createLogger } from "@lord-commander/cli-core/logger";
+import { readFile, writeFile } from "@lord-commander/cli-core/fs";
+import { text, confirm } from "@lord-commander/cli-core/prompts";
 ```
 
 **Core Functionality Categories**:
+
 - **CLI Framework** (15 exports): `createCLI`, command registration, lifecycle management
 - **File System** (25 exports): `execa`, `readFile`, `writeFile`, `exists`, `stat`, directory operations
-- **UI Components** (20 exports): `createLogger`, `prompts`, `icons`, colors, themes  
+- **UI Components** (20 exports): `createLogger`, `prompts`, `icons`, colors, themes
 - **Error Handling** (12 exports): Custom error types, recovery mechanisms, validation
 - **Security** (8 exports): Input validation, path sanitization, privilege checks
 - **Constants** (15 exports): Branding, configuration paths, framework patterns
@@ -177,16 +179,24 @@ import { text, confirm } from "@lord-commander/cli-core/prompts";
 ### Plugins Module (`@lord-commander/cli-core/plugins`) - 71 Exports
 
 **Plugin Imports**:
+
 ```typescript
 // Selective plugin imports
 import { isGitRepository, init } from "@lord-commander/cli-core/git";
-import { parseVersion, compareVersions } from "@lord-commander/cli-core/updater";  
-import { discoverPackages, runScript } from "@lord-commander/cli-core/workspace";
+import {
+  parseVersion,
+  compareVersions,
+} from "@lord-commander/cli-core/updater";
+import {
+  discoverPackages,
+  runScript,
+} from "@lord-commander/cli-core/workspace";
 ```
 
 **Plugin Categories**:
+
 - **Git Operations** (35 exports): Repository management, commits, branches, status
-- **Version Management** (20 exports): Version parsing, comparison, update planning  
+- **Version Management** (20 exports): Version parsing, comparison, update planning
 - **Workspace Tools** (16 exports): Package discovery, monorepo support, script execution
 
 ## Build Tool Integration
@@ -217,16 +227,16 @@ Use the `--tree-shaking` flag for optimal results.
 
 ## Performance Benefits
 
-| Import Pattern                  | Bundle Size     | Savings vs Full | Use Case                                |
-| ------------------------------- | --------------- | --------------- | --------------------------------------- |
-| Full SDK                        | ~292.8KB        | Baseline        | Complex CLIs with all features          |
-| Namespace imports               | Varies by usage | Significant     | Standard CLI implementations            |  
-| **Granular imports**            | **~2-50KB**     | **Up to 98%**   | **Maximum optimization**                |
-| Single function                 | ~2-12KB         | **95%+**        | Minimal utility scripts                 |
+| Import Pattern       | Bundle Size     | Savings vs Full | Use Case                       |
+| -------------------- | --------------- | --------------- | ------------------------------ |
+| Full SDK             | ~292.8KB        | Baseline        | Complex CLIs with all features |
+| Namespace imports    | Varies by usage | Significant     | Standard CLI implementations   |
+| **Granular imports** | **~2-50KB**     | **Up to 98%**   | **Maximum optimization**       |
+| Single function      | ~2-12KB         | **95%+**        | Minimal utility scripts        |
 
 **Achievement**: Granular exports enable significant tree-shaking effectiveness. Individual imports load only required functions plus dependencies, achieving much smaller bundle sizes for focused functionality.
 
-*Note: Actual bundle sizes depend on specific functions imported and their dependencies. Use bundler analysis tools to measure your specific use case.*
+_Note: Actual bundle sizes depend on specific functions imported and their dependencies. Use bundler analysis tools to measure your specific use case._
 
 ## Migration Guide
 
@@ -239,11 +249,11 @@ const logger = core.createLogger();
 await core.execa("npm", ["install"]);
 await plugins.git.init();
 
-// After: Granular imports (smaller bundles)  
-import { createCLI } from "@lord-commander/cli-core";           
-import { createLogger } from "@lord-commander/cli-core/logger"; 
-import { execa } from "@lord-commander/cli-core/execa";         
-import { init } from "@lord-commander/cli-core/git";            
+// After: Granular imports (smaller bundles)
+import { createCLI } from "@lord-commander/cli-core";
+import { createLogger } from "@lord-commander/cli-core/logger";
+import { execa } from "@lord-commander/cli-core/execa";
+import { init } from "@lord-commander/cli-core/git";
 
 // Same API, potentially smaller bundle
 const logger = createLogger();
@@ -253,11 +263,11 @@ await init();
 
 ### Backward Compatibility
 
-```typescript  
+```typescript
 // ✅ Still works: Namespace imports (no breaking changes)
 import { core, plugins } from "@lord-commander/cli-core";
 
-// ✅ Available: Direct imports (better tree-shaking)  
+// ✅ Available: Direct imports (better tree-shaking)
 import { createCLI, execa, createLogger } from "@lord-commander/cli-core";
 
 // ✅ Available: Subpath imports (maximum optimization)
@@ -276,8 +286,8 @@ pnpm docs:bundle-analysis
 # Test granular imports
 node test-phase2-imports.mjs
 
-# Check build output structure  
-ls -la dist/ 
+# Check build output structure
+ls -la dist/
 # Should show individual files: execa.js, logger.js, fs.js, etc.
 
 # Analyze tree-shaking effectiveness
@@ -286,7 +296,7 @@ pnpm docs:performance
 # Test specific imports
 node -e "
 import { createCLI } from '@lord-commander/cli-core';
-import { execa } from '@lord-commander/cli-core/execa'; 
+import { execa } from '@lord-commander/cli-core/execa';
 console.log('✅ Granular imports working');
 "
 
@@ -299,7 +309,7 @@ npm run build -- --analyze
 The SDK achieves **excellent tree-shaking effectiveness** with granular imports:
 
 - **Granular Exports**: 89+ individual function exports for selective imports
-- **Subpath Imports**: Dedicated entry points (`/execa`, `/logger`, `/fs`, etc.)  
+- **Subpath Imports**: Dedicated entry points (`/execa`, `/logger`, `/fs`, etc.)
 - **Module Preservation**: Vite builds individual chunks instead of monolithic bundle
 - **Dead Code Elimination**: Unused functions excluded from bundle
 - **Optimal Bundle Sizes**: Varies based on usage and specific functions imported
@@ -321,7 +331,7 @@ The SDK achieves **excellent tree-shaking effectiveness** with granular imports:
 ### Analysis
 
 - **Lord Commander** provides comprehensive functionality WITH excellent tree-shaking capabilities
-- **Granular imports** enable significant bundle size reduction with individual function imports  
+- **Granular imports** enable significant bundle size reduction with individual function imports
 - **Tree-shaking effectiveness** competitive with best-in-class CLI frameworks
 - **Better than most alternatives** in both functionality and optimization potential
 - **Modern architecture** delivers on granular exports for maximum flexibility
@@ -342,27 +352,27 @@ The SDK achieves **excellent tree-shaking effectiveness** with granular imports:
 
 ### Architecture Implementation ✅
 
-```typescript  
+```typescript
 // ✅ Granular exports for excellent tree-shaking
-export { createCLI } from "./core/createCLI.js";         
-export { execa } from "./core/execution/execa.js";       
-export { createLogger } from "./core/ui/logger.js";      
-export { prompts } from "./core/ui/prompts.js";          
+export { createCLI } from "./core/createCLI.js";
+export { execa } from "./core/execution/execa.js";
+export { createLogger } from "./core/ui/logger.js";
+export { prompts } from "./core/ui/prompts.js";
 // + 89 individual exports for maximum granular control
 
-// ✅ Backward compatibility maintained  
-export * as core from "./core";     // Still works
+// ✅ Backward compatibility maintained
+export * as core from "./core"; // Still works
 export * as plugins from "./plugins"; // Still works
 ```
 
 ### Tree-Shaking Results ✅
 
-| Import Pattern             | Bundle Size Range | Optimization Level | **Use Case**          |
-| -------------------------- | ----------------- | ------------------ | --------------------- |
-| Minimal (`createCLI` only) | **~2-5KB**        | **Maximum**        | **Simple utilities**  |
-| Common usage               | **~12-50KB**      | **Significant**    | **Standard CLIs**     |  
-| Full import                | ~292KB            | Baseline           | Complex applications  |
+| Import Pattern             | Bundle Size Range | Optimization Level | **Use Case**         |
+| -------------------------- | ----------------- | ------------------ | -------------------- |
+| Minimal (`createCLI` only) | **~2-5KB**        | **Maximum**        | **Simple utilities** |
+| Common usage               | **~12-50KB**      | **Significant**    | **Standard CLIs**    |
+| Full import                | ~292KB            | Baseline           | Complex applications |
 
 **🏆 Result**: Lord Commander delivers competitive tree-shaking performance with the flexibility of both granular and namespace imports, suitable for projects ranging from simple utilities to enterprise applications.
 
-*Note: Actual bundle sizes depend on specific functions used and bundler configuration. Use analysis tools to measure your specific implementation.*
+_Note: Actual bundle sizes depend on specific functions used and bundler configuration. Use analysis tools to measure your specific implementation._
