@@ -513,7 +513,7 @@ async function updateBundleAnalysisDoc(analysis: BundleAnalysis): Promise<void> 
 | **Total Bundle Size** | ${formatKB(analysis.totalSize)}KB | Complete SDK with all features |
 | **Core Bundle Size** | ${formatKB(analysis.coreSize)}KB | Essential CLI functionality only |
 | **Plugin Bundle Size** | ${formatKB(analysis.pluginSize)}KB | Extended features (Git, updater, workspace) |
-| **Tree-shaking Reduction** | ${analysis.reductionPercent}% | Bundle size reduction with selective imports |
+| **Build Optimization** | ${analysis.reductionPercent}% | TypeScript compilation + minification savings |
 | **Total Exports** | ${analysis.treeshakingMetrics.totalExports} | Available functions and utilities |
 
 ## 🎯 Import Strategy Comparison
@@ -527,7 +527,7 @@ import * as SDK from '@caedonai/sdk';
 ### Selective Core Import (Recommended)
 \`\`\`typescript
 import { createCLI, createLogger, execa } from '@caedonai/sdk/core';
-// Bundle size: ~${formatKB(analysis.coreSize)}KB (${analysis.reductionPercent}% smaller)
+// Bundle size: ~${formatKB(analysis.coreSize)}KB (excludes plugins)
 \`\`\`
 
 ### Plugin-Specific Import
@@ -552,13 +552,14 @@ ${analysis.fileBreakdown
   .map((f) => `| \`${f.name}\` | ${f.sizeKB}KB | ${f.description} |`)
   .join('\\n')}
 
-### Supporting Files Summary
+### File Categories Summary
 | Category | Files | Total Size | Description |
 |----------|-------|------------|-------------|
-| **Shared Chunks** | ${analysis.fileBreakdown.filter((f) => f.category === 'chunk').length} files | ${Math.round(analysis.fileBreakdown.filter((f) => f.category === 'chunk').reduce((sum, f) => sum + f.sizeKB, 0) * 100) / 100}KB | Optimized code chunks for efficient loading |
-| **CLI Utilities** | ${analysis.fileBreakdown.filter((f) => f.category === 'utility' && (f.name.includes('cli') || f.name.includes('completion') || f.name.includes('hello') || f.name.includes('version'))).length} files | ${Math.round(analysis.fileBreakdown.filter((f) => f.category === 'utility' && (f.name.includes('cli') || f.name.includes('completion') || f.name.includes('hello') || f.name.includes('version'))).reduce((sum, f) => sum + f.sizeKB, 0) * 100) / 100}KB | CLI commands and completion system |
-| **System Utilities** | ${analysis.fileBreakdown.filter((f) => f.category === 'utility' && (f.name.includes('execa') || f.name.includes('fs') || f.name.includes('protection'))).length} files | ${Math.round(analysis.fileBreakdown.filter((f) => f.category === 'utility' && (f.name.includes('execa') || f.name.includes('fs') || f.name.includes('protection'))).reduce((sum, f) => sum + f.sizeKB, 0) * 100) / 100}KB | Process execution, file system, and security |
-| **Other Utilities** | ${analysis.fileBreakdown.filter((f) => f.category === 'utility' && !f.name.includes('cli') && !f.name.includes('completion') && !f.name.includes('hello') && !f.name.includes('version') && !f.name.includes('execa') && !f.name.includes('fs') && !f.name.includes('protection')).length} files | ${Math.round(analysis.fileBreakdown.filter((f) => f.category === 'utility' && !f.name.includes('cli') && !f.name.includes('completion') && !f.name.includes('hello') && !f.name.includes('version') && !f.name.includes('execa') && !f.name.includes('fs') && !f.name.includes('protection')).reduce((sum, f) => sum + f.sizeKB, 0) * 100) / 100}KB | Supporting libraries and entry points |
+| **Core Files** | ${analysis.fileBreakdown.filter((f) => f.category === 'core').length} files | ${Math.round(analysis.fileBreakdown.filter((f) => f.category === 'core').reduce((sum, f) => sum + f.sizeKB, 0) * 10) / 10}KB | Main CLI framework, security, UI, and execution utilities |
+| **Plugin Files** | ${analysis.fileBreakdown.filter((f) => f.category === 'plugin').length} files | ${Math.round(analysis.fileBreakdown.filter((f) => f.category === 'plugin').reduce((sum, f) => sum + f.sizeKB, 0) * 10) / 10}KB | Git, updater, and workspace management features |
+| **Command Files** | ${analysis.fileBreakdown.filter((f) => f.category === 'utility').length} files | ${Math.round(analysis.fileBreakdown.filter((f) => f.category === 'utility').reduce((sum, f) => sum + f.sizeKB, 0) * 10) / 10}KB | CLI commands (hello, version, completion) |
+| **Type Files** | ${analysis.fileBreakdown.filter((f) => f.category === 'chunk').length} files | ${Math.round(analysis.fileBreakdown.filter((f) => f.category === 'chunk').reduce((sum, f) => sum + f.sizeKB, 0) * 1000) / 1000}KB | TypeScript type definitions |
+| **Entry Files** | ${analysis.fileBreakdown.filter((f) => f.name === 'index.js' && f.category !== 'core').length} files | ${Math.round(analysis.fileBreakdown.filter((f) => f.name === 'index.js' && f.category !== 'core').reduce((sum, f) => sum + f.sizeKB, 0) * 10) / 10}KB | Main entry points and exports |
 
 ### Key Individual Files
 | File | Size | Description |
@@ -920,7 +921,7 @@ async function main(): Promise<void> {
     console.log(`\n📊 Bundle Summary:`);
     console.log(`   Total: ${formatKB(analysis.totalSize)}KB`);
     console.log(
-      `   Core: ${formatKB(analysis.coreSize)}KB (${analysis.reductionPercent}% tree-shaking reduction)`
+      `   Core: ${formatKB(analysis.coreSize)}KB (${analysis.reductionPercent}% build optimization)`
     );
     console.log(`   Tree-shaking Score: ${treeShaking.score}/100`);
 
